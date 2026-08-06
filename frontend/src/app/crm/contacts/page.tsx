@@ -1,13 +1,19 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { ModuleGuard } from '../../../components/guards/PermissionGuard';
-import { DashboardLayout } from '../../../components/layout';
-import { useCustomOptions } from '../../../hooks/useCustomOptions';
-import { CustomOptionDialog } from '../../../components/common/CustomOptionDialog';
-import CRMService from '@/src/services/CRMService';
-import fileUploadService from '@/src/services/FileUploadService';
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { ModuleGuard } from "../../../components/guards/PermissionGuard";
+import { DashboardLayout } from "../../../components/layout";
+import { useCustomOptions } from "../../../hooks/useCustomOptions";
+import { CustomOptionDialog } from "../../../components/common/CustomOptionDialog";
+import CRMService from "@/src/services/CRMService";
+import fileUploadService from "@/src/services/FileUploadService";
 import {
   Contact,
   ContactType,
@@ -16,35 +22,35 @@ import {
   ContactUpdate,
   ContactAttachment,
   Company,
-} from '@/src/models/crm';
+} from "@/src/models/crm";
 import {
   defaultEmailRowsFromEntity,
   defaultPhoneRowsFromEntity,
-} from '@/src/components/crm/LabeledContactFields';
+} from "@/src/components/crm/LabeledContactFields";
 import {
   defaultSocialLinks,
   mergeSocialFromApi,
   birthdayInputFromApi,
   buildAddressesPayload,
-} from '@/src/components/crm/contacts/contactUtils';
-import { ContactsLoadingState } from '@/src/components/crm/contacts/ContactsLoadingState';
-import { ContactsPageHeader } from '@/src/components/crm/contacts/ContactsPageHeader';
-import { ContactsFiltersCard } from '@/src/components/crm/contacts/ContactsFiltersCard';
-import { ContactsListCard } from '@/src/components/crm/contacts/ContactsListCard';
-import { ContactFormDialog } from '@/src/components/crm/contacts/ContactFormDialog';
-import { ContactViewDialog } from '@/src/components/crm/contacts/ContactViewDialog';
-import { ContactDeleteDialog } from '@/src/components/crm/contacts/ContactDeleteDialog';
-import { useAuth } from '@/src/contexts/AuthContext';
-import { User } from '@/src/models';
-import { apiService } from '@/src/services/ApiService';
-import { toast } from 'sonner';
-import { type UserSearchItem } from '@/src/components/ui/user-search';
+} from "@/src/components/crm/contacts/contactUtils";
+import { ContactsLoadingState } from "@/src/components/crm/contacts/ContactsLoadingState";
+import { ContactsPageHeader } from "@/src/components/crm/contacts/ContactsPageHeader";
+import { ContactsFiltersCard } from "@/src/components/crm/contacts/ContactsFiltersCard";
+import { ContactsListCard } from "@/src/components/crm/contacts/ContactsListCard";
+import { ContactFormDialog } from "@/src/components/crm/contacts/ContactFormDialog";
+import { ContactViewDialog } from "@/src/components/crm/contacts/ContactViewDialog";
+import { ContactDeleteDialog } from "@/src/components/crm/contacts/ContactDeleteDialog";
+import { useAuth } from "@/src/contexts/AuthContext";
+import { User } from "@/src/models";
+import { apiService } from "@/src/services/ApiService";
+import { toast } from "sonner";
+import { type UserSearchItem } from "@/src/components/ui/user-search";
 
 export default function CRMContactsPage() {
   return (
     <ModuleGuard
       module="crm"
-      fallback={<div>You don't have access to CRM module</div>}
+      fallback={<div>You don&apos;t have access to CRM module</div>}
     >
       <CRMContactsContent />
     </ModuleGuard>
@@ -65,15 +71,15 @@ function CRMContactsContent() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [filters, setFilters] = useState<CRMContactFilters>({});
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [viewingContact, setViewingContact] = useState<Contact | null>(null);
   const [deletingContact, setDeletingContact] = useState<Contact | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const [showCustomContactTypeDialog, setShowCustomContactTypeDialog] =
     useState(false);
   const [openAdditional, setOpenAdditional] = useState(false);
@@ -87,27 +93,27 @@ function CRMContactsContent() {
   } = useCustomOptions();
 
   const [formData, setFormData] = useState<ContactCreate>({
-    firstName: '',
-    lastName: '',
-    emails: [{ value: '', label: 'personal' }],
-    phones: [{ value: '', label: 'work' }],
-    jobTitle: '',
-    department: '',
-    companyId: '',
+    firstName: "",
+    lastName: "",
+    emails: [{ value: "", label: "personal" }],
+    phones: [{ value: "", label: "work" }],
+    jobTitle: "",
+    department: "",
+    companyId: "",
     contactType: ContactType.CUSTOMER,
-    notes: '',
-    description: '',
+    notes: "",
+    description: "",
     tags: [],
     attachments: [] as ContactAttachment[],
     isActive: true,
-    initials: '',
-    fullName: '',
-    birthday: '',
-    businessTaxId: '',
+    initials: "",
+    fullName: "",
+    birthday: "",
+    businessTaxId: "",
     addresses: [],
     socialLinks: defaultSocialLinks(),
-    assignedTo: '',
-    website: '',
+    assignedTo: "",
+    website: "",
   });
   const [companies, setCompanies] = useState<Company[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -119,8 +125,7 @@ function CRMContactsContent() {
     try {
       const response = await CRMService.getCompanies({}, 1, 100);
       setCompanies(response.companies || []);
-    } catch (err) {
-    }
+    } catch (err) {}
   }, []);
 
   const loadContacts = useCallback(async () => {
@@ -164,16 +169,15 @@ function CRMContactsContent() {
   const fetchUsers = useCallback(async () => {
     try {
       let tenantId: string | null = null;
-      const selectedTenant = localStorage.getItem('selectedTenant');
+      const selectedTenant = localStorage.getItem("selectedTenant");
       if (selectedTenant) {
         try {
           const parsed = JSON.parse(selectedTenant);
           tenantId = parsed.id || parsed.tenantId;
-        } catch {
-        }
+        } catch {}
       }
       if (!tenantId) {
-        tenantId = localStorage.getItem('currentTenantId');
+        tenantId = localStorage.getItem("currentTenantId");
       }
       if (tenantId) {
         const response = await apiService.getTenantUsers(tenantId);
@@ -191,8 +195,7 @@ function CRMContactsContent() {
       } else {
         setUsers([]);
       }
-    } catch {
-    }
+    } catch {}
   }, []);
 
   useEffect(() => {
@@ -200,7 +203,7 @@ function CRMContactsContent() {
   }, [fetchUsers]);
 
   useEffect(() => {
-    const contactId = searchParams.get('contactId')?.trim();
+    const contactId = searchParams.get("contactId")?.trim();
     if (!contactId || openedContactIdRef.current === contactId) {
       return;
     }
@@ -211,18 +214,16 @@ function CRMContactsContent() {
         const contact = await CRMService.getContact(contactId);
         setViewingContact(contact);
       } catch {
-        toast.error('Contact not found');
+        toast.error("Contact not found");
       } finally {
-        router.replace('/crm/contacts', { scroll: false });
+        router.replace("/crm/contacts", { scroll: false });
       }
     })();
   }, [searchParams, router]);
 
   const selectedAssignee = useMemo((): UserSearchItem | null => {
     if (!formData.assignedTo) return null;
-    const found = users.find(
-      (u) => (u.id || u.userId) === formData.assignedTo,
-    );
+    const found = users.find((u) => (u.id || u.userId) === formData.assignedTo);
     if (found) return found;
     return {
       id: formData.assignedTo,
@@ -238,7 +239,7 @@ function CRMContactsContent() {
 
   const resetFilters = () => {
     setFilters({});
-    setSearch('');
+    setSearch("");
     setPage(1);
   };
 
@@ -248,33 +249,32 @@ function CRMContactsContent() {
   ) => {
     try {
       await createCustomContactType(name, description);
-    } catch (error) {
-    }
+    } catch (error) {}
   };
 
   const resetForm = () => {
     setFormData({
-      firstName: '',
-      lastName: '',
-      emails: [{ value: '', label: 'personal' }],
-      phones: [{ value: '', label: 'work' }],
-      jobTitle: '',
-      department: '',
-      companyId: '',
+      firstName: "",
+      lastName: "",
+      emails: [{ value: "", label: "personal" }],
+      phones: [{ value: "", label: "work" }],
+      jobTitle: "",
+      department: "",
+      companyId: "",
       contactType: ContactType.CUSTOMER,
-      notes: '',
-      description: '',
+      notes: "",
+      description: "",
       tags: [],
       attachments: [],
       isActive: true,
-      initials: '',
-      fullName: '',
-      birthday: '',
-      businessTaxId: '',
+      initials: "",
+      fullName: "",
+      birthday: "",
+      businessTaxId: "",
       addresses: [],
       socialLinks: defaultSocialLinks(),
-      assignedTo: '',
-      website: '',
+      assignedTo: "",
+      website: "",
     });
     setOpenAdditional(false);
     setOpenAddresses(false);
@@ -285,7 +285,7 @@ function CRMContactsContent() {
     e.preventDefault();
 
     if (!formData.firstName.trim() || !formData.lastName.trim()) {
-      toast.error('First name and last name are required');
+      toast.error("First name and last name are required");
       return;
     }
 
@@ -320,12 +320,12 @@ function CRMContactsContent() {
           assignedTo: formData.assignedTo || undefined,
         };
         await CRMService.updateContact(editingContact.id, payload);
-        setSuccessMessage('Contact updated successfully!');
+        setSuccessMessage("Contact updated successfully!");
         setShowCreateDialog(false);
         setEditingContact(null);
         resetForm();
         loadContacts();
-        setTimeout(() => setSuccessMessage(''), 3000);
+        setTimeout(() => setSuccessMessage(""), 3000);
       } else {
         await CRMService.createContact({
           ...formData,
@@ -342,15 +342,15 @@ function CRMContactsContent() {
           website: formData.website?.trim() || undefined,
           assignedTo: formData.assignedTo || undefined,
         });
-        setSuccessMessage('Contact created successfully!');
+        setSuccessMessage("Contact created successfully!");
         setShowCreateDialog(false);
         resetForm();
         loadContacts();
-        setTimeout(() => setSuccessMessage(''), 3000);
+        setTimeout(() => setSuccessMessage(""), 3000);
       }
     } catch (error) {
-      setErrorMessage('Error saving contact. Please try again.');
-      setTimeout(() => setErrorMessage(''), 5000);
+      setErrorMessage("Error saving contact. Please try again.");
+      setTimeout(() => setErrorMessage(""), 5000);
     } finally {
       setSubmitting(false);
     }
@@ -358,30 +358,30 @@ function CRMContactsContent() {
 
   const handleEdit = (contact: Contact) => {
     setEditingContact(contact);
-    setErrorMessage('');
-    setSuccessMessage('');
+    setErrorMessage("");
+    setSuccessMessage("");
     setFormData({
       firstName: contact.firstName,
       lastName: contact.lastName,
       emails: defaultEmailRowsFromEntity(contact),
       phones: defaultPhoneRowsFromEntity(contact),
-      jobTitle: contact.jobTitle || '',
-      department: contact.department || '',
-      companyId: contact.companyId || '',
+      jobTitle: contact.jobTitle || "",
+      department: contact.department || "",
+      companyId: contact.companyId || "",
       contactType: contact.contactType ?? ContactType.CUSTOMER,
-      notes: contact.notes || '',
-      description: contact.description || '',
+      notes: contact.notes || "",
+      description: contact.description || "",
       tags: contact.tags || [],
       attachments: contact.attachments || [],
       isActive: contact.isActive,
-      initials: contact.initials || '',
-      fullName: contact.fullName || '',
+      initials: contact.initials || "",
+      fullName: contact.fullName || "",
       birthday: birthdayInputFromApi(contact.birthday),
-      businessTaxId: contact.businessTaxId || '',
+      businessTaxId: contact.businessTaxId || "",
       addresses: Array.isArray(contact.addresses) ? contact.addresses : [],
       socialLinks: mergeSocialFromApi(contact.socialLinks),
-      assignedTo: contact.assignedTo || '',
-      website: contact.website || '',
+      assignedTo: contact.assignedTo || "",
+      website: contact.website || "",
     });
     setShowCreateDialog(true);
   };
@@ -406,11 +406,11 @@ function CRMContactsContent() {
         ],
       }));
     } catch {
-      setErrorMessage('File upload failed. Please try again.');
-      setTimeout(() => setErrorMessage(''), 5000);
+      setErrorMessage("File upload failed. Please try again.");
+      setTimeout(() => setErrorMessage(""), 5000);
     } finally {
       setAttachmentUploading(false);
-      e.target.value = '';
+      e.target.value = "";
     }
   };
 
@@ -423,8 +423,8 @@ function CRMContactsContent() {
         try {
           await fileUploadService.deleteFile(key);
         } catch {
-          setErrorMessage('Removed from list; storage delete may have failed.');
-          setTimeout(() => setErrorMessage(''), 5000);
+          setErrorMessage("Removed from list; storage delete may have failed.");
+          setTimeout(() => setErrorMessage(""), 5000);
         }
       }
     }
@@ -448,13 +448,13 @@ function CRMContactsContent() {
     setDeleting(true);
     try {
       await CRMService.deleteContact(deletingContact.id);
-      setSuccessMessage('Contact deleted successfully!');
+      setSuccessMessage("Contact deleted successfully!");
       setDeletingContact(null);
       loadContacts();
-      setTimeout(() => setSuccessMessage(''), 3000);
+      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
-      setErrorMessage('Error deleting contact. Please try again.');
-      setTimeout(() => setErrorMessage(''), 5000);
+      setErrorMessage("Error deleting contact. Please try again.");
+      setTimeout(() => setErrorMessage(""), 5000);
     } finally {
       setDeleting(false);
     }
@@ -476,8 +476,8 @@ function CRMContactsContent() {
             if (uid) {
               setFormData((prev) => ({ ...prev, assignedTo: uid }));
             }
-            setErrorMessage('');
-            setSuccessMessage('');
+            setErrorMessage("");
+            setSuccessMessage("");
             setShowCreateDialog(true);
           }}
         />
@@ -531,8 +531,8 @@ function CRMContactsContent() {
             setShowCreateDialog(false);
             setEditingContact(null);
             resetForm();
-            setErrorMessage('');
-            setSuccessMessage('');
+            setErrorMessage("");
+            setSuccessMessage("");
           }}
           attachmentFileInputRef={attachmentFileInputRef}
           onAttachmentFile={handleAttachmentFile}

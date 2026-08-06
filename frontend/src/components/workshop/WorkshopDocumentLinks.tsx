@@ -1,23 +1,23 @@
-'use client';
+"use client";
 
-import React, { useEffect, useRef, useState } from 'react';
-import { Label } from '../ui/label';
-import { Input } from '../ui/input';
-import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
+import React, { useEffect, useRef, useState } from "react";
+import { Label } from "../ui/label";
+import { Input } from "../ui/input";
+import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../ui/select';
-import { Search, FileText, X, Plus } from 'lucide-react';
-import { apiService } from '../../services/ApiService';
-import { inventoryService } from '../../services/InventoryService';
-import InvoiceService from '../../services/InvoiceService';
-import PurchaseOrderModal from '../inventory/PurchaseOrderModal';
-import { PurchaseOrder, PurchaseOrderCreate } from '../../models/inventory';
+} from "../ui/select";
+import { Search, FileText, X, Plus } from "lucide-react";
+import { apiService } from "../../services/ApiService";
+import { inventoryService } from "../../services/InventoryService";
+import InvoiceService from "../../services/InvoiceService";
+import PurchaseOrderModal from "../inventory/PurchaseOrderModal";
+import { PurchaseOrder, PurchaseOrderCreate } from "../../models/inventory";
 
 export type WorkshopDocumentLinksValue = {
   purchaseOrderId?: string;
@@ -33,7 +33,7 @@ type PurchaseOrderOption = {
 
 type WorkshopDocumentLinksProps = {
   value: WorkshopDocumentLinksValue;
-  excludeType: 'purchase_order' | 'job_card' | 'invoice';
+  excludeType: "purchase_order" | "job_card" | "invoice";
   onChange: (value: WorkshopDocumentLinksValue) => void;
   purchaseOrderInitialData?: Partial<PurchaseOrderCreate>;
   dense?: boolean;
@@ -46,55 +46,71 @@ export function WorkshopDocumentLinks({
   purchaseOrderInitialData,
   dense = false,
 }: WorkshopDocumentLinksProps) {
-  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrderOption[]>([]);
-  const [jobCards, setJobCards] = useState<{ id: string; job_card_number: string; title: string }[]>([]);
-  const [invoices, setInvoices] = useState<{ id: string; invoiceNumber: string; customerName: string }[]>([]);
-  const [poQuery, setPoQuery] = useState('');
+  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrderOption[]>(
+    [],
+  );
+  const [jobCards, setJobCards] = useState<
+    { id: string; job_card_number: string; title: string }[]
+  >([]);
+  const [invoices, setInvoices] = useState<
+    { id: string; invoiceNumber: string; customerName: string }[]
+  >([]);
+  const [poQuery, setPoQuery] = useState("");
   const [poResults, setPoResults] = useState<PurchaseOrderOption[]>([]);
   const [poOpen, setPoOpen] = useState(false);
-  const [selectedPo, setSelectedPo] = useState<PurchaseOrderOption | null>(null);
+  const [selectedPo, setSelectedPo] = useState<PurchaseOrderOption | null>(
+    null,
+  );
   const [showCreatePo, setShowCreatePo] = useState(false);
   const poSearchRef = useRef<HTMLDivElement>(null);
 
   const loadPurchaseOrders = () => {
-    inventoryService.getPurchaseOrders(undefined, 0, 500).then((res) => {
-      const list = (res.purchaseOrders || []).map((po) => ({
-        id: po.id,
-        orderNumber: po.orderNumber,
-        supplierName: po.supplierName,
-      }));
-      setPurchaseOrders(list);
-    }).catch(() => setPurchaseOrders([]));
+    inventoryService
+      .getPurchaseOrders(undefined, 0, 500)
+      .then((res) => {
+        const list = (res.purchaseOrders || []).map((po) => ({
+          id: po.id,
+          orderNumber: po.orderNumber,
+          supplierName: po.supplierName,
+        }));
+        setPurchaseOrders(list);
+      })
+      .catch(() => setPurchaseOrders([]));
   };
 
   useEffect(() => {
-    if (excludeType !== 'purchase_order') {
+    if (excludeType !== "purchase_order") {
       loadPurchaseOrders();
     }
 
-    if (excludeType !== 'job_card') {
-      apiService.get('/job-cards?limit=500').then((data: any) => {
-        const list = Array.isArray(data) ? data : [];
-        setJobCards(
-          list.map((jc: any) => ({
-            id: jc.id,
-            job_card_number: jc.job_card_number,
-            title: jc.title,
-          })),
-        );
-      }).catch(() => setJobCards([]));
+    if (excludeType !== "job_card") {
+      apiService
+        .get("/job-cards?limit=500")
+        .then((data: any) => {
+          const list = Array.isArray(data) ? data : [];
+          setJobCards(
+            list.map((jc: any) => ({
+              id: jc.id,
+              job_card_number: jc.job_card_number,
+              title: jc.title,
+            })),
+          );
+        })
+        .catch(() => setJobCards([]));
     }
 
-    if (excludeType !== 'invoice' && excludeType !== 'job_card') {
-      InvoiceService.getInvoices({}, 1, 500).then((res) => {
-        setInvoices(
-          (res.invoices || []).map((inv) => ({
-            id: inv.id,
-            invoiceNumber: inv.invoiceNumber,
-            customerName: inv.customerName,
-          })),
-        );
-      }).catch(() => setInvoices([]));
+    if (excludeType !== "invoice" && excludeType !== "job_card") {
+      InvoiceService.getInvoices({}, 1, 500)
+        .then((res) => {
+          setInvoices(
+            (res.invoices || []).map((inv) => ({
+              id: inv.id,
+              invoiceNumber: inv.invoiceNumber,
+              customerName: inv.customerName,
+            })),
+          );
+        })
+        .catch(() => setInvoices([]));
     }
   }, [excludeType]);
 
@@ -131,12 +147,15 @@ export function WorkshopDocumentLinks({
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (poSearchRef.current && !poSearchRef.current.contains(event.target as Node)) {
+      if (
+        poSearchRef.current &&
+        !poSearchRef.current.contains(event.target as Node)
+      ) {
         setPoOpen(false);
       }
     }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   useEffect(() => {
@@ -148,7 +167,8 @@ export function WorkshopDocumentLinks({
     setPoResults(
       purchaseOrders
         .filter((po) => {
-          const hay = `${po.orderNumber} ${po.supplierName || ''}`.toLowerCase();
+          const hay =
+            `${po.orderNumber} ${po.supplierName || ""}`.toLowerCase();
           return hay.includes(q);
         })
         .slice(0, 20),
@@ -161,14 +181,14 @@ export function WorkshopDocumentLinks({
 
   const handleSelectPo = (po: PurchaseOrderOption) => {
     setSelectedPo(po);
-    setPoQuery('');
+    setPoQuery("");
     setPoOpen(false);
     update({ purchaseOrderId: po.id });
   };
 
   const handleClearPo = () => {
     setSelectedPo(null);
-    setPoQuery('');
+    setPoQuery("");
     update({ purchaseOrderId: undefined });
   };
 
@@ -179,7 +199,10 @@ export function WorkshopDocumentLinks({
         orderNumber: order.orderNumber,
         supplierName: order.supplierName,
       };
-      setPurchaseOrders((prev) => [option, ...prev.filter((p) => p.id !== option.id)]);
+      setPurchaseOrders((prev) => [
+        option,
+        ...prev.filter((p) => p.id !== option.id),
+      ]);
       setSelectedPo(option);
       update({ purchaseOrderId: option.id });
     } else {
@@ -188,28 +211,42 @@ export function WorkshopDocumentLinks({
     setShowCreatePo(false);
   };
 
-  const showPurchaseOrder = excludeType !== 'purchase_order';
-  const showJobCard = excludeType !== 'job_card';
+  const showPurchaseOrder = excludeType !== "purchase_order";
+  const showJobCard = excludeType !== "job_card";
   const showInvoice =
-    excludeType !== 'invoice' && excludeType !== 'job_card' && excludeType !== 'purchase_order';
+    excludeType !== "invoice" &&
+    excludeType !== "job_card" &&
+    excludeType !== "purchase_order";
 
   const inputCls = dense
-    ? 'h-8 rounded-md border-input bg-background pl-9 pr-10 text-sm shadow-none'
-    : 'pl-10 pr-10';
-  const triggerCls = dense ? 'h-8 text-sm shadow-none' : undefined;
+    ? "h-8 rounded-md border-input bg-background pl-9 pr-10 text-sm shadow-none"
+    : "pl-10 pr-10";
+  const triggerCls = dense ? "h-8 text-sm shadow-none" : undefined;
 
   return (
     <div
       className={
         dense
-          ? 'space-y-2 rounded-lg border border-border bg-card px-3 py-2'
-          : 'space-y-3 rounded-lg border p-4'
+          ? "space-y-2 rounded-lg border border-border bg-card px-3 py-2"
+          : "space-y-3 rounded-lg border p-4"
       }
     >
-      <p className={dense ? 'text-sm font-semibold' : 'text-sm font-medium'}>Linked documents</p>
-      <div className={dense ? 'grid grid-cols-1 gap-2 md:grid-cols-2' : 'grid grid-cols-1 md:grid-cols-2 gap-4'}>
+      <p className={dense ? "text-sm font-semibold" : "text-sm font-medium"}>
+        Linked documents
+      </p>
+      <div
+        className={
+          dense
+            ? "grid grid-cols-1 gap-2 md:grid-cols-2"
+            : "grid grid-cols-1 md:grid-cols-2 gap-4"
+        }
+      >
         {showPurchaseOrder && (
-          <div className={dense ? 'space-y-1.5 md:col-span-2' : 'space-y-2 md:col-span-2'}>
+          <div
+            className={
+              dense ? "space-y-1.5 md:col-span-2" : "space-y-2 md:col-span-2"
+            }
+          >
             <div className="flex items-end gap-2">
               <div className="relative flex-1" ref={poSearchRef}>
                 {!dense && <Label>Purchase order</Label>}
@@ -228,7 +265,9 @@ export function WorkshopDocumentLinks({
                       setPoOpen(true);
                     }}
                     onFocus={() => setPoOpen(true)}
-                    placeholder={selectedPo ? '' : 'Search by order number or supplier...'}
+                    placeholder={
+                      selectedPo ? "" : "Search by order number or supplier..."
+                    }
                     className={inputCls}
                     disabled={!!selectedPo}
                   />
@@ -258,9 +297,13 @@ export function WorkshopDocumentLinks({
                             <div className="flex items-center gap-3">
                               <FileText className="h-4 w-4 shrink-0 text-gray-500" />
                               <div className="min-w-0">
-                                <div className="truncate font-medium text-gray-900">{po.orderNumber}</div>
+                                <div className="truncate font-medium text-gray-900">
+                                  {po.orderNumber}
+                                </div>
                                 {po.supplierName && (
-                                  <div className="truncate text-sm text-gray-500">{po.supplierName}</div>
+                                  <div className="truncate text-sm text-gray-500">
+                                    {po.supplierName}
+                                  </div>
                                 )}
                               </div>
                             </div>
@@ -282,8 +325,8 @@ export function WorkshopDocumentLinks({
               <Button
                 type="button"
                 variant="outline"
-                size={dense ? 'sm' : 'default'}
-                className={dense ? 'h-8 shrink-0' : 'shrink-0'}
+                size={dense ? "sm" : "default"}
+                className={dense ? "h-8 shrink-0" : "shrink-0"}
                 onClick={() => setShowCreatePo(true)}
               >
                 <Plus className="mr-1 h-4 w-4" />
@@ -294,9 +337,13 @@ export function WorkshopDocumentLinks({
               <div className="flex items-center gap-2 rounded-lg border bg-gray-50 p-2">
                 <FileText className="h-4 w-4 text-gray-500" />
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-medium">{selectedPo.orderNumber}</div>
+                  <div className="truncate text-sm font-medium">
+                    {selectedPo.orderNumber}
+                  </div>
                   {selectedPo.supplierName && (
-                    <div className="truncate text-xs text-gray-500">{selectedPo.supplierName}</div>
+                    <div className="truncate text-xs text-gray-500">
+                      {selectedPo.supplierName}
+                    </div>
                   )}
                 </div>
                 <Badge variant="outline">PO</Badge>
@@ -306,15 +353,19 @@ export function WorkshopDocumentLinks({
         )}
 
         {showJobCard && (
-          <div className={dense ? 'space-y-1' : 'space-y-2'}>
+          <div className={dense ? "space-y-1" : "space-y-2"}>
             {dense ? (
-              <span className="mb-1 block text-xs font-medium text-muted-foreground">Job card</span>
+              <span className="mb-1 block text-xs font-medium text-muted-foreground">
+                Job card
+              </span>
             ) : (
               <Label>Job card</Label>
             )}
             <Select
-              value={value.jobCardId || 'none'}
-              onValueChange={(v) => update({ jobCardId: v === 'none' ? undefined : v })}
+              value={value.jobCardId || "none"}
+              onValueChange={(v) =>
+                update({ jobCardId: v === "none" ? undefined : v })
+              }
             >
               <SelectTrigger className={triggerCls}>
                 <SelectValue placeholder="Select job card" />
@@ -332,15 +383,19 @@ export function WorkshopDocumentLinks({
         )}
 
         {showInvoice && (
-          <div className={dense ? 'space-y-1' : 'space-y-2'}>
+          <div className={dense ? "space-y-1" : "space-y-2"}>
             {dense ? (
-              <span className="mb-1 block text-xs font-medium text-muted-foreground">Invoice</span>
+              <span className="mb-1 block text-xs font-medium text-muted-foreground">
+                Invoice
+              </span>
             ) : (
               <Label>Invoice</Label>
             )}
             <Select
-              value={value.invoiceId || 'none'}
-              onValueChange={(v) => update({ invoiceId: v === 'none' ? undefined : v })}
+              value={value.invoiceId || "none"}
+              onValueChange={(v) =>
+                update({ invoiceId: v === "none" ? undefined : v })
+              }
             >
               <SelectTrigger className={triggerCls}>
                 <SelectValue placeholder="Select invoice" />
@@ -369,7 +424,7 @@ export function WorkshopDocumentLinks({
           showAddSupplierButton={true}
           useToastNotifications={true}
           initialData={purchaseOrderInitialData}
-          hideJobCardLink={excludeType === 'job_card'}
+          hideJobCardLink={excludeType === "job_card"}
         />
       )}
     </div>

@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
-import { DashboardLayout } from '@/src/components/layout';
-import { Button } from '@/src/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
-import Link from 'next/link';
-import healthcareService from '@/src/services/HealthcareService';
-import type { PatientHistoryResponse } from '@/src/models/healthcare';
-import { PatientHistorySections } from '@/src/components/healthcare/PatientHistorySections';
-import { toast } from 'sonner';
+import React, { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import { DashboardLayout } from "@/src/components/layout";
+import { Button } from "@/src/components/ui/button";
+import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
+import healthcareService from "@/src/services/HealthcareService";
+import type { PatientHistoryResponse } from "@/src/models/healthcare";
+import { PatientHistorySections } from "@/src/components/healthcare/PatientHistorySections";
+import { toast } from "sonner";
 
 export default function PatientHistoryPage() {
   const params = useParams();
@@ -27,7 +27,9 @@ export default function PatientHistoryPage() {
         if (!cancelled) setData(res);
       } catch (e) {
         if (!cancelled) {
-          toast.error(e instanceof Error ? e.message : 'Failed to load patient history');
+          toast.error(
+            e instanceof Error ? e.message : "Failed to load patient history",
+          );
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -40,15 +42,16 @@ export default function PatientHistoryPage() {
 
   const handleDownloadPrescription = async (prescriptionId: string) => {
     try {
-      const blob = await healthcareService.getPrescriptionDownload(prescriptionId);
+      const blob =
+        await healthcareService.getPrescriptionDownload(prescriptionId);
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `prescription-${prescriptionId}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Failed to download');
+      toast.error(e instanceof Error ? e.message : "Failed to download");
     }
   };
 
@@ -70,13 +73,18 @@ export default function PatientHistoryPage() {
       <div className="container mx-auto px-6 py-8">
         <div className="mb-6 flex items-center gap-4">
           <Button variant="ghost" size="sm" asChild>
-            <Link href="/healthcare/patients" className="flex items-center gap-2">
+            <Link
+              href="/healthcare/patients"
+              className="flex items-center gap-2"
+            >
               <ArrowLeft className="w-4 h-4" />
               Back to Patients
             </Link>
           </Button>
           <Button variant="outline" size="sm" asChild>
-            <Link href={`/healthcare/patient-history?patient=${id}`}>Open in Patient history</Link>
+            <Link href={`/healthcare/patient-history?patient=${id}`}>
+              Open in Patient history
+            </Link>
           </Button>
         </div>
 

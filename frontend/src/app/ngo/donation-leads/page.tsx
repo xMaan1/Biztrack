@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
+import { redirect } from "next/navigation";
 
 export default function DonationLeadsRedirectPage() {
-  redirect('/ngo/donor-leads');
+  redirect("/ngo/donor-leads");
 }

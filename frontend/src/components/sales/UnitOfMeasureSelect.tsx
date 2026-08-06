@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { Input } from '../ui/input';
+import React, { useEffect, useState } from "react";
+import { Input } from "../ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../ui/select';
+} from "../ui/select";
 import {
   CUSTOM_UNIT_VALUE,
   isPresetUnit,
   PRESET_UNITS,
-} from '../../constants/unitOfMeasureOptions';
+} from "../../constants/unitOfMeasureOptions";
 
 interface UnitOfMeasureSelectProps {
   value: string;
@@ -25,27 +25,27 @@ interface UnitOfMeasureSelectProps {
 export function UnitOfMeasureSelect({
   value,
   onChange,
-  className = 'h-8 rounded-md border-input bg-background text-sm shadow-none',
+  className = "h-8 rounded-md border-input bg-background text-sm shadow-none",
   disabled = false,
 }: UnitOfMeasureSelectProps) {
-  const [mode, setMode] = useState<'preset' | 'custom'>(() =>
-    value && !isPresetUnit(value) ? 'custom' : 'preset',
+  const [mode, setMode] = useState<"preset" | "custom">(() =>
+    value && !isPresetUnit(value) ? "custom" : "preset",
   );
   const [customValue, setCustomValue] = useState(() =>
-    value && !isPresetUnit(value) ? value : '',
+    value && !isPresetUnit(value) ? value : "",
   );
 
   useEffect(() => {
     if (value && !isPresetUnit(value)) {
-      setMode('custom');
+      setMode("custom");
       setCustomValue(value);
     } else if (value && isPresetUnit(value)) {
-      setMode('preset');
+      setMode("preset");
     }
   }, [value]);
 
   const selectValue =
-    mode === 'custom' || (value && !isPresetUnit(value))
+    mode === "custom" || (value && !isPresetUnit(value))
       ? CUSTOM_UNIT_VALUE
       : value || PRESET_UNITS[0].value;
 
@@ -56,14 +56,14 @@ export function UnitOfMeasureSelect({
         disabled={disabled}
         onValueChange={(next) => {
           if (next === CUSTOM_UNIT_VALUE) {
-            setMode('custom');
+            setMode("custom");
             if (customValue.trim()) {
               onChange(customValue.trim());
             }
             return;
           }
-          setMode('preset');
-          setCustomValue('');
+          setMode("preset");
+          setCustomValue("");
           onChange(next);
         }}
       >
@@ -79,7 +79,7 @@ export function UnitOfMeasureSelect({
           <SelectItem value={CUSTOM_UNIT_VALUE}>Custom...</SelectItem>
         </SelectContent>
       </Select>
-      {(mode === 'custom' || selectValue === CUSTOM_UNIT_VALUE) && (
+      {(mode === "custom" || selectValue === CUSTOM_UNIT_VALUE) && (
         <Input
           value={customValue}
           disabled={disabled}

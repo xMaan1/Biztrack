@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
-import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
-import { Camera, Keyboard, Loader2 } from 'lucide-react';
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
-import { Label } from '@/src/components/ui/label';
-import type { ProductEntryMode } from './productCodeUtils';
+import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
+import { Camera, Keyboard, Loader2 } from "lucide-react";
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
+import { Label } from "@/src/components/ui/label";
+import type { ProductEntryMode } from "./productCodeUtils";
 
 type ProductCodeScannerProps = {
-  mode: Exclude<ProductEntryMode, 'manual'>;
+  mode: Exclude<ProductEntryMode, "manual">;
   scanning: boolean;
   onScan: (code: string) => void;
 };
@@ -28,14 +28,18 @@ const BARCODE_FORMATS = [
   Html5QrcodeSupportedFormats.CODABAR,
 ];
 
-export function ProductCodeScanner({ mode, scanning, onScan }: ProductCodeScannerProps) {
+export function ProductCodeScanner({
+  mode,
+  scanning,
+  onScan,
+}: ProductCodeScannerProps) {
   const reactId = useId();
-  const containerId = `product-code-scanner-${reactId.replace(/:/g, '')}`;
+  const containerId = `product-code-scanner-${reactId.replace(/:/g, "")}`;
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const handledRef = useRef(false);
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
-  const [manualCode, setManualCode] = useState('');
+  const [manualCode, setManualCode] = useState("");
 
   const stopCamera = useCallback(async () => {
     const scanner = scannerRef.current;
@@ -73,13 +77,13 @@ export function ProductCodeScanner({ mode, scanning, onScan }: ProductCodeScanne
 
     const scanner = new Html5Qrcode(containerId, {
       verbose: false,
-      formatsToSupport: mode === 'qr' ? QR_FORMATS : BARCODE_FORMATS,
+      formatsToSupport: mode === "qr" ? QR_FORMATS : BARCODE_FORMATS,
     });
     scannerRef.current = scanner;
 
     try {
       await scanner.start(
-        { facingMode: 'environment' },
+        { facingMode: "environment" },
         {
           fps: 10,
           qrbox: { width: 260, height: 160 },
@@ -90,14 +94,16 @@ export function ProductCodeScanner({ mode, scanning, onScan }: ProductCodeScanne
       );
       setCameraActive(true);
     } catch {
-      setCameraError('Camera access failed. Enter the code manually or allow camera permission.');
+      setCameraError(
+        "Camera access failed. Enter the code manually or allow camera permission.",
+      );
       setCameraActive(false);
     }
   }, [containerId, handleDetected, mode, stopCamera]);
 
   useEffect(() => {
     handledRef.current = false;
-    setManualCode('');
+    setManualCode("");
     void startCamera();
     return () => {
       void stopCamera();
@@ -114,7 +120,7 @@ export function ProductCodeScanner({ mode, scanning, onScan }: ProductCodeScanne
     const code = manualCode.trim();
     if (!code || scanning) return;
     onScan(code);
-    setManualCode('');
+    setManualCode("");
   };
 
   return (
@@ -122,13 +128,20 @@ export function ProductCodeScanner({ mode, scanning, onScan }: ProductCodeScanne
       <div className="flex items-center justify-between gap-2">
         <div>
           <p className="text-sm font-medium">
-            {mode === 'qr' ? 'Scan QR Code' : 'Scan Barcode'}
+            {mode === "qr" ? "Scan QR Code" : "Scan Barcode"}
           </p>
           <p className="text-xs text-muted-foreground">
-            Point your camera at the {mode === 'qr' ? 'QR code' : 'barcode'} or enter the code below.
+            Point your camera at the {mode === "qr" ? "QR code" : "barcode"} or
+            enter the code below.
           </p>
         </div>
-        <Button type="button" variant="outline" size="sm" onClick={() => void startCamera()} disabled={scanning}>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => void startCamera()}
+          disabled={scanning}
+        >
           <Camera className="mr-2 h-4 w-4" />
           Restart Camera
         </Button>
@@ -146,7 +159,7 @@ export function ProductCodeScanner({ mode, scanning, onScan }: ProductCodeScanne
         )}
         {!cameraActive && !scanning && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/70 px-6 text-center text-sm text-white">
-            {cameraError || 'Starting camera...'}
+            {cameraError || "Starting camera..."}
           </div>
         )}
       </div>
@@ -158,16 +171,24 @@ export function ProductCodeScanner({ mode, scanning, onScan }: ProductCodeScanne
             id={`${containerId}-manual`}
             value={manualCode}
             onChange={(e) => setManualCode(e.target.value)}
-            placeholder={mode === 'qr' ? 'Paste QR code value...' : 'Enter barcode number...'}
+            placeholder={
+              mode === "qr"
+                ? "Paste QR code value..."
+                : "Enter barcode number..."
+            }
             disabled={scanning}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') {
+              if (e.key === "Enter") {
                 e.preventDefault();
                 submitManualCode();
               }
             }}
           />
-          <Button type="button" onClick={submitManualCode} disabled={scanning || !manualCode.trim()}>
+          <Button
+            type="button"
+            onClick={submitManualCode}
+            disabled={scanning || !manualCode.trim()}
+          >
             <Keyboard className="mr-2 h-4 w-4" />
             Use Code
           </Button>

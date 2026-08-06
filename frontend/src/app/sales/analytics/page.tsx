@@ -1,29 +1,34 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from '../../../components/ui/card';
-import { Button } from '../../../components/ui/button';
+} from "../../../components/ui/card";
+import { Button } from "../../../components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../../components/ui/select';
-import { Label } from '../../../components/ui/label';
-import { Badge } from '../../../components/ui/badge';
-import { useCurrency } from '@/src/contexts/CurrencyContext';
-import CRMService from '../../../services/CRMService';
-import { Opportunity, OpportunityStage } from '../../../models/crm';
-import { Contact, ContactType } from '../../../models/crm';
-import { Company, Industry } from '../../../models/crm';
-import { DashboardLayout } from '../../../components/layout';
-import { toast } from 'sonner';
+} from "../../../components/ui/select";
+import { Label } from "../../../components/ui/label";
+import { Badge } from "../../../components/ui/badge";
+import { useCurrency } from "@/src/contexts/CurrencyContext";
+import CRMService from "../../../services/CRMService";
+import {
+  Company,
+  Contact,
+  ContactType,
+  Industry,
+  Opportunity,
+  OpportunityStage,
+} from "../../../models/crm";
+import { DashboardLayout } from "../../../components/layout";
+import { toast } from "sonner";
 import {
   TrendingUp,
   Users,
@@ -33,7 +38,7 @@ import {
   PieChart,
   Activity,
   Plus,
-} from 'lucide-react';
+} from "lucide-react";
 
 export default function SalesAnalyticsPage() {
   const { getCurrencySymbol } = useCurrency();
@@ -41,8 +46,8 @@ export default function SalesAnalyticsPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
-  const [timeRange, setTimeRange] = useState('30');
-  const [selectedStage, setSelectedStage] = useState<string>('all');
+  const [timeRange, setTimeRange] = useState("30");
+  const [selectedStage, setSelectedStage] = useState<string>("all");
 
   useEffect(() => {
     loadData();
@@ -62,9 +67,12 @@ export default function SalesAnalyticsPage() {
       setContacts(contactsResponse.contacts || []);
       setCompanies(companiesResponse.companies || []);
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to load analytics data';
+      const errorMessage =
+        error?.response?.data?.detail ||
+        error?.message ||
+        "Failed to load analytics data";
       toast.error(`Load Error: ${errorMessage}`);
-      } finally {
+    } finally {
       setLoading(false);
     }
   };
@@ -221,7 +229,7 @@ export default function SalesAnalyticsPage() {
                   <SelectItem value="all">All stages</SelectItem>
                   {Object.values(OpportunityStage).map((stage) => (
                     <SelectItem key={stage as string} value={stage as string}>
-                      {(stage as string).replace('_', ' ')}
+                      {(stage as string).replace("_", " ")}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -241,7 +249,8 @@ export default function SalesAnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {getCurrencySymbol()}{totalPipelineValue.toLocaleString()}
+                {getCurrencySymbol()}
+                {totalPipelineValue.toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground">
                 {filteredOpps.length} opportunities
@@ -258,7 +267,8 @@ export default function SalesAnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {getCurrencySymbol()}{weightedPipelineValue.toLocaleString()}
+                {getCurrencySymbol()}
+                {weightedPipelineValue.toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground">
                 Probability-adjusted
@@ -288,7 +298,8 @@ export default function SalesAnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {getCurrencySymbol()}{totalRevenue.toLocaleString()}
+                {getCurrencySymbol()}
+                {totalRevenue.toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground">Closed won deals</p>
             </CardContent>
@@ -313,13 +324,14 @@ export default function SalesAnalyticsPage() {
                   >
                     <div className="flex items-center gap-2">
                       <Badge variant="outline">
-                        {(stage as string).replace('_', ' ')}
+                        {(stage as string).replace("_", " ")}
                       </Badge>
                       <span className="text-sm text-gray-600">({count})</span>
                     </div>
                     <div className="text-right">
                       <div className="font-semibold">
-                        {getCurrencySymbol()}{totalValue.toLocaleString()}
+                        {getCurrencySymbol()}
+                        {totalValue.toLocaleString()}
                       </div>
                       <div className="text-xs text-gray-500">
                         {totalPipelineValue > 0
@@ -405,7 +417,8 @@ export default function SalesAnalyticsPage() {
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Avg Deal Size</span>
                 <span className="font-semibold">
-                  {getCurrencySymbol()}{avgDealSize.toLocaleString()}
+                  {getCurrencySymbol()}
+                  {avgDealSize.toLocaleString()}
                 </span>
               </div>
               <div className="flex justify-between">
@@ -493,19 +506,20 @@ export default function SalesAnalyticsPage() {
                       <div>
                         <div className="font-medium">{opp.title}</div>
                         <div className="text-sm text-gray-500">
-                          {opp.stage.replace('_', ' ')} • {opp.probability || 0}
+                          {opp.stage.replace("_", " ")} • {opp.probability || 0}
                           % probability
                         </div>
                       </div>
                     </div>
                     <div className="text-right">
                       <div className="font-semibold text-lg">
-                        {getCurrencySymbol()}{opp.amount?.toLocaleString()}
+                        {getCurrencySymbol()}
+                        {opp.amount?.toLocaleString()}
                       </div>
                       <div className="text-sm text-gray-500">
                         {opp.closedDate
                           ? new Date(opp.closedDate).toLocaleDateString()
-                          : 'No close date'}
+                          : "No close date"}
                       </div>
                     </div>
                   </div>
@@ -524,28 +538,28 @@ export default function SalesAnalyticsPage() {
             <div className="flex gap-4">
               <Button
                 variant="outline"
-                onClick={() => (window.location.href = '/crm/opportunities')}
+                onClick={() => (window.location.href = "/crm/opportunities")}
               >
                 <Plus className="w-4 h-4 mr-2" />
                 New Opportunity
               </Button>
               <Button
                 variant="outline"
-                onClick={() => (window.location.href = '/crm/contacts')}
+                onClick={() => (window.location.href = "/crm/contacts")}
               >
                 <Users className="w-4 h-4 mr-2" />
                 Add Contact
               </Button>
               <Button
                 variant="outline"
-                onClick={() => (window.location.href = '/crm/companies')}
+                onClick={() => (window.location.href = "/crm/companies")}
               >
                 <Building className="w-4 h-4 mr-2" />
                 Add Company
               </Button>
               <Button
                 variant="outline"
-                onClick={() => (window.location.href = '/crm/leads')}
+                onClick={() => (window.location.href = "/crm/leads")}
               >
                 <Target className="w-4 h-4 mr-2" />
                 Manage Leads

@@ -1,36 +1,37 @@
-'use client';
+"use client";
 
-import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { Label } from '@/src/components/ui/label';
-import { Button } from '@/src/components/ui/button';
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Label } from "@/src/components/ui/label";
+import { Button } from "@/src/components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
-import { ArrowLeft, Calendar, Info } from 'lucide-react';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
-import { cn } from '@/src/lib/utils';
-import motBookingService from '@/src/services/MotBookingService';
-import type { MotBooking } from '@/src/models/mot/MotBooking';
-import type { MotMeridiem, MotWizardDateTime } from '../wizardTypes';
+} from "@/src/components/ui/select";
+import { ArrowLeft, Calendar, Info } from "lucide-react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { cn } from "@/src/lib/utils";
+import motBookingService from "@/src/services/MotBookingService";
+import type { MotBooking } from "@/src/models/mot/MotBooking";
 import {
   MOT_DELIVERY_OPTIONS,
   bookingTimeToParts,
   getHour12OptionsForMeridiem,
   partsToBookingTime,
-} from '../wizardTypes';
+  type MotMeridiem,
+  type MotWizardDateTime,
+} from "../wizardTypes";
 import {
   formatLocalDate,
   getBookedSlotsByDate,
   getBookedTimesForDate,
   getCalendarDateRange,
   parseLocalDate,
-} from '../motCalendarUtils';
+} from "../motCalendarUtils";
 
 type Step3DateTimeProps = {
   tenantDomain: string;
@@ -50,13 +51,15 @@ export function Step3DateTime({
   canNext,
 }: Step3DateTimeProps) {
   const searchParams = useSearchParams();
-  const amendBookingId = searchParams.get('amend');
+  const amendBookingId = searchParams.get("amend");
 
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [bookedSlotsByDate, setBookedSlotsByDate] = useState<Map<string, Set<string>>>(new Map());
+  const [bookedSlotsByDate, setBookedSlotsByDate] = useState<
+    Map<string, Set<string>>
+  >(new Map());
   const [loadingAvailability, setLoadingAvailability] = useState(true);
   const [meridiem, setMeridiem] = useState<MotMeridiem>(
-    () => bookingTimeToParts(dateTime.bookingTime)?.meridiem || 'AM',
+    () => bookingTimeToParts(dateTime.bookingTime)?.meridiem || "AM",
   );
 
   const bookedTimesForSelectedDate = useMemo(
@@ -67,7 +70,9 @@ export function Step3DateTime({
     [bookedSlotsByDate, dateTime.bookingDate],
   );
 
-  const selectedDate = dateTime.bookingDate ? parseLocalDate(dateTime.bookingDate) : null;
+  const selectedDate = dateTime.bookingDate
+    ? parseLocalDate(dateTime.bookingDate)
+    : null;
   const minDate = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -81,10 +86,17 @@ export function Step3DateTime({
       setLoadingAvailability(true);
       try {
         const { dateFrom, dateTo } = getCalendarDateRange();
-        const response = await motBookingService.getPublicCalendar(tenantDomain, dateFrom, dateTo);
+        const response = await motBookingService.getPublicCalendar(
+          tenantDomain,
+          dateFrom,
+          dateTo,
+        );
         if (cancelled) return;
         setBookedSlotsByDate(
-          getBookedSlotsByDate((response.bookings || []) as MotBooking[], amendBookingId),
+          getBookedSlotsByDate(
+            (response.bookings || []) as MotBooking[],
+            amendBookingId,
+          ),
         );
       } catch {
         if (!cancelled) setBookedSlotsByDate(new Map());
@@ -102,8 +114,13 @@ export function Step3DateTime({
   useEffect(() => {
     if (!dateTime.bookingDate || !dateTime.bookingTime) return;
     if (!bookedTimesForSelectedDate.has(dateTime.bookingTime)) return;
-    onChange({ bookingTime: '' });
-  }, [bookedTimesForSelectedDate, dateTime.bookingDate, dateTime.bookingTime, onChange]);
+    onChange({ bookingTime: "" });
+  }, [
+    bookedTimesForSelectedDate,
+    dateTime.bookingDate,
+    dateTime.bookingTime,
+    onChange,
+  ]);
 
   useEffect(() => {
     const parts = bookingTimeToParts(dateTime.bookingTime);
@@ -112,17 +129,17 @@ export function Step3DateTime({
 
   const handleDateChange = (date: Date | null) => {
     if (!date) {
-      onChange({ bookingDate: '', bookingTime: '' });
+      onChange({ bookingDate: "", bookingTime: "" });
       return;
     }
-    onChange({ bookingDate: formatLocalDate(date), bookingTime: '' });
+    onChange({ bookingDate: formatLocalDate(date), bookingTime: "" });
     setCalendarOpen(false);
   };
 
   const openCalendar = () => setCalendarOpen(true);
 
   const timeParts = bookingTimeToParts(dateTime.bookingTime);
-  const selectedHour12 = timeParts?.hour12 || '';
+  const selectedHour12 = timeParts?.hour12 || "";
   const hour12Options = getHour12OptionsForMeridiem(meridiem);
 
   const handleHourChange = (hour12: string) => {
@@ -132,30 +149,36 @@ export function Step3DateTime({
   const handleMeridiemChange = (nextMeridiem: MotMeridiem) => {
     setMeridiem(nextMeridiem);
     if (!selectedHour12) {
-      onChange({ bookingTime: '' });
+      onChange({ bookingTime: "" });
       return;
     }
     const hoursForMeridiem = getHour12OptionsForMeridiem(nextMeridiem);
     const nextHour = hoursForMeridiem.includes(selectedHour12)
       ? selectedHour12
-      : hoursForMeridiem[0] || '';
+      : hoursForMeridiem[0] || "";
     onChange({
-      bookingTime: nextHour ? partsToBookingTime(nextHour, nextMeridiem) : '',
+      bookingTime: nextHour ? partsToBookingTime(nextHour, nextMeridiem) : "",
     });
   };
 
   return (
     <div className="space-y-8">
       <div>
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Step 03</p>
-        <h2 className="mt-2 text-3xl font-bold tracking-tight">Select a Date & Time</h2>
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">
+          Step 03
+        </p>
+        <h2 className="mt-2 text-3xl font-bold tracking-tight">
+          Select a Date & Time
+        </h2>
         <p className="mt-2 text-sm text-muted-foreground">
           All fields are mandatory unless otherwise stated.
         </p>
       </div>
 
       <div className="space-y-4">
-        <h3 className="text-sm font-bold uppercase tracking-wide">Choose Delivery and Collection Options</h3>
+        <h3 className="text-sm font-bold uppercase tracking-wide">
+          Choose Delivery and Collection Options
+        </h3>
         <div className="space-y-3">
           {MOT_DELIVERY_OPTIONS.map((option) => {
             const selected = dateTime.deliveryOption === option.value;
@@ -163,10 +186,10 @@ export function Step3DateTime({
               <label
                 key={option.value}
                 className={cn(
-                  'flex cursor-pointer items-start gap-4 rounded-2xl border-2 p-4 transition-all',
+                  "flex cursor-pointer items-start gap-4 rounded-2xl border-2 p-4 transition-all",
                   selected
-                    ? 'border-primary bg-gradient-to-r from-blue-50/80 to-purple-50/80 dark:from-blue-950/30 dark:to-purple-950/30'
-                    : 'border-border hover:border-primary/30',
+                    ? "border-primary bg-gradient-to-r from-blue-50/80 to-purple-50/80 dark:from-blue-950/30 dark:to-purple-950/30"
+                    : "border-border hover:border-primary/30",
                 )}
               >
                 <input
@@ -177,7 +200,9 @@ export function Step3DateTime({
                   onChange={() => onChange({ deliveryOption: option.value })}
                   className="mt-1 h-4 w-4 accent-primary"
                 />
-                <span className="flex-1 text-sm leading-relaxed">{option.label}</span>
+                <span className="flex-1 text-sm leading-relaxed">
+                  {option.label}
+                </span>
                 <Info className="h-4 w-4 shrink-0 text-muted-foreground" />
               </label>
             );
@@ -197,7 +222,9 @@ export function Step3DateTime({
               onClickOutside={() => setCalendarOpen(false)}
               minDate={minDate}
               dateFormat="dd/MM/yyyy"
-              placeholderText={loadingAvailability ? 'Loading dates...' : 'Select a Date'}
+              placeholderText={
+                loadingAvailability ? "Loading dates..." : "Select a Date"
+              }
               disabled={loadingAvailability}
               className="w-full bg-transparent pr-2 text-sm outline-none"
               wrapperClassName="w-full"
@@ -214,7 +241,8 @@ export function Step3DateTime({
             </button>
           </div>
           <p className="text-xs text-muted-foreground">
-            Pick any available date. Taken time slots are shown after you select a date.
+            Pick any available date. Taken time slots are shown after you select
+            a date.
           </p>
         </div>
 
@@ -229,7 +257,7 @@ export function Step3DateTime({
               <SelectTrigger className="h-12 rounded-xl border-2">
                 <SelectValue
                   placeholder={
-                    !dateTime.bookingDate ? 'Select a date first' : 'Time'
+                    !dateTime.bookingDate ? "Select a date first" : "Time"
                   }
                 />
               </SelectTrigger>
@@ -248,7 +276,9 @@ export function Step3DateTime({
 
             <Select
               value={meridiem}
-              onValueChange={(value) => handleMeridiemChange(value as MotMeridiem)}
+              onValueChange={(value) =>
+                handleMeridiemChange(value as MotMeridiem)
+              }
               disabled={!dateTime.bookingDate || loadingAvailability}
             >
               <SelectTrigger className="h-12 rounded-xl border-2">
@@ -264,7 +294,11 @@ export function Step3DateTime({
       </div>
 
       <div className="flex flex-wrap gap-3">
-        <Button variant="outline" onClick={onBack} className="h-12 rounded-xl gap-2">
+        <Button
+          variant="outline"
+          onClick={onBack}
+          className="h-12 rounded-xl gap-2"
+        >
           <ArrowLeft className="h-4 w-4" />
           Back
         </Button>

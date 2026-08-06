@@ -1,25 +1,25 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import { toast } from 'sonner';
-import ngoService from '@/src/services/NgoService';
-import type { Donor, DonorCreate } from '@/src/models/ngo';
-import { extractErrorMessage } from '@/src/utils/errorUtils';
+import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
+import ngoService from "@/src/services/NgoService";
+import type { Donor, DonorCreate } from "@/src/models/ngo";
+import { extractErrorMessage } from "@/src/utils/errorUtils";
 import {
   DONORS_PAGE_LIMIT,
   buildDonorPayload,
   donorToFormData,
   emptyDonorForm,
-} from '@/src/utils/ngo/donorUtils';
+} from "@/src/utils/ngo/donorUtils";
 
 export function useNgoDonors() {
   const limit = DONORS_PAGE_LIMIT;
   const [donors, setDonors] = useState<Donor[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [appliedSearch, setAppliedSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
+  const [search, setSearch] = useState("");
+  const [appliedSearch, setAppliedSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
   const [page, setPage] = useState(1);
   const [formOpen, setFormOpen] = useState(false);
   const [viewOpen, setViewOpen] = useState(false);
@@ -40,7 +40,7 @@ export function useNgoDonors() {
       setDonors(res.donors);
       setTotal(res.total);
     } catch (e) {
-      toast.error(extractErrorMessage(e, 'Failed to load donors'));
+      toast.error(extractErrorMessage(e, "Failed to load donors"));
     } finally {
       setLoading(false);
     }
@@ -56,9 +56,9 @@ export function useNgoDonors() {
   };
 
   const resetFilters = () => {
-    setSearch('');
-    setAppliedSearch('');
-    setTypeFilter('');
+    setSearch("");
+    setAppliedSearch("");
+    setTypeFilter("");
     setPage(1);
   };
 
@@ -85,22 +85,22 @@ export function useNgoDonors() {
   const handleSubmit = async () => {
     const payload = buildDonorPayload(formData);
     if (!payload) {
-      toast.error('Full name and email are required');
+      toast.error("Full name and email are required");
       return;
     }
     try {
       setSubmitLoading(true);
       if (editing) {
         await ngoService.updateDonor(editing.id, payload);
-        toast.success('Donor updated');
+        toast.success("Donor updated");
       } else {
         await ngoService.createDonor(payload);
-        toast.success('Donor created');
+        toast.success("Donor created");
       }
       setFormOpen(false);
       await loadDonors();
     } catch (e) {
-      toast.error(extractErrorMessage(e, 'Failed to save donor'));
+      toast.error(extractErrorMessage(e, "Failed to save donor"));
     } finally {
       setSubmitLoading(false);
     }
@@ -109,10 +109,10 @@ export function useNgoDonors() {
   const handleDelete = async (donor: Donor) => {
     try {
       await ngoService.deleteDonor(donor.id);
-      toast.success('Donor deleted');
+      toast.success("Donor deleted");
       await loadDonors();
     } catch (e) {
-      toast.error(extractErrorMessage(e, 'Failed to delete donor'));
+      toast.error(extractErrorMessage(e, "Failed to delete donor"));
       throw e;
     }
   };

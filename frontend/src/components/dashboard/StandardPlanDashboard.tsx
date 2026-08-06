@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { useRouter } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
-import { DashboardLayout } from '../layout';
-import PlanAwareDashboard from './PlanAwareDashboard';
-import type { PlanInfo } from '../../hooks/usePlanInfo';
-import { useDashboard, type DashboardData } from '../../hooks/useDashboard';
+import React from "react";
+import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
+import { DashboardLayout } from "../layout";
+import PlanAwareDashboard from "./PlanAwareDashboard";
+import type { PlanInfo } from "../../hooks/usePlanInfo";
+import { useDashboard, type DashboardData } from "../../hooks/useDashboard";
 
-import type { AgencyStats } from './AgencyDashboard';
+import type { AgencyStats } from "./AgencyDashboard";
 
 interface DashboardStats extends Partial<AgencyStats> {
   totalProjects: number;
@@ -20,62 +20,80 @@ interface DashboardStats extends Partial<AgencyStats> {
   productionEfficiency?: number;
 }
 
-function getTeamMembersFromDashboard(usersData: DashboardData['users'] | undefined) {
-  const raw = usersData as { users?: AgencyStats['teamMembers']; recent?: AgencyStats['teamMembers'] };
+function getTeamMembersFromDashboard(
+  usersData: DashboardData["users"] | undefined,
+) {
+  const raw = usersData as {
+    users?: AgencyStats["teamMembers"];
+    recent?: AgencyStats["teamMembers"];
+  };
   if (Array.isArray(raw?.users)) return raw.users;
   if (Array.isArray(raw?.recent)) return raw.recent;
   return [];
 }
 
-export default function StandardPlanDashboard({ planInfo }: { planInfo: PlanInfo }) {
+export default function StandardPlanDashboard({
+  planInfo,
+}: {
+  planInfo: PlanInfo;
+}) {
   const router = useRouter();
-  const { data: dashboardData, loading: dashboardLoading, error: dashboardError } = useDashboard();
+  const {
+    data: dashboardData,
+    loading: dashboardLoading,
+    error: dashboardError,
+  } = useDashboard();
 
-  const stats: DashboardStats = dashboardData ? (() => {
-    const teamMembers = getTeamMembersFromDashboard(dashboardData.users);
-    const projectStats = dashboardData.projects.stats as DashboardData['projects']['stats'] & {
-      on_hold?: number;
-    };
-    const averageProgress =
-      dashboardData.projects.recent.length > 0
-        ? Math.round(
-            dashboardData.projects.recent.reduce(
-              (sum, p) => sum + p.completionPercent,
-              0,
-            ) / dashboardData.projects.recent.length,
-          )
-        : 0;
+  const stats: DashboardStats = dashboardData
+    ? (() => {
+        const teamMembers = getTeamMembersFromDashboard(dashboardData.users);
+        const projectStats = dashboardData.projects
+          .stats as DashboardData["projects"]["stats"] & {
+          on_hold?: number;
+        };
+        const averageProgress =
+          dashboardData.projects.recent.length > 0
+            ? Math.round(
+                dashboardData.projects.recent.reduce(
+                  (sum, p) => sum + p.completionPercent,
+                  0,
+                ) / dashboardData.projects.recent.length,
+              )
+            : 0;
 
-    return {
-      totalProjects: projectStats.total,
-      activeProjects: projectStats.active,
-      completedProjects: projectStats.completed,
-      onHoldProjects: projectStats.on_hold ?? 0,
-      totalTeamMembers: dashboardData.users.total,
-      activeTeamMembers: teamMembers.filter((member) => member.isActive !== false).length,
-      averageProgress,
-      recentProjects: dashboardData.projects.recent.map((project) => ({
-        id: project.id,
-        name: project.name,
-        status: project.status,
-        completionPercent: project.completionPercent,
-        dueDate: project.dueDate,
-      })),
-      teamMembers,
-      qualityIssues: 0,
-      productionEfficiency: averageProgress,
-    };
-  })() : {
-    totalProjects: 0,
-    activeProjects: 0,
-    completedProjects: 0,
-    onHoldProjects: 0,
-    totalTeamMembers: 0,
-    activeTeamMembers: 0,
-    averageProgress: 0,
-    recentProjects: [],
-    teamMembers: [],
-  };
+        return {
+          totalProjects: projectStats.total,
+          activeProjects: projectStats.active,
+          completedProjects: projectStats.completed,
+          onHoldProjects: projectStats.on_hold ?? 0,
+          totalTeamMembers: dashboardData.users.total,
+          activeTeamMembers: teamMembers.filter(
+            (member) => member.isActive !== false,
+          ).length,
+          averageProgress,
+          recentProjects: dashboardData.projects.recent.map((project) => ({
+            id: project.id,
+            name: project.name,
+            status: project.status,
+            completionPercent: project.completionPercent,
+            dueDate: project.dueDate,
+          })),
+          teamMembers,
+          qualityIssues: 0,
+          productionEfficiency: averageProgress,
+        };
+      })()
+    : {
+        totalProjects: 0,
+        activeProjects: 0,
+        completedProjects: 0,
+        onHoldProjects: 0,
+        totalTeamMembers: 0,
+        activeTeamMembers: 0,
+        averageProgress: 0,
+        recentProjects: [],
+        teamMembers: [],
+      };
 
   const handleNavigate = (path: string) => {
     router.push(path);

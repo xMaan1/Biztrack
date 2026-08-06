@@ -1,25 +1,18 @@
-'use client';
+"use client";
 
-import { useRouter } from 'next/navigation';
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/src/components/ui/select';
-import type { Product } from '@/src/models/pos';
-import type { InvoiceItemCreate } from '@/src/models/sales';
-import { resolveItemUnit } from '@/src/utils/sales/commerceInvoiceUtils';
-import { UnitOfMeasureSelect } from '../UnitOfMeasureSelect';
-import { COMMERCE_INPUT_CLS } from './constants';
-import { InlineField } from './InlineField';
-import type { CommerceInvoiceTotals } from './types';
+import { useRouter } from "next/navigation";
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
+import type { Product } from "@/src/models/pos";
+import type { InvoiceItemCreate } from "@/src/models/sales";
+import { resolveItemUnit } from "@/src/utils/sales/commerceInvoiceUtils";
+import { UnitOfMeasureSelect } from "../UnitOfMeasureSelect";
+import { COMMERCE_INPUT_CLS } from "./constants";
+import { InlineField } from "./InlineField";
+import type { CommerceInvoiceTotals } from "./types";
 
 type CommerceInvoiceProductEntrySectionProps = {
-  mode: 'create' | 'edit';
+  mode: "create" | "edit";
   loading: boolean;
   errors: Record<string, string>;
   newItem: InvoiceItemCreate;
@@ -27,7 +20,6 @@ type CommerceInvoiceProductEntrySectionProps = {
   productSearch: string;
   totals: CommerceInvoiceTotals;
   onProductSearchChange: (value: string) => void;
-  onProductSelect: (productId: string) => void;
   onNewItemChange: (item: InvoiceItemCreate) => void;
   onAddItem: () => void;
   onAddExtraItem: () => void | Promise<void>;
@@ -44,7 +36,6 @@ export function CommerceInvoiceProductEntrySection({
   productSearch,
   totals,
   onProductSearchChange,
-  onProductSelect,
   onNewItemChange,
   onAddItem,
   onAddExtraItem,
@@ -62,49 +53,21 @@ export function CommerceInvoiceProductEntrySection({
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-start">
         <div className="space-y-1.5">
           <InlineField label="Product:" required>
-            <Select
-              value={newItem.productId || ''}
-              onValueChange={(value) => {
-                onProductSelect(value);
-                const product = products.find((p) => p.id === value);
-                if (product) {
-                  onProductSearchChange(product.name);
-                }
-                clearFieldError('newItemProduct');
-                clearFieldError('newItemDescription');
-              }}
-            >
-              <SelectTrigger
-                className={`${COMMERCE_INPUT_CLS} w-full ${errors.newItemProduct ? 'border-destructive' : ''}`}
-              >
-                <SelectValue placeholder="Select product" />
-              </SelectTrigger>
-              <SelectContent>
-                {products.length === 0 ? (
-                  <SelectItem value="no-products" disabled>
-                    No products available
-                  </SelectItem>
-                ) : (
-                  products.map((product) => (
-                    <SelectItem key={product.id} value={product.id}>
-                      {product.name} ({product.sku})
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
-          </InlineField>
-          {errors.newItemProduct && (
-            <p className="pl-[116px] text-xs text-destructive">{errors.newItemProduct}</p>
-          )}
-          <InlineField label="Search:">
             <Input
               value={productSearch}
-              onChange={(e) => onProductSearchChange(e.target.value)}
+              onChange={(e) => {
+                onProductSearchChange(e.target.value);
+                if (errors.newItemProduct) clearFieldError("newItemProduct");
+              }}
               placeholder="Search by Name / Item code"
-              className={COMMERCE_INPUT_CLS}
+              className={`${COMMERCE_INPUT_CLS} ${errors.newItemProduct ? "border-destructive" : ""}`}
             />
           </InlineField>
+          {errors.newItemProduct && (
+            <p className="pl-[116px] text-xs text-destructive">
+              {errors.newItemProduct}
+            </p>
+          )}
           <InlineField label="Extra Discount %:">
             <Input
               type="number"
@@ -120,7 +83,9 @@ export function CommerceInvoiceProductEntrySection({
           </InlineField>
           <InlineField label="Units / Packs:">
             <UnitOfMeasureSelect
-              value={newItem.unit || resolveItemUnit(newItem, products) || 'piece'}
+              value={
+                newItem.unit || resolveItemUnit(newItem, products) || "piece"
+              }
               onChange={(unit) => updateNewItem({ unit })}
             />
           </InlineField>
@@ -132,9 +97,9 @@ export function CommerceInvoiceProductEntrySection({
               value={newItem.description}
               onChange={(e) => {
                 updateNewItem({ description: e.target.value });
-                clearFieldError('newItemDescription');
+                clearFieldError("newItemDescription");
               }}
-              className={`${COMMERCE_INPUT_CLS} ${errors.newItemDescription ? 'border-destructive' : ''}`}
+              className={`${COMMERCE_INPUT_CLS} ${errors.newItemDescription ? "border-destructive" : ""}`}
             />
           </InlineField>
           <InlineField label="Quantity:">
@@ -145,9 +110,9 @@ export function CommerceInvoiceProductEntrySection({
               value={newItem.quantity}
               onChange={(e) => {
                 updateNewItem({ quantity: parseFloat(e.target.value) || 0 });
-                clearFieldError('newItemQuantity');
+                clearFieldError("newItemQuantity");
               }}
-              className={`${COMMERCE_INPUT_CLS} ${errors.newItemQuantity ? 'border-destructive' : ''}`}
+              className={`${COMMERCE_INPUT_CLS} ${errors.newItemQuantity ? "border-destructive" : ""}`}
             />
           </InlineField>
           <InlineField label="Sale Price:">
@@ -158,9 +123,9 @@ export function CommerceInvoiceProductEntrySection({
               value={newItem.salePrice}
               onChange={(e) => {
                 updateNewItem({ salePrice: parseFloat(e.target.value) || 0 });
-                clearFieldError('newItemSalePrice');
+                clearFieldError("newItemSalePrice");
               }}
-              className={`${COMMERCE_INPUT_CLS} ${errors.newItemSalePrice ? 'border-destructive' : ''}`}
+              className={`${COMMERCE_INPUT_CLS} ${errors.newItemSalePrice ? "border-destructive" : ""}`}
             />
           </InlineField>
         </div>
@@ -171,7 +136,7 @@ export function CommerceInvoiceProductEntrySection({
             variant="outline"
             size="sm"
             className="h-9 text-xs font-semibold"
-            onClick={() => router.push('/sales/quotes')}
+            onClick={() => router.push("/sales/quotes")}
           >
             Save as Quotation
           </Button>
@@ -180,7 +145,7 @@ export function CommerceInvoiceProductEntrySection({
             variant="outline"
             size="sm"
             className="h-9 text-xs font-semibold"
-            onClick={() => router.push('/sales/quotes')}
+            onClick={() => router.push("/sales/quotes")}
           >
             Quotation List
           </Button>
@@ -221,10 +186,10 @@ export function CommerceInvoiceProductEntrySection({
             className="h-9 text-xs font-semibold"
           >
             {loading
-              ? 'Saving...'
-              : mode === 'create'
-                ? 'Generate Invoice'
-                : 'Update Invoice'}
+              ? "Saving..."
+              : mode === "create"
+                ? "Generate Invoice"
+                : "Update Invoice"}
           </Button>
         </div>
       </div>

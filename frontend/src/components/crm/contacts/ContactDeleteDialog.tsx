@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   Dialog,
@@ -6,9 +6,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/src/components/ui/dialog';
-import { Button } from '@/src/components/ui/button';
-import { Contact } from '@/src/models/crm';
+} from "@/src/components/ui/dialog";
+import { Button } from "@/src/components/ui/button";
+import { Contact } from "@/src/models/crm";
 
 type ContactDeleteDialogProps = {
   contact: Contact | null;
@@ -33,7 +33,7 @@ export function ContactDeleteDialog({
         {contact && (
           <div className="space-y-4">
             <p className="text-gray-600">
-              Are you sure you want to delete{' '}
+              Are you sure you want to delete{" "}
               <strong>
                 &quot;{contact.firstName} {contact.lastName}&quot;
               </strong>
@@ -50,7 +50,7 @@ export function ContactDeleteDialog({
                 onClick={onConfirm}
                 disabled={deleting}
               >
-                {deleting ? 'Deleting...' : 'Delete Contact'}
+                {deleting ? "Deleting..." : "Delete Contact"}
               </Button>
             </DialogFooter>
           </div>

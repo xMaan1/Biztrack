@@ -1,4 +1,4 @@
-import { apiService } from './ApiService';
+import { apiService } from "./ApiService";
 import {
   WarehouseCreate,
   WarehouseUpdate,
@@ -21,16 +21,21 @@ import {
   ReceivingsResponse,
   ReceivingResponse,
   InventoryDashboardStats,
-} from '../models/inventory';
+} from "../models/inventory";
 
 class InventoryService {
   private handleError(error: any, endpoint: string) {
     console.error(`[InventoryService] Error calling ${endpoint}:`, error);
     if (error.response) {
-      console.error(`[InventoryService] Response status: ${error.response.status}`);
+      console.error(
+        `[InventoryService] Response status: ${error.response.status}`,
+      );
       console.error(`[InventoryService] Response data:`, error.response.data);
     } else if (error.request) {
-      console.error(`[InventoryService] No response received. Request:`, error.request);
+      console.error(
+        `[InventoryService] No response received. Request:`,
+        error.request,
+      );
     } else {
       console.error(`[InventoryService] Error message:`, error.message);
     }
@@ -47,7 +52,7 @@ class InventoryService {
       );
       return response;
     } catch (error) {
-      this.handleError(error, '/inventory/warehouses');
+      this.handleError(error, "/inventory/warehouses");
       throw error;
     }
   }
@@ -60,7 +65,7 @@ class InventoryService {
   async createWarehouse(
     warehouse: WarehouseCreate,
   ): Promise<WarehouseResponse> {
-    const response = await apiService.post('/inventory/warehouses', warehouse);
+    const response = await apiService.post("/inventory/warehouses", warehouse);
     return response;
   }
 
@@ -86,9 +91,9 @@ class InventoryService {
     limit: number = 100,
   ): Promise<StorageLocationsResponse> {
     const params = new URLSearchParams();
-    if (warehouseId) params.append('warehouse_id', warehouseId);
-    params.append('skip', skip.toString());
-    params.append('limit', limit.toString());
+    if (warehouseId) params.append("warehouse_id", warehouseId);
+    params.append("skip", skip.toString());
+    params.append("limit", limit.toString());
 
     const response = await apiService.get(
       `/inventory/storage-locations?${params.toString()}`,
@@ -105,7 +110,7 @@ class InventoryService {
     location: StorageLocationCreate,
   ): Promise<StorageLocationResponse> {
     const response = await apiService.post(
-      '/inventory/storage-locations',
+      "/inventory/storage-locations",
       location,
     );
     return response;
@@ -134,10 +139,10 @@ class InventoryService {
     limit: number = 100,
   ): Promise<StockMovementsResponse> {
     const params = new URLSearchParams();
-    if (productId) params.append('product_id', productId);
-    if (warehouseId) params.append('warehouse_id', warehouseId);
-    params.append('skip', skip.toString());
-    params.append('limit', limit.toString());
+    if (productId) params.append("product_id", productId);
+    if (warehouseId) params.append("warehouse_id", warehouseId);
+    params.append("skip", skip.toString());
+    params.append("limit", limit.toString());
 
     const response = await apiService.get(
       `/inventory/stock-movements?${params.toString()}`,
@@ -154,7 +159,7 @@ class InventoryService {
     movement: StockMovementCreate,
   ): Promise<StockMovementResponse> {
     const response = await apiService.post(
-      '/inventory/stock-movements',
+      "/inventory/stock-movements",
       movement,
     );
     return response;
@@ -182,9 +187,9 @@ class InventoryService {
     limit: number = 100,
   ): Promise<PurchaseOrdersResponse> {
     const params = new URLSearchParams();
-    if (status) params.append('status', status);
-    params.append('skip', skip.toString());
-    params.append('limit', limit.toString());
+    if (status) params.append("status", status);
+    params.append("skip", skip.toString());
+    params.append("limit", limit.toString());
 
     const response = await apiService.get(
       `/inventory/purchase-orders?${params.toString()}`,
@@ -200,7 +205,7 @@ class InventoryService {
   async createPurchaseOrder(
     order: PurchaseOrderCreate,
   ): Promise<PurchaseOrderResponse> {
-    const response = await apiService.post('/inventory/purchase-orders', order);
+    const response = await apiService.post("/inventory/purchase-orders", order);
     return response;
   }
 
@@ -226,9 +231,9 @@ class InventoryService {
     limit: number = 100,
   ): Promise<ReceivingsResponse> {
     const params = new URLSearchParams();
-    if (status) params.append('status', status);
-    params.append('skip', skip.toString());
-    params.append('limit', limit.toString());
+    if (status) params.append("status", status);
+    params.append("skip", skip.toString());
+    params.append("limit", limit.toString());
 
     const response = await apiService.get(
       `/inventory/receivings?${params.toString()}`,
@@ -244,7 +249,7 @@ class InventoryService {
   async createReceiving(
     receiving: ReceivingCreate,
   ): Promise<ReceivingResponse> {
-    const response = await apiService.post('/inventory/receivings', receiving);
+    const response = await apiService.post("/inventory/receivings", receiving);
     return response;
   }
 
@@ -266,10 +271,10 @@ class InventoryService {
   // Dashboard
   async getInventoryDashboard(): Promise<InventoryDashboardStats> {
     try {
-      const response = await apiService.get('/inventory/dashboard');
+      const response = await apiService.get("/inventory/dashboard");
       return response;
     } catch (error) {
-      this.handleError(error, '/inventory/dashboard');
+      this.handleError(error, "/inventory/dashboard");
       throw error;
     }
   }
@@ -281,9 +286,9 @@ class InventoryService {
     limit: number = 100,
   ): Promise<StockMovementsResponse> {
     const params = new URLSearchParams();
-    if (warehouseId) params.append('warehouse_id', warehouseId);
-    params.append('skip', skip.toString());
-    params.append('limit', limit.toString());
+    if (warehouseId) params.append("warehouse_id", warehouseId);
+    params.append("skip", skip.toString());
+    params.append("limit", limit.toString());
 
     const response = await apiService.get(
       `/inventory/dumps?${params.toString()}`,
@@ -291,10 +296,8 @@ class InventoryService {
     return response;
   }
 
-  async createDump(
-    dump: StockMovementCreate,
-  ): Promise<StockMovementResponse> {
-    const response = await apiService.post('/inventory/dumps', dump);
+  async createDump(dump: StockMovementCreate): Promise<StockMovementResponse> {
+    const response = await apiService.post("/inventory/dumps", dump);
     return response;
   }
 
@@ -305,9 +308,9 @@ class InventoryService {
     limit: number = 100,
   ): Promise<StockMovementsResponse> {
     const params = new URLSearchParams();
-    if (warehouseId) params.append('warehouse_id', warehouseId);
-    params.append('skip', skip.toString());
-    params.append('limit', limit.toString());
+    if (warehouseId) params.append("warehouse_id", warehouseId);
+    params.append("skip", skip.toString());
+    params.append("limit", limit.toString());
 
     const response = await apiService.get(
       `/inventory/customer-returns?${params.toString()}`,
@@ -318,7 +321,10 @@ class InventoryService {
   async createCustomerReturn(
     returnData: StockMovementCreate,
   ): Promise<StockMovementResponse> {
-    const response = await apiService.post('/inventory/customer-returns', returnData);
+    const response = await apiService.post(
+      "/inventory/customer-returns",
+      returnData,
+    );
     return response;
   }
 
@@ -329,9 +335,9 @@ class InventoryService {
     limit: number = 100,
   ): Promise<StockMovementsResponse> {
     const params = new URLSearchParams();
-    if (warehouseId) params.append('warehouse_id', warehouseId);
-    params.append('skip', skip.toString());
-    params.append('limit', limit.toString());
+    if (warehouseId) params.append("warehouse_id", warehouseId);
+    params.append("skip", skip.toString());
+    params.append("limit", limit.toString());
 
     const response = await apiService.get(
       `/inventory/supplier-returns?${params.toString()}`,
@@ -342,7 +348,10 @@ class InventoryService {
   async createSupplierReturn(
     returnData: StockMovementCreate,
   ): Promise<StockMovementResponse> {
-    const response = await apiService.post('/inventory/supplier-returns', returnData);
+    const response = await apiService.post(
+      "/inventory/supplier-returns",
+      returnData,
+    );
     return response;
   }
 }

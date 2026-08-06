@@ -1,23 +1,23 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
-import { Textarea } from '../ui/textarea';
-import { Label } from '../ui/label';
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
+import { Textarea } from "../ui/textarea";
+import { Label } from "../ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../ui/select';
-import { Play, Square, Pause, Timer } from 'lucide-react';
-import { timeTrackingService } from '../../services/TimeTrackingService';
-import { ActiveTimeSession } from '../../models/timeTracking';
-import { useAuth } from '../../contexts/AuthContext';
-import { toast } from 'sonner';
+} from "../ui/select";
+import { Play, Square, Pause, Timer } from "lucide-react";
+import { timeTrackingService } from "../../services/TimeTrackingService";
+import { ActiveTimeSession } from "../../models/timeTracking";
+import { useAuth } from "../../contexts/AuthContext";
+import { toast } from "sonner";
 
 interface TimeTrackerProps {
   projects?: Array<{ id: string; name: string }>;
@@ -25,18 +25,23 @@ interface TimeTrackerProps {
   onTimeEntryCreated?: (timeEntry: any) => void;
 }
 
-export function TimeTracker({ projects = [], tasks = [], onTimeEntryCreated }: TimeTrackerProps) {
+export function TimeTracker({
+  projects = [],
+  tasks = [],
+  onTimeEntryCreated,
+}: TimeTrackerProps) {
   const { user } = useAuth();
-  const [currentSession, setCurrentSession] = useState<ActiveTimeSession | null>(null);
+  const [currentSession, setCurrentSession] =
+    useState<ActiveTimeSession | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  
-  const [elapsedTime, setElapsedTime] = useState(0);
-  const [selectedProject, setSelectedProject] = useState<string>('');
-  const [selectedTask, setSelectedTask] = useState<string>('');
-  const [description, setDescription] = useState('');
 
-  const filteredTasks = selectedProject 
-    ? tasks.filter(task => task.projectId === selectedProject)
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [selectedProject, setSelectedProject] = useState<string>("");
+  const [selectedTask, setSelectedTask] = useState<string>("");
+  const [description, setDescription] = useState("");
+
+  const filteredTasks = selectedProject
+    ? tasks.filter((task) => task.projectId === selectedProject)
     : tasks;
 
   useEffect(() => {
@@ -45,9 +50,9 @@ export function TimeTracker({ projects = [], tasks = [], onTimeEntryCreated }: T
 
   useEffect(() => {
     if (selectedProject && selectedTask) {
-      const task = tasks.find(t => t.id === selectedTask);
+      const task = tasks.find((t) => t.id === selectedTask);
       if (task && task.projectId !== selectedProject) {
-        setSelectedTask('');
+        setSelectedTask("");
       }
     }
   }, [selectedProject, selectedTask, tasks]);
@@ -74,27 +79,26 @@ export function TimeTracker({ projects = [], tasks = [], onTimeEntryCreated }: T
         const now = Date.now();
         setElapsedTime(Math.floor((now - startTime) / 1000));
       }
-    } catch (error) {
-    }
+    } catch (error) {}
   };
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
   const handleStart = async () => {
     if (!user) {
       return;
     }
-    
+
     const userId = user.userId || user.id;
     if (!userId) {
       return;
     }
-    
+
     setIsLoading(true);
     try {
       const sessionData = {
@@ -102,13 +106,13 @@ export function TimeTracker({ projects = [], tasks = [], onTimeEntryCreated }: T
         taskId: selectedTask || undefined,
         description: description || undefined,
       };
-      
+
       const session = await timeTrackingService.startTimeSession(sessionData);
       setCurrentSession(session);
       setElapsedTime(0);
-      toast.success('Time tracking started');
+      toast.success("Time tracking started");
     } catch (error) {
-      toast.error('Failed to start time tracking. Please try again.');
+      toast.error("Failed to start time tracking. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -116,22 +120,25 @@ export function TimeTracker({ projects = [], tasks = [], onTimeEntryCreated }: T
 
   const handleStop = async () => {
     if (!currentSession) return;
-    
+
     setIsLoading(true);
     try {
-      const timeEntry = await timeTrackingService.stopTimeSession(currentSession.id, description);
+      const timeEntry = await timeTrackingService.stopTimeSession(
+        currentSession.id,
+        description,
+      );
       setCurrentSession(null);
       setElapsedTime(0);
-      setDescription('');
-      setSelectedProject('');
-      setSelectedTask('');
-      
+      setDescription("");
+      setSelectedProject("");
+      setSelectedTask("");
+
       if (onTimeEntryCreated) {
         onTimeEntryCreated(timeEntry);
       }
-      toast.success('Time tracking stopped');
+      toast.success("Time tracking stopped");
     } catch (error) {
-      toast.error('Failed to stop time tracking. Please try again.');
+      toast.error("Failed to stop time tracking. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -139,14 +146,16 @@ export function TimeTracker({ projects = [], tasks = [], onTimeEntryCreated }: T
 
   const handlePause = async () => {
     if (!currentSession) return;
-    
+
     setIsLoading(true);
     try {
-      const session = await timeTrackingService.pauseTimeSession(currentSession.id);
+      const session = await timeTrackingService.pauseTimeSession(
+        currentSession.id,
+      );
       setCurrentSession(session);
-      toast.success('Time tracking paused');
+      toast.success("Time tracking paused");
     } catch (error) {
-      toast.error('Failed to pause time tracking. Please try again.');
+      toast.error("Failed to pause time tracking. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -154,14 +163,16 @@ export function TimeTracker({ projects = [], tasks = [], onTimeEntryCreated }: T
 
   const handleResume = async () => {
     if (!currentSession) return;
-    
+
     setIsLoading(true);
     try {
-      const session = await timeTrackingService.resumeTimeSession(currentSession.id);
+      const session = await timeTrackingService.resumeTimeSession(
+        currentSession.id,
+      );
       setCurrentSession(session);
-      toast.success('Time tracking resumed');
+      toast.success("Time tracking resumed");
     } catch (error) {
-      toast.error('Failed to resume time tracking. Please try again.');
+      toast.error("Failed to resume time tracking. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -180,10 +191,12 @@ export function TimeTracker({ projects = [], tasks = [], onTimeEntryCreated }: T
           <div className="text-6xl font-mono font-bold text-gray-900 mb-4">
             {formatTime(elapsedTime)}
           </div>
-          
-          
+
           {currentSession?.isActive && (
-            <Badge variant="secondary" className="bg-green-100 text-green-800 mb-4">
+            <Badge
+              variant="secondary"
+              className="bg-green-100 text-green-800 mb-4"
+            >
               Currently tracking
             </Badge>
           )}
@@ -193,7 +206,10 @@ export function TimeTracker({ projects = [], tasks = [], onTimeEntryCreated }: T
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="project">Project</Label>
-              <Select value={selectedProject || undefined} onValueChange={setSelectedProject}>
+              <Select
+                value={selectedProject || undefined}
+                onValueChange={setSelectedProject}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select project" />
                 </SelectTrigger>
@@ -209,8 +225,8 @@ export function TimeTracker({ projects = [], tasks = [], onTimeEntryCreated }: T
 
             <div>
               <Label htmlFor="task">Task</Label>
-              <Select 
-                value={selectedTask || undefined} 
+              <Select
+                value={selectedTask || undefined}
                 onValueChange={setSelectedTask}
                 disabled={filteredTasks.length === 0}
               >

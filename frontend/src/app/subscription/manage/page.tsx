@@ -1,12 +1,18 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { DashboardLayout } from '@/src/components/layout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Badge } from '@/src/components/ui/badge';
-import { Separator } from '@/src/components/ui/separator';
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { DashboardLayout } from "@/src/components/layout";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { Badge } from "@/src/components/ui/badge";
+import { Separator } from "@/src/components/ui/separator";
 import {
   Dialog,
   DialogContent,
@@ -14,9 +20,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/src/components/ui/dialog';
-import { Textarea } from '@/src/components/ui/textarea';
-import { Label } from '@/src/components/ui/label';
+} from "@/src/components/ui/dialog";
+import { Textarea } from "@/src/components/ui/textarea";
+import { Label } from "@/src/components/ui/label";
 import {
   RefreshCw,
   XCircle,
@@ -25,11 +31,11 @@ import {
   AlertTriangle,
   Loader2,
   ArrowLeft,
-} from 'lucide-react';
-import { apiService } from '@/src/services/ApiService';
-import { useCurrency } from '@/src/contexts/CurrencyContext';
-import { toast } from 'sonner';
-import { extractErrorMessage } from '@/src/utils/errorUtils';
+} from "lucide-react";
+import { apiService } from "@/src/services/ApiService";
+import { useCurrency } from "@/src/contexts/CurrencyContext";
+import { toast } from "sonner";
+import { extractErrorMessage } from "@/src/utils/errorUtils";
 
 interface Subscription {
   id: string;
@@ -79,18 +85,18 @@ export default function SubscriptionManagePage() {
   const [billingInfo, setBillingInfo] = useState<BillingInfo | null>(null);
   const [usageSummary, setUsageSummary] = useState<UsageSummary | null>(null);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
-  const [cancelReason, setCancelReason] = useState('');
+  const [cancelReason, setCancelReason] = useState("");
   const [cancelling, setCancelling] = useState(false);
   const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
   const [availablePlans, setAvailablePlans] = useState<any[]>([]);
-  const [selectedPlanId, setSelectedPlanId] = useState('');
+  const [selectedPlanId, setSelectedPlanId] = useState("");
   const [upgrading, setUpgrading] = useState(false);
 
   const tenantId = apiService.getTenantId();
 
   useEffect(() => {
     if (!tenantId) {
-      router.push('/dashboard');
+      router.push("/dashboard");
       return;
     }
     loadSubscriptionData();
@@ -98,11 +104,11 @@ export default function SubscriptionManagePage() {
 
   const loadSubscriptionData = async () => {
     if (!tenantId) return;
-    
+
     try {
       setLoading(true);
       const [subscriptionRes, billingRes, usageRes] = await Promise.all([
-        apiService.get('/tenants/current/subscription').catch(() => null),
+        apiService.get("/tenants/current/subscription").catch(() => null),
         apiService.getSubscriptionBilling(tenantId).catch(() => null),
         apiService.getSubscriptionUsage(tenantId).catch(() => null),
       ]);
@@ -119,7 +125,9 @@ export default function SubscriptionManagePage() {
         setUsageSummary(usageRes);
       }
     } catch (error) {
-      toast.error(extractErrorMessage(error, 'Failed to load subscription data'));
+      toast.error(
+        extractErrorMessage(error, "Failed to load subscription data"),
+      );
     } finally {
       setLoading(false);
     }
@@ -131,10 +139,12 @@ export default function SubscriptionManagePage() {
     try {
       setSyncing(true);
       await apiService.syncSubscriptionStatus(tenantId);
-      toast.success('Subscription status synced successfully');
+      toast.success("Subscription status synced successfully");
       await loadSubscriptionData();
     } catch (error) {
-      toast.error(extractErrorMessage(error, 'Failed to sync subscription status'));
+      toast.error(
+        extractErrorMessage(error, "Failed to sync subscription status"),
+      );
     } finally {
       setSyncing(false);
     }
@@ -142,19 +152,19 @@ export default function SubscriptionManagePage() {
 
   const handleCancel = async () => {
     if (!tenantId || !cancelReason.trim()) {
-      toast.error('Please provide a reason for cancellation');
+      toast.error("Please provide a reason for cancellation");
       return;
     }
 
     try {
       setCancelling(true);
       await apiService.cancelSubscription(tenantId, cancelReason);
-      toast.success('Subscription cancelled successfully');
+      toast.success("Subscription cancelled successfully");
       setCancelDialogOpen(false);
-      setCancelReason('');
+      setCancelReason("");
       await loadSubscriptionData();
     } catch (error) {
-      toast.error(extractErrorMessage(error, 'Failed to cancel subscription'));
+      toast.error(extractErrorMessage(error, "Failed to cancel subscription"));
     } finally {
       setCancelling(false);
     }
@@ -166,10 +176,12 @@ export default function SubscriptionManagePage() {
     try {
       setCancelling(true);
       await apiService.reactivateSubscription(tenantId);
-      toast.success('Subscription reactivated successfully');
+      toast.success("Subscription reactivated successfully");
       await loadSubscriptionData();
     } catch (error) {
-      toast.error(extractErrorMessage(error, 'Failed to reactivate subscription'));
+      toast.error(
+        extractErrorMessage(error, "Failed to reactivate subscription"),
+      );
     } finally {
       setCancelling(false);
     }
@@ -177,12 +189,14 @@ export default function SubscriptionManagePage() {
 
   const loadAvailablePlans = async () => {
     try {
-      const response = await apiService.get('/public/plans');
+      const response = await apiService.get("/public/plans");
       if (response.plans) {
-        setAvailablePlans(response.plans.filter((p: any) => p.id !== subscription?.plan.id));
+        setAvailablePlans(
+          response.plans.filter((p: any) => p.id !== subscription?.plan.id),
+        );
       }
     } catch (error) {
-      toast.error(extractErrorMessage(error, 'Failed to load available plans'));
+      toast.error(extractErrorMessage(error, "Failed to load available plans"));
     }
   };
 
@@ -191,28 +205,41 @@ export default function SubscriptionManagePage() {
 
     try {
       setUpgrading(true);
-      await apiService.upgradePlan(tenantId, selectedPlanId, subscription.plan.id);
-      toast.success('Plan upgraded successfully');
+      await apiService.upgradePlan(
+        tenantId,
+        selectedPlanId,
+        subscription.plan.id,
+      );
+      toast.success("Plan upgraded successfully");
       setUpgradeDialogOpen(false);
-      setSelectedPlanId('');
+      setSelectedPlanId("");
       await loadSubscriptionData();
     } catch (error) {
-      toast.error(extractErrorMessage(error, 'Failed to upgrade plan'));
+      toast.error(extractErrorMessage(error, "Failed to upgrade plan"));
     } finally {
       setUpgrading(false);
     }
   };
 
   const getStatusBadge = (status: string) => {
-    const statusConfig: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; label: string }> = {
-      active: { variant: 'default', label: 'Active' },
-      trial: { variant: 'secondary', label: 'Trial' },
-      cancelled: { variant: 'destructive', label: 'Cancelled' },
-      expired: { variant: 'destructive', label: 'Expired' },
-      inactive: { variant: 'secondary', label: 'Inactive' },
+    const statusConfig: Record<
+      string,
+      {
+        variant: "default" | "secondary" | "destructive" | "outline";
+        label: string;
+      }
+    > = {
+      active: { variant: "default", label: "Active" },
+      trial: { variant: "secondary", label: "Trial" },
+      cancelled: { variant: "destructive", label: "Cancelled" },
+      expired: { variant: "destructive", label: "Expired" },
+      inactive: { variant: "secondary", label: "Inactive" },
     };
 
-    const config = statusConfig[status.toLowerCase()] || { variant: 'secondary' as const, label: status };
+    const config = statusConfig[status.toLowerCase()] || {
+      variant: "secondary" as const,
+      label: status,
+    };
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
@@ -247,9 +274,11 @@ export default function SubscriptionManagePage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Subscription Management</h1>
-            <p className="text-muted-foreground mt-1">Manage your subscription and billing</p>
+            <p className="text-muted-foreground mt-1">
+              Manage your subscription and billing
+            </p>
           </div>
-          <Button variant="outline" onClick={() => router.push('/dashboard')}>
+          <Button variant="outline" onClick={() => router.push("/dashboard")}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Dashboard
           </Button>
@@ -267,39 +296,56 @@ export default function SubscriptionManagePage() {
               {subscription && (
                 <>
                   <div>
-                    <p className="text-2xl font-bold">{subscription.plan.name}</p>
-                    <p className="text-muted-foreground">{subscription.plan.planType}</p>
+                    <p className="text-2xl font-bold">
+                      {subscription.plan.name}
+                    </p>
+                    <p className="text-muted-foreground">
+                      {subscription.plan.planType}
+                    </p>
                   </div>
                   <Separator />
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Price</span>
                       <span className="font-semibold">
-                        {subscription.plan.price != null ? formatCurrency(subscription.plan.price) : 'N/A'}/{subscription.plan.billingCycle === 'monthly' ? 'month' : 'year'}
+                        {subscription.plan.price != null
+                          ? formatCurrency(subscription.plan.price)
+                          : "N/A"}
+                        /
+                        {subscription.plan.billingCycle === "monthly"
+                          ? "month"
+                          : "year"}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Max Projects</span>
-                      <span className="font-semibold">{subscription.plan.maxProjects}</span>
+                      <span className="text-muted-foreground">
+                        Max Projects
+                      </span>
+                      <span className="font-semibold">
+                        {subscription.plan.maxProjects}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Max Users</span>
-                      <span className="font-semibold">{subscription.plan.maxUsers}</span>
+                      <span className="font-semibold">
+                        {subscription.plan.maxUsers}
+                      </span>
                     </div>
                   </div>
-                  {subscription.plan.features && subscription.plan.features.length > 0 && (
-                    <>
-                      <Separator />
-                      <div>
-                        <p className="text-sm font-medium mb-2">Features</p>
-                        <ul className="text-sm text-muted-foreground space-y-1">
-                          {subscription.plan.features.map((feature, idx) => (
-                            <li key={idx}>• {feature}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    </>
-                  )}
+                  {subscription.plan.features &&
+                    subscription.plan.features.length > 0 && (
+                      <>
+                        <Separator />
+                        <div>
+                          <p className="text-sm font-medium mb-2">Features</p>
+                          <ul className="text-sm text-muted-foreground space-y-1">
+                            {subscription.plan.features.map((feature, idx) => (
+                              <li key={idx}>• {feature}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      </>
+                    )}
                 </>
               )}
             </CardContent>
@@ -319,26 +365,44 @@ export default function SubscriptionManagePage() {
                     </div>
                     {billingInfo.start_date && (
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Start Date</span>
-                        <span>{new Date(billingInfo.start_date).toLocaleDateString()}</span>
+                        <span className="text-muted-foreground">
+                          Start Date
+                        </span>
+                        <span>
+                          {new Date(
+                            billingInfo.start_date,
+                          ).toLocaleDateString()}
+                        </span>
                       </div>
                     )}
                     {billingInfo.end_date && (
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">End Date</span>
-                        <span>{new Date(billingInfo.end_date).toLocaleDateString()}</span>
+                        <span>
+                          {new Date(billingInfo.end_date).toLocaleDateString()}
+                        </span>
                       </div>
                     )}
                     {billingInfo.next_billing_date && (
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Next Billing</span>
-                        <span>{new Date(billingInfo.next_billing_date).toLocaleDateString()}</span>
+                        <span className="text-muted-foreground">
+                          Next Billing
+                        </span>
+                        <span>
+                          {new Date(
+                            billingInfo.next_billing_date,
+                          ).toLocaleDateString()}
+                        </span>
                       </div>
                     )}
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Auto Renew</span>
-                      <Badge variant={billingInfo.auto_renew ? 'default' : 'secondary'}>
-                        {billingInfo.auto_renew ? 'Yes' : 'No'}
+                      <Badge
+                        variant={
+                          billingInfo.auto_renew ? "default" : "secondary"
+                        }
+                      >
+                        {billingInfo.auto_renew ? "Yes" : "No"}
                       </Badge>
                     </div>
                   </div>
@@ -349,7 +413,9 @@ export default function SubscriptionManagePage() {
                     onClick={handleSync}
                     disabled={syncing}
                   >
-                    <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
+                    <RefreshCw
+                      className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`}
+                    />
                     Sync Status
                   </Button>
                 </>
@@ -362,7 +428,9 @@ export default function SubscriptionManagePage() {
           <Card>
             <CardHeader>
               <CardTitle>Usage Summary</CardTitle>
-              <CardDescription>Current usage against your plan limits</CardDescription>
+              <CardDescription>
+                Current usage against your plan limits
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 md:grid-cols-2">
@@ -370,7 +438,8 @@ export default function SubscriptionManagePage() {
                   <div className="flex justify-between text-sm">
                     <span>Projects</span>
                     <span className="font-medium">
-                      {usageSummary.projects.current} / {usageSummary.projects.limit}
+                      {usageSummary.projects.current} /{" "}
+                      {usageSummary.projects.limit}
                     </span>
                   </div>
                   <div className="w-full bg-secondary rounded-full h-2">
@@ -410,7 +479,7 @@ export default function SubscriptionManagePage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex flex-wrap gap-4">
-              {subscription && subscription.status === 'cancelled' ? (
+              {subscription && subscription.status === "cancelled" ? (
                 <Button onClick={handleReactivate} disabled={cancelling}>
                   <CheckCircle className="h-4 w-4 mr-2" />
                   Reactivate Subscription
@@ -430,7 +499,7 @@ export default function SubscriptionManagePage() {
                   <Button
                     variant="destructive"
                     onClick={() => setCancelDialogOpen(true)}
-                    disabled={subscription?.status === 'cancelled'}
+                    disabled={subscription?.status === "cancelled"}
                   >
                     <XCircle className="h-4 w-4 mr-2" />
                     Cancel Subscription
@@ -447,7 +516,9 @@ export default function SubscriptionManagePage() {
           <DialogHeader>
             <DialogTitle>Cancel Subscription</DialogTitle>
             <DialogDescription>
-              Please provide a reason for cancelling your subscription. Your subscription will remain active until the end of the current billing period.
+              Please provide a reason for cancelling your subscription. Your
+              subscription will remain active until the end of the current
+              billing period.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -463,17 +534,24 @@ export default function SubscriptionManagePage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCancelDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setCancelDialogOpen(false)}
+            >
               Keep Subscription
             </Button>
-            <Button variant="destructive" onClick={handleCancel} disabled={cancelling || !cancelReason.trim()}>
+            <Button
+              variant="destructive"
+              onClick={handleCancel}
+              disabled={cancelling || !cancelReason.trim()}
+            >
               {cancelling ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   Cancelling...
                 </>
               ) : (
-                'Cancel Subscription'
+                "Cancel Subscription"
               )}
             </Button>
           </DialogFooter>
@@ -490,23 +568,32 @@ export default function SubscriptionManagePage() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             {availablePlans.length === 0 ? (
-              <p className="text-muted-foreground text-center py-4">No upgrade plans available</p>
+              <p className="text-muted-foreground text-center py-4">
+                No upgrade plans available
+              </p>
             ) : (
               <div className="space-y-2">
                 {availablePlans.map((plan) => (
                   <div
                     key={plan.id}
                     className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                      selectedPlanId === plan.id ? 'border-primary bg-primary/5' : 'hover:bg-muted'
+                      selectedPlanId === plan.id
+                        ? "border-primary bg-primary/5"
+                        : "hover:bg-muted"
                     }`}
                     onClick={() => setSelectedPlanId(plan.id)}
                   >
                     <div className="flex justify-between items-start">
                       <div>
                         <p className="font-semibold">{plan.name}</p>
-                        <p className="text-sm text-muted-foreground">{plan.planType}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {plan.planType}
+                        </p>
                         <p className="text-sm mt-1">
-                          {plan.price != null ? formatCurrency(plan.price) : 'N/A'}/{plan.billingCycle === 'monthly' ? 'month' : 'year'}
+                          {plan.price != null
+                            ? formatCurrency(plan.price)
+                            : "N/A"}
+                          /{plan.billingCycle === "monthly" ? "month" : "year"}
                         </p>
                       </div>
                       {selectedPlanId === plan.id && (
@@ -519,17 +606,23 @@ export default function SubscriptionManagePage() {
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setUpgradeDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setUpgradeDialogOpen(false)}
+            >
               Cancel
             </Button>
-            <Button onClick={handleUpgrade} disabled={upgrading || !selectedPlanId}>
+            <Button
+              onClick={handleUpgrade}
+              disabled={upgrading || !selectedPlanId}
+            >
               {upgrading ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   Upgrading...
                 </>
               ) : (
-                'Upgrade Plan'
+                "Upgrade Plan"
               )}
             </Button>
           </DialogFooter>

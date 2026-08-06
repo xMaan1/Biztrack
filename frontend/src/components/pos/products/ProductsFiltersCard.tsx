@@ -1,25 +1,25 @@
-'use client';
+"use client";
 
-import { Search } from 'lucide-react';
+import { Search } from "lucide-react";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
-import { Label } from '@/src/components/ui/label';
+} from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
+import { Label } from "@/src/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
-import { ProductCategory } from '@/src/models/pos';
-import type { ProductFiltersState } from './types';
-import { formatCategoryLabel } from './productUtils';
+} from "@/src/components/ui/select";
+import { ProductCategory } from "@/src/models/pos";
+import type { ProductFiltersState } from "./types";
+import { formatCategoryLabel } from "./productUtils";
 
 type ProductsFiltersCardProps = {
   categories: string[];
@@ -34,7 +34,9 @@ export function ProductsFiltersCard({
   onFiltersChange,
   onClear,
 }: ProductsFiltersCardProps) {
-  const categoryOptions = categories.length ? categories : Object.values(ProductCategory);
+  const categoryOptions = categories.length
+    ? categories
+    : Object.values(ProductCategory);
 
   return (
     <Card>
@@ -54,7 +56,9 @@ export function ProductsFiltersCard({
                 id="search"
                 placeholder="Search products..."
                 value={filters.searchTerm}
-                onChange={(e) => onFiltersChange({ searchTerm: e.target.value })}
+                onChange={(e) =>
+                  onFiltersChange({ searchTerm: e.target.value })
+                }
                 className="pl-10"
               />
             </div>
@@ -64,7 +68,9 @@ export function ProductsFiltersCard({
             <Label htmlFor="category">Category</Label>
             <Select
               value={filters.selectedCategory}
-              onValueChange={(value) => onFiltersChange({ selectedCategory: value })}
+              onValueChange={(value) =>
+                onFiltersChange({ selectedCategory: value })
+              }
             >
               <SelectTrigger>
                 <SelectValue placeholder="All Categories" />
@@ -83,8 +89,10 @@ export function ProductsFiltersCard({
           <div className="space-y-2">
             <Label htmlFor="stock">Stock Status</Label>
             <Select
-              value={filters.showLowStock ? 'low' : 'all'}
-              onValueChange={(value) => onFiltersChange({ showLowStock: value === 'low' })}
+              value={filters.showLowStock ? "low" : "all"}
+              onValueChange={(value) =>
+                onFiltersChange({ showLowStock: value === "low" })
+              }
             >
               <SelectTrigger>
                 <SelectValue />

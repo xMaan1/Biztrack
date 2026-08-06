@@ -1,43 +1,43 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Badge } from '../../components/ui/badge';
+} from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Badge } from "../../components/ui/badge";
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-} from '../../components/ui/avatar';
+} from "../../components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from '../../components/ui/dropdown-menu';
+} from "../../components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from '../../components/ui/dialog';
-import { Label } from '../../components/ui/label';
-import { Alert, AlertDescription } from '../../components/ui/alert';
+} from "../../components/ui/dialog";
+import { Label } from "../../components/ui/label";
+import { Alert, AlertDescription } from "../../components/ui/alert";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../components/ui/select';
+} from "../../components/ui/select";
 import {
   Search,
   MoreVertical,
@@ -50,31 +50,31 @@ import {
   Loader2,
   Users,
   Crown,
-} from 'lucide-react';
-import { apiService } from '../../services/ApiService';
-import { extractErrorMessage } from '../../utils/errorUtils';
-import { User } from '../../models/auth';
-import { DashboardLayout } from '../../components/layout';
-import { useConfirm } from '@/src/contexts/ConfirmContext';
-import { cn, getInitials } from '../../lib/utils';
-import AddMemberModal from '../../components/team/AddMemberModal';
+} from "lucide-react";
+import { apiService } from "../../services/ApiService";
+import { extractErrorMessage } from "../../utils/errorUtils";
+import { User } from "../../models/auth";
+import { DashboardLayout } from "../../components/layout";
+import { useConfirm } from "@/src/contexts/ConfirmContext";
+import { cn, getInitials } from "../../lib/utils";
+import AddMemberModal from "../../components/team/AddMemberModal";
 
 export default function TeamPage() {
   const confirm = useConfirm();
   const [teamMembers, setTeamMembers] = useState<User[]>([]);
   const [filteredMembers, setFilteredMembers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<User | null>(null);
   const [editFormData, setEditFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    userName: '',
-    userRole: '',
+    firstName: "",
+    lastName: "",
+    email: "",
+    userName: "",
+    userRole: "",
   });
 
   useEffect(() => {
@@ -106,24 +106,23 @@ export default function TeamPage() {
       let tenantId = null;
 
       // Method 1: From selectedTenant
-      const selectedTenant = localStorage.getItem('selectedTenant');
+      const selectedTenant = localStorage.getItem("selectedTenant");
       if (selectedTenant) {
         try {
           const parsed = JSON.parse(selectedTenant);
           tenantId = parsed.id || parsed.tenantId;
-        } catch (e) {
-          }
+        } catch (e) {}
       }
 
       // Method 2: From currentTenantId
       if (!tenantId) {
-        tenantId = localStorage.getItem('currentTenantId');
+        tenantId = localStorage.getItem("currentTenantId");
       }
 
       // Method 3: From URL path if we're in workspace
-      if (!tenantId && typeof window !== 'undefined') {
-        const pathParts = window.location.pathname.split('/');
-        const workspaceIndex = pathParts.indexOf('workspace');
+      if (!tenantId && typeof window !== "undefined") {
+        const pathParts = window.location.pathname.split("/");
+        const workspaceIndex = pathParts.indexOf("workspace");
         if (workspaceIndex !== -1 && pathParts[workspaceIndex + 1]) {
           tenantId = pathParts[workspaceIndex + 1];
         }
@@ -133,10 +132,10 @@ export default function TeamPage() {
         const response = await apiService.getTenantUsers(tenantId);
         setTeamMembers(response.users || []);
       } else {
-        setError('No tenant selected. Please select a workspace first.');
+        setError("No tenant selected. Please select a workspace first.");
       }
     } catch (err) {
-      setError('Failed to load team members');
+      setError("Failed to load team members");
     } finally {
       setLoading(false);
     }
@@ -144,27 +143,27 @@ export default function TeamPage() {
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case 'super_admin':
-        return 'bg-red-100 text-red-800 border-red-200';
-      case 'admin':
-        return 'bg-purple-100 text-purple-800 border-purple-200';
-      case 'project_manager':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'team_member':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'client':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case "super_admin":
+        return "bg-red-100 text-red-800 border-red-200";
+      case "admin":
+        return "bg-purple-100 text-purple-800 border-purple-200";
+      case "project_manager":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case "team_member":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "client":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
   const getRoleIcon = (role: string) => {
     switch (role) {
-      case 'super_admin':
-      case 'admin':
+      case "super_admin":
+      case "admin":
         return <Crown className="h-3 w-3" />;
-      case 'project_manager':
+      case "project_manager":
         return <Shield className="h-3 w-3" />;
       default:
         return <Users className="h-3 w-3" />;
@@ -172,17 +171,17 @@ export default function TeamPage() {
   };
 
   const formatRole = (role: string) => {
-    return role.replace('_', ' ').replace(/\b\w/g, (l) => l.toUpperCase());
+    return role.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase());
   };
 
   const getTeamStats = () => {
     const totalMembers = teamMembers.length;
     const activeMembers = teamMembers.filter((m) => m.isActive).length;
     const admins = teamMembers.filter((m) =>
-      ['super_admin', 'admin'].includes(m.userRole),
+      ["super_admin", "admin"].includes(m.userRole),
     ).length;
     const projectManagers = teamMembers.filter(
-      (m) => m.userRole === 'project_manager',
+      (m) => m.userRole === "project_manager",
     ).length;
 
     return { totalMembers, activeMembers, admins, projectManagers };
@@ -197,11 +196,11 @@ export default function TeamPage() {
   const openEditDialog = (member: User) => {
     setSelectedMember(member);
     setEditFormData({
-      firstName: member.firstName || '',
-      lastName: member.lastName || '',
-      email: member.email || '',
-      userName: member.userName || '',
-      userRole: member.userRole || '',
+      firstName: member.firstName || "",
+      lastName: member.lastName || "",
+      email: member.email || "",
+      userName: member.userName || "",
+      userRole: member.userRole || "",
     });
     setIsEditDialogOpen(true);
   };
@@ -213,9 +212,9 @@ export default function TeamPage() {
     try {
       setLoading(true);
       const memberId = selectedMember.userId || selectedMember.id;
-      
+
       if (!memberId) {
-        setError('Member ID not found');
+        setError("Member ID not found");
         return;
       }
 
@@ -224,22 +223,22 @@ export default function TeamPage() {
       setSelectedMember(null);
       fetchTeamMembers();
     } catch (err) {
-      setError('Failed to update member');
+      setError("Failed to update member");
     } finally {
       setLoading(false);
     }
   };
 
   const handleEditInputChange = (field: string, value: string) => {
-    setEditFormData(prev => ({
+    setEditFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
   const getCurrentTenantId = () => {
     let tenantId = null;
-    const selectedTenant = localStorage.getItem('selectedTenant');
+    const selectedTenant = localStorage.getItem("selectedTenant");
     if (selectedTenant) {
       try {
         const parsed = JSON.parse(selectedTenant);
@@ -249,7 +248,7 @@ export default function TeamPage() {
       }
     }
     if (!tenantId) {
-      tenantId = localStorage.getItem('currentTenantId');
+      tenantId = localStorage.getItem("currentTenantId");
     }
     return tenantId;
   };
@@ -258,27 +257,26 @@ export default function TeamPage() {
     const ok = await confirm({
       description: `Are you sure you want to remove ${memberName} from the team?`,
       destructive: true,
-      confirmLabel: 'Remove',
+      confirmLabel: "Remove",
     });
     if (!ok) return;
 
     try {
       setLoading(true);
       const tenantId = getCurrentTenantId();
-      
+
       if (!tenantId) {
-        setError('No tenant selected');
+        setError("No tenant selected");
         return;
       }
 
       // Call the remove user API
       await apiService.delete(`/rbac/remove-user/${memberId}`);
-      
+
       // Refresh the team members list
       await fetchTeamMembers();
-      
     } catch (err: any) {
-      setError(extractErrorMessage(err, 'Failed to remove team member'));
+      setError(extractErrorMessage(err, "Failed to remove team member"));
     } finally {
       setLoading(false);
     }
@@ -304,9 +302,12 @@ export default function TeamPage() {
               onClick={fetchTeamMembers}
               disabled={loading}
             >
-              <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
+              <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
             </Button>
-            <Button className="modern-button" onClick={() => setShowAddMemberModal(true)}>
+            <Button
+              className="modern-button"
+              onClick={() => setShowAddMemberModal(true)}
+            >
               <UserPlus className="h-4 w-4 mr-2" />
               Add Team Member
             </Button>
@@ -454,21 +455,23 @@ export default function TeamPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => openEditDialog(member)}>
+                        <DropdownMenuItem
+                          onClick={() => openEditDialog(member)}
+                        >
                           <Edit className="h-4 w-4 mr-2" />
                           Edit Member
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem 
+                        <DropdownMenuItem
                           className="text-red-600 focus:text-red-600"
                           onClick={() => {
                             const memberId = member.userId || member.id;
                             if (memberId) {
                               handleRemoveMember(
-                                memberId, 
-                                member.firstName && member.lastName 
-                                  ? `${member.firstName} ${member.lastName}` 
-                                  : member.userName
+                                memberId,
+                                member.firstName && member.lastName
+                                  ? `${member.firstName} ${member.lastName}`
+                                  : member.userName,
                               );
                             }
                           }}
@@ -494,7 +497,7 @@ export default function TeamPage() {
                       {getRoleIcon(member.userRole)}
                       <Badge
                         variant="outline"
-                        className={cn('text-xs', getRoleColor(member.userRole))}
+                        className={cn("text-xs", getRoleColor(member.userRole))}
                       >
                         {formatRole(member.userRole)}
                       </Badge>
@@ -504,12 +507,12 @@ export default function TeamPage() {
                       <div className="flex items-center gap-2">
                         <div
                           className={cn(
-                            'w-2 h-2 rounded-full',
-                            member.isActive ? 'bg-green-500' : 'bg-gray-400',
+                            "w-2 h-2 rounded-full",
+                            member.isActive ? "bg-green-500" : "bg-gray-400",
                           )}
                         />
                         <span className="text-xs text-gray-500">
-                          {member.isActive ? 'Active' : 'Inactive'}
+                          {member.isActive ? "Active" : "Inactive"}
                         </span>
                       </div>
                     </div>
@@ -530,10 +533,13 @@ export default function TeamPage() {
               </h3>
               <p className="text-gray-600 mb-4">
                 {searchTerm
-                  ? 'Try adjusting your search terms'
-                  : 'Get started by inviting your first team member'}
+                  ? "Try adjusting your search terms"
+                  : "Get started by inviting your first team member"}
               </p>
-              <Button className="modern-button" onClick={() => setShowAddMemberModal(true)}>
+              <Button
+                className="modern-button"
+                onClick={() => setShowAddMemberModal(true)}
+              >
                 <UserPlus className="h-4 w-4 mr-2" />
                 Add Team Member
               </Button>
@@ -547,7 +553,8 @@ export default function TeamPage() {
             <DialogHeader>
               <DialogTitle>Edit Team Member</DialogTitle>
               <DialogDescription>
-                Update information for {selectedMember?.firstName} {selectedMember?.lastName}
+                Update information for {selectedMember?.firstName}{" "}
+                {selectedMember?.lastName}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleEditSubmit} className="space-y-6 py-4">
@@ -557,7 +564,9 @@ export default function TeamPage() {
                   <Input
                     id="edit-firstName"
                     value={editFormData.firstName}
-                    onChange={(e) => handleEditInputChange('firstName', e.target.value)}
+                    onChange={(e) =>
+                      handleEditInputChange("firstName", e.target.value)
+                    }
                     required
                   />
                 </div>
@@ -566,7 +575,9 @@ export default function TeamPage() {
                   <Input
                     id="edit-lastName"
                     value={editFormData.lastName}
-                    onChange={(e) => handleEditInputChange('lastName', e.target.value)}
+                    onChange={(e) =>
+                      handleEditInputChange("lastName", e.target.value)
+                    }
                     required
                   />
                 </div>
@@ -576,7 +587,9 @@ export default function TeamPage() {
                     id="edit-email"
                     type="email"
                     value={editFormData.email}
-                    onChange={(e) => handleEditInputChange('email', e.target.value)}
+                    onChange={(e) =>
+                      handleEditInputChange("email", e.target.value)
+                    }
                     required
                   />
                 </div>
@@ -585,7 +598,9 @@ export default function TeamPage() {
                   <Input
                     id="edit-userName"
                     value={editFormData.userName}
-                    onChange={(e) => handleEditInputChange('userName', e.target.value)}
+                    onChange={(e) =>
+                      handleEditInputChange("userName", e.target.value)
+                    }
                     required
                   />
                 </div>
@@ -593,14 +608,18 @@ export default function TeamPage() {
                   <Label htmlFor="edit-userRole">Role *</Label>
                   <Select
                     value={editFormData.userRole}
-                    onValueChange={(value) => handleEditInputChange('userRole', value)}
+                    onValueChange={(value) =>
+                      handleEditInputChange("userRole", value)
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select role" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="team_member">Team Member</SelectItem>
-                      <SelectItem value="project_manager">Project Manager</SelectItem>
+                      <SelectItem value="project_manager">
+                        Project Manager
+                      </SelectItem>
                       <SelectItem value="admin">Admin</SelectItem>
                       <SelectItem value="super_admin">Super Admin</SelectItem>
                     </SelectContent>
@@ -622,7 +641,7 @@ export default function TeamPage() {
                       Updating...
                     </>
                   ) : (
-                    'Update Member'
+                    "Update Member"
                   )}
                 </Button>
               </div>
@@ -635,7 +654,7 @@ export default function TeamPage() {
           open={showAddMemberModal}
           onClose={() => setShowAddMemberModal(false)}
           onSuccess={handleAddMemberSuccess}
-          tenantId={getCurrentTenantId() || ''}
+          tenantId={getCurrentTenantId() || ""}
         />
       </div>
     </DashboardLayout>

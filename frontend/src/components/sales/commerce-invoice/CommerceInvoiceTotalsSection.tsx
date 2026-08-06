@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { Input } from '@/src/components/ui/input';
-import { COMMERCE_INPUT_CLS } from './constants';
-import { InlineField } from './InlineField';
-import type { CommerceInvoiceTotals } from './types';
+import { Input } from "@/src/components/ui/input";
+import { COMMERCE_INPUT_CLS } from "./constants";
+import { InlineField } from "./InlineField";
+import type { CommerceInvoiceTotals } from "./types";
 
 type CommerceInvoiceTotalsSectionProps = {
   totals: CommerceInvoiceTotals;
@@ -36,7 +36,11 @@ export function CommerceInvoiceTotalsSection({
           <InlineField label="Bill Status:">
             <Input
               readOnly
-              value={paidAmount >= totals.total && totals.total > 0 ? 'paid' : 'draft'}
+              value={
+                paidAmount >= totals.total && totals.total > 0
+                  ? "paid"
+                  : "draft"
+              }
               className={`${COMMERCE_INPUT_CLS} bg-background capitalize`}
             />
           </InlineField>
@@ -66,7 +70,9 @@ export function CommerceInvoiceTotalsSection({
               min="0"
               step="0.01"
               value={paidAmount}
-              onChange={(e) => onPaidAmountChange(parseFloat(e.target.value) || 0)}
+              onChange={(e) =>
+                onPaidAmountChange(parseFloat(e.target.value) || 0)
+              }
               className={`${COMMERCE_INPUT_CLS} bg-background`}
             />
           </InlineField>

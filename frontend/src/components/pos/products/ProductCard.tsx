@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import { AlertTriangle, Edit, Eye, Trash2 } from 'lucide-react';
+import { AlertTriangle, Edit, Eye, Trash2 } from "lucide-react";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Badge } from '@/src/components/ui/badge';
-import type { Product } from '@/src/models/pos';
-import { formatProductDate, unitLabel } from './productUtils';
+} from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { Badge } from "@/src/components/ui/badge";
+import type { Product } from "@/src/models/pos";
+import { formatProductDate, unitLabel } from "./productUtils";
 
 type ProductCardProps = {
   product: Product;
@@ -36,7 +36,9 @@ export function ProductCard({
             <CardTitle className="line-clamp-2 break-words text-lg leading-tight">
               {product.name}
             </CardTitle>
-            <CardDescription className="truncate text-sm">SKU: {product.sku}</CardDescription>
+            <CardDescription className="truncate text-sm">
+              SKU: {product.sku}
+            </CardDescription>
           </div>
           <div className="flex shrink-0 flex-wrap items-center justify-end gap-1 sm:pt-0.5">
             <Button variant="ghost" size="sm" onClick={() => onView(product)}>
@@ -55,14 +57,18 @@ export function ProductCard({
       <CardContent className="space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">Price</span>
-          <span className="font-semibold">{formatCurrency(product.salePrice)}</span>
+          <span className="font-semibold">
+            {formatCurrency(product.salePrice)}
+          </span>
         </div>
 
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">Stock</span>
           <div className="flex items-center space-x-2">
             <span className="font-medium">{product.stockQuantity}</span>
-            <span className="text-xs text-muted-foreground">{unitLabel(product.unitOfMeasure)}</span>
+            <span className="text-xs text-muted-foreground">
+              {unitLabel(product.unitOfMeasure)}
+            </span>
           </div>
         </div>
 

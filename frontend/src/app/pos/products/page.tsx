@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { DashboardLayout } from '@/src/components/layout';
-import { useCurrency } from '@/src/contexts/CurrencyContext';
-import { usePosProductsPage } from '@/src/hooks/usePosProductsPage';
-import { ProductsLoadingState } from '@/src/components/pos/products/ProductsLoadingState';
-import { ProductsPageHeader } from '@/src/components/pos/products/ProductsPageHeader';
-import { ProductsFiltersCard } from '@/src/components/pos/products/ProductsFiltersCard';
-import { ProductsGrid } from '@/src/components/pos/products/ProductsGrid';
-import { CreateProductDialog } from '@/src/components/pos/products/CreateProductDialog';
-import { ProductViewDialog } from '@/src/components/pos/products/ProductViewDialog';
-import { ProductDeleteDialog } from '@/src/components/pos/products/ProductDeleteDialog';
+import { DashboardLayout } from "@/src/components/layout";
+import { useCurrency } from "@/src/contexts/CurrencyContext";
+import { usePosProductsPage } from "@/src/hooks/usePosProductsPage";
+import { ProductsLoadingState } from "@/src/components/pos/products/ProductsLoadingState";
+import { ProductsPageHeader } from "@/src/components/pos/products/ProductsPageHeader";
+import { ProductsFiltersCard } from "@/src/components/pos/products/ProductsFiltersCard";
+import { ProductsGrid } from "@/src/components/pos/products/ProductsGrid";
+import { CreateProductDialog } from "@/src/components/pos/products/CreateProductDialog";
+import { ProductViewDialog } from "@/src/components/pos/products/ProductViewDialog";
+import { ProductDeleteDialog } from "@/src/components/pos/products/ProductDeleteDialog";
 
 export default function POSProductsPage() {
   const { formatCurrency } = useCurrency();
@@ -27,7 +27,9 @@ export default function POSProductsPage() {
         <ProductsFiltersCard
           categories={page.categories}
           filters={page.filters}
-          onFiltersChange={(patch) => page.setFilters((prev) => ({ ...prev, ...patch }))}
+          onFiltersChange={(patch) =>
+            page.setFilters((prev) => ({ ...prev, ...patch }))
+          }
           onClear={page.clearFilters}
         />
 

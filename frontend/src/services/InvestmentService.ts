@@ -1,12 +1,16 @@
-import { apiService } from './ApiService';
+import { apiService } from "./ApiService";
 
 export interface Investment {
   id: string;
   tenant_id: string;
   investment_number: string;
   investment_date: string;
-  investment_type: 'cash_investment' | 'card_transfer' | 'bank_transfer' | 'equipment_purchase';
-  status: 'pending' | 'completed' | 'cancelled' | 'failed';
+  investment_type:
+    | "cash_investment"
+    | "card_transfer"
+    | "bank_transfer"
+    | "equipment_purchase";
+  status: "pending" | "completed" | "cancelled" | "failed";
   amount: number;
   currency?: string;
   description: string;
@@ -24,7 +28,11 @@ export interface Investment {
 
 export interface InvestmentCreate {
   investment_date: string;
-  investment_type: 'cash_investment' | 'card_transfer' | 'bank_transfer' | 'equipment_purchase';
+  investment_type:
+    | "cash_investment"
+    | "card_transfer"
+    | "bank_transfer"
+    | "equipment_purchase";
   amount: number;
   currency?: string;
   description: string;
@@ -37,7 +45,11 @@ export interface InvestmentCreate {
 
 export interface InvestmentUpdate {
   investment_date?: string;
-  investment_type?: 'cash_investment' | 'card_transfer' | 'bank_transfer' | 'equipment_purchase';
+  investment_type?:
+    | "cash_investment"
+    | "card_transfer"
+    | "bank_transfer"
+    | "equipment_purchase";
   amount?: number;
   currency?: string;
   description?: string;
@@ -46,7 +58,7 @@ export interface InvestmentUpdate {
   reference_type?: string;
   meta_data?: Record<string, any>;
   tags?: string[];
-  status?: 'pending' | 'completed' | 'cancelled' | 'failed';
+  status?: "pending" | "completed" | "cancelled" | "failed";
 }
 
 export interface InvestmentDashboardStats {
@@ -107,18 +119,18 @@ class InvestmentService {
     investment_type?: string,
     status?: string,
     start_date?: string,
-    end_date?: string
+    end_date?: string,
   ): Promise<{ investments: Investment[]; total: number }> {
     const params = new URLSearchParams({
       skip: skip.toString(),
       limit: limit.toString(),
     });
-    
-    if (investment_type) params.append('investment_type', investment_type);
-    if (status) params.append('status', status);
-    if (start_date) params.append('start_date', start_date);
-    if (end_date) params.append('end_date', end_date);
-    
+
+    if (investment_type) params.append("investment_type", investment_type);
+    if (status) params.append("status", status);
+    if (start_date) params.append("start_date", start_date);
+    if (end_date) params.append("end_date", end_date);
+
     const response = await apiService.get(`/investments?${params.toString()}`);
     return response;
   }
@@ -129,11 +141,14 @@ class InvestmentService {
   }
 
   async createInvestment(investment: InvestmentCreate): Promise<Investment> {
-    const response = await apiService.post('/investments', investment);
+    const response = await apiService.post("/investments", investment);
     return response;
   }
 
-  async updateInvestment(id: string, investment: InvestmentUpdate): Promise<Investment> {
+  async updateInvestment(
+    id: string,
+    investment: InvestmentUpdate,
+  ): Promise<Investment> {
     const response = await apiService.put(`/investments/${id}`, investment);
     return response;
   }
@@ -148,20 +163,27 @@ class InvestmentService {
   }
 
   async getInvestmentDashboardStats(): Promise<InvestmentDashboardStats> {
-    const response = await apiService.get('/investments/dashboard/stats');
+    const response = await apiService.get("/investments/dashboard/stats");
     return response;
   }
 
-  async getEquipmentInvestments(investmentId: string): Promise<EquipmentInvestment[]> {
-    const response = await apiService.get(`/investments/${investmentId}/equipment`);
+  async getEquipmentInvestments(
+    investmentId: string,
+  ): Promise<EquipmentInvestment[]> {
+    const response = await apiService.get(
+      `/investments/${investmentId}/equipment`,
+    );
     return response;
   }
 
   async createEquipmentInvestment(
-    investmentId: string, 
-    equipment: EquipmentInvestmentCreate
+    investmentId: string,
+    equipment: EquipmentInvestmentCreate,
   ): Promise<EquipmentInvestment> {
-    const response = await apiService.post(`/investments/${investmentId}/equipment`, equipment);
+    const response = await apiService.post(
+      `/investments/${investmentId}/equipment`,
+      equipment,
+    );
     return response;
   }
 }

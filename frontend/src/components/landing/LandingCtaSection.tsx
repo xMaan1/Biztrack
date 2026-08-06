@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { ArrowRight, Calendar, Mail } from 'lucide-react';
-import { Button } from '../ui/button';
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { ArrowRight, Calendar, Mail } from "lucide-react";
+import { Button } from "../ui/button";
 
 export function LandingCtaSection() {
   const router = useRouter();
@@ -29,7 +29,7 @@ export function LandingCtaSection() {
           <Button
             size="lg"
             className="text-base sm:text-lg px-8 py-6 h-auto bg-white text-blue-700 hover:bg-blue-50"
-            onClick={() => router.push('/signup')}
+            onClick={() => router.push("/signup")}
           >
             <Calendar className="mr-2 h-5 w-5" />
             Book a Demo
@@ -49,11 +49,11 @@ export function LandingCtaSection() {
         </div>
 
         <p className="mt-8 text-sm text-blue-100/90">
-          Prefer self-serve?{' '}
+          Prefer self-serve?{" "}
           <button
             type="button"
             className="font-semibold underline underline-offset-2 hover:text-white"
-            onClick={() => router.push('/signup')}
+            onClick={() => router.push("/signup")}
           >
             Start your free trial
           </button>

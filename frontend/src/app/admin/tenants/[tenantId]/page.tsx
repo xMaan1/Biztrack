@@ -1,22 +1,40 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { SuperAdminGuard } from '@/src/components/guards/PermissionGuard';
-import { useCurrency } from '@/src/contexts/CurrencyContext';
-import { apiService } from '@/src/services/ApiService';
-import { extractErrorMessage } from '@/src/utils/errorUtils';
-import { useConfirm } from '@/src/contexts/ConfirmContext';
-import { DashboardLayout } from '../../../../components/layout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Badge } from '@/src/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/src/components/ui/tabs';
-import { Alert, AlertDescription } from '@/src/components/ui/alert';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/src/components/ui/dialog';
-import { Separator } from '@/src/components/ui/separator';
-import { Checkbox } from '@/src/components/ui/checkbox';
-import { Invoice } from '@/src/models/sales';
+import React, { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { SuperAdminGuard } from "@/src/components/guards/PermissionGuard";
+import { useCurrency } from "@/src/contexts/CurrencyContext";
+import { apiService } from "@/src/services/ApiService";
+import { extractErrorMessage } from "@/src/utils/errorUtils";
+import { useConfirm } from "@/src/contexts/ConfirmContext";
+import { DashboardLayout } from "../../../../components/layout";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { Badge } from "@/src/components/ui/badge";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/src/components/ui/tabs";
+import { Alert, AlertDescription } from "@/src/components/ui/alert";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/src/components/ui/dialog";
+import { Separator } from "@/src/components/ui/separator";
+import { Checkbox } from "@/src/components/ui/checkbox";
+import { Invoice } from "@/src/models/sales";
 import {
   Building2,
   Users,
@@ -32,7 +50,7 @@ import {
   Plus,
   AlertTriangle,
   Loader2,
-} from 'lucide-react';
+} from "lucide-react";
 
 interface TenantDetails {
   tenant: {
@@ -131,9 +149,11 @@ function TenantDetailsContent() {
   const { getCurrencySymbol, formatCurrency } = useCurrency();
   const tenantId = params.tenantId as string;
 
-  const [tenantDetails, setTenantDetails] = useState<TenantDetails | null>(null);
+  const [tenantDetails, setTenantDetails] = useState<TenantDetails | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   // Invoice details modal state
@@ -154,11 +174,13 @@ function TenantDetailsContent() {
   const fetchTenantDetails = async () => {
     try {
       setLoading(true);
-      setError('');
-      const response = await apiService.get(`/admin/tenants/${tenantId}/complete`);
+      setError("");
+      const response = await apiService.get(
+        `/admin/tenants/${tenantId}/complete`,
+      );
       setTenantDetails(response);
     } catch (err: any) {
-      setError(extractErrorMessage(err, 'Failed to load tenant details'));
+      setError(extractErrorMessage(err, "Failed to load tenant details"));
     } finally {
       setLoading(false);
     }
@@ -168,13 +190,13 @@ function TenantDetailsContent() {
     if (!tenantDetails) return;
 
     try {
-      setActionLoading('toggle-status');
+      setActionLoading("toggle-status");
       await apiService.put(`/admin/tenants/${tenantId}/status`, {
         is_active: !tenantDetails.tenant.isActive,
       });
       await fetchTenantDetails(); // Refresh data
     } catch (err: any) {
-      setError(extractErrorMessage(err, 'Failed to update tenant status'));
+      setError(extractErrorMessage(err, "Failed to update tenant status"));
     } finally {
       setActionLoading(null);
     }
@@ -182,9 +204,9 @@ function TenantDetailsContent() {
 
   const handleDeleteUser = async (userId: string) => {
     const ok = await confirm({
-      description: 'Are you sure you want to remove this user from the tenant?',
+      description: "Are you sure you want to remove this user from the tenant?",
       destructive: true,
-      confirmLabel: 'Remove',
+      confirmLabel: "Remove",
     });
     if (!ok) return;
 
@@ -193,7 +215,7 @@ function TenantDetailsContent() {
       await apiService.delete(`/admin/tenants/${tenantId}/users/${userId}`);
       await fetchTenantDetails(); // Refresh data
     } catch (err: any) {
-      setError(extractErrorMessage(err, 'Failed to remove user'));
+      setError(extractErrorMessage(err, "Failed to remove user"));
     } finally {
       setActionLoading(null);
     }
@@ -201,18 +223,20 @@ function TenantDetailsContent() {
 
   const handleDeleteInvoice = async (invoiceId: string) => {
     const ok = await confirm({
-      description: 'Are you sure you want to delete this invoice?',
+      description: "Are you sure you want to delete this invoice?",
       destructive: true,
-      confirmLabel: 'Delete',
+      confirmLabel: "Delete",
     });
     if (!ok) return;
 
     try {
       setActionLoading(`delete-invoice-${invoiceId}`);
-      await apiService.delete(`/admin/tenants/${tenantId}/invoices/${invoiceId}`);
+      await apiService.delete(
+        `/admin/tenants/${tenantId}/invoices/${invoiceId}`,
+      );
       await fetchTenantDetails(); // Refresh data
     } catch (err: any) {
-      setError(extractErrorMessage(err, 'Failed to delete invoice'));
+      setError(extractErrorMessage(err, "Failed to delete invoice"));
     } finally {
       setActionLoading(null);
     }
@@ -221,11 +245,13 @@ function TenantDetailsContent() {
   const handleViewInvoiceDetails = async (invoiceId: string) => {
     setInvoiceDetailsLoading(true);
     try {
-      const response = await apiService.get(`/admin/tenants/${tenantId}/invoices/${invoiceId}`);
+      const response = await apiService.get(
+        `/admin/tenants/${tenantId}/invoices/${invoiceId}`,
+      );
       setSelectedInvoice(response.invoice);
       setShowInvoiceDetails(true);
     } catch (error: any) {
-      setError(extractErrorMessage(error, 'Failed to load invoice details'));
+      setError(extractErrorMessage(error, "Failed to load invoice details"));
     } finally {
       setInvoiceDetailsLoading(false);
     }
@@ -234,7 +260,7 @@ function TenantDetailsContent() {
   const handleDeleteTenant = async () => {
     if (!tenantDetails) return;
 
-    setActionLoading('delete-tenant');
+    setActionLoading("delete-tenant");
     try {
       await apiService.delete(`/admin/tenants/${tenantId}`, {
         data: {
@@ -244,9 +270,9 @@ function TenantDetailsContent() {
       setShowDeleteTenantModal(false);
       setDeleteAllData(false);
       // Redirect to tenants list after successful deletion
-      router.push('/admin/tenants');
+      router.push("/admin/tenants");
     } catch (err: any) {
-      setError(extractErrorMessage(err, 'Failed to delete tenant'));
+      setError(extractErrorMessage(err, "Failed to delete tenant"));
     } finally {
       setActionLoading(null);
     }
@@ -254,18 +280,20 @@ function TenantDetailsContent() {
 
   const handleDeleteProject = async (projectId: string) => {
     const ok = await confirm({
-      description: 'Are you sure you want to delete this project?',
+      description: "Are you sure you want to delete this project?",
       destructive: true,
-      confirmLabel: 'Delete',
+      confirmLabel: "Delete",
     });
     if (!ok) return;
 
     try {
       setActionLoading(`delete-project-${projectId}`);
-      await apiService.delete(`/admin/tenants/${tenantId}/projects/${projectId}`);
+      await apiService.delete(
+        `/admin/tenants/${tenantId}/projects/${projectId}`,
+      );
       await fetchTenantDetails(); // Refresh data
     } catch (err: any) {
-      setError(extractErrorMessage(err, 'Failed to delete project'));
+      setError(extractErrorMessage(err, "Failed to delete project"));
     } finally {
       setActionLoading(null);
     }
@@ -273,39 +301,41 @@ function TenantDetailsContent() {
 
   const handleDeleteCustomer = async (customerId: string) => {
     const ok = await confirm({
-      description: 'Are you sure you want to delete this customer?',
+      description: "Are you sure you want to delete this customer?",
       destructive: true,
-      confirmLabel: 'Delete',
+      confirmLabel: "Delete",
     });
     if (!ok) return;
 
     try {
       setActionLoading(`delete-customer-${customerId}`);
-      await apiService.delete(`/admin/tenants/${tenantId}/customers/${customerId}`);
+      await apiService.delete(
+        `/admin/tenants/${tenantId}/customers/${customerId}`,
+      );
       await fetchTenantDetails(); // Refresh data
     } catch (err: any) {
-      setError(extractErrorMessage(err, 'Failed to delete customer'));
+      setError(extractErrorMessage(err, "Failed to delete customer"));
     } finally {
       setActionLoading(null);
     }
   };
 
   const getStatusColor = (status: string) => {
-    if (!status) return 'bg-gray-100 text-gray-800';
+    if (!status) return "bg-gray-100 text-gray-800";
     switch (status.toLowerCase()) {
-      case 'active':
-      case 'paid':
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'inactive':
-      case 'draft':
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'cancelled':
-      case 'overdue':
-        return 'bg-red-100 text-red-800';
+      case "active":
+      case "paid":
+      case "completed":
+        return "bg-green-100 text-green-800";
+      case "inactive":
+      case "draft":
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "cancelled":
+      case "overdue":
+        return "bg-red-100 text-red-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -332,12 +362,12 @@ function TenantDetailsContent() {
             <CardHeader>
               <CardTitle className="text-center text-red-600">Error</CardTitle>
               <CardDescription className="text-center">
-                {error || 'Failed to load tenant details'}
+                {error || "Failed to load tenant details"}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Button
-                onClick={() => router.push('/admin/tenants')}
+                onClick={() => router.push("/admin/tenants")}
                 className="w-full"
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
@@ -358,7 +388,7 @@ function TenantDetailsContent() {
           <div className="flex items-center space-x-4">
             <Button
               variant="outline"
-              onClick={() => router.push('/admin/tenants')}
+              onClick={() => router.push("/admin/tenants")}
               className="gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -373,35 +403,36 @@ function TenantDetailsContent() {
           </div>
           <div className="flex items-center space-x-2">
             <Badge
-              className={tenantDetails.tenant.isActive
-                ? 'bg-green-100 text-green-800'
-                : 'bg-red-100 text-red-800'
+              className={
+                tenantDetails.tenant.isActive
+                  ? "bg-green-100 text-green-800"
+                  : "bg-red-100 text-red-800"
               }
             >
-              {tenantDetails.tenant.isActive ? 'Active' : 'Inactive'}
+              {tenantDetails.tenant.isActive ? "Active" : "Inactive"}
             </Badge>
             <Button
               onClick={handleToggleTenantStatus}
-              disabled={actionLoading === 'toggle-status'}
+              disabled={actionLoading === "toggle-status"}
               variant="outline"
               className="gap-2"
             >
-              {actionLoading === 'toggle-status' ? (
+              {actionLoading === "toggle-status" ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
               ) : tenantDetails.tenant.isActive ? (
                 <ToggleLeft className="h-4 w-4" />
               ) : (
                 <ToggleRight className="h-4 w-4" />
               )}
-              {tenantDetails.tenant.isActive ? 'Deactivate' : 'Activate'}
+              {tenantDetails.tenant.isActive ? "Deactivate" : "Activate"}
             </Button>
             <Button
               onClick={() => setShowDeleteTenantModal(true)}
-              disabled={actionLoading === 'delete-tenant'}
+              disabled={actionLoading === "delete-tenant"}
               variant="destructive"
               className="gap-2"
             >
-              {actionLoading === 'delete-tenant' ? (
+              {actionLoading === "delete-tenant" ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
               ) : (
                 <Trash2 className="h-4 w-4" />
@@ -428,7 +459,9 @@ function TenantDetailsContent() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{tenantDetails.statistics.totalUsers}</div>
+              <div className="text-2xl font-bold">
+                {tenantDetails.statistics.totalUsers}
+              </div>
               <p className="text-xs text-muted-foreground">
                 {tenantDetails.statistics.activeUsers} active
               </p>
@@ -441,10 +474,10 @@ function TenantDetailsContent() {
               <Package className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{tenantDetails.statistics.totalProjects}</div>
-              <p className="text-xs text-muted-foreground">
-                Total projects
-              </p>
+              <div className="text-2xl font-bold">
+                {tenantDetails.statistics.totalProjects}
+              </div>
+              <p className="text-xs text-muted-foreground">Total projects</p>
             </CardContent>
           </Card>
 
@@ -454,10 +487,10 @@ function TenantDetailsContent() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{tenantDetails.statistics.totalCustomers}</div>
-              <p className="text-xs text-muted-foreground">
-                Total customers
-              </p>
+              <div className="text-2xl font-bold">
+                {tenantDetails.statistics.totalCustomers}
+              </div>
+              <p className="text-xs text-muted-foreground">Total customers</p>
             </CardContent>
           </Card>
 
@@ -467,9 +500,13 @@ function TenantDetailsContent() {
               <FileText className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{tenantDetails.statistics.totalInvoices}</div>
+              <div className="text-2xl font-bold">
+                {tenantDetails.statistics.totalInvoices}
+              </div>
               <p className="text-xs text-muted-foreground">
-                {getCurrencySymbol()}{tenantDetails.statistics.totalInvoiceValue.toLocaleString()} total value
+                {getCurrencySymbol()}
+                {tenantDetails.statistics.totalInvoiceValue.toLocaleString()}{" "}
+                total value
               </p>
             </CardContent>
           </Card>
@@ -497,20 +534,34 @@ function TenantDetailsContent() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <label className="text-sm font-medium text-gray-500">Name</label>
+                    <label className="text-sm font-medium text-gray-500">
+                      Name
+                    </label>
                     <p className="text-lg">{tenantDetails.tenant.name}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-500">Domain</label>
+                    <label className="text-sm font-medium text-gray-500">
+                      Domain
+                    </label>
                     <p className="text-lg">{tenantDetails.tenant.domain}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-500">Description</label>
-                    <p className="text-lg">{tenantDetails.tenant.description || 'No description'}</p>
+                    <label className="text-sm font-medium text-gray-500">
+                      Description
+                    </label>
+                    <p className="text-lg">
+                      {tenantDetails.tenant.description || "No description"}
+                    </p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-500">Created</label>
-                    <p className="text-lg">{new Date(tenantDetails.tenant.createdAt).toLocaleDateString()}</p>
+                    <label className="text-sm font-medium text-gray-500">
+                      Created
+                    </label>
+                    <p className="text-lg">
+                      {new Date(
+                        tenantDetails.tenant.createdAt,
+                      ).toLocaleDateString()}
+                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -527,21 +578,45 @@ function TenantDetailsContent() {
                   {tenantDetails.subscription ? (
                     <>
                       <div>
-                        <label className="text-sm font-medium text-gray-500">Plan</label>
-                        <p className="text-lg">{tenantDetails.subscription.plan.name}</p>
+                        <label className="text-sm font-medium text-gray-500">
+                          Plan
+                        </label>
+                        <p className="text-lg">
+                          {tenantDetails.subscription.plan.name}
+                        </p>
                       </div>
                       <div>
-                        <label className="text-sm font-medium text-gray-500">Type</label>
-                        <p className="text-lg">{tenantDetails.subscription.plan.planType}</p>
+                        <label className="text-sm font-medium text-gray-500">
+                          Type
+                        </label>
+                        <p className="text-lg">
+                          {tenantDetails.subscription.plan.planType}
+                        </p>
                       </div>
                       <div>
-                        <label className="text-sm font-medium text-gray-500">Price</label>
-                        <p className="text-lg">{getCurrencySymbol()}{tenantDetails.subscription.plan.price}/{tenantDetails.subscription.plan.billingCycle}</p>
+                        <label className="text-sm font-medium text-gray-500">
+                          Price
+                        </label>
+                        <p className="text-lg">
+                          {getCurrencySymbol()}
+                          {tenantDetails.subscription.plan.price}/
+                          {tenantDetails.subscription.plan.billingCycle}
+                        </p>
                       </div>
                       <div>
-                        <label className="text-sm font-medium text-gray-500">Status</label>
-                        <Badge className={tenantDetails.subscription.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
-                          {tenantDetails.subscription.status === 'active' ? 'Active' : tenantDetails.subscription.status || 'Inactive'}
+                        <label className="text-sm font-medium text-gray-500">
+                          Status
+                        </label>
+                        <Badge
+                          className={
+                            tenantDetails.subscription.status === "active"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }
+                        >
+                          {tenantDetails.subscription.status === "active"
+                            ? "Active"
+                            : tenantDetails.subscription.status || "Inactive"}
                         </Badge>
                       </div>
                     </>
@@ -570,17 +645,28 @@ function TenantDetailsContent() {
               <CardContent>
                 <div className="space-y-4">
                   {tenantDetails.users.map((user) => (
-                    <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div
+                      key={user.id}
+                      className="flex items-center justify-between p-4 border rounded-lg"
+                    >
                       <div className="flex items-center space-x-4">
                         <div>
-                          <p className="font-medium">{user.firstName} {user.lastName}</p>
+                          <p className="font-medium">
+                            {user.firstName} {user.lastName}
+                          </p>
                           <p className="text-sm text-gray-500">{user.email}</p>
-                          <p className="text-sm text-gray-500">Role: {user.userRole}</p>
+                          <p className="text-sm text-gray-500">
+                            Role: {user.userRole}
+                          </p>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Badge className={getStatusColor(user.isActive ? 'active' : 'inactive')}>
-                          {user.isActive ? 'Active' : 'Inactive'}
+                        <Badge
+                          className={getStatusColor(
+                            user.isActive ? "active" : "inactive",
+                          )}
+                        >
+                          {user.isActive ? "Active" : "Inactive"}
                         </Badge>
                         <Button
                           variant="outline"
@@ -598,7 +684,9 @@ function TenantDetailsContent() {
                     </div>
                   ))}
                   {tenantDetails.users.length === 0 && (
-                    <p className="text-center text-gray-500 py-8">No users found</p>
+                    <p className="text-center text-gray-500 py-8">
+                      No users found
+                    </p>
                   )}
                 </div>
               </CardContent>
@@ -622,17 +710,32 @@ function TenantDetailsContent() {
               <CardContent>
                 <div className="space-y-4">
                   {tenantDetails.invoices.map((invoice) => (
-                    <div key={invoice.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div
+                      key={invoice.id}
+                      className="flex items-center justify-between p-4 border rounded-lg"
+                    >
                       <div className="flex items-center space-x-4">
                         <div>
-                          <p className="font-medium">#{invoice.invoiceNumber}</p>
-                          <p className="text-sm text-gray-500">{invoice.customerName}</p>
-                          <p className="text-sm text-gray-500">{invoice.customerEmail}</p>
-                          <p className="text-sm text-gray-500">Issue Date: {new Date(invoice.issueDate).toLocaleDateString()}</p>
+                          <p className="font-medium">
+                            #{invoice.invoiceNumber}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {invoice.customerName}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {invoice.customerEmail}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            Issue Date:{" "}
+                            {new Date(invoice.issueDate).toLocaleDateString()}
+                          </p>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <p className="font-medium">{getCurrencySymbol()}{invoice.total.toLocaleString()}</p>
+                        <p className="font-medium">
+                          {getCurrencySymbol()}
+                          {invoice.total.toLocaleString()}
+                        </p>
                         <Badge className={getStatusColor(invoice.status)}>
                           {invoice.status}
                         </Badge>
@@ -652,7 +755,9 @@ function TenantDetailsContent() {
                           variant="outline"
                           size="sm"
                           onClick={() => handleDeleteInvoice(invoice.id)}
-                          disabled={actionLoading === `delete-invoice-${invoice.id}`}
+                          disabled={
+                            actionLoading === `delete-invoice-${invoice.id}`
+                          }
                         >
                           {actionLoading === `delete-invoice-${invoice.id}` ? (
                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
@@ -664,7 +769,9 @@ function TenantDetailsContent() {
                     </div>
                   ))}
                   {tenantDetails.invoices.length === 0 && (
-                    <p className="text-center text-gray-500 py-8">No invoices found</p>
+                    <p className="text-center text-gray-500 py-8">
+                      No invoices found
+                    </p>
                   )}
                 </div>
               </CardContent>
@@ -688,12 +795,20 @@ function TenantDetailsContent() {
               <CardContent>
                 <div className="space-y-4">
                   {tenantDetails.projects.map((project) => (
-                    <div key={project.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div
+                      key={project.id}
+                      className="flex items-center justify-between p-4 border rounded-lg"
+                    >
                       <div className="flex items-center space-x-4">
                         <div>
                           <p className="font-medium">{project.name}</p>
-                          <p className="text-sm text-gray-500">{project.description}</p>
-                          <p className="text-sm text-gray-500">Start: {new Date(project.startDate).toLocaleDateString()}</p>
+                          <p className="text-sm text-gray-500">
+                            {project.description}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            Start:{" "}
+                            {new Date(project.startDate).toLocaleDateString()}
+                          </p>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
@@ -704,7 +819,9 @@ function TenantDetailsContent() {
                           variant="outline"
                           size="sm"
                           onClick={() => handleDeleteProject(project.id)}
-                          disabled={actionLoading === `delete-project-${project.id}`}
+                          disabled={
+                            actionLoading === `delete-project-${project.id}`
+                          }
                         >
                           {actionLoading === `delete-project-${project.id}` ? (
                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
@@ -716,7 +833,9 @@ function TenantDetailsContent() {
                     </div>
                   ))}
                   {tenantDetails.projects.length === 0 && (
-                    <p className="text-center text-gray-500 py-8">No projects found</p>
+                    <p className="text-center text-gray-500 py-8">
+                      No projects found
+                    </p>
                   )}
                 </div>
               </CardContent>
@@ -740,13 +859,22 @@ function TenantDetailsContent() {
               <CardContent>
                 <div className="space-y-4">
                   {tenantDetails.customers.map((customer) => (
-                    <div key={customer.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div
+                      key={customer.id}
+                      className="flex items-center justify-between p-4 border rounded-lg"
+                    >
                       <div className="flex items-center space-x-4">
                         <div>
                           <p className="font-medium">{customer.name}</p>
-                          <p className="text-sm text-gray-500">{customer.email}</p>
-                          <p className="text-sm text-gray-500">{customer.phone}</p>
-                          <p className="text-sm text-gray-500">{customer.status}</p>
+                          <p className="text-sm text-gray-500">
+                            {customer.email}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {customer.phone}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {customer.status}
+                          </p>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
@@ -757,9 +885,12 @@ function TenantDetailsContent() {
                           variant="outline"
                           size="sm"
                           onClick={() => handleDeleteCustomer(customer.id)}
-                          disabled={actionLoading === `delete-customer-${customer.id}`}
+                          disabled={
+                            actionLoading === `delete-customer-${customer.id}`
+                          }
                         >
-                          {actionLoading === `delete-customer-${customer.id}` ? (
+                          {actionLoading ===
+                          `delete-customer-${customer.id}` ? (
                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
                           ) : (
                             <Trash2 className="h-4 w-4" />
@@ -769,7 +900,9 @@ function TenantDetailsContent() {
                     </div>
                   ))}
                   {tenantDetails.customers.length === 0 && (
-                    <p className="text-center text-gray-500 py-8">No customers found</p>
+                    <p className="text-center text-gray-500 py-8">
+                      No customers found
+                    </p>
                   )}
                 </div>
               </CardContent>
@@ -779,12 +912,16 @@ function TenantDetailsContent() {
       </div>
 
       {/* Delete Tenant Confirmation Modal */}
-      <Dialog open={showDeleteTenantModal} onOpenChange={setShowDeleteTenantModal}>
+      <Dialog
+        open={showDeleteTenantModal}
+        onOpenChange={setShowDeleteTenantModal}
+      >
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle className="text-red-600">Delete Tenant</DialogTitle>
             <DialogDescription>
-              This action cannot be undone. Are you sure you want to delete this tenant?
+              This action cannot be undone. Are you sure you want to delete this
+              tenant?
             </DialogDescription>
           </DialogHeader>
 
@@ -792,7 +929,9 @@ function TenantDetailsContent() {
             <div className="space-y-4">
               <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
                 <p className="font-medium text-red-800">
-                  Do you confirm deleting this tenant: <span className="font-bold">{tenantDetails.tenant.name}</span>?
+                  Do you confirm deleting this tenant:{" "}
+                  <span className="font-bold">{tenantDetails.tenant.name}</span>
+                  ?
                 </p>
               </div>
 
@@ -801,7 +940,9 @@ function TenantDetailsContent() {
                   <Checkbox
                     id="deleteAllData"
                     checked={deleteAllData}
-                    onCheckedChange={(checked: boolean) => setDeleteAllData(checked)}
+                    onCheckedChange={(checked: boolean) =>
+                      setDeleteAllData(checked)
+                    }
                   />
                   <label
                     htmlFor="deleteAllData"
@@ -814,8 +955,10 @@ function TenantDetailsContent() {
                 {deleteAllData && (
                   <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                     <p className="text-sm text-yellow-800">
-                      ⚠️ <strong>Warning:</strong> This will permanently delete all users, invoices, projects,
-                      customers, and all other data associated with this tenant. This action cannot be undone.
+                      ⚠️ <strong>Warning:</strong> This will permanently delete
+                      all users, invoices, projects, customers, and all other
+                      data associated with this tenant. This action cannot be
+                      undone.
                     </p>
                   </div>
                 )}
@@ -830,22 +973,22 @@ function TenantDetailsContent() {
                 setShowDeleteTenantModal(false);
                 setDeleteAllData(false);
               }}
-              disabled={actionLoading === 'delete-tenant'}
+              disabled={actionLoading === "delete-tenant"}
             >
               Cancel
             </Button>
             <Button
               variant="destructive"
               onClick={handleDeleteTenant}
-              disabled={actionLoading === 'delete-tenant'}
+              disabled={actionLoading === "delete-tenant"}
             >
-              {actionLoading === 'delete-tenant' ? (
+              {actionLoading === "delete-tenant" ? (
                 <div className="flex items-center gap-2">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                   Deleting...
                 </div>
               ) : (
-                'Delete Tenant'
+                "Delete Tenant"
               )}
             </Button>
           </DialogFooter>
@@ -856,9 +999,12 @@ function TenantDetailsContent() {
       <Dialog open={showInvoiceDetails} onOpenChange={setShowInvoiceDetails}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Invoice Details - #{selectedInvoice?.invoiceNumber}</DialogTitle>
+            <DialogTitle>
+              Invoice Details - #{selectedInvoice?.invoiceNumber}
+            </DialogTitle>
             <DialogDescription>
-              Complete invoice information including items, parts, discounts, and taxes
+              Complete invoice information including items, parts, discounts,
+              and taxes
             </DialogDescription>
           </DialogHeader>
 
@@ -878,29 +1024,47 @@ function TenantDetailsContent() {
                   <div className="space-y-2">
                     <div>
                       <span className="font-medium">Invoice Number:</span>
-                      <p className="text-sm text-gray-600">#{selectedInvoice.invoiceNumber}</p>
+                      <p className="text-sm text-gray-600">
+                        #{selectedInvoice.invoiceNumber}
+                      </p>
                     </div>
                     <div>
                       <span className="font-medium">Issue Date:</span>
-                      <p className="text-sm text-gray-600">{new Date(selectedInvoice.issueDate).toLocaleDateString()}</p>
+                      <p className="text-sm text-gray-600">
+                        {new Date(
+                          selectedInvoice.issueDate,
+                        ).toLocaleDateString()}
+                      </p>
                     </div>
                     <div>
                       <span className="font-medium">Due Date:</span>
-                      <p className="text-sm text-gray-600">{new Date(selectedInvoice.dueDate).toLocaleDateString()}</p>
+                      <p className="text-sm text-gray-600">
+                        {new Date(selectedInvoice.dueDate).toLocaleDateString()}
+                      </p>
                     </div>
                   </div>
                   <div className="space-y-2">
                     <div>
                       <span className="font-medium">Order Number:</span>
-                      <p className="text-sm text-gray-600">{selectedInvoice.orderNumber || 'N/A'}</p>
+                      <p className="text-sm text-gray-600">
+                        {selectedInvoice.orderNumber || "N/A"}
+                      </p>
                     </div>
                     <div>
                       <span className="font-medium">Created:</span>
-                      <p className="text-sm text-gray-600">{new Date(selectedInvoice.createdAt).toLocaleDateString()}</p>
+                      <p className="text-sm text-gray-600">
+                        {new Date(
+                          selectedInvoice.createdAt,
+                        ).toLocaleDateString()}
+                      </p>
                     </div>
                     <div>
                       <span className="font-medium">Last Updated:</span>
-                      <p className="text-sm text-gray-600">{new Date(selectedInvoice.updatedAt).toLocaleDateString()}</p>
+                      <p className="text-sm text-gray-600">
+                        {new Date(
+                          selectedInvoice.updatedAt,
+                        ).toLocaleDateString()}
+                      </p>
                     </div>
                   </div>
                 </CardContent>
@@ -915,26 +1079,36 @@ function TenantDetailsContent() {
                   <div className="space-y-2">
                     <div>
                       <span className="font-medium">Customer Name:</span>
-                      <p className="text-sm text-gray-600">{selectedInvoice.customerName}</p>
+                      <p className="text-sm text-gray-600">
+                        {selectedInvoice.customerName}
+                      </p>
                     </div>
                     <div>
                       <span className="font-medium">Email:</span>
-                      <p className="text-sm text-gray-600">{selectedInvoice.customerEmail}</p>
+                      <p className="text-sm text-gray-600">
+                        {selectedInvoice.customerEmail}
+                      </p>
                     </div>
                     <div>
                       <span className="font-medium">Phone:</span>
-                      <p className="text-sm text-gray-600">{selectedInvoice.customerPhone || 'N/A'}</p>
+                      <p className="text-sm text-gray-600">
+                        {selectedInvoice.customerPhone || "N/A"}
+                      </p>
                     </div>
                   </div>
                   <div className="space-y-2">
                     <div>
                       <span className="font-medium">Billing Address:</span>
-                      <p className="text-sm text-gray-600 whitespace-pre-line">{selectedInvoice.billingAddress}</p>
+                      <p className="text-sm text-gray-600 whitespace-pre-line">
+                        {selectedInvoice.billingAddress}
+                      </p>
                     </div>
                     {selectedInvoice.shippingAddress && (
                       <div>
                         <span className="font-medium">Shipping Address:</span>
-                        <p className="text-sm text-gray-600 whitespace-pre-line">{selectedInvoice.shippingAddress}</p>
+                        <p className="text-sm text-gray-600 whitespace-pre-line">
+                          {selectedInvoice.shippingAddress}
+                        </p>
                       </div>
                     )}
                   </div>
@@ -949,7 +1123,9 @@ function TenantDetailsContent() {
                   <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <span className="font-medium">Registration:</span>
-                      <p className="text-sm text-gray-600">{selectedInvoice.vehicleReg}</p>
+                      <p className="text-sm text-gray-600">
+                        {selectedInvoice.vehicleReg}
+                      </p>
                     </div>
                   </CardContent>
                 </Card>
@@ -978,23 +1154,35 @@ function TenantDetailsContent() {
                           <tr key={item.id || index} className="border-b">
                             <td className="p-2">
                               <div>
-                                <p className="font-medium">{item.description}</p>
+                                <p className="font-medium">
+                                  {item.description}
+                                </p>
                                 {item.productId && (
-                                  <p className="text-xs text-gray-500">Product ID: {item.productId}</p>
+                                  <p className="text-xs text-gray-500">
+                                    Product ID: {item.productId}
+                                  </p>
                                 )}
                                 {item.projectId && (
-                                  <p className="text-xs text-gray-500">Project ID: {item.projectId}</p>
+                                  <p className="text-xs text-gray-500">
+                                    Project ID: {item.projectId}
+                                  </p>
                                 )}
                                 {item.taskId && (
-                                  <p className="text-xs text-gray-500">Task ID: {item.taskId}</p>
+                                  <p className="text-xs text-gray-500">
+                                    Task ID: {item.taskId}
+                                  </p>
                                 )}
                               </div>
                             </td>
                             <td className="text-right p-2">{item.quantity}</td>
-                            <td className="text-right p-2">{formatCurrency(item.salePrice)}</td>
+                            <td className="text-right p-2">
+                              {formatCurrency(item.salePrice)}
+                            </td>
                             <td className="text-right p-2">{item.discount}%</td>
                             <td className="text-right p-2">{item.taxRate}%</td>
-                            <td className="text-right p-2 font-medium">{formatCurrency(item.total)}</td>
+                            <td className="text-right p-2 font-medium">
+                              {formatCurrency(item.total)}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -1012,13 +1200,17 @@ function TenantDetailsContent() {
                     {selectedInvoice.vehicleReg && (
                       <div>
                         <span className="font-medium">Registration:</span>
-                        <p className="text-sm text-gray-600">{selectedInvoice.vehicleReg}</p>
+                        <p className="text-sm text-gray-600">
+                          {selectedInvoice.vehicleReg}
+                        </p>
                       </div>
                     )}
                     {selectedInvoice.jobCardId && (
                       <div>
                         <span className="font-medium">Job Card:</span>
-                        <p className="text-sm text-gray-600">{selectedInvoice.jobCardId}</p>
+                        <p className="text-sm text-gray-600">
+                          {selectedInvoice.jobCardId}
+                        </p>
                       </div>
                     )}
                   </CardContent>
@@ -1040,7 +1232,9 @@ function TenantDetailsContent() {
                       {selectedInvoice.labourCost ? (
                         <div className="flex justify-between">
                           <span>Labour Cost:</span>
-                          <span>{formatCurrency(selectedInvoice.labourCost)}</span>
+                          <span>
+                            {formatCurrency(selectedInvoice.labourCost)}
+                          </span>
                         </div>
                       ) : null}
                       <Separator />
@@ -1050,11 +1244,17 @@ function TenantDetailsContent() {
                       </div>
                       <div className="flex justify-between">
                         <span>Total Paid:</span>
-                        <span>{formatCurrency(selectedInvoice.totalPaid || 0)}</span>
+                        <span>
+                          {formatCurrency(selectedInvoice.totalPaid || 0)}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span>Balance:</span>
-                        <span>{formatCurrency(selectedInvoice.balance || selectedInvoice.total)}</span>
+                        <span>
+                          {formatCurrency(
+                            selectedInvoice.balance || selectedInvoice.total,
+                          )}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -1071,7 +1271,9 @@ function TenantDetailsContent() {
                     {selectedInvoice.terms && (
                       <div>
                         <span className="font-medium">Terms & Conditions:</span>
-                        <p className="text-sm text-gray-600 whitespace-pre-line">{selectedInvoice.terms}</p>
+                        <p className="text-sm text-gray-600 whitespace-pre-line">
+                          {selectedInvoice.terms}
+                        </p>
                       </div>
                     )}
                   </CardContent>

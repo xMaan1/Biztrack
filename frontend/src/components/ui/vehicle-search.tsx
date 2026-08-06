@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Input } from './input';
-import { Label } from './label';
-import { Button } from './button';
-import { Card, CardContent } from './card';
-import { Search, Car, X } from 'lucide-react';
-import { apiService } from '../../services/ApiService';
-import { Vehicle } from '../../models/workshop';
+import React, { useState, useEffect, useRef } from "react";
+import { Input } from "./input";
+import { Label } from "./label";
+import { Button } from "./button";
+import { Card, CardContent } from "./card";
+import { Search, Car, X } from "lucide-react";
+import { apiService } from "../../services/ApiService";
+import { Vehicle } from "../../models/workshop";
 
 interface VehicleSearchProps {
   value?: Vehicle | null;
@@ -22,27 +22,32 @@ interface VehicleSearchProps {
 export function VehicleSearch({
   value,
   onSelect,
-  placeholder = 'Search vehicles by reg, VIN, make, model...',
-  label = 'Vehicle',
+  placeholder = "Search vehicles by reg, VIN, make, model...",
+  label = "Vehicle",
   required = false,
   error,
-  className = '',
+  className = "",
 }: VehicleSearchProps) {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(value || null);
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(
+    value || null,
+  );
   const searchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   useEffect(() => {
@@ -53,7 +58,9 @@ export function VehicleSearch({
       }
       setLoading(true);
       try {
-        const data = await apiService.get(`/vehicles?search=${encodeURIComponent(searchQuery.trim())}&limit=20`);
+        const data = await apiService.get(
+          `/vehicles?search=${encodeURIComponent(searchQuery.trim())}&limit=20`,
+        );
         setVehicles(Array.isArray(data) ? data : []);
       } catch {
         setVehicles([]);
@@ -71,14 +78,14 @@ export function VehicleSearch({
 
   const handleSelect = (vehicle: Vehicle) => {
     setSelectedVehicle(vehicle);
-    setSearchQuery('');
+    setSearchQuery("");
     setIsOpen(false);
     onSelect(vehicle);
   };
 
   const handleClear = () => {
     setSelectedVehicle(null);
-    setSearchQuery('');
+    setSearchQuery("");
     onSelect(null);
   };
 
@@ -90,13 +97,20 @@ export function VehicleSearch({
   };
 
   const displayLine = (v: Vehicle) => {
-    const parts = [v.registration_number, v.make, v.model, v.year].filter(Boolean);
-    return parts.length ? parts.join(' · ') : v.vin || v.id;
+    const parts = [v.registration_number, v.make, v.model, v.year].filter(
+      Boolean,
+    );
+    return parts.length ? parts.join(" · ") : v.vin || v.id;
   };
 
   return (
     <div className={`relative ${className}`} ref={searchRef}>
-      <Label htmlFor="vehicle-search" className={required ? "after:content-['*'] after:text-red-500 after:ml-1" : ''}>
+      <Label
+        htmlFor="vehicle-search"
+        className={
+          required ? "after:content-['*'] after:text-red-500 after:ml-1" : ""
+        }
+      >
         {label}
       </Label>
       <div className="relative">
@@ -108,8 +122,8 @@ export function VehicleSearch({
             value={selectedVehicle ? displayLine(selectedVehicle) : searchQuery}
             onChange={handleInputChange}
             onFocus={handleInputFocus}
-            placeholder={selectedVehicle ? '' : placeholder}
-            className={`pl-10 pr-10 ${error ? 'border-red-500' : ''}`}
+            placeholder={selectedVehicle ? "" : placeholder}
+            className={`pl-10 pr-10 ${error ? "border-red-500" : ""}`}
             disabled={!!selectedVehicle}
           />
           {selectedVehicle && (
@@ -142,16 +156,26 @@ export function VehicleSearch({
                     >
                       <Car className="h-4 w-4 text-gray-500 shrink-0" />
                       <div className="min-w-0">
-                        <div className="font-medium text-gray-900 truncate">{displayLine(vehicle)}</div>
-                        {vehicle.vin && <div className="text-sm text-gray-500 truncate">{vehicle.vin}</div>}
+                        <div className="font-medium text-gray-900 truncate">
+                          {displayLine(vehicle)}
+                        </div>
+                        {vehicle.vin && (
+                          <div className="text-sm text-gray-500 truncate">
+                            {vehicle.vin}
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
                 </div>
               ) : searchQuery.trim().length >= 1 ? (
-                <div className="p-4 text-center text-gray-500">No vehicles found for &quot;{searchQuery}&quot;</div>
+                <div className="p-4 text-center text-gray-500">
+                  No vehicles found for &quot;{searchQuery}&quot;
+                </div>
               ) : (
-                <div className="p-4 text-center text-gray-500">Type to search vehicles</div>
+                <div className="p-4 text-center text-gray-500">
+                  Type to search vehicles
+                </div>
               )}
             </CardContent>
           </Card>
@@ -162,10 +186,22 @@ export function VehicleSearch({
         <div className="mt-2 p-3 bg-gray-50 rounded-lg border flex items-center gap-3">
           <Car className="h-4 w-4 text-gray-500 shrink-0" />
           <div className="min-w-0 text-sm">
-            <div className="font-medium text-gray-900">{displayLine(selectedVehicle)}</div>
-            {(selectedVehicle.vin || selectedVehicle.color || selectedVehicle.mileage || selectedVehicle.engine_number) && (
+            <div className="font-medium text-gray-900">
+              {displayLine(selectedVehicle)}
+            </div>
+            {(selectedVehicle.vin ||
+              selectedVehicle.color ||
+              selectedVehicle.mileage ||
+              selectedVehicle.engine_number) && (
               <div className="text-gray-600 truncate">
-                {[selectedVehicle.vin, selectedVehicle.engine_number, selectedVehicle.color, selectedVehicle.mileage].filter(Boolean).join(' · ')}
+                {[
+                  selectedVehicle.vin,
+                  selectedVehicle.engine_number,
+                  selectedVehicle.color,
+                  selectedVehicle.mileage,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
               </div>
             )}
           </div>

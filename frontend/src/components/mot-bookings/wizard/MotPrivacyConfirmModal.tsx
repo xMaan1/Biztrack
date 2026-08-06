@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   Dialog,
@@ -7,9 +7,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/src/components/ui/dialog';
-import { Button } from '@/src/components/ui/button';
-import { ShieldCheck } from 'lucide-react';
+} from "@/src/components/ui/dialog";
+import { Button } from "@/src/components/ui/button";
+import { ShieldCheck } from "lucide-react";
 
 type MotPrivacyConfirmModalProps = {
   open: boolean;
@@ -29,19 +29,22 @@ export function MotPrivacyConfirmModal({
           <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-purple-600">
             <ShieldCheck className="h-7 w-7 text-white" />
           </div>
-          <DialogTitle className="text-center text-xl">Privacy & Data Notice</DialogTitle>
+          <DialogTitle className="text-center text-xl">
+            Privacy & Data Notice
+          </DialogTitle>
           <DialogDescription className="space-y-3 pt-2 text-center text-sm leading-relaxed">
             <p>
-              We will use your personal details to process your MOT booking and contact you about
-              your appointment.
+              We will use your personal details to process your MOT booking and
+              contact you about your appointment.
             </p>
             <p>
-              Your data is stored securely and handled in accordance with our Privacy Policy. You
-              can update your communication preferences at any time.
+              Your data is stored securely and handled in accordance with our
+              Privacy Policy. You can update your communication preferences at
+              any time.
             </p>
             <p className="font-medium text-foreground">
-              By confirming, you acknowledge that you have read and accept our privacy practices for
-              this booking.
+              By confirming, you acknowledge that you have read and accept our
+              privacy practices for this booking.
             </p>
           </DialogDescription>
         </DialogHeader>
@@ -52,7 +55,11 @@ export function MotPrivacyConfirmModal({
           >
             Confirm & Continue
           </Button>
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full">
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="w-full"
+          >
             Go Back
           </Button>
         </DialogFooter>

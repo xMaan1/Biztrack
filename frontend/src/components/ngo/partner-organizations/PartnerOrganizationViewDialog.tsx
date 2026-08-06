@@ -1,19 +1,19 @@
-import { Button } from '@/src/components/ui/button';
+import { Button } from "@/src/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/src/components/ui/dialog';
-import type { PartnerOrganization } from '@/src/models/ngo';
+} from "@/src/components/ui/dialog";
+import type { PartnerOrganization } from "@/src/models/ngo";
 import {
   formatPartnerDate,
   partnerSectorLabel,
   partnerSizeLabel,
   partnerStatusLabel,
-} from '@/src/utils/ngo/partnerOrganizationUtils';
-import { PartnerOrganizationDetailRow } from './PartnerOrganizationDetailRow';
+} from "@/src/utils/ngo/partnerOrganizationUtils";
+import { PartnerOrganizationDetailRow } from "./PartnerOrganizationDetailRow";
 
 type PartnerOrganizationViewDialogProps = {
   open: boolean;
@@ -36,10 +36,22 @@ export function PartnerOrganizationViewDialog({
         </DialogHeader>
         {organization && (
           <div className="space-y-3 text-sm">
-            <PartnerOrganizationDetailRow label="Partner ID" value={organization.partner_code} />
-            <PartnerOrganizationDetailRow label="Name" value={organization.name} />
-            <PartnerOrganizationDetailRow label="Email" value={organization.email} />
-            <PartnerOrganizationDetailRow label="Sector" value={partnerSectorLabel(organization.sector)} />
+            <PartnerOrganizationDetailRow
+              label="Partner ID"
+              value={organization.partner_code}
+            />
+            <PartnerOrganizationDetailRow
+              label="Name"
+              value={organization.name}
+            />
+            <PartnerOrganizationDetailRow
+              label="Email"
+              value={organization.email}
+            />
+            <PartnerOrganizationDetailRow
+              label="Sector"
+              value={partnerSectorLabel(organization.sector)}
+            />
             <PartnerOrganizationDetailRow
               label="Size"
               value={partnerSizeLabel(organization.organization_size)}
@@ -50,11 +62,11 @@ export function PartnerOrganizationViewDialog({
             />
             <PartnerOrganizationDetailRow
               label="Website"
-              value={organization.website || '—'}
+              value={organization.website || "—"}
             />
             <PartnerOrganizationDetailRow
               label="Location"
-              value={organization.location || '—'}
+              value={organization.location || "—"}
             />
             <PartnerOrganizationDetailRow
               label="Created"
@@ -67,7 +79,10 @@ export function PartnerOrganizationViewDialog({
             Close
           </Button>
           {organization && (
-            <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={onEdit}>
+            <Button
+              className="bg-emerald-600 hover:bg-emerald-700"
+              onClick={onEdit}
+            >
               Edit
             </Button>
           )}

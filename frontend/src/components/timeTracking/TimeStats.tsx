@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from '../ui/card';
-import { Clock, Calendar, BarChart3, TrendingUp } from 'lucide-react';
-import { timeTrackingService } from '../../services/TimeTrackingService';
+import React, { useState, useEffect } from "react";
+import { Card, CardContent } from "../ui/card";
+import { Clock, Calendar, BarChart3, TrendingUp } from "lucide-react";
+import { timeTrackingService } from "../../services/TimeTrackingService";
 
 interface TimeStatsProps {
   employeeId?: string;
@@ -32,7 +32,7 @@ export function TimeStats({ employeeId, startDate, endDate }: TimeStatsProps) {
       const response = await timeTrackingService.getTimeTrackingStats(
         startDate,
         endDate,
-        employeeId
+        employeeId,
       );
       setStats(response);
     } catch (error) {

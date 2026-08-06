@@ -1,25 +1,25 @@
-'use client';
+"use client";
 
-import React from 'react';
+import React from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/src/components/ui/dialog';
-import { Button } from '@/src/components/ui/button';
-import { Alert, AlertDescription } from '@/src/components/ui/alert';
-import { Contact, ContactCreate } from '@/src/models/crm';
-import { CustomOption } from '@/src/services/CustomOptionsService';
-import { ContactFormCoreFields } from './contact-form/ContactFormCoreFields';
-import { ContactFormNotesSection } from './contact-form/ContactFormNotesSection';
-import { ContactFormAdditionalSection } from './contact-form/ContactFormAdditionalSection';
-import { ContactFormAddressesSection } from './contact-form/ContactFormAddressesSection';
-import { ContactFormSocialSection } from './contact-form/ContactFormSocialSection';
-import { ContactFormAttachmentsSection } from './contact-form/ContactFormAttachmentsSection';
-import { User } from '@/src/models';
-import { type UserSearchItem } from '@/src/components/ui/user-search';
+} from "@/src/components/ui/dialog";
+import { Button } from "@/src/components/ui/button";
+import { Alert, AlertDescription } from "@/src/components/ui/alert";
+import { Contact, ContactCreate } from "@/src/models/crm";
+import { CustomOption } from "@/src/services/CustomOptionsService";
+import { ContactFormCoreFields } from "./contact-form/ContactFormCoreFields";
+import { ContactFormNotesSection } from "./contact-form/ContactFormNotesSection";
+import { ContactFormAdditionalSection } from "./contact-form/ContactFormAdditionalSection";
+import { ContactFormAddressesSection } from "./contact-form/ContactFormAddressesSection";
+import { ContactFormSocialSection } from "./contact-form/ContactFormSocialSection";
+import { ContactFormAttachmentsSection } from "./contact-form/ContactFormAttachmentsSection";
+import { User } from "@/src/models";
+import { type UserSearchItem } from "@/src/components/ui/user-search";
 
 type CompanyOption = { id: string; name: string };
 
@@ -81,7 +81,7 @@ export function ContactFormDialog({
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {editingContact ? 'Edit Contact' : 'Create New Contact'}
+            {editingContact ? "Edit Contact" : "Create New Contact"}
           </DialogTitle>
         </DialogHeader>
 
@@ -143,10 +143,10 @@ export function ContactFormDialog({
             </Button>
             <Button type="submit" disabled={submitting}>
               {submitting
-                ? 'Saving...'
+                ? "Saving..."
                 : editingContact
-                  ? 'Update Contact'
-                  : 'Create Contact'}
+                  ? "Update Contact"
+                  : "Create Contact"}
             </Button>
           </DialogFooter>
         </form>

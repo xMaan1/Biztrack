@@ -1,5 +1,5 @@
-import { apiService } from './ApiService';
-import { extractErrorMessage } from '../utils/errorUtils';
+import { apiService } from "./ApiService";
+import { extractErrorMessage } from "../utils/errorUtils";
 import {
   ChartOfAccountsCreate,
   ChartOfAccountsUpdate,
@@ -26,14 +26,14 @@ import {
   AccountType,
   AccountCategory,
   ProfitLossDashboard,
-} from '../models/ledger';
+} from "../models/ledger";
 
 export class LedgerService {
   // Chart of Accounts
   static async createChartOfAccounts(
     data: ChartOfAccountsCreate,
   ): Promise<ChartOfAccountsResponse> {
-    const response = await apiService.post('/ledger/chart-of-accounts', data);
+    const response = await apiService.post("/ledger/chart-of-accounts", data);
     return response;
   }
 
@@ -44,10 +44,10 @@ export class LedgerService {
     accountCategory?: AccountCategory,
   ): Promise<ChartOfAccountsResponse[]> {
     const params = new URLSearchParams();
-    if (skip > 0) params.append('skip', skip.toString());
-    if (limit !== 1000) params.append('limit', limit.toString());
-    if (accountType) params.append('account_type', accountType);
-    if (accountCategory) params.append('account_category', accountCategory);
+    if (skip > 0) params.append("skip", skip.toString());
+    if (limit !== 1000) params.append("limit", limit.toString());
+    if (accountType) params.append("account_type", accountType);
+    if (accountCategory) params.append("account_category", accountCategory);
 
     const response = await apiService.get(
       `/ledger/chart-of-accounts?${params.toString()}`,
@@ -81,7 +81,7 @@ export class LedgerService {
   static async createLedgerTransaction(
     data: LedgerTransactionCreate,
   ): Promise<LedgerTransactionResponse> {
-    const response = await apiService.post('/ledger/transactions', data);
+    const response = await apiService.post("/ledger/transactions", data);
     return response;
   }
 
@@ -94,12 +94,12 @@ export class LedgerService {
     endDate?: string,
   ): Promise<LedgerTransactionResponse[]> {
     const params = new URLSearchParams();
-    if (skip > 0) params.append('skip', skip.toString());
-    if (limit !== 100) params.append('limit', limit.toString());
-    if (transactionType) params.append('transaction_type', transactionType);
-    if (accountId) params.append('account_id', accountId);
-    if (startDate) params.append('start_date', startDate);
-    if (endDate) params.append('end_date', endDate);
+    if (skip > 0) params.append("skip", skip.toString());
+    if (limit !== 100) params.append("limit", limit.toString());
+    if (transactionType) params.append("transaction_type", transactionType);
+    if (accountId) params.append("account_id", accountId);
+    if (startDate) params.append("start_date", startDate);
+    if (endDate) params.append("end_date", endDate);
 
     const response = await apiService.get(
       `/ledger/transactions?${params.toString()}`,
@@ -130,7 +130,7 @@ export class LedgerService {
   static async createJournalEntry(
     data: JournalEntryCreate,
   ): Promise<JournalEntryResponse> {
-    const response = await apiService.post('/ledger/journal-entries', data);
+    const response = await apiService.post("/ledger/journal-entries", data);
     return response;
   }
 
@@ -140,9 +140,9 @@ export class LedgerService {
     status?: string,
   ): Promise<JournalEntryResponse[]> {
     const params = new URLSearchParams();
-    if (skip > 0) params.append('skip', skip.toString());
-    if (limit !== 100) params.append('limit', limit.toString());
-    if (status) params.append('status', status);
+    if (skip > 0) params.append("skip", skip.toString());
+    if (limit !== 100) params.append("limit", limit.toString());
+    if (status) params.append("status", status);
 
     const response = await apiService.get(
       `/ledger/journal-entries?${params.toString()}`,
@@ -182,7 +182,7 @@ export class LedgerService {
     asOfDate?: string,
   ): Promise<TrialBalanceResponse> {
     const params = new URLSearchParams();
-    if (asOfDate) params.append('as_of_date', asOfDate);
+    if (asOfDate) params.append("as_of_date", asOfDate);
 
     const response = await apiService.get(
       `/ledger/reports/trial-balance?${params.toString()}`,
@@ -195,8 +195,8 @@ export class LedgerService {
     endDate?: string,
   ): Promise<IncomeStatementResponse> {
     const params = new URLSearchParams();
-    if (startDate) params.append('start_date', startDate);
-    if (endDate) params.append('end_date', endDate);
+    if (startDate) params.append("start_date", startDate);
+    if (endDate) params.append("end_date", endDate);
 
     const response = await apiService.get(
       `/ledger/reports/income-statement?${params.toString()}`,
@@ -208,7 +208,7 @@ export class LedgerService {
     asOfDate?: string,
   ): Promise<BalanceSheetResponse> {
     const params = new URLSearchParams();
-    if (asOfDate) params.append('as_of_date', asOfDate);
+    if (asOfDate) params.append("as_of_date", asOfDate);
 
     const response = await apiService.get(
       `/ledger/reports/balance-sheet?${params.toString()}`,
@@ -226,7 +226,7 @@ export class LedgerService {
     balance: number;
   }> {
     const params = new URLSearchParams();
-    if (asOfDate) params.append('as_of_date', asOfDate);
+    if (asOfDate) params.append("as_of_date", asOfDate);
 
     const response = await apiService.get(
       `/ledger/accounts/${accountId}/balance?${params.toString()}`,
@@ -236,7 +236,7 @@ export class LedgerService {
 
   // Budgets
   static async createBudget(data: BudgetCreate): Promise<BudgetResponse> {
-    const response = await apiService.post('/ledger/budgets', data);
+    const response = await apiService.post("/ledger/budgets", data);
     return response;
   }
 
@@ -246,9 +246,9 @@ export class LedgerService {
     activeOnly: boolean = false,
   ): Promise<BudgetResponse[]> {
     const params = new URLSearchParams();
-    if (skip > 0) params.append('skip', skip.toString());
-    if (limit !== 100) params.append('limit', limit.toString());
-    if (activeOnly) params.append('active_only', 'true');
+    if (skip > 0) params.append("skip", skip.toString());
+    if (limit !== 100) params.append("limit", limit.toString());
+    if (activeOnly) params.append("active_only", "true");
 
     const response = await apiService.get(
       `/ledger/budgets?${params.toString()}`,
@@ -277,7 +277,7 @@ export class LedgerService {
   static async createBudgetItem(
     data: BudgetItemCreate,
   ): Promise<BudgetItemResponse> {
-    const response = await apiService.post('/ledger/budget-items', data);
+    const response = await apiService.post("/ledger/budget-items", data);
     return response;
   }
 
@@ -304,7 +304,7 @@ export class LedgerService {
   static async createFinancialPeriod(
     data: FinancialPeriodCreate,
   ): Promise<FinancialPeriodResponse> {
-    const response = await apiService.post('/ledger/financial-periods', data);
+    const response = await apiService.post("/ledger/financial-periods", data);
     return response;
   }
 
@@ -313,8 +313,8 @@ export class LedgerService {
     limit: number = 100,
   ): Promise<FinancialPeriodResponse[]> {
     const params = new URLSearchParams();
-    if (skip > 0) params.append('skip', skip.toString());
-    if (limit !== 100) params.append('limit', limit.toString());
+    if (skip > 0) params.append("skip", skip.toString());
+    if (limit !== 100) params.append("limit", limit.toString());
 
     const response = await apiService.get(
       `/ledger/financial-periods?${params.toString()}`,
@@ -413,24 +413,27 @@ export class LedgerService {
   // Test seeding endpoint
   static async testSeedEndpoint(): Promise<any> {
     try {
-      const response = await apiService.post('/ledger/seed-accounts-simple');
+      const response = await apiService.post("/ledger/seed-accounts-simple");
       return response;
     } catch (error: any) {
-      const errorMessage = extractErrorMessage(error, 'Failed to seed accounts');
+      const errorMessage = extractErrorMessage(
+        error,
+        "Failed to seed accounts",
+      );
       throw new Error(errorMessage);
     }
   }
 
   // Profit/Loss Dashboard
   static async getProfitLossDashboard(
-    period: string = 'month',
+    period: string = "month",
     startDate?: string,
     endDate?: string,
   ): Promise<ProfitLossDashboard> {
     const params = new URLSearchParams();
-    params.append('period', period);
-    if (startDate) params.append('start_date', startDate);
-    if (endDate) params.append('end_date', endDate);
+    params.append("period", period);
+    if (startDate) params.append("start_date", startDate);
+    if (endDate) params.append("end_date", endDate);
 
     const response = await apiService.get(
       `/ledger/profit-loss-dashboard?${params.toString()}`,
@@ -439,16 +442,16 @@ export class LedgerService {
   }
 
   static async sendProfitLossReportEmail(
-    period: string = 'month',
+    period: string = "month",
     startDate: string | undefined,
     endDate: string | undefined,
     toEmail: string,
     message?: string,
   ): Promise<{ message: string; warning?: string }> {
     const params = new URLSearchParams();
-    params.append('period', period);
-    if (startDate) params.append('start_date', startDate);
-    if (endDate) params.append('end_date', endDate);
+    params.append("period", period);
+    if (startDate) params.append("start_date", startDate);
+    if (endDate) params.append("end_date", endDate);
 
     const body: any = { to_email: toEmail };
     if (message) {
@@ -463,15 +466,19 @@ export class LedgerService {
   }
 
   static async sendProfitLossReportWhatsApp(
-    period: string = 'month',
+    period: string = "month",
     startDate: string | undefined,
     endDate: string | undefined,
     phoneNumber: string,
-  ): Promise<{ whatsapp_url: string; phone_number: string; formatted_message: string }> {
+  ): Promise<{
+    whatsapp_url: string;
+    phone_number: string;
+    formatted_message: string;
+  }> {
     const params = new URLSearchParams();
-    params.append('period', period);
-    if (startDate) params.append('start_date', startDate);
-    if (endDate) params.append('end_date', endDate);
+    params.append("period", period);
+    if (startDate) params.append("start_date", startDate);
+    if (endDate) params.append("end_date", endDate);
 
     const response = await apiService.post(
       `/ledger/profit-loss-dashboard/send-whatsapp?${params.toString()}`,

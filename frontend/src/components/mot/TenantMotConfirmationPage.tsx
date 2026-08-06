@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -10,27 +10,35 @@ import {
   Edit,
   Printer,
   XCircle,
-} from 'lucide-react';
-import { toast } from 'sonner';
-import { MotPublicLayout } from '@/src/components/mot/MotPublicLayout';
-import { Button } from '@/src/components/ui/button';
-import { Badge } from '@/src/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
-import motBookingService from '@/src/services/MotBookingService';
-import { getTenantMotBookingUrl } from '@/src/models/mot/MotSettings';
-import type { MotBooking } from '@/src/models/mot/MotBooking';
-import { getMotStatusColor, getMotStatusLabel } from '@/src/models/mot/MotBooking';
+} from "lucide-react";
+import { toast } from "sonner";
+import { MotPublicLayout } from "@/src/components/mot/MotPublicLayout";
+import { Button } from "@/src/components/ui/button";
+import { Badge } from "@/src/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/src/components/ui/card";
+import motBookingService from "@/src/services/MotBookingService";
+import { getTenantMotBookingUrl } from "@/src/models/mot/MotSettings";
+import {
+  getMotStatusColor,
+  getMotStatusLabel,
+  type MotBooking,
+} from "@/src/models/mot/MotBooking";
 import {
   MotBookingPrintSheet,
   exportMotBookingPdf,
   printMotBooking,
-} from '@/src/components/mot-bookings/wizard/MotBookingPrintSheet';
-import { getVehicleBrandStyle } from '@/src/components/mot-bookings/wizard/motBrandStyle';
+} from "@/src/components/mot-bookings/wizard/MotBookingPrintSheet";
+import { getVehicleBrandStyle } from "@/src/components/mot-bookings/wizard/motBrandStyle";
 import {
   formatBookingDateTime,
   getDeliveryOptionLabel,
-} from '@/src/components/mot-bookings/wizard/wizardUtils';
-import { MOT_INSPECTION_PRICE } from '@/src/components/mot-bookings/wizard/wizardTypes';
+} from "@/src/components/mot-bookings/wizard/wizardUtils";
+import { MOT_INSPECTION_PRICE } from "@/src/components/mot-bookings/wizard/wizardTypes";
 
 export function TenantMotConfirmationPage() {
   const params = useParams();
@@ -38,7 +46,7 @@ export function TenantMotConfirmationPage() {
   const tenantDomain = params.domain as string;
   const bookingId = params.id as string;
   const [booking, setBooking] = useState<MotBooking | null>(null);
-  const [tenantName, setTenantName] = useState('');
+  const [tenantName, setTenantName] = useState("");
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
   const [exportingPdf, setExportingPdf] = useState(false);
@@ -59,12 +67,20 @@ export function TenantMotConfirmationPage() {
   }, [bookingId, tenantDomain]);
 
   const handleCancel = async () => {
-    if (!booking || !confirm('Are you sure you want to cancel this MOT booking?')) return;
+    if (
+      !booking ||
+      !confirm("Are you sure you want to cancel this MOT booking?")
+    )
+      return;
     setCancelling(true);
     try {
-      const updated = await motBookingService.updatePublicBookingStatus(tenantDomain, booking.id, {
-        status: 'cancelled',
-      });
+      const updated = await motBookingService.updatePublicBookingStatus(
+        tenantDomain,
+        booking.id,
+        {
+          status: "cancelled",
+        },
+      );
       setBooking(updated);
     } catch {
     } finally {
@@ -95,17 +111,17 @@ export function TenantMotConfirmationPage() {
     );
   }
 
-  const brand = getVehicleBrandStyle(booking.vehicle_make || '');
-  const isCancelled = booking.status === 'cancelled';
+  const brand = getVehicleBrandStyle(booking.vehicle_make || "");
+  const isCancelled = booking.status === "cancelled";
   const bookingRef = booking.id.slice(0, 8).toUpperCase();
 
   const handleExportPdf = async () => {
     setExportingPdf(true);
     try {
       await exportMotBookingPdf(bookingRef);
-      toast.success('PDF downloaded');
+      toast.success("PDF downloaded");
     } catch {
-      toast.error('Failed to export PDF');
+      toast.error("Failed to export PDF");
     } finally {
       setExportingPdf(false);
     }
@@ -126,9 +142,11 @@ export function TenantMotConfirmationPage() {
             <CheckCircle2 className="h-8 w-8" />
           </div>
           <h1 className="text-3xl font-bold tracking-tight">
-            {isCancelled ? 'Booking Cancelled' : 'MOT Booked Successfully'}
+            {isCancelled ? "Booking Cancelled" : "MOT Booked Successfully"}
           </h1>
-          <p className="mt-2 text-muted-foreground">Reference MOT-{bookingRef}</p>
+          <p className="mt-2 text-muted-foreground">
+            Reference MOT-{bookingRef}
+          </p>
           <Badge className={`mt-4 ${getMotStatusColor(booking.status)}`}>
             {getMotStatusLabel(booking.status)}
           </Badge>
@@ -144,7 +162,9 @@ export function TenantMotConfirmationPage() {
               </div>
               <div>
                 <CardTitle className="uppercase">
-                  {[booking.vehicle_make, booking.vehicle_model].filter(Boolean).join(' ')}
+                  {[booking.vehicle_make, booking.vehicle_model]
+                    .filter(Boolean)
+                    .join(" ")}
                 </CardTitle>
                 <p className="font-mono text-sm text-muted-foreground">
                   {booking.vehicle_registration}
@@ -160,7 +180,7 @@ export function TenantMotConfirmationPage() {
                 </p>
                 <p className="font-medium">
                   {formatBookingDateTime(
-                    booking.booking_date?.slice(0, 10) || '',
+                    booking.booking_date?.slice(0, 10) || "",
                     booking.start_time,
                   )}
                 </p>
@@ -178,13 +198,18 @@ export function TenantMotConfirmationPage() {
                   Customer
                 </p>
                 <p className="font-medium">{booking.customer_name}</p>
-                <p className="text-sm text-muted-foreground">{booking.customer_phone}</p>
+                <p className="text-sm text-muted-foreground">
+                  {booking.customer_phone}
+                </p>
               </div>
             </div>
             {booking.delivery_option && (
               <p className="text-sm text-muted-foreground">
                 {getDeliveryOptionLabel(
-                  booking.delivery_option as 'drop_off' | 'wait_security' | 'wait_on_site',
+                  booking.delivery_option as
+                    | "drop_off"
+                    | "wait_security"
+                    | "wait_on_site",
                 )}
               </p>
             )}
@@ -206,7 +231,7 @@ export function TenantMotConfirmationPage() {
             className="h-12 rounded-xl"
           >
             <Download className="mr-2 h-4 w-4" />
-            {exportingPdf ? 'Exporting...' : 'Export PDF'}
+            {exportingPdf ? "Exporting..." : "Export PDF"}
           </Button>
           <Button
             variant="outline"
@@ -224,7 +249,7 @@ export function TenantMotConfirmationPage() {
             className="h-12 rounded-xl"
           >
             <XCircle className="mr-2 h-4 w-4" />
-            {cancelling ? 'Cancelling...' : 'Cancel MOT'}
+            {cancelling ? "Cancelling..." : "Cancel MOT"}
           </Button>
         </div>
       </div>

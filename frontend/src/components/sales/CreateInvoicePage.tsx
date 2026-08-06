@@ -1,25 +1,25 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Settings } from 'lucide-react';
-import { DashboardLayout } from '@/src/components/layout';
-import { PermissionGuard } from '@/src/components/guards/PermissionGuard';
-import { Button } from '@/src/components/ui/button';
-import { CreateInvoiceSection } from './CreateInvoiceSection';
-import { InvoiceCreatedDialog } from './InvoiceCreatedDialog';
-import { InvoiceCustomizationDialog } from './InvoiceCustomizationDialog';
-import { InstallmentPlanCreateOption } from './InvoiceDialog';
-import InvoiceService from '@/src/services/InvoiceService';
-import type { Invoice, InvoiceCreate } from '@/src/models/sales';
-import { usePlanInfo } from '@/src/hooks/usePlanInfo';
-import { usePermissions } from '@/src/hooks/usePermissions';
-import { extractErrorMessage } from '@/src/utils/errorUtils';
+import { useState } from "react";
+import { Settings } from "lucide-react";
+import { DashboardLayout } from "@/src/components/layout";
+import { PermissionGuard } from "@/src/components/guards/PermissionGuard";
+import { Button } from "@/src/components/ui/button";
+import { CreateInvoiceSection } from "./CreateInvoiceSection";
+import { InvoiceCreatedDialog } from "./InvoiceCreatedDialog";
+import { InvoiceCustomizationDialog } from "./InvoiceCustomizationDialog";
+import { InstallmentPlanCreateOption } from "./InvoiceDialog";
+import InvoiceService from "@/src/services/InvoiceService";
+import type { Invoice, InvoiceCreate } from "@/src/models/sales";
+import { usePlanInfo } from "@/src/hooks/usePlanInfo";
+import { usePermissions } from "@/src/hooks/usePermissions";
+import { extractErrorMessage } from "@/src/utils/errorUtils";
 
 function CreateInvoicePageContent() {
   const { planInfo } = usePlanInfo();
   const { isOwner } = usePermissions();
   const isCommerce =
-    planInfo?.planType === 'commerce' || planInfo?.planType === 'agency';
+    planInfo?.planType === "commerce" || planInfo?.planType === "agency";
   const [createError, setCreateError] = useState<string | null>(null);
   const [showCustomizeDialog, setShowCustomizeDialog] = useState(false);
   const [createdInvoice, setCreatedInvoice] = useState<Invoice | null>(null);
@@ -40,7 +40,7 @@ function CreateInvoicePageContent() {
       setCreateError(null);
       setCreatedInvoice(created);
     } catch (err) {
-      setCreateError(extractErrorMessage(err, 'Failed to create invoice'));
+      setCreateError(extractErrorMessage(err, "Failed to create invoice"));
     }
   };
 
@@ -50,12 +50,12 @@ function CreateInvoicePageContent() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
-              {isCommerce ? 'Create Sales Invoice' : 'Create Invoice'}
+              {isCommerce ? "Create Sales Invoice" : "Create Invoice"}
             </h1>
             <p className="text-gray-600">
               {isCommerce
-                ? 'Create a new sales invoice'
-                : 'Create a new invoice'}
+                ? "Create a new sales invoice"
+                : "Create a new invoice"}
             </p>
           </div>
           {canCustomizeInvoice && (
@@ -70,7 +70,10 @@ function CreateInvoicePageContent() {
           )}
         </div>
 
-        <CreateInvoiceSection onSubmit={handleCreateInvoice} error={createError} />
+        <CreateInvoiceSection
+          onSubmit={handleCreateInvoice}
+          error={createError}
+        />
 
         <InvoiceCreatedDialog
           invoice={createdInvoice}

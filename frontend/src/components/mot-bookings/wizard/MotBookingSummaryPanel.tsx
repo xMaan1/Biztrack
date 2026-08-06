@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { Sparkles } from 'lucide-react';
-import { Button } from '@/src/components/ui/button';
-import type { MotWizardData, MotWizardStep } from './wizardTypes';
+import { Sparkles } from "lucide-react";
+import { Button } from "@/src/components/ui/button";
+import type { MotWizardData, MotWizardStep } from "./wizardTypes";
 import {
   calculateTotalCost,
   formatBookingDateTime,
   formatVehicleSummary,
   getDeliveryOptionLabel,
   getSelectedMotServices,
-} from './wizardUtils';
+} from "./wizardUtils";
 
 type MotBookingSummaryPanelProps = {
   data: MotWizardData;
@@ -68,7 +68,7 @@ export function MotBookingSummaryPanel({
   currentStep,
   onEditStep,
   onNext,
-  nextLabel = 'Next Step',
+  nextLabel = "Next Step",
   nextDisabled = false,
   showNext = true,
 }: MotBookingSummaryPanelProps) {
@@ -85,7 +85,9 @@ export function MotBookingSummaryPanel({
       <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 px-5 py-4">
         <div className="flex items-center gap-2 text-white">
           <Sparkles className="h-4 w-4" />
-          <h3 className="text-sm font-bold uppercase tracking-widest">Your Booking Details</h3>
+          <h3 className="text-sm font-bold uppercase tracking-widest">
+            Your Booking Details
+          </h3>
         </div>
       </div>
 
@@ -97,12 +99,18 @@ export function MotBookingSummaryPanel({
           onEdit={onEditStep}
           hasContent={Boolean(vehicleSummary || data.vehicle.registration)}
         >
-          {vehicleSummary && <p className="font-semibold uppercase">{vehicleSummary}</p>}
+          {vehicleSummary && (
+            <p className="font-semibold uppercase">{vehicleSummary}</p>
+          )}
           {data.vehicle.registration && (
-            <p className="text-muted-foreground">{data.vehicle.registration.toUpperCase()}</p>
+            <p className="text-muted-foreground">
+              {data.vehicle.registration.toUpperCase()}
+            </p>
           )}
           {data.vehicle.mileage && (
-            <p className="text-muted-foreground">{data.vehicle.mileage} miles</p>
+            <p className="text-muted-foreground">
+              {data.vehicle.mileage} miles
+            </p>
           )}
         </SummarySection>
 
@@ -117,26 +125,37 @@ export function MotBookingSummaryPanel({
             Boolean(data.services.otherServices.trim())
           }
         >
-          {getSelectedMotServices(data.services, inspectionPrice).map((service) => (
-            <div key={service.id} className="flex items-start justify-between gap-2">
-              <span>{service.label}</span>
-              <span className="font-bold">£{service.price.toFixed(2)}</span>
-            </div>
-          ))}
+          {getSelectedMotServices(data.services, inspectionPrice).map(
+            (service) => (
+              <div
+                key={service.id}
+                className="flex items-start justify-between gap-2"
+              >
+                <span>{service.label}</span>
+                <span className="font-bold">£{service.price.toFixed(2)}</span>
+              </div>
+            ),
+          )}
           {deliveryLabel && currentStep >= 3 && (
             <p className="text-xs text-muted-foreground">{deliveryLabel}</p>
           )}
           {data.services.otherServices.trim() && (
-            <p className="text-muted-foreground">{data.services.otherServices}</p>
+            <p className="text-muted-foreground">
+              {data.services.otherServices}
+            </p>
           )}
         </SummarySection>
 
         <div className="border-b border-border/60 py-4">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-widest">Total Cost*</span>
+            <span className="text-xs font-bold uppercase tracking-widest">
+              Total Cost*
+            </span>
             <span className="text-lg font-bold">£{total.toFixed(2)}</span>
           </div>
-          <p className="mt-1 text-xs text-muted-foreground">*Payable on day of appointment</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            *Payable on day of appointment
+          </p>
         </div>
 
         <SummarySection
@@ -147,7 +166,9 @@ export function MotBookingSummaryPanel({
           hasContent={Boolean(dateTimeLabel)}
         >
           {dateTimeLabel && <p className="font-medium">{dateTimeLabel}</p>}
-          {deliveryLabel && <p className="text-xs text-muted-foreground">{deliveryLabel}</p>}
+          {deliveryLabel && (
+            <p className="text-xs text-muted-foreground">{deliveryLabel}</p>
+          )}
         </SummarySection>
 
         {currentStep >= 4 && (
@@ -156,14 +177,22 @@ export function MotBookingSummaryPanel({
             step={4}
             currentStep={currentStep}
             onEdit={onEditStep}
-            hasContent={Boolean(data.customer.firstName && data.customer.lastName)}
+            hasContent={Boolean(
+              data.customer.firstName && data.customer.lastName,
+            )}
           >
             <p className="font-semibold">
-              {[data.customer.title, data.customer.firstName, data.customer.lastName]
+              {[
+                data.customer.title,
+                data.customer.firstName,
+                data.customer.lastName,
+              ]
                 .filter(Boolean)
-                .join(' ')}
+                .join(" ")}
             </p>
-            {data.customer.email && <p className="text-muted-foreground">{data.customer.email}</p>}
+            {data.customer.email && (
+              <p className="text-muted-foreground">{data.customer.email}</p>
+            )}
             {data.customer.telephone && (
               <p className="text-muted-foreground">{data.customer.telephone}</p>
             )}

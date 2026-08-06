@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { useRouter } from 'next/navigation';
-import { Button } from '../ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { Badge } from '../ui/badge';
+import React from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "../ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { Badge } from "../ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,14 +12,14 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '../ui/dropdown-menu';
-import { Menu, Settings, LogOut, User, Loader2 } from 'lucide-react';
-import { useAuth } from '@/src/contexts/AuthContext';
-import { isTauriApp } from '@/src/lib/isTauriApp';
-import { usePermissions } from '@/src/hooks/usePermissions';
-import { getInitials } from '../../lib/utils';
-import NotificationBell from '../notifications/NotificationBell';
-import { BizTrackLogo } from '../brand/BizTrackLogo';
+} from "../ui/dropdown-menu";
+import { Menu, Settings, LogOut, User, Loader2 } from "lucide-react";
+import { useAuth } from "@/src/contexts/AuthContext";
+import { isTauriApp } from "@/src/lib/isTauriApp";
+import { usePermissions } from "@/src/hooks/usePermissions";
+import { getInitials } from "../../lib/utils";
+import NotificationBell from "../notifications/NotificationBell";
+import { BizTrackLogo } from "../brand/BizTrackLogo";
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -33,30 +33,32 @@ export default function Header({ onMenuClick }: HeaderProps) {
   const handleLogout = async () => {
     try {
       await logout();
-    } catch (error) {
-      }
+    } catch (error) {}
   };
 
   const handleSettingsClick = () => {
-    router.push('/settings');
+    router.push("/settings");
   };
 
   const handleProfileClick = () => {
-    router.push('/profile');
+    router.push("/profile");
   };
 
-  const showSync =
-    isTauriApp() && tauriTenantSync && tauriTenantSync.total > 0;
+  const showSync = isTauriApp() && tauriTenantSync && tauriTenantSync.total > 0;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md shadow-sm">
       {showSync ? (
         <div className="flex items-center gap-2 border-b border-blue-100 bg-blue-50/90 px-4 py-2 text-sm text-blue-900 md:px-6">
-          <Loader2 className="h-4 w-4 shrink-0 animate-spin text-blue-600" aria-hidden />
+          <Loader2
+            className="h-4 w-4 shrink-0 animate-spin text-blue-600"
+            aria-hidden
+          />
           <span className="min-w-0 flex-1 truncate font-medium">
-            Syncing workspace for offline use{' '}
+            Syncing workspace for offline use{" "}
             <span className="font-normal text-blue-800/90">
-              ({tauriTenantSync.step}/{tauriTenantSync.total}) {tauriTenantSync.label.replace(/_/g, ' ')}
+              ({tauriTenantSync.step}/{tauriTenantSync.total}){" "}
+              {tauriTenantSync.label.replace(/_/g, " ")}
             </span>
           </span>
           <span className="hidden shrink-0 tabular-nums text-blue-700 sm:inline">
@@ -75,11 +77,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
           >
             <Menu className="h-5 w-5" />
           </Button>
-          <BizTrackLogo
-            size="sm"
-            href="/dashboard"
-            className="md:hidden"
-          />
+          <BizTrackLogo size="sm" href="/dashboard" className="md:hidden" />
         </div>
 
         {/* Right side - Notifications and User menu */}
@@ -101,7 +99,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
                       ? getInitials(
                           `${user.firstName} ${user.lastName}` || user.userName,
                         )
-                      : 'U'}
+                      : "U"}
                   </AvatarFallback>
                 </Avatar>
               </Button>
@@ -112,7 +110,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
                   <p className="text-sm font-medium leading-none">
                     {user?.firstName && user?.lastName
                       ? `${user.firstName} ${user.lastName}`
-                      : user?.userName || 'User'}
+                      : user?.userName || "User"}
                   </p>
                   <p className="text-xs leading-none text-muted-foreground">
                     {user?.email}

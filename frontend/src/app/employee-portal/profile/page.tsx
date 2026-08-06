@@ -1,43 +1,58 @@
-'use client';
+"use client";
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { DashboardLayout } from '@/src/components/layout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
-import { Label } from '@/src/components/ui/label';
-import { Textarea } from '@/src/components/ui/textarea';
-import { Avatar, AvatarFallback, AvatarImage } from '@/src/components/ui/avatar';
-import { Loader2, UploadCloud, X } from 'lucide-react';
-import { toast } from 'sonner';
-import { useConfirm } from '@/src/contexts/ConfirmContext';
-import { useApiService } from '@/src/hooks/useApiService';
-import { useAuth } from '@/src/hooks/useAuth';
-import { EmployeePortalService } from '@/src/services/EmployeePortalService';
-import { apiService } from '@/src/services/ApiService';
-import { extractErrorMessage } from '@/src/utils/errorUtils';
-import { getInitials } from '@/src/lib/utils';
-import type { Employee } from '@/src/models/hrm';
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { DashboardLayout } from "@/src/components/layout";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
+import { Label } from "@/src/components/ui/label";
+import { Textarea } from "@/src/components/ui/textarea";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/src/components/ui/avatar";
+import { Loader2, UploadCloud, X } from "lucide-react";
+import { toast } from "sonner";
+import { useConfirm } from "@/src/contexts/ConfirmContext";
+import { useApiService } from "@/src/hooks/useApiService";
+import { useAuth } from "@/src/hooks/useAuth";
+import { EmployeePortalService } from "@/src/services/EmployeePortalService";
+import { apiService } from "@/src/services/ApiService";
+import { extractErrorMessage } from "@/src/utils/errorUtils";
+import { getInitials } from "@/src/lib/utils";
+import type { Employee } from "@/src/models/hrm";
 
 function formatDepartmentLabel(department: string) {
-  return department.charAt(0).toUpperCase() + department.slice(1).replace(/_/g, ' ');
+  return (
+    department.charAt(0).toUpperCase() + department.slice(1).replace(/_/g, " ")
+  );
 }
 
 export default function EmployeePortalProfilePage() {
   const confirm = useConfirm();
   const { refreshUser } = useAuth();
   const api = useApiService();
-  const portalService = React.useMemo(() => new EmployeePortalService(api), [api]);
+  const portalService = React.useMemo(
+    () => new EmployeePortalService(api),
+    [api],
+  );
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
 
   const [profile, setProfile] = useState<Employee | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [avatarBusy, setAvatarBusy] = useState(false);
-  const [phone, setPhone] = useState('');
-  const [address, setAddress] = useState('');
-  const [emergencyContact, setEmergencyContact] = useState('');
-  const [emergencyPhone, setEmergencyPhone] = useState('');
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [emergencyContact, setEmergencyContact] = useState("");
+  const [emergencyPhone, setEmergencyPhone] = useState("");
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -45,13 +60,15 @@ export default function EmployeePortalProfilePage() {
       setLoading(true);
       const p = await portalService.getMyEmployeeProfile();
       setProfile(p);
-      setPhone(p.phone ?? '');
-      setAddress(p.address ?? '');
-      setEmergencyContact(p.emergencyContact ?? '');
-      setEmergencyPhone(p.emergencyPhone ?? '');
+      setPhone(p.phone ?? "");
+      setAddress(p.address ?? "");
+      setEmergencyContact(p.emergencyContact ?? "");
+      setEmergencyPhone(p.emergencyPhone ?? "");
       setAvatarPreview(p.avatar ?? null);
     } catch (error) {
-      toast.error(extractErrorMessage(error, 'Failed to load employee profile'));
+      toast.error(
+        extractErrorMessage(error, "Failed to load employee profile"),
+      );
       setProfile(null);
     } finally {
       setLoading(false);
@@ -66,18 +83,20 @@ export default function EmployeePortalProfilePage() {
     avatarInputRef.current?.click();
   };
 
-  const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please select an image file (PNG, JPG, GIF, or WEBP)');
-      event.target.value = '';
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file (PNG, JPG, GIF, or WEBP)");
+      event.target.value = "";
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image size must be less than 5MB');
-      event.target.value = '';
+      toast.error("Image size must be less than 5MB");
+      event.target.value = "";
       return;
     }
 
@@ -85,33 +104,35 @@ export default function EmployeePortalProfilePage() {
     reader.onload = async (e) => {
       const dataUrl = e.target?.result as string;
       if (!dataUrl) {
-        toast.error('Failed to process image');
+        toast.error("Failed to process image");
         return;
       }
       setAvatarPreview(dataUrl);
       setAvatarBusy(true);
       try {
-        const updated = await portalService.updateMyEmployeeProfile({ avatar: dataUrl });
+        const updated = await portalService.updateMyEmployeeProfile({
+          avatar: dataUrl,
+        });
         setProfile(updated);
         setAvatarPreview(updated.avatar ?? dataUrl);
         await refreshUser();
-        toast.success('Profile photo updated');
+        toast.success("Profile photo updated");
       } catch (error) {
         setAvatarPreview(profile?.avatar ?? null);
-        toast.error(extractErrorMessage(error, 'Failed to upload photo'));
+        toast.error(extractErrorMessage(error, "Failed to upload photo"));
       } finally {
         setAvatarBusy(false);
       }
     };
     reader.readAsDataURL(file);
-    event.target.value = '';
+    event.target.value = "";
   };
 
   const handleRemoveAvatar = async () => {
     const ok = await confirm({
-      description: 'Remove your profile photo?',
+      description: "Remove your profile photo?",
       destructive: true,
-      confirmLabel: 'Remove',
+      confirmLabel: "Remove",
     });
     if (!ok) return;
 
@@ -121,9 +142,9 @@ export default function EmployeePortalProfilePage() {
       setAvatarPreview(null);
       setProfile((prev) => (prev ? { ...prev, avatar: null } : prev));
       await refreshUser();
-      toast.success('Profile photo removed');
+      toast.success("Profile photo removed");
     } catch (error) {
-      toast.error(extractErrorMessage(error, 'Failed to remove photo'));
+      toast.error(extractErrorMessage(error, "Failed to remove photo"));
     } finally {
       setAvatarBusy(false);
     }
@@ -141,9 +162,9 @@ export default function EmployeePortalProfilePage() {
       });
       setProfile(updated);
       setAvatarPreview(updated.avatar ?? avatarPreview);
-      toast.success('Profile updated');
+      toast.success("Profile updated");
     } catch (error) {
-      toast.error(extractErrorMessage(error, 'Failed to save profile'));
+      toast.error(extractErrorMessage(error, "Failed to save profile"));
     } finally {
       setSaving(false);
     }
@@ -167,7 +188,8 @@ export default function EmployeePortalProfilePage() {
             <CardHeader>
               <CardTitle>My Profile</CardTitle>
               <CardDescription>
-                No employee record is linked to your account. Ask an admin to link your user to an HRM employee.
+                No employee record is linked to your account. Ask an admin to
+                link your user to an HRM employee.
               </CardDescription>
             </CardHeader>
           </Card>
@@ -183,13 +205,17 @@ export default function EmployeePortalProfilePage() {
       <div className="container mx-auto max-w-3xl space-y-6 p-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">My Profile</h1>
-          <p className="text-gray-600">Personal information and contact details</p>
+          <p className="text-gray-600">
+            Personal information and contact details
+          </p>
         </div>
 
         <Card>
           <CardHeader>
             <CardTitle>Profile photo</CardTitle>
-            <CardDescription>This photo appears on your employee profile across BizTrack.</CardDescription>
+            <CardDescription>
+              This photo appears on your employee profile across BizTrack.
+            </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
             <input
@@ -201,21 +227,28 @@ export default function EmployeePortalProfilePage() {
               disabled={avatarBusy}
             />
             <Avatar
-              className={`h-24 w-24 ${avatarBusy ? 'opacity-50' : 'cursor-pointer'}`}
+              className={`h-24 w-24 ${avatarBusy ? "opacity-50" : "cursor-pointer"}`}
               onClick={avatarBusy ? undefined : handleAvatarClick}
             >
-              <AvatarImage src={avatarPreview || undefined} alt={`${profile.firstName} ${profile.lastName}`} />
+              <AvatarImage
+                src={avatarPreview || undefined}
+                alt={`${profile.firstName} ${profile.lastName}`}
+              />
               <AvatarFallback className="text-2xl">{initials}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col gap-2">
               <div className="flex flex-wrap gap-2">
-                <Button type="button" onClick={handleAvatarClick} disabled={avatarBusy}>
+                <Button
+                  type="button"
+                  onClick={handleAvatarClick}
+                  disabled={avatarBusy}
+                >
                   {avatarBusy ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
                     <UploadCloud className="mr-2 h-4 w-4" />
                   )}
-                  {avatarPreview ? 'Change photo' : 'Add photo'}
+                  {avatarPreview ? "Change photo" : "Add photo"}
                 </Button>
                 {avatarPreview ? (
                   <Button
@@ -229,7 +262,9 @@ export default function EmployeePortalProfilePage() {
                   </Button>
                 ) : null}
               </div>
-              <p className="text-sm text-gray-500">PNG, JPG, GIF, or WEBP. Max 5MB.</p>
+              <p className="text-sm text-gray-500">
+                PNG, JPG, GIF, or WEBP. Max 5MB.
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -249,7 +284,9 @@ export default function EmployeePortalProfilePage() {
               </div>
               <div>
                 <Label className="text-sm text-gray-500">Department</Label>
-                <p className="text-sm font-medium">{formatDepartmentLabel(profile.department)}</p>
+                <p className="text-sm font-medium">
+                  {formatDepartmentLabel(profile.department)}
+                </p>
               </div>
               <div>
                 <Label className="text-sm text-gray-500">Employee ID</Label>
@@ -257,7 +294,9 @@ export default function EmployeePortalProfilePage() {
               </div>
               <div>
                 <Label className="text-sm text-gray-500">Hire date</Label>
-                <p className="text-sm font-medium">{profile.hireDate?.slice(0, 10) || '—'}</p>
+                <p className="text-sm font-medium">
+                  {profile.hireDate?.slice(0, 10) || "—"}
+                </p>
               </div>
             </div>
 
@@ -306,7 +345,7 @@ export default function EmployeePortalProfilePage() {
                     Saving...
                   </>
                 ) : (
-                  'Save changes'
+                  "Save changes"
                 )}
               </Button>
             </form>

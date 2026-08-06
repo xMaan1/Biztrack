@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { DashboardLayout } from '@/src/components/layout';
+import React, { useState, useEffect, useCallback } from "react";
+import { DashboardLayout } from "@/src/components/layout";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
-import { Label } from '@/src/components/ui/label';
-import { Textarea } from '@/src/components/ui/textarea';
+} from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
+import { Label } from "@/src/components/ui/label";
+import { Textarea } from "@/src/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +20,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/src/components/ui/dialog';
+} from "@/src/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -28,27 +28,27 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/src/components/ui/table';
+} from "@/src/components/ui/table";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
-import { Banknote, ChevronLeft, ChevronRight } from 'lucide-react';
-import healthcareService from '@/src/services/HealthcareService';
-import { apiService } from '@/src/services/ApiService';
-import type { AdmissionInvoiceSummary } from '@/src/models/healthcare';
-import { toast } from 'sonner';
-import Link from 'next/link';
+} from "@/src/components/ui/select";
+import { Banknote, ChevronLeft, ChevronRight } from "lucide-react";
+import healthcareService from "@/src/services/HealthcareService";
+import { apiService } from "@/src/services/ApiService";
+import type { AdmissionInvoiceSummary } from "@/src/models/healthcare";
+import { toast } from "sonner";
+import Link from "next/link";
 
 const PAYMENT_METHODS = [
-  { value: 'cash', label: 'Cash' },
-  { value: 'credit_card', label: 'Credit Card' },
-  { value: 'bank_transfer', label: 'Bank Transfer' },
-  { value: 'check', label: 'Check' },
-  { value: 'paypal', label: 'PayPal' },
+  { value: "cash", label: "Cash" },
+  { value: "credit_card", label: "Credit Card" },
+  { value: "bank_transfer", label: "Bank Transfer" },
+  { value: "check", label: "Check" },
+  { value: "paypal", label: "PayPal" },
 ] as const;
 
 export default function HospitalPaymentsPage() {
@@ -67,12 +67,15 @@ function HospitalPaymentsContent() {
   const limit = 20;
   const totalPages = Math.ceil(total / limit) || 1;
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
-  const [selectedInvoice, setSelectedInvoice] = useState<AdmissionInvoiceSummary | null>(null);
-  const [paymentAmount, setPaymentAmount] = useState('');
-  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().slice(0, 10));
-  const [paymentMethod, setPaymentMethod] = useState<string>('cash');
-  const [paymentReference, setPaymentReference] = useState('');
-  const [paymentNotes, setPaymentNotes] = useState('');
+  const [selectedInvoice, setSelectedInvoice] =
+    useState<AdmissionInvoiceSummary | null>(null);
+  const [paymentAmount, setPaymentAmount] = useState("");
+  const [paymentDate, setPaymentDate] = useState(
+    new Date().toISOString().slice(0, 10),
+  );
+  const [paymentMethod, setPaymentMethod] = useState<string>("cash");
+  const [paymentReference, setPaymentReference] = useState("");
+  const [paymentNotes, setPaymentNotes] = useState("");
   const [paymentLoading, setPaymentLoading] = useState(false);
 
   const loadInvoices = useCallback(async () => {
@@ -82,7 +85,9 @@ function HospitalPaymentsContent() {
       setInvoices(res.invoices);
       setTotal(res.total);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Failed to load admission invoices');
+      toast.error(
+        e instanceof Error ? e.message : "Failed to load admission invoices",
+      );
     } finally {
       setLoading(false);
     }
@@ -94,11 +99,11 @@ function HospitalPaymentsContent() {
 
   const openRecordPayment = (inv: AdmissionInvoiceSummary) => {
     setSelectedInvoice(inv);
-    setPaymentAmount(inv.balance > 0 ? String(inv.balance) : '');
+    setPaymentAmount(inv.balance > 0 ? String(inv.balance) : "");
     setPaymentDate(new Date().toISOString().slice(0, 10));
-    setPaymentMethod('cash');
-    setPaymentReference('');
-    setPaymentNotes('');
+    setPaymentMethod("cash");
+    setPaymentReference("");
+    setPaymentNotes("");
     setPaymentDialogOpen(true);
   };
 
@@ -106,11 +111,11 @@ function HospitalPaymentsContent() {
     if (!selectedInvoice) return;
     const amount = parseFloat(paymentAmount);
     if (isNaN(amount) || amount <= 0) {
-      toast.error('Enter a valid amount');
+      toast.error("Enter a valid amount");
       return;
     }
     if (amount > selectedInvoice.balance) {
-      toast.error('Amount cannot exceed balance');
+      toast.error("Amount cannot exceed balance");
       return;
     }
     try {
@@ -123,18 +128,23 @@ function HospitalPaymentsContent() {
         reference: paymentReference.trim() || undefined,
         notes: paymentNotes.trim() || undefined,
       });
-      toast.success('Payment recorded');
+      toast.success("Payment recorded");
       setPaymentDialogOpen(false);
       setSelectedInvoice(null);
       loadInvoices();
     } catch (e: unknown) {
       const msg =
-        e && typeof e === 'object' && 'response' in e && e.response && typeof e.response === 'object' && 'data' in e.response
+        e &&
+        typeof e === "object" &&
+        "response" in e &&
+        e.response &&
+        typeof e.response === "object" &&
+        "data" in e.response
           ? (e.response as { data?: { detail?: string } }).data?.detail
           : e instanceof Error
             ? e.message
-            : 'Failed to record payment';
-      toast.error(typeof msg === 'string' ? msg : JSON.stringify(msg));
+            : "Failed to record payment";
+      toast.error(typeof msg === "string" ? msg : JSON.stringify(msg));
     } finally {
       setPaymentLoading(false);
     }
@@ -144,7 +154,9 @@ function HospitalPaymentsContent() {
     <div className="container mx-auto px-6 py-8">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Hospital Payments</h1>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Hospital Payments
+          </h1>
           <p className="text-gray-600">Admission bills and payments</p>
         </div>
         <Button variant="outline" asChild>
@@ -156,7 +168,8 @@ function HospitalPaymentsContent() {
         <CardHeader>
           <CardTitle>Admission Invoices</CardTitle>
           <CardDescription>
-            Invoices generated from admitted patients (order ADM-). Record payments below.
+            Invoices generated from admitted patients (order ADM-). Record
+            payments below.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -166,10 +179,20 @@ function HospitalPaymentsContent() {
                 Page {page} of {totalPages} ({total} total)
               </span>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page <= 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                >
                   <ChevronLeft className="w-4 h-4" />
                 </Button>
-                <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page >= totalPages}
+                  onClick={() => setPage((p) => p + 1)}
+                >
                   <ChevronRight className="w-4 h-4" />
                 </Button>
               </div>
@@ -179,7 +202,8 @@ function HospitalPaymentsContent() {
             <div className="py-12 text-center text-gray-500">Loading...</div>
           ) : invoices.length === 0 ? (
             <div className="py-12 text-center text-gray-500">
-              No admission invoices yet. Generate a bill from Admitted Patients to see them here.
+              No admission invoices yet. Generate a bill from Admitted Patients
+              to see them here.
             </div>
           ) : (
             <Table>
@@ -198,12 +222,20 @@ function HospitalPaymentsContent() {
               <TableBody>
                 {invoices.map((inv) => (
                   <TableRow key={inv.id}>
-                    <TableCell className="font-medium">{inv.invoice_number}</TableCell>
-                    <TableCell>{inv.order_number ?? '—'}</TableCell>
+                    <TableCell className="font-medium">
+                      {inv.invoice_number}
+                    </TableCell>
+                    <TableCell>{inv.order_number ?? "—"}</TableCell>
                     <TableCell>{inv.customer_name}</TableCell>
-                    <TableCell className="text-right">{inv.total.toFixed(2)}</TableCell>
-                    <TableCell className="text-right">{inv.total_paid.toFixed(2)}</TableCell>
-                    <TableCell className="text-right">{inv.balance.toFixed(2)}</TableCell>
+                    <TableCell className="text-right">
+                      {inv.total.toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {inv.total_paid.toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {inv.balance.toFixed(2)}
+                    </TableCell>
                     <TableCell>{inv.status}</TableCell>
                     <TableCell className="text-right">
                       <Button
@@ -231,7 +263,8 @@ function HospitalPaymentsContent() {
             <DialogDescription>
               {selectedInvoice && (
                 <>
-                  Invoice {selectedInvoice.invoice_number} – {selectedInvoice.customer_name}. Balance:{' '}
+                  Invoice {selectedInvoice.invoice_number} –{" "}
+                  {selectedInvoice.customer_name}. Balance:{" "}
                   {selectedInvoice.balance.toFixed(2)}
                 </>
               )}
@@ -251,7 +284,11 @@ function HospitalPaymentsContent() {
             </div>
             <div className="space-y-2">
               <Label>Payment date</Label>
-              <Input type="date" value={paymentDate} onChange={(e) => setPaymentDate(e.target.value)} />
+              <Input
+                type="date"
+                value={paymentDate}
+                onChange={(e) => setPaymentDate(e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label>Method</Label>
@@ -287,11 +324,14 @@ function HospitalPaymentsContent() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPaymentDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setPaymentDialogOpen(false)}
+            >
               Cancel
             </Button>
             <Button onClick={handleRecordPayment} disabled={paymentLoading}>
-              {paymentLoading ? 'Recording...' : 'Record payment'}
+              {paymentLoading ? "Recording..." : "Record payment"}
             </Button>
           </DialogFooter>
         </DialogContent>

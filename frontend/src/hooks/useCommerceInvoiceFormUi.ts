@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useEffect, useMemo, useState } from 'react';
-import type { Customer } from '@/src/services/CustomerService';
-import type { Product } from '@/src/models/pos';
-import type { InvoiceItemCreate } from '@/src/models/sales';
-import InvoiceService from '@/src/services/InvoiceService';
+import { useEffect, useMemo, useState } from "react";
+import type { Customer } from "@/src/services/CustomerService";
+import type { Product } from "@/src/models/pos";
+import type { InvoiceItemCreate } from "@/src/models/sales";
+import InvoiceService from "@/src/services/InvoiceService";
 import {
   filterProducts,
   itemFieldKey,
@@ -13,7 +13,7 @@ import {
   sumItemQuantities,
   type CommerceItemNumericField,
   type CommerceItemTextField,
-} from '@/src/utils/sales/commerceInvoiceUtils';
+} from "@/src/utils/sales/commerceInvoiceUtils";
 
 type UseCommerceInvoiceFormUiOptions = {
   items: InvoiceItemCreate[];
@@ -26,11 +26,13 @@ export function useCommerceInvoiceFormUi({
   products,
   onUpdateItem,
 }: UseCommerceInvoiceFormUiOptions) {
-  const [productSearch, setProductSearch] = useState('');
-  const [customerSearch, setCustomerSearch] = useState('');
+  const [productSearch, setProductSearch] = useState("");
+  const [customerSearch, setCustomerSearch] = useState("");
   const [customerOptions, setCustomerOptions] = useState<Customer[]>([]);
   const [paidAmount, setPaidAmount] = useState(0);
-  const [itemFieldDrafts, setItemFieldDrafts] = useState<Record<string, string>>({});
+  const [itemFieldDrafts, setItemFieldDrafts] = useState<
+    Record<string, string>
+  >({});
 
   const filteredProducts = useMemo(
     () => filterProducts(products, productSearch),
@@ -38,7 +40,10 @@ export function useCommerceInvoiceFormUi({
   );
 
   const totalQuantity = useMemo(() => sumItemQuantities(items), [items]);
-  const totalItemDiscount = useMemo(() => sumItemDiscountAmount(items), [items]);
+  const totalItemDiscount = useMemo(
+    () => sumItemDiscountAmount(items),
+    [items],
+  );
 
   useEffect(() => {
     setItemFieldDrafts({});
@@ -74,13 +79,13 @@ export function useCommerceInvoiceFormUi({
     field: CommerceItemNumericField,
     parsed: number,
   ): number => {
-    if (field === 'discount') {
+    if (field === "discount") {
       return Math.min(100, Math.max(0, parsed));
     }
-    if (field === 'quantity') {
+    if (field === "quantity") {
       return Math.max(0.01, parsed);
     }
-    if (field === 'salePrice') {
+    if (field === "salePrice") {
       return Math.max(0, parsed);
     }
     return parsed;
@@ -110,7 +115,10 @@ export function useCommerceInvoiceFormUi({
     }
   };
 
-  const handleItemFieldBlur = (index: number, field: CommerceItemNumericField) => {
+  const handleItemFieldBlur = (
+    index: number,
+    field: CommerceItemNumericField,
+  ) => {
     const key = itemFieldKey(index, field);
     const raw = itemFieldDrafts[key];
     if (raw !== undefined) {
@@ -138,7 +146,10 @@ export function useCommerceInvoiceFormUi({
     onUpdateItem(index, { [field]: raw });
   };
 
-  const handleItemTextFieldBlur = (index: number, field: CommerceItemTextField) => {
+  const handleItemTextFieldBlur = (
+    index: number,
+    field: CommerceItemTextField,
+  ) => {
     const key = itemFieldKey(index, field);
     setItemFieldDrafts((prev) => {
       const next = { ...prev };

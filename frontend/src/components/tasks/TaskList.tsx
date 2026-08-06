@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from '../ui/card';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
+import React, { useState, useEffect } from "react";
+import { Card, CardContent } from "../ui/card";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../ui/select';
-import { TaskCard } from './TaskCard';
-import { TaskDialog } from './TaskDialog';
+} from "../ui/select";
+import { TaskCard } from "./TaskCard";
+import { TaskDialog } from "./TaskDialog";
 import {
   Dialog,
   DialogContent,
@@ -20,14 +20,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '../ui/dialog';
+} from "../ui/dialog";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from '../ui/sheet';
+} from "../ui/sheet";
 import {
   Plus,
   Search,
@@ -39,20 +39,20 @@ import {
   PlayCircle,
   XCircle,
   Trash2,
-} from 'lucide-react';
+} from "lucide-react";
 import {
   Task,
   TaskCreate,
   TaskUpdate,
   TaskStatus,
   SubTask,
-} from '../../models/task';
-import { Project } from '../../models/project/Project';
-import { User } from '../../models/auth';
-import { apiService } from '../../services/ApiService';
-import { extractErrorMessage } from '../../utils/errorUtils';
-import { cn } from '../../lib/utils';
-import { usePermissions } from '../../hooks/usePermissions';
+} from "../../models/task";
+import { Project } from "../../models/project/Project";
+import { User } from "../../models/auth";
+import { apiService } from "../../services/ApiService";
+import { extractErrorMessage } from "../../utils/errorUtils";
+import { cn } from "../../lib/utils";
+import { usePermissions } from "../../hooks/usePermissions";
 
 interface TaskListProps {
   projectId?: string;
@@ -85,10 +85,10 @@ export const TaskList: React.FC<TaskListProps> = ({
 
   // Filter states
   const [filters, setFilters] = useState({
-    project: projectId || '',
-    status: '',
-    assignedTo: '',
-    search: '',
+    project: projectId || "",
+    status: "",
+    assignedTo: "",
+    search: "",
     mainTasksOnly: false,
   });
 
@@ -129,7 +129,7 @@ export const TaskList: React.FC<TaskListProps> = ({
       setProjects(projectsRes.projects || []);
       setUsers(usersRes.users || []);
     } catch (err) {
-      setError('Failed to load projects and users');
+      setError("Failed to load projects and users");
     }
   };
 
@@ -152,16 +152,16 @@ export const TaskList: React.FC<TaskListProps> = ({
     if (Array.isArray(response)) return response;
     if (
       response &&
-      typeof response === 'object' &&
-      'tasks' in response &&
+      typeof response === "object" &&
+      "tasks" in response &&
       Array.isArray((response as { tasks: Task[] }).tasks)
     ) {
       return (response as { tasks: Task[] }).tasks;
     }
     if (
       response &&
-      typeof response === 'object' &&
-      'data' in response &&
+      typeof response === "object" &&
+      "data" in response &&
       Array.isArray((response as { data: Task[] }).data)
     ) {
       return (response as { data: Task[] }).data;
@@ -199,7 +199,7 @@ export const TaskList: React.FC<TaskListProps> = ({
       setTotalPages(response.pagination?.pages || 1);
       setTotalTasks(filteredTasks.length);
     } catch (err) {
-      setError('Failed to load tasks');
+      setError("Failed to load tasks");
     } finally {
       setLoading(false);
     }
@@ -241,7 +241,9 @@ export const TaskList: React.FC<TaskListProps> = ({
   };
 
   const handleAddSubtask = (parentTaskId: string) => {
-    const parent = [...tasks, ...completedTasks].find((t) => t.id === parentTaskId);
+    const parent = [...tasks, ...completedTasks].find(
+      (t) => t.id === parentTaskId,
+    );
     if (parent) {
       setEditingTask(null);
       setParentTask(parent);
@@ -257,7 +259,7 @@ export const TaskList: React.FC<TaskListProps> = ({
       project:
         [...tasks, ...completedTasks].find((t) =>
           t.subtasks.some((s) => s.id === subtask.id),
-        )?.project || '',
+        )?.project || "",
       subtasks: [],
       subtaskCount: 0,
       completedSubtaskCount: 0,
@@ -289,7 +291,7 @@ export const TaskList: React.FC<TaskListProps> = ({
       await loadTasks();
       await loadCompletedTasks();
     } catch (err: any) {
-      setDialogError(extractErrorMessage(err, 'Failed to save task'));
+      setDialogError(extractErrorMessage(err, "Failed to save task"));
     } finally {
       setDialogLoading(false);
     }
@@ -322,7 +324,9 @@ export const TaskList: React.FC<TaskListProps> = ({
       setTaskToDelete(null);
       setSubtaskToDelete(null);
     } catch (err) {
-      setError(taskToDelete ? 'Failed to delete task' : 'Failed to delete subtask');
+      setError(
+        taskToDelete ? "Failed to delete task" : "Failed to delete subtask",
+      );
     } finally {
       setDeleteLoading(false);
     }
@@ -340,23 +344,23 @@ export const TaskList: React.FC<TaskListProps> = ({
       await loadTasks();
       await loadCompletedTasks();
     } catch (err) {
-      setError('Failed to update task status');
+      setError("Failed to update task status");
     }
   };
 
   const handleFilterChange = (field: string, value: string | boolean) => {
     // Convert "all" values to empty strings for filtering
-    const filterValue = value === 'all' ? '' : value;
+    const filterValue = value === "all" ? "" : value;
     setFilters((prev) => ({ ...prev, [field]: filterValue }));
     setPage(1); // Reset to first page when filters change
   };
 
   const clearFilters = () => {
     setFilters({
-      project: projectId || '',
-      status: '',
-      assignedTo: '',
-      search: '',
+      project: projectId || "",
+      status: "",
+      assignedTo: "",
+      search: "",
       mainTasksOnly: false,
     });
     setPage(1);
@@ -370,7 +374,12 @@ export const TaskList: React.FC<TaskListProps> = ({
     ).length;
     const todoTasks = tasks.filter((t) => t.status === TaskStatus.TODO).length;
 
-    return { totalTasks, completedTasks: completedTasksCount, inProgressTasks, todoTasks };
+    return {
+      totalTasks,
+      completedTasks: completedTasksCount,
+      inProgressTasks,
+      todoTasks,
+    };
   };
 
   const renderTaskCard = (task: Task) => (
@@ -380,7 +389,11 @@ export const TaskList: React.FC<TaskListProps> = ({
       onEdit={canUpdateTasks() ? handleEditTask : undefined}
       onDelete={
         canDeleteTasks()
-          ? (taskId) => handleDeleteTask(tasks.find((t) => t.id === taskId) || completedTasks.find((t) => t.id === taskId)!)
+          ? (taskId) =>
+              handleDeleteTask(
+                tasks.find((t) => t.id === taskId) ||
+                  completedTasks.find((t) => t.id === taskId)!,
+              )
           : undefined
       }
       onStatusChange={canUpdateTasks() ? handleStatusChange : undefined}
@@ -441,7 +454,7 @@ export const TaskList: React.FC<TaskListProps> = ({
             }}
             disabled={loading}
           >
-            <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
+            <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
           </Button>
           {canCreateTasks() && (
             <Button onClick={handleCreateTask} className="modern-button">
@@ -529,7 +542,7 @@ export const TaskList: React.FC<TaskListProps> = ({
                 <Input
                   placeholder="Search tasks..."
                   value={filters.search}
-                  onChange={(e) => handleFilterChange('search', e.target.value)}
+                  onChange={(e) => handleFilterChange("search", e.target.value)}
                   className="pl-10"
                 />
               </div>
@@ -538,9 +551,9 @@ export const TaskList: React.FC<TaskListProps> = ({
             {showProjectFilter && (
               <div>
                 <Select
-                  value={filters.project || 'all'}
+                  value={filters.project || "all"}
                   onValueChange={(value) =>
-                    handleFilterChange('project', value)
+                    handleFilterChange("project", value)
                   }
                 >
                   <SelectTrigger>
@@ -560,8 +573,8 @@ export const TaskList: React.FC<TaskListProps> = ({
 
             <div>
               <Select
-                value={filters.status || 'all'}
-                onValueChange={(value) => handleFilterChange('status', value)}
+                value={filters.status || "all"}
+                onValueChange={(value) => handleFilterChange("status", value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="All Status" />
@@ -581,9 +594,9 @@ export const TaskList: React.FC<TaskListProps> = ({
 
             <div>
               <Select
-                value={filters.assignedTo || 'all'}
+                value={filters.assignedTo || "all"}
                 onValueChange={(value) =>
-                  handleFilterChange('assignedTo', value)
+                  handleFilterChange("assignedTo", value)
                 }
               >
                 <SelectTrigger>
@@ -593,10 +606,10 @@ export const TaskList: React.FC<TaskListProps> = ({
                   <SelectItem value="all">All Users</SelectItem>
                   {users.map((user) => (
                     <SelectItem
-                      key={user.id || user.userId || ''}
-                      value={user.id || user.userId || ''}
+                      key={user.id || user.userId || ""}
+                      value={user.id || user.userId || ""}
                     >
-                      {`${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() ||
+                      {`${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() ||
                         user.userName}
                     </SelectItem>
                   ))}
@@ -606,9 +619,9 @@ export const TaskList: React.FC<TaskListProps> = ({
 
             <div>
               <Select
-                value={filters.mainTasksOnly ? 'main' : 'all'}
+                value={filters.mainTasksOnly ? "main" : "all"}
                 onValueChange={(value) =>
-                  handleFilterChange('mainTasksOnly', value === 'main')
+                  handleFilterChange("mainTasksOnly", value === "main")
                 }
               >
                 <SelectTrigger>
@@ -674,8 +687,8 @@ export const TaskList: React.FC<TaskListProps> = ({
                 </h3>
                 <p className="text-gray-600 mb-4">
                   {Object.values(filters).some((v) => v)
-                    ? 'Try adjusting your filters or create a new task.'
-                    : 'Get started by creating your first task.'}
+                    ? "Try adjusting your filters or create a new task."
+                    : "Get started by creating your first task."}
                 </p>
                 {canCreateTasks() && (
                   <Button onClick={handleCreateTask} className="modern-button">
@@ -705,7 +718,7 @@ export const TaskList: React.FC<TaskListProps> = ({
                       return (
                         <Button
                           key={pageNum}
-                          variant={page === pageNum ? 'default' : 'outline'}
+                          variant={page === pageNum ? "default" : "outline"}
                           size="sm"
                           onClick={() => setPage(pageNum)}
                         >
@@ -737,8 +750,8 @@ export const TaskList: React.FC<TaskListProps> = ({
         parentTask={parentTask ?? undefined}
         projects={projects}
         users={users.map((u) => ({
-          id: u.id || u.userId || '',
-          name: `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() || u.userName,
+          id: u.id || u.userId || "",
+          name: `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || u.userName,
           email: u.email,
         }))}
         loading={dialogLoading}
@@ -752,14 +765,12 @@ export const TaskList: React.FC<TaskListProps> = ({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Trash2 className="h-5 w-5 text-red-600" />
-              Delete {taskToDelete ? 'Task' : 'Subtask'}
+              Delete {taskToDelete ? "Task" : "Subtask"}
             </DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete{' '}
-              <strong>
-                {taskToDelete?.title || subtaskToDelete?.title}
-              </strong>
-              ? This action cannot be undone.
+              Are you sure you want to delete{" "}
+              <strong>{taskToDelete?.title || subtaskToDelete?.title}</strong>?
+              This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

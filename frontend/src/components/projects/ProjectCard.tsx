@@ -1,18 +1,27 @@
-'use client';
+"use client";
 
-import React, { useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Badge } from '@/src/components/ui/badge';
-import { Progress } from '@/src/components/ui/progress';
-import { Separator } from '@/src/components/ui/separator';
-import { Avatar, AvatarFallback, AvatarImage } from '@/src/components/ui/avatar';
+import React, { useCallback } from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { Badge } from "@/src/components/ui/badge";
+import { Progress } from "@/src/components/ui/progress";
+import { Separator } from "@/src/components/ui/separator";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/src/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-} from '@/src/components/ui/dropdown-menu';
+} from "@/src/components/ui/dropdown-menu";
 import {
   Star,
   MoreVertical,
@@ -23,9 +32,9 @@ import {
   Clock,
   FolderOpen,
   CheckSquare,
-} from 'lucide-react';
-import { cn } from '@/src/lib/utils';
-import type { ProjectCardProps } from '@/src/types/projects';
+} from "lucide-react";
+import { cn } from "@/src/lib/utils";
+import type { ProjectCardProps } from "@/src/types/projects";
 
 export const ProjectCard = React.memo(function ProjectCard({
   project,
@@ -79,8 +88,10 @@ export const ProjectCard = React.memo(function ProjectCard({
             >
               <Star
                 className={cn(
-                  'h-4 w-4',
-                  isStarred ? 'fill-yellow-400 text-yellow-400' : 'text-gray-400',
+                  "h-4 w-4",
+                  isStarred
+                    ? "fill-yellow-400 text-yellow-400"
+                    : "text-gray-400",
                 )}
               />
             </Button>
@@ -100,7 +111,7 @@ export const ProjectCard = React.memo(function ProjectCard({
                     <Edit className="h-3 w-3 mr-2" />
                     Edit
                   </DropdownMenuItem>
-                  {(deleteMode === 'direct' || deleteMode === 'approved') && (
+                  {(deleteMode === "direct" || deleteMode === "approved") && (
                     <DropdownMenuItem
                       onClick={handleDeleteClick}
                       className="text-red-600 focus:text-red-600 focus:bg-red-50"
@@ -109,13 +120,13 @@ export const ProjectCard = React.memo(function ProjectCard({
                       Delete
                     </DropdownMenuItem>
                   )}
-                  {deleteMode === 'pending' && (
+                  {deleteMode === "pending" && (
                     <DropdownMenuItem disabled>
                       <Clock className="h-3 w-3 mr-2" />
                       Deletion Pending
                     </DropdownMenuItem>
                   )}
-                  {deleteMode === 'request' && (
+                  {deleteMode === "request" && (
                     <DropdownMenuItem
                       onClick={handleRequestDeletionClick}
                       className="text-red-600 focus:text-red-600 focus:bg-red-50"
@@ -130,7 +141,7 @@ export const ProjectCard = React.memo(function ProjectCard({
           </div>
         </div>
         <p className="text-sm text-gray-600 line-clamp-2 mt-1">
-          {project.description || 'No description provided'}
+          {project.description || "No description provided"}
         </p>
       </CardHeader>
       <CardContent className="pt-0 space-y-4">
@@ -138,30 +149,32 @@ export const ProjectCard = React.memo(function ProjectCard({
           <div className="flex items-center gap-2">
             <Badge
               variant={
-                project.status === 'completed'
-                  ? 'default'
-                  : project.status === 'in_progress'
-                    ? 'secondary'
-                    : project.status === 'on_hold'
-                      ? 'outline'
-                      : 'destructive'
+                project.status === "completed"
+                  ? "default"
+                  : project.status === "in_progress"
+                    ? "secondary"
+                    : project.status === "on_hold"
+                      ? "outline"
+                      : "destructive"
               }
             >
-              {project.status.replace('_', ' ')}
+              {project.status.replace("_", " ")}
             </Badge>
             <Badge
               variant={
-                project.priority === 'high'
-                  ? 'destructive'
-                  : project.priority === 'medium'
-                    ? 'secondary'
-                    : 'outline'
+                project.priority === "high"
+                  ? "destructive"
+                  : project.priority === "medium"
+                    ? "secondary"
+                    : "outline"
               }
             >
               {project.priority}
             </Badge>
           </div>
-          <div className="text-sm text-gray-500">{project.completionPercent}%</div>
+          <div className="text-sm text-gray-500">
+            {project.completionPercent}%
+          </div>
         </div>
         <Progress value={project.completionPercent} className="h-2" />
         <div className="flex items-center justify-between text-sm text-gray-600">
@@ -171,13 +184,15 @@ export const ProjectCard = React.memo(function ProjectCard({
               <span>
                 {project.startDate
                   ? new Date(project.startDate).toLocaleDateString()
-                  : 'No start date'}
+                  : "No start date"}
               </span>
             </div>
             <div className="flex items-center gap-1">
               <FolderOpen className="h-3 w-3" />
               <span>
-                {project.budget ? `$${project.budget.toLocaleString()}` : 'No budget'}
+                {project.budget
+                  ? `$${project.budget.toLocaleString()}`
+                  : "No budget"}
               </span>
             </div>
           </div>
@@ -190,7 +205,9 @@ export const ProjectCard = React.memo(function ProjectCard({
                 {project.projectManager.name.charAt(0)}
               </AvatarFallback>
             </Avatar>
-            <span className="text-sm text-gray-600">PM: {project.projectManager.name}</span>
+            <span className="text-sm text-gray-600">
+              PM: {project.projectManager.name}
+            </span>
           </div>
           <div className="flex -space-x-2">
             {project.teamMembers.slice(0, 3).map((member) => (
@@ -203,7 +220,9 @@ export const ProjectCard = React.memo(function ProjectCard({
             ))}
             {project.teamMembers.length > 3 && (
               <div className="h-6 w-6 rounded-full bg-gray-100 border-2 border-white flex items-center justify-center">
-                <span className="text-xs text-gray-600">+{project.teamMembers.length - 3}</span>
+                <span className="text-xs text-gray-600">
+                  +{project.teamMembers.length - 3}
+                </span>
               </div>
             )}
           </div>

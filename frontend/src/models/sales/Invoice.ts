@@ -1,23 +1,23 @@
 export enum InvoiceStatus {
-  DRAFT = 'draft',
-  SENT = 'sent',
-  VIEWED = 'viewed',
-  PAID = 'paid',
-  PARTIALLY_PAID = 'partially_paid',
-  OVERDUE = 'overdue',
-  CANCELLED = 'cancelled',
-  VOID = 'void',
+  DRAFT = "draft",
+  SENT = "sent",
+  VIEWED = "viewed",
+  PAID = "paid",
+  PARTIALLY_PAID = "partially_paid",
+  OVERDUE = "overdue",
+  CANCELLED = "cancelled",
+  VOID = "void",
 }
 
 export enum PaymentMethod {
-  CREDIT_CARD = 'credit_card',
-  BANK_TRANSFER = 'bank_transfer',
-  CASH = 'cash',
-  CHECK = 'check',
-  PAYPAL = 'paypal',
-  STRIPE = 'stripe',
-  CREDIT = 'credit',
-  OTHER = 'other',
+  CREDIT_CARD = "credit_card",
+  BANK_TRANSFER = "bank_transfer",
+  CASH = "cash",
+  CHECK = "check",
+  PAYPAL = "paypal",
+  STRIPE = "stripe",
+  CREDIT = "credit",
+  OTHER = "other",
 }
 
 export interface InvoiceItem {

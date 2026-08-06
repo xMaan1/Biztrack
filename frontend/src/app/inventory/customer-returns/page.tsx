@@ -1,24 +1,24 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { ModuleGuard } from '../../../components/guards/PermissionGuard';
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { ModuleGuard } from "../../../components/guards/PermissionGuard";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from '../../../components/ui/card';
-import { Button } from '../../../components/ui/button';
-import { Badge } from '../../../components/ui/badge';
-import { Input } from '../../../components/ui/input';
+} from "../../../components/ui/card";
+import { Button } from "../../../components/ui/button";
+import { Badge } from "../../../components/ui/badge";
+import { Input } from "../../../components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../../components/ui/select';
+} from "../../../components/ui/select";
 import {
   Table,
   TableBody,
@@ -26,7 +26,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../../../components/ui/table';
+} from "../../../components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -34,7 +34,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '../../../components/ui/dialog';
+} from "../../../components/ui/dialog";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -48,20 +48,29 @@ import {
   TrendingUp,
   Loader2,
   Trash2,
-} from 'lucide-react';
-import { useAuth } from '../../../contexts/AuthContext';
-import { inventoryService } from '../../../services/InventoryService';
-import { StockMovement, StockMovementStatus, StockMovementCreate, StockMovementType, Warehouse } from '../../../models/inventory';
-import { DashboardLayout } from '../../../components/layout';
-import { Textarea } from '../../../components/ui/textarea';
-import { Label } from '../../../components/ui/label';
-import { apiService } from '../../../services/ApiService';
-import { Product } from '../../../models/pos';
-import { useCurrency } from '../../../contexts/CurrencyContext';
+} from "lucide-react";
+import { useAuth } from "../../../contexts/AuthContext";
+import { inventoryService } from "../../../services/InventoryService";
+import {
+  StockMovement,
+  StockMovementStatus,
+  StockMovementCreate,
+  StockMovementType,
+  Warehouse,
+} from "../../../models/inventory";
+import { DashboardLayout } from "../../../components/layout";
+import { Textarea } from "../../../components/ui/textarea";
+import { Label } from "../../../components/ui/label";
+import { apiService } from "../../../services/ApiService";
+import { Product } from "../../../models/pos";
+import { useCurrency } from "../../../contexts/CurrencyContext";
 
 export default function CustomerReturnsPage() {
   return (
-    <ModuleGuard module="inventory" fallback={<div>You don't have access to Inventory module</div>}>
+    <ModuleGuard
+      module="inventory"
+      fallback={<div>You don&apos;t have access to Inventory module</div>}
+    >
       <CustomerReturnsContent />
     </ModuleGuard>
   );
@@ -78,46 +87,50 @@ function CustomerReturnsContent() {
   const router = useRouter();
   const [returns, setReturns] = useState<StockMovement[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [warehouseFilter, setWarehouseFilter] = useState<string>('');
-  const [statusFilter, setStatusFilter] = useState<string>('');
-  const [selectedReturn, setSelectedReturn] = useState<StockMovement | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [warehouseFilter, setWarehouseFilter] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [selectedReturn, setSelectedReturn] = useState<StockMovement | null>(
+    null,
+  );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isRecordReturnOpen, setIsRecordReturnOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [returnToDelete, setReturnToDelete] = useState<StockMovement | null>(null);
+  const [returnToDelete, setReturnToDelete] = useState<StockMovement | null>(
+    null,
+  );
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editReturn, setEditReturn] = useState<StockMovementCreate>({
-    productId: '',
-    warehouseId: '',
-    locationId: '',
+    productId: "",
+    warehouseId: "",
+    locationId: "",
     movementType: StockMovementType.RETURN,
     quantity: 0,
     unitCost: 0,
-    referenceNumber: '',
-    referenceType: 'customer_return',
-    notes: '',
-    batchNumber: '',
-    serialNumber: '',
-    expiryDate: '',
+    referenceNumber: "",
+    referenceType: "customer_return",
+    notes: "",
+    batchNumber: "",
+    serialNumber: "",
+    expiryDate: "",
   });
   const [newReturn, setNewReturn] = useState<StockMovementCreate>({
-    productId: '',
-    warehouseId: '',
-    locationId: '',
+    productId: "",
+    warehouseId: "",
+    locationId: "",
     movementType: StockMovementType.RETURN,
     quantity: 0,
     unitCost: 0,
-    referenceNumber: '',
-    referenceType: 'customer_return',
-    notes: '',
-    batchNumber: '',
-    serialNumber: '',
-    expiryDate: '',
+    referenceNumber: "",
+    referenceType: "customer_return",
+    notes: "",
+    batchNumber: "",
+    serialNumber: "",
+    expiryDate: "",
   });
 
   useEffect(() => {
@@ -133,24 +146,26 @@ function CustomerReturnsContent() {
       const response = await inventoryService.getWarehouses();
       setWarehouses(response.warehouses);
       if (response.warehouses.length > 0 && !newReturn.warehouseId) {
-        setNewReturn(prev => ({ ...prev, warehouseId: response.warehouses[0].id }));
+        setNewReturn((prev) => ({
+          ...prev,
+          warehouseId: response.warehouses[0].id,
+        }));
       }
-    } catch (error) {
-    }
+    } catch (error) {}
   };
 
   const loadProducts = async () => {
     try {
-      const response = await apiService.get('/pos/products');
+      const response = await apiService.get("/pos/products");
       setProducts(response.products || []);
-    } catch (error) {
-    }
+    } catch (error) {}
   };
 
   const loadReturns = async () => {
     try {
       setLoading(true);
-      const warehouseId = warehouseFilter === 'all' ? undefined : warehouseFilter;
+      const warehouseId =
+        warehouseFilter === "all" ? undefined : warehouseFilter;
       const response = await inventoryService.getCustomerReturns(warehouseId);
       setReturns(response.stockMovements);
     } catch (error) {
@@ -160,49 +175,64 @@ function CustomerReturnsContent() {
   };
 
   const filteredReturns = returns.filter((returnItem) => {
-    const matchesSearch = 
-      returnItem.productName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchesSearch =
+      returnItem.productName
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
       returnItem.productSku?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       returnItem.productId.toLowerCase().includes(searchTerm.toLowerCase()) ||
       returnItem.notes?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      returnItem.batchNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      returnItem.referenceNumber?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = !statusFilter || statusFilter === 'all' || returnItem.status === statusFilter;
-    
+      returnItem.batchNumber
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      returnItem.referenceNumber
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase());
+
+    const matchesStatus =
+      !statusFilter ||
+      statusFilter === "all" ||
+      returnItem.status === statusFilter;
+
     return matchesSearch && matchesStatus;
   });
 
-  const totalRefundValue = returns.reduce((sum, returnItem) => sum + (returnItem.quantity * returnItem.unitCost), 0);
-  const totalQuantity = returns.reduce((sum, returnItem) => sum + returnItem.quantity, 0);
+  const totalRefundValue = returns.reduce(
+    (sum, returnItem) => sum + returnItem.quantity * returnItem.unitCost,
+    0,
+  );
+  const totalQuantity = returns.reduce(
+    (sum, returnItem) => sum + returnItem.quantity,
+    0,
+  );
 
   const getStatusBadge = (status: StockMovementStatus) => {
     const statusConfig = {
-      pending: { color: 'bg-yellow-100 text-yellow-800', label: 'Pending' },
-      in_progress: { color: 'bg-blue-100 text-blue-800', label: 'In Progress' },
-      completed: { color: 'bg-green-100 text-green-800', label: 'Completed' },
-      cancelled: { color: 'bg-red-100 text-red-800', label: 'Cancelled' },
-      failed: { color: 'bg-gray-100 text-gray-800', label: 'Failed' },
+      pending: { color: "bg-yellow-100 text-yellow-800", label: "Pending" },
+      in_progress: { color: "bg-blue-100 text-blue-800", label: "In Progress" },
+      completed: { color: "bg-green-100 text-green-800", label: "Completed" },
+      cancelled: { color: "bg-red-100 text-red-800", label: "Cancelled" },
+      failed: { color: "bg-gray-100 text-gray-800", label: "Failed" },
     };
-    
+
     const config = statusConfig[status] || statusConfig.pending;
-    return (
-      <Badge className={config.color}>
-        {config.label}
-      </Badge>
-    );
+    return <Badge className={config.color}>{config.label}</Badge>;
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
   const handleRecordReturn = async () => {
-    if (!newReturn.productId || !newReturn.warehouseId || newReturn.quantity <= 0) {
+    if (
+      !newReturn.productId ||
+      !newReturn.warehouseId ||
+      newReturn.quantity <= 0
+    ) {
       return;
     }
 
@@ -221,18 +251,18 @@ function CustomerReturnsContent() {
 
   const resetReturnForm = () => {
     setNewReturn({
-      productId: '',
-      warehouseId: warehouses.length > 0 ? warehouses[0].id : '',
-      locationId: '',
+      productId: "",
+      warehouseId: warehouses.length > 0 ? warehouses[0].id : "",
+      locationId: "",
       movementType: StockMovementType.RETURN,
       quantity: 0,
       unitCost: 0,
-      referenceNumber: '',
-      referenceType: 'customer_return',
-      notes: '',
-      batchNumber: '',
-      serialNumber: '',
-      expiryDate: '',
+      referenceNumber: "",
+      referenceType: "customer_return",
+      notes: "",
+      batchNumber: "",
+      serialNumber: "",
+      expiryDate: "",
     });
   };
 
@@ -265,24 +295,30 @@ function CustomerReturnsContent() {
     setEditReturn({
       productId: returnItem.productId,
       warehouseId: returnItem.warehouseId,
-      locationId: returnItem.locationId || '',
+      locationId: returnItem.locationId || "",
       movementType: returnItem.movementType,
       quantity: returnItem.quantity,
       unitCost: returnItem.unitCost,
-      referenceNumber: returnItem.referenceNumber || '',
-      referenceType: returnItem.referenceType || 'customer_return',
-      notes: returnItem.notes || '',
-      batchNumber: returnItem.batchNumber || '',
-      serialNumber: returnItem.serialNumber || '',
-      expiryDate: returnItem.expiryDate ? new Date(returnItem.expiryDate).toISOString().split('T')[0] : '',
+      referenceNumber: returnItem.referenceNumber || "",
+      referenceType: returnItem.referenceType || "customer_return",
+      notes: returnItem.notes || "",
+      batchNumber: returnItem.batchNumber || "",
+      serialNumber: returnItem.serialNumber || "",
+      expiryDate: returnItem.expiryDate
+        ? new Date(returnItem.expiryDate).toISOString().split("T")[0]
+        : "",
     });
     setIsEditModalOpen(true);
   };
 
   const handleUpdateReturn = async () => {
     if (!selectedReturn) return;
-    
-    if (!editReturn.productId || !editReturn.warehouseId || editReturn.quantity <= 0) {
+
+    if (
+      !editReturn.productId ||
+      !editReturn.warehouseId ||
+      editReturn.quantity <= 0
+    ) {
       return;
     }
 
@@ -325,7 +361,10 @@ function CustomerReturnsContent() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => router.push('/inventory/stock-movements')}>
+            <Button
+              variant="outline"
+              onClick={() => router.push("/inventory/stock-movements")}
+            >
               <Package className="mr-2 h-4 w-4" />
               View All Movements
             </Button>
@@ -364,9 +403,7 @@ function CustomerReturnsContent() {
               <div className="text-2xl font-bold text-green-600">
                 {formatCurrency(totalRefundValue)}
               </div>
-              <p className="text-xs text-muted-foreground">
-                Refund amount
-              </p>
+              <p className="text-xs text-muted-foreground">Refund amount</p>
             </CardContent>
           </Card>
 
@@ -379,33 +416,31 @@ function CustomerReturnsContent() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {returns.filter(r => r.status === 'pending').length}
+                {returns.filter((r) => r.status === "pending").length}
               </div>
-              <p className="text-xs text-muted-foreground">
-                Require attention
-              </p>
+              <p className="text-xs text-muted-foreground">Require attention</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                This Month
-              </CardTitle>
+              <CardTitle className="text-sm font-medium">This Month</CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {returns.filter(r => {
-                  const returnDate = new Date(r.createdAt);
-                  const now = new Date();
-                  return returnDate.getMonth() === now.getMonth() && 
-                         returnDate.getFullYear() === now.getFullYear();
-                }).length}
+                {
+                  returns.filter((r) => {
+                    const returnDate = new Date(r.createdAt);
+                    const now = new Date();
+                    return (
+                      returnDate.getMonth() === now.getMonth() &&
+                      returnDate.getFullYear() === now.getFullYear()
+                    );
+                  }).length
+                }
               </div>
-              <p className="text-xs text-muted-foreground">
-                Recent returns
-              </p>
+              <p className="text-xs text-muted-foreground">Recent returns</p>
             </CardContent>
           </Card>
         </div>
@@ -434,7 +469,10 @@ function CustomerReturnsContent() {
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Warehouse</label>
-                <Select value={warehouseFilter} onValueChange={setWarehouseFilter}>
+                <Select
+                  value={warehouseFilter}
+                  onValueChange={setWarehouseFilter}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="All warehouses" />
                   </SelectTrigger>
@@ -502,7 +540,9 @@ function CustomerReturnsContent() {
                       <div className="flex items-center gap-3">
                         <Package className="h-5 w-5 text-muted-foreground" />
                         <div>
-                          <div className="font-medium">{returnItem.productName || 'Unknown Product'}</div>
+                          <div className="font-medium">
+                            {returnItem.productName || "Unknown Product"}
+                          </div>
                           <div className="text-sm text-muted-foreground">
                             SKU: {returnItem.productSku || returnItem.productId}
                           </div>
@@ -512,10 +552,12 @@ function CustomerReturnsContent() {
                     <TableCell>{returnItem.quantity}</TableCell>
                     <TableCell>{formatCurrency(returnItem.unitCost)}</TableCell>
                     <TableCell className="text-green-600 font-medium">
-                      {formatCurrency(returnItem.quantity * returnItem.unitCost)}
+                      {formatCurrency(
+                        returnItem.quantity * returnItem.unitCost,
+                      )}
                     </TableCell>
                     <TableCell>{getStatusBadge(returnItem.status)}</TableCell>
-                    <TableCell>{returnItem.referenceNumber || '-'}</TableCell>
+                    <TableCell>{returnItem.referenceNumber || "-"}</TableCell>
                     <TableCell>{formatDate(returnItem.createdAt)}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
@@ -573,57 +615,80 @@ function CustomerReturnsContent() {
                   <div>
                     <label className="text-sm font-medium">Product</label>
                     <p className="text-sm text-muted-foreground">
-                      {selectedReturn.productName || 'Unknown Product'}
+                      {selectedReturn.productName || "Unknown Product"}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      SKU: {selectedReturn.productSku || selectedReturn.productId}
+                      SKU:{" "}
+                      {selectedReturn.productSku || selectedReturn.productId}
                     </p>
                   </div>
                   <div>
                     <label className="text-sm font-medium">Quantity</label>
-                    <p className="text-sm text-muted-foreground">{selectedReturn.quantity}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedReturn.quantity}
+                    </p>
                   </div>
                   <div>
                     <label className="text-sm font-medium">Unit Cost</label>
-                    <p className="text-sm text-muted-foreground">{formatCurrency(selectedReturn.unitCost)}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {formatCurrency(selectedReturn.unitCost)}
+                    </p>
                   </div>
                   <div>
                     <label className="text-sm font-medium">Refund Value</label>
                     <p className="text-sm font-medium text-green-600">
-                      {formatCurrency(selectedReturn.quantity * selectedReturn.unitCost)}
+                      {formatCurrency(
+                        selectedReturn.quantity * selectedReturn.unitCost,
+                      )}
                     </p>
                   </div>
                   <div>
                     <label className="text-sm font-medium">Status</label>
-                    <div className="mt-1">{getStatusBadge(selectedReturn.status)}</div>
+                    <div className="mt-1">
+                      {getStatusBadge(selectedReturn.status)}
+                    </div>
                   </div>
                   <div>
-                    <label className="text-sm font-medium">Reference Number</label>
-                    <p className="text-sm text-muted-foreground">{selectedReturn.referenceNumber || '-'}</p>
+                    <label className="text-sm font-medium">
+                      Reference Number
+                    </label>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedReturn.referenceNumber || "-"}
+                    </p>
                   </div>
                   <div>
                     <label className="text-sm font-medium">Batch Number</label>
-                    <p className="text-sm text-muted-foreground">{selectedReturn.batchNumber || '-'}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedReturn.batchNumber || "-"}
+                    </p>
                   </div>
                   <div>
                     <label className="text-sm font-medium">Serial Number</label>
-                    <p className="text-sm text-muted-foreground">{selectedReturn.serialNumber || '-'}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedReturn.serialNumber || "-"}
+                    </p>
                   </div>
                 </div>
                 {selectedReturn.notes && (
                   <div>
                     <label className="text-sm font-medium">Notes</label>
-                    <p className="text-sm text-muted-foreground mt-1">{selectedReturn.notes}</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {selectedReturn.notes}
+                    </p>
                   </div>
                 )}
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
                     <label className="text-sm font-medium">Created Date</label>
-                    <p className="text-sm text-muted-foreground">{formatDate(selectedReturn.createdAt)}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {formatDate(selectedReturn.createdAt)}
+                    </p>
                   </div>
                   <div>
                     <label className="text-sm font-medium">Last Updated</label>
-                    <p className="text-sm text-muted-foreground">{formatDate(selectedReturn.updatedAt)}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {formatDate(selectedReturn.updatedAt)}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -632,10 +697,12 @@ function CustomerReturnsContent() {
               <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                 Close
               </Button>
-              <Button onClick={() => {
-                setIsDialogOpen(false);
-                handleEditReturn(selectedReturn!);
-              }}>
+              <Button
+                onClick={() => {
+                  setIsDialogOpen(false);
+                  handleEditReturn(selectedReturn!);
+                }}
+              >
                 Edit Details
               </Button>
             </DialogFooter>
@@ -659,7 +726,7 @@ function CustomerReturnsContent() {
                     value={newReturn.productId}
                     onValueChange={(value) => {
                       const product = products.find((p) => p.id === value);
-                      setNewReturn(prev => ({
+                      setNewReturn((prev) => ({
                         ...prev,
                         productId: value,
                         unitCost: product?.costPerUnitPrice || 0,
@@ -686,7 +753,12 @@ function CustomerReturnsContent() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="warehouse">Warehouse *</Label>
-                  <Select value={newReturn.warehouseId} onValueChange={(value) => setNewReturn(prev => ({ ...prev, warehouseId: value }))}>
+                  <Select
+                    value={newReturn.warehouseId}
+                    onValueChange={(value) =>
+                      setNewReturn((prev) => ({ ...prev, warehouseId: value }))
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select warehouse" />
                     </SelectTrigger>
@@ -707,7 +779,12 @@ function CustomerReturnsContent() {
                     min="1"
                     placeholder="Enter quantity"
                     value={newReturn.quantity}
-                    onChange={(e) => setNewReturn(prev => ({ ...prev, quantity: parseInt(e.target.value) || 0 }))}
+                    onChange={(e) =>
+                      setNewReturn((prev) => ({
+                        ...prev,
+                        quantity: parseInt(e.target.value) || 0,
+                      }))
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -719,7 +796,12 @@ function CustomerReturnsContent() {
                     min="0"
                     placeholder="Enter unit cost"
                     value={newReturn.unitCost}
-                    onChange={(e) => setNewReturn(prev => ({ ...prev, unitCost: parseFloat(e.target.value) || 0 }))}
+                    onChange={(e) =>
+                      setNewReturn((prev) => ({
+                        ...prev,
+                        unitCost: parseFloat(e.target.value) || 0,
+                      }))
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -728,7 +810,12 @@ function CustomerReturnsContent() {
                     id="referenceNumber"
                     placeholder="Order number or reference"
                     value={newReturn.referenceNumber}
-                    onChange={(e) => setNewReturn(prev => ({ ...prev, referenceNumber: e.target.value }))}
+                    onChange={(e) =>
+                      setNewReturn((prev) => ({
+                        ...prev,
+                        referenceNumber: e.target.value,
+                      }))
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -737,7 +824,12 @@ function CustomerReturnsContent() {
                     id="batchNumber"
                     placeholder="Enter batch number"
                     value={newReturn.batchNumber}
-                    onChange={(e) => setNewReturn(prev => ({ ...prev, batchNumber: e.target.value }))}
+                    onChange={(e) =>
+                      setNewReturn((prev) => ({
+                        ...prev,
+                        batchNumber: e.target.value,
+                      }))
+                    }
                   />
                 </div>
               </div>
@@ -747,13 +839,18 @@ function CustomerReturnsContent() {
                   id="notes"
                   placeholder="Describe the return reason and circumstances..."
                   value={newReturn.notes}
-                  onChange={(e) => setNewReturn(prev => ({ ...prev, notes: e.target.value }))}
+                  onChange={(e) =>
+                    setNewReturn((prev) => ({ ...prev, notes: e.target.value }))
+                  }
                   rows={3}
                 />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsRecordReturnOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setIsRecordReturnOpen(false)}
+              >
                 Cancel
               </Button>
               <Button onClick={handleRecordReturn} disabled={isSubmitting}>
@@ -790,7 +887,7 @@ function CustomerReturnsContent() {
                     value={editReturn.productId}
                     onValueChange={(value) => {
                       const product = products.find((p) => p.id === value);
-                      setEditReturn(prev => ({
+                      setEditReturn((prev) => ({
                         ...prev,
                         productId: value,
                         unitCost: product?.costPerUnitPrice || 0,
@@ -817,7 +914,12 @@ function CustomerReturnsContent() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="edit-warehouse">Warehouse *</Label>
-                  <Select value={editReturn.warehouseId} onValueChange={(value) => setEditReturn(prev => ({ ...prev, warehouseId: value }))}>
+                  <Select
+                    value={editReturn.warehouseId}
+                    onValueChange={(value) =>
+                      setEditReturn((prev) => ({ ...prev, warehouseId: value }))
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select warehouse" />
                     </SelectTrigger>
@@ -838,7 +940,12 @@ function CustomerReturnsContent() {
                     min="1"
                     placeholder="Enter quantity"
                     value={editReturn.quantity}
-                    onChange={(e) => setEditReturn(prev => ({ ...prev, quantity: parseInt(e.target.value) || 0 }))}
+                    onChange={(e) =>
+                      setEditReturn((prev) => ({
+                        ...prev,
+                        quantity: parseInt(e.target.value) || 0,
+                      }))
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -850,7 +957,12 @@ function CustomerReturnsContent() {
                     min="0"
                     placeholder="Enter unit cost"
                     value={editReturn.unitCost}
-                    onChange={(e) => setEditReturn(prev => ({ ...prev, unitCost: parseFloat(e.target.value) || 0 }))}
+                    onChange={(e) =>
+                      setEditReturn((prev) => ({
+                        ...prev,
+                        unitCost: parseFloat(e.target.value) || 0,
+                      }))
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -859,7 +971,12 @@ function CustomerReturnsContent() {
                     id="edit-referenceNumber"
                     placeholder="Order number or reference"
                     value={editReturn.referenceNumber}
-                    onChange={(e) => setEditReturn(prev => ({ ...prev, referenceNumber: e.target.value }))}
+                    onChange={(e) =>
+                      setEditReturn((prev) => ({
+                        ...prev,
+                        referenceNumber: e.target.value,
+                      }))
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -868,7 +985,12 @@ function CustomerReturnsContent() {
                     id="edit-batchNumber"
                     placeholder="Enter batch number"
                     value={editReturn.batchNumber}
-                    onChange={(e) => setEditReturn(prev => ({ ...prev, batchNumber: e.target.value }))}
+                    onChange={(e) =>
+                      setEditReturn((prev) => ({
+                        ...prev,
+                        batchNumber: e.target.value,
+                      }))
+                    }
                   />
                 </div>
               </div>
@@ -878,13 +1000,21 @@ function CustomerReturnsContent() {
                   id="edit-notes"
                   placeholder="Describe the return reason and circumstances..."
                   value={editReturn.notes}
-                  onChange={(e) => setEditReturn(prev => ({ ...prev, notes: e.target.value }))}
+                  onChange={(e) =>
+                    setEditReturn((prev) => ({
+                      ...prev,
+                      notes: e.target.value,
+                    }))
+                  }
                   rows={3}
                 />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setIsEditModalOpen(false)}
+              >
                 Cancel
               </Button>
               <Button onClick={handleUpdateReturn} disabled={isSubmitting}>
@@ -910,7 +1040,8 @@ function CustomerReturnsContent() {
             <DialogHeader>
               <DialogTitle>Delete Customer Return</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete this customer return? This action cannot be undone.
+                Are you sure you want to delete this customer return? This
+                action cannot be undone.
               </DialogDescription>
             </DialogHeader>
             <div className="flex justify-end space-x-2 mt-4">

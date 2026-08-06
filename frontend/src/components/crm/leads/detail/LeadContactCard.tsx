@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { Input } from '@/src/components/ui/input';
-import { Textarea } from '@/src/components/ui/textarea';
-import { Phone, Mail, Plus, Pencil } from 'lucide-react';
-import { Lead } from '@/src/models/crm';
-import CRMService from '@/src/services/CRMService';
+import { Input } from "@/src/components/ui/input";
+import { Textarea } from "@/src/components/ui/textarea";
+import { Phone, Mail, Plus, Pencil } from "lucide-react";
+import { Lead } from "@/src/models/crm";
+import CRMService from "@/src/services/CRMService";
 
 type Props = {
   lead: Lead;
@@ -40,7 +40,7 @@ export function LeadContactCard({
           <Phone className="h-4 w-4 text-emerald-500" />
           <Input
             className="h-8 border-0 shadow-none px-0"
-            value={lead.phone || ''}
+            value={lead.phone || ""}
             onChange={(e) => setLead({ ...lead, phone: e.target.value })}
             onBlur={() => patchLead({ phone: lead.phone })}
             placeholder="Phone"
@@ -67,12 +67,12 @@ export function LeadContactCard({
           type="button"
           className="flex items-center gap-1"
           onClick={async () => {
-            const name = window.prompt('Contact name');
+            const name = window.prompt("Contact name");
             if (!name) return;
             await CRMService.createAdditionalContact(leadId, {
               name,
-              phone: window.prompt('Phone') || undefined,
-              email: window.prompt('Email') || undefined,
+              phone: window.prompt("Phone") || undefined,
+              email: window.prompt("Email") || undefined,
             });
             reload();
           }}
@@ -83,7 +83,7 @@ export function LeadContactCard({
           type="button"
           className="flex items-center gap-1"
           onClick={async () => {
-            const address = window.prompt('Address', lead.address || '');
+            const address = window.prompt("Address", lead.address || "");
             if (address == null) return;
             await patchLead({ address });
           }}
@@ -96,7 +96,7 @@ export function LeadContactCard({
       )}
       <Textarea
         placeholder="Lead Description..."
-        value={lead.description || ''}
+        value={lead.description || ""}
         onChange={(e) => setLead({ ...lead, description: e.target.value })}
         onBlur={() => patchLead({ description: lead.description })}
         className="min-h-[80px] text-xs"

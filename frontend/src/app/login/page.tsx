@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Button } from '../../components/ui/button';
-import { UserPlus, Home } from 'lucide-react';
-import { AuthForm } from '../../components/auth';
-import { SessionManager } from '@/src/services/SessionManager';
-import { getDefaultLandingPath } from '@/src/utils/getDefaultLandingPath';
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Button } from "../../components/ui/button";
+import { UserPlus, Home } from "lucide-react";
+import { AuthForm } from "../../components/auth";
+import { SessionManager } from "@/src/services/SessionManager";
+import { getDefaultLandingPath } from "@/src/utils/getDefaultLandingPath";
 
 export default function LoginPage() {
   const router = useRouter();

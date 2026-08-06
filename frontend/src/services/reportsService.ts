@@ -1,4 +1,4 @@
-import { apiClient } from './apiClient';
+import { apiClient } from "./apiClient";
 
 export interface ProjectMetrics {
   total_projects: number;
@@ -95,7 +95,7 @@ export interface FinancialAnalytics {
 class ReportsService {
   async getDashboard(): Promise<ReportsDashboard> {
     try {
-      const response = await apiClient.get('/reports/dashboard');
+      const response = await apiClient.get("/reports/dashboard");
       return response.data;
     } catch (error) {
       throw error;
@@ -104,7 +104,7 @@ class ReportsService {
 
   async getSummary(): Promise<ReportsSummary> {
     try {
-      const response = await apiClient.get('/reports/summary');
+      const response = await apiClient.get("/reports/summary");
       return response.summary;
     } catch (error) {
       throw error;
@@ -116,10 +116,12 @@ class ReportsService {
     end_date?: string;
   }): Promise<ProjectAnalytics> {
     const params = new URLSearchParams();
-    if (filters?.start_date) params.append('start_date', filters.start_date);
-    if (filters?.end_date) params.append('end_date', filters.end_date);
+    if (filters?.start_date) params.append("start_date", filters.start_date);
+    if (filters?.end_date) params.append("end_date", filters.end_date);
 
-    const response = await apiClient.get(`/reports/projects/analytics?${params.toString()}`);
+    const response = await apiClient.get(
+      `/reports/projects/analytics?${params.toString()}`,
+    );
     return response.data.data;
   }
 
@@ -128,28 +130,32 @@ class ReportsService {
     end_date?: string;
   }): Promise<FinancialAnalytics> {
     const params = new URLSearchParams();
-    if (filters?.start_date) params.append('start_date', filters.start_date);
-    if (filters?.end_date) params.append('end_date', filters.end_date);
+    if (filters?.start_date) params.append("start_date", filters.start_date);
+    if (filters?.end_date) params.append("end_date", filters.end_date);
 
-    const response = await apiClient.get(`/reports/financial/analytics?${params.toString()}`);
+    const response = await apiClient.get(
+      `/reports/financial/analytics?${params.toString()}`,
+    );
     return response.data.data;
   }
 
   async exportReports(
     reportType: string,
-    format: string = 'json',
+    format: string = "json",
     filters?: {
       start_date?: string;
       end_date?: string;
-    }
+    },
   ) {
     const params = new URLSearchParams();
-    params.append('report_type', reportType);
-    params.append('format', format);
-    if (filters?.start_date) params.append('start_date', filters.start_date);
-    if (filters?.end_date) params.append('end_date', filters.end_date);
+    params.append("report_type", reportType);
+    params.append("format", format);
+    if (filters?.start_date) params.append("start_date", filters.start_date);
+    if (filters?.end_date) params.append("end_date", filters.end_date);
 
-    const response = await apiClient.get(`/reports/export?${params.toString()}`);
+    const response = await apiClient.get(
+      `/reports/export?${params.toString()}`,
+    );
     return response.data;
   }
 }

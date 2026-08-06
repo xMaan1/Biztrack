@@ -1,5 +1,5 @@
-import { Button } from '@/src/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Button } from "@/src/components/ui/button";
+import { Plus } from "lucide-react";
 
 type ContactsPageHeaderProps = {
   successMessage: string;

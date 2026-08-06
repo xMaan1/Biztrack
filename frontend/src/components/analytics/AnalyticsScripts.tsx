@@ -1,8 +1,8 @@
-import Script from 'next/script';
+import Script from "next/script";
 
-const GTM_ID = 'GTM-PLN79QD6';
-const CLARITY_ID = 'xkr2twnyf3';
-const GA_ID = 'G-J76EKB3M57';
+const GTM_ID = "GTM-PLN79QD6";
+const CLARITY_ID = "xkr2twnyf3";
+const GA_ID = "G-J76EKB3M57";
 
 export function AnalyticsScripts() {
   return (
@@ -42,7 +42,7 @@ export function AnalyticsNoscript() {
         src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
         height="0"
         width="0"
-        style={{ display: 'none', visibility: 'hidden' }}
+        style={{ display: "none", visibility: "hidden" }}
         title="Google Tag Manager"
       />
     </noscript>

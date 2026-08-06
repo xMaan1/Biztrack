@@ -1,9 +1,14 @@
-'use client';
+"use client";
 
-import { Search } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
-import { Input } from '@/src/components/ui/input';
-import type { SuppliersSearchCardProps } from './types';
+import { Search } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/src/components/ui/card";
+import { Input } from "@/src/components/ui/input";
+import type { SuppliersSearchCardProps } from "./types";
 
 export function SuppliersSearchCard({
   searchTerm,

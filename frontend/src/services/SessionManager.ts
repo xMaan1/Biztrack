@@ -1,5 +1,5 @@
-import { User } from '../models/auth/User';
-import { extractErrorMessage } from '../utils/errorUtils';
+import { User } from "../models/auth/User";
+import { extractErrorMessage } from "../utils/errorUtils";
 
 export interface SessionData {
   token: string;
@@ -9,15 +9,15 @@ export interface SessionData {
 }
 
 class SessionManager {
-  private readonly TOKEN_KEY = 'auth_token';
-  private readonly USER_KEY = 'user_data';
-  private readonly EXPIRES_KEY = 'token_expires';
-  private readonly REFRESH_TOKEN_KEY = 'refresh_token';
-  private readonly COOKIE_TOKEN_KEY = 'auth-token';
+  private readonly TOKEN_KEY = "auth_token";
+  private readonly USER_KEY = "user_data";
+  private readonly EXPIRES_KEY = "token_expires";
+  private readonly REFRESH_TOKEN_KEY = "refresh_token";
+  private readonly COOKIE_TOKEN_KEY = "auth-token";
 
   // Helper function to set cookie
   private setCookie(name: string, value: string, days: number = 7): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
     const expires = new Date();
     expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
@@ -26,13 +26,13 @@ class SessionManager {
 
   // Helper function to get cookie
   private getCookie(name: string): string | null {
-    if (typeof window === 'undefined') return null;
+    if (typeof window === "undefined") return null;
 
-    const nameEQ = name + '=';
-    const ca = document.cookie.split(';');
+    const nameEQ = name + "=";
+    const ca = document.cookie.split(";");
     for (let i = 0; i < ca.length; i++) {
       let c = ca[i];
-      while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+      while (c.charAt(0) === " ") c = c.substring(1, c.length);
       if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
     }
     return null;
@@ -40,14 +40,14 @@ class SessionManager {
 
   // Helper function to remove cookie
   private removeCookie(name: string): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
     document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`;
   }
 
   // Token management
   setToken(token: string, expiresIn?: number): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
     // Store in localStorage
     localStorage.setItem(this.TOKEN_KEY, token);
@@ -63,7 +63,7 @@ class SessionManager {
   }
 
   getToken(): string | null {
-    if (typeof window === 'undefined') return null;
+    if (typeof window === "undefined") return null;
 
     // Try localStorage first, then cookie as fallback
     let token = localStorage.getItem(this.TOKEN_KEY);
@@ -85,7 +85,7 @@ class SessionManager {
   }
 
   removeToken(): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.EXPIRES_KEY);
@@ -94,29 +94,29 @@ class SessionManager {
 
   // Refresh token management
   setRefreshToken(refreshToken: string): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
     localStorage.setItem(this.REFRESH_TOKEN_KEY, refreshToken);
   }
 
   getRefreshToken(): string | null {
-    if (typeof window === 'undefined') return null;
+    if (typeof window === "undefined") return null;
     return localStorage.getItem(this.REFRESH_TOKEN_KEY);
   }
 
   removeRefreshToken(): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
     localStorage.removeItem(this.REFRESH_TOKEN_KEY);
   }
 
   // User data management
   setUser(user: User): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
     localStorage.setItem(this.USER_KEY, JSON.stringify(user));
   }
 
   getUser(): User | null {
-    if (typeof window === 'undefined') return null;
+    if (typeof window === "undefined") return null;
 
     const userData = localStorage.getItem(this.USER_KEY);
     if (!userData) return null;
@@ -130,7 +130,7 @@ class SessionManager {
   }
 
   removeUser(): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
     localStorage.removeItem(this.USER_KEY);
   }
@@ -170,15 +170,15 @@ class SessionManager {
     this.removeToken();
     this.removeUser();
     this.removeRefreshToken();
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('currentTenantId');
-      localStorage.removeItem('userTenants');
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("currentTenantId");
+      localStorage.removeItem("userTenants");
       this.removeCookie(this.COOKIE_TOKEN_KEY);
     }
   }
 
   isSessionValid(): boolean {
-    if (typeof window === 'undefined') return false;
+    if (typeof window === "undefined") return false;
 
     const token = this.getToken();
     const user = this.getUser();
@@ -187,7 +187,7 @@ class SessionManager {
   }
 
   isTokenExpired(): boolean {
-    if (typeof window === 'undefined') return true;
+    if (typeof window === "undefined") return true;
 
     const expiresAt = localStorage.getItem(this.EXPIRES_KEY);
     if (!expiresAt) return false;
@@ -203,16 +203,14 @@ class SessionManager {
         return false;
       }
 
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-      const apiUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
-      const response = await fetch(
-        `${apiUrl}/auth/refresh`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ refresh_token: refreshToken }),
-        },
-      );
+      const baseUrl =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const apiUrl = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
+      const response = await fetch(`${apiUrl}/auth/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      });
 
       if (response.ok) {
         const data = await response.json();
@@ -221,8 +219,8 @@ class SessionManager {
         // Update refresh token if provided (token rotation)
         if (data.refresh_token) {
           this.setRefreshToken(data.refresh_token);
-          } else {
-          }
+        } else {
+        }
         return true;
       } else {
         return false;
@@ -242,7 +240,7 @@ class SessionManager {
 
   // Session events
   onSessionExpired(callback: () => void): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
     const checkExpiration = async () => {
       if (this.isTokenExpired()) {
@@ -261,7 +259,7 @@ class SessionManager {
 
   // Proactive token refresh - refresh before expiration
   startProactiveRefresh(): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
     const refreshBeforeExpiration = async () => {
       try {
@@ -275,7 +273,7 @@ class SessionManager {
           }
         }
       } catch (error: any) {
-        extractErrorMessage(error, 'Session refresh failed');
+        extractErrorMessage(error, "Session refresh failed");
       }
     };
 
@@ -288,7 +286,7 @@ class SessionManager {
 
   // Utility methods
   getTokenExpirationTime(): Date | null {
-    if (typeof window === 'undefined') return null;
+    if (typeof window === "undefined") return null;
 
     const expiresAt = localStorage.getItem(this.EXPIRES_KEY);
     if (!expiresAt) return null;

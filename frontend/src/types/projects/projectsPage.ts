@@ -1,6 +1,6 @@
-import type { Project } from '@/src/models';
+import type { Project } from "@/src/models";
 
-export type ProjectDialogMode = 'create' | 'edit';
+export type ProjectDialogMode = "create" | "edit";
 
 export interface ProjectFormData {
   name: string;
@@ -16,7 +16,12 @@ export interface ProjectFormData {
   teamMemberIds: string[];
 }
 
-export type ProjectDeleteMode = 'direct' | 'approved' | 'pending' | 'request' | 'none';
+export type ProjectDeleteMode =
+  | "direct"
+  | "approved"
+  | "pending"
+  | "request"
+  | "none";
 
 export interface ProjectCardProps {
   project: Project;
@@ -49,9 +54,11 @@ export interface ProjectFormDialogProps {
   formData: ProjectFormData;
   formError: string | null;
   formLoading: boolean;
-  users: import('@/src/models').User[];
-  selectedProjectManager: import('@/src/components/ui/user-search').UserSearchItem | null;
-  selectedTeamMembers: import('@/src/components/ui/user-multi-search').UserMultiSearchItem[];
+  users: import("@/src/models").User[];
+  selectedProjectManager:
+    | import("@/src/components/ui/user-search").UserSearchItem
+    | null;
+  selectedTeamMembers: import("@/src/components/ui/user-multi-search").UserMultiSearchItem[];
   onOpenChange: (open: boolean) => void;
   onFormDataChange: (data: ProjectFormData) => void;
   onSubmit: (e: React.FormEvent) => void;

@@ -1,53 +1,45 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '../ui/card';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../ui/select';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '../ui/dialog';
-import { Alert, AlertDescription } from '../ui/alert';
-import { Filter, Settings } from 'lucide-react';
-import InvoiceService from '../../services/InvoiceService';
-import {
-  Invoice,
-  InvoiceCreate,
-  InvoiceFilters,
-} from '../../models/sales';
-import { InvoiceDialog, InstallmentPlanCreateOption } from './InvoiceDialog';
-import { InvoiceList } from './InvoiceList';
-import { InvoiceCustomizationDialog } from './InvoiceCustomizationDialog';
-import { usePermissions } from '@/src/hooks/usePermissions';
-import { extractErrorMessage } from '@/src/utils/errorUtils';
+} from "../ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
+import { Alert, AlertDescription } from "../ui/alert";
+import { Filter, Settings } from "lucide-react";
+import InvoiceService from "../../services/InvoiceService";
+import { Invoice, InvoiceCreate, InvoiceFilters } from "../../models/sales";
+import { InvoiceDialog, InstallmentPlanCreateOption } from "./InvoiceDialog";
+import { InvoiceList } from "./InvoiceList";
+import { InvoiceCustomizationDialog } from "./InvoiceCustomizationDialog";
+import { usePermissions } from "@/src/hooks/usePermissions";
+import { extractErrorMessage } from "@/src/utils/errorUtils";
 
-export type InvoiceListScope = 'paid' | 'outstanding';
+export type InvoiceListScope = "paid" | "outstanding";
 
 const OUTSTANDING_STATUS_OPTIONS = [
-  { value: 'all', label: 'All Statuses' },
-  { value: 'draft', label: 'Draft' },
-  { value: 'sent', label: 'Sent' },
-  { value: 'viewed', label: 'Viewed' },
-  { value: 'partially_paid', label: 'Partially Paid' },
-  { value: 'overdue', label: 'Overdue' },
-  { value: 'cancelled', label: 'Cancelled' },
-  { value: 'void', label: 'Void' },
+  { value: "all", label: "All Statuses" },
+  { value: "draft", label: "Draft" },
+  { value: "sent", label: "Sent" },
+  { value: "viewed", label: "Viewed" },
+  { value: "partially_paid", label: "Partially Paid" },
+  { value: "overdue", label: "Overdue" },
+  { value: "cancelled", label: "Cancelled" },
+  { value: "void", label: "Void" },
 ] as const;
 
 type InvoiceManagementPanelProps = {
@@ -57,11 +49,11 @@ type InvoiceManagementPanelProps = {
 
 export function InvoiceManagementPanel({
   onInvoicesChange,
-  scope = 'paid',
+  scope = "paid",
 }: InvoiceManagementPanelProps) {
   const { canViewInvoices, isOwner } = usePermissions();
-  const canCustomizeInvoice = isOwner() && scope === 'paid';
-  const isOutstanding = scope === 'outstanding';
+  const canCustomizeInvoice = isOwner() && scope === "paid";
+  const isOutstanding = scope === "outstanding";
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -73,19 +65,19 @@ export function InvoiceManagementPanel({
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [updateError, setUpdateError] = useState<string | null>(null);
   const [filters, setFilters] = useState<InvoiceFilters>({});
-  const [searchTerm, setSearchTerm] = useState('');
-  const [orderPrefix, setOrderPrefix] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [orderPrefix, setOrderPrefix] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
   const hasViewPermission = useMemo(() => canViewInvoices(), [canViewInvoices]);
   const loadingRef = useRef(false);
   const resolvedStatus = isOutstanding
-    ? statusFilter === 'all'
-      ? 'outstanding'
+    ? statusFilter === "all"
+      ? "outstanding"
       : statusFilter
-    : 'paid';
+    : "paid";
 
   const notifyChange = useCallback(() => {
     onInvoicesChange?.();
@@ -112,19 +104,34 @@ export function InvoiceManagementPanel({
       setInvoices(response.invoices || []);
       setTotalPages(response.pagination?.pages || 1);
     } catch (err) {
-      setError(extractErrorMessage(err, 'Failed to load data'));
+      setError(extractErrorMessage(err, "Failed to load data"));
     } finally {
       setLoading(false);
       loadingRef.current = false;
     }
-  }, [filters, searchTerm, orderPrefix, resolvedStatus, currentPage, hasViewPermission]);
+  }, [
+    filters,
+    searchTerm,
+    orderPrefix,
+    resolvedStatus,
+    currentPage,
+    hasViewPermission,
+  ]);
 
   const filtersString = useMemo(() => JSON.stringify(filters), [filters]);
 
   useEffect(() => {
     if (!hasViewPermission) return;
     loadData();
-  }, [currentPage, filtersString, searchTerm, orderPrefix, resolvedStatus, loadData, hasViewPermission]);
+  }, [
+    currentPage,
+    filtersString,
+    searchTerm,
+    orderPrefix,
+    resolvedStatus,
+    loadData,
+    hasViewPermission,
+  ]);
 
   const handleUpdateInvoice = async (
     invoiceId: string,
@@ -150,7 +157,7 @@ export function InvoiceManagementPanel({
       loadData();
       notifyChange();
     } catch (err) {
-      const errorMessage = extractErrorMessage(err, 'Failed to update invoice');
+      const errorMessage = extractErrorMessage(err, "Failed to update invoice");
       setUpdateError(errorMessage);
       setError(errorMessage);
     }
@@ -166,7 +173,7 @@ export function InvoiceManagementPanel({
       loadData();
       notifyChange();
     } catch (err) {
-      const errorMessage = extractErrorMessage(err, 'Failed to delete invoice');
+      const errorMessage = extractErrorMessage(err, "Failed to delete invoice");
       setDeleteError(errorMessage);
       setError(errorMessage);
     }
@@ -178,7 +185,7 @@ export function InvoiceManagementPanel({
       loadData();
       notifyChange();
     } catch (err) {
-      setError(extractErrorMessage(err, 'Failed to send invoice'));
+      setError(extractErrorMessage(err, "Failed to send invoice"));
     }
   };
 
@@ -188,7 +195,7 @@ export function InvoiceManagementPanel({
       loadData();
       notifyChange();
     } catch (err) {
-      setError(extractErrorMessage(err, 'Failed to mark invoice as paid'));
+      setError(extractErrorMessage(err, "Failed to mark invoice as paid"));
     }
   };
 
@@ -198,7 +205,7 @@ export function InvoiceManagementPanel({
       loadData();
       notifyChange();
     } catch (err) {
-      setError(extractErrorMessage(err, 'Failed to send invoices'));
+      setError(extractErrorMessage(err, "Failed to send invoices"));
     }
   };
 
@@ -208,7 +215,7 @@ export function InvoiceManagementPanel({
       loadData();
       notifyChange();
     } catch (err) {
-      setError(extractErrorMessage(err, 'Failed to mark invoices as paid'));
+      setError(extractErrorMessage(err, "Failed to mark invoices as paid"));
     }
   };
 
@@ -218,7 +225,7 @@ export function InvoiceManagementPanel({
       loadData();
       notifyChange();
     } catch (err) {
-      setError(extractErrorMessage(err, 'Failed to mark invoices as unpaid'));
+      setError(extractErrorMessage(err, "Failed to mark invoices as unpaid"));
     }
   };
 
@@ -228,7 +235,7 @@ export function InvoiceManagementPanel({
       loadData();
       notifyChange();
     } catch (err) {
-      setError(extractErrorMessage(err, 'Failed to delete invoices'));
+      setError(extractErrorMessage(err, "Failed to delete invoices"));
     }
   };
 
@@ -293,7 +300,7 @@ export function InvoiceManagementPanel({
         <CardContent>
           <div
             className={`grid grid-cols-1 gap-4 ${
-              isOutstanding ? 'md:grid-cols-5' : 'md:grid-cols-4'
+              isOutstanding ? "md:grid-cols-5" : "md:grid-cols-4"
             }`}
           >
             <div>
@@ -303,7 +310,7 @@ export function InvoiceManagementPanel({
                 placeholder="Customer, invoice #..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                onKeyPress={(e) => e.key === "Enter" && handleSearch()}
               />
             </div>
             <div>
@@ -313,7 +320,7 @@ export function InvoiceManagementPanel({
                 placeholder="ORD-20250608"
                 value={orderPrefix}
                 onChange={(e) => setOrderPrefix(e.target.value.toUpperCase())}
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                onKeyPress={(e) => e.key === "Enter" && handleSearch()}
               />
             </div>
             {isOutstanding && (
@@ -344,8 +351,10 @@ export function InvoiceManagementPanel({
               <Input
                 id="dateFrom"
                 type="date"
-                value={filters.dateFrom || ''}
-                onChange={(e) => handleFilterChange({ dateFrom: e.target.value })}
+                value={filters.dateFrom || ""}
+                onChange={(e) =>
+                  handleFilterChange({ dateFrom: e.target.value })
+                }
               />
             </div>
             <div>
@@ -353,7 +362,7 @@ export function InvoiceManagementPanel({
               <Input
                 id="dateTo"
                 type="date"
-                value={filters.dateTo || ''}
+                value={filters.dateTo || ""}
                 onChange={(e) => handleFilterChange({ dateTo: e.target.value })}
               />
             </div>
@@ -399,8 +408,9 @@ export function InvoiceManagementPanel({
               </h3>
               <div className="mt-2 text-sm text-blue-700">
                 <p>
-                  Before downloading invoices, please customize your invoice template with your company details,
-                  payment information, and styling preferences using the Customize Invoice button above.
+                  Before downloading invoices, please customize your invoice
+                  template with your company details, payment information, and
+                  styling preferences using the Customize Invoice button above.
                 </p>
               </div>
             </div>
@@ -434,19 +444,22 @@ export function InvoiceManagementPanel({
         invoice={selectedInvoice}
       />
 
-      <Dialog open={showDeleteDialog} onOpenChange={(open) => {
-        setShowDeleteDialog(open);
-        if (!open) {
-          setDeleteError(null);
-        }
-      }}>
+      <Dialog
+        open={showDeleteDialog}
+        onOpenChange={(open) => {
+          setShowDeleteDialog(open);
+          if (!open) {
+            setDeleteError(null);
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Invoice</DialogTitle>
           </DialogHeader>
           <div className="py-4">
             <p>
-              Are you sure you want to delete invoice{' '}
+              Are you sure you want to delete invoice{" "}
               <strong>{selectedInvoice?.invoiceNumber}</strong>? This action
               cannot be undone.
             </p>

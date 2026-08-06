@@ -1,15 +1,25 @@
-'use client';
+"use client";
 
-import { ClipboardCheck, Plus } from 'lucide-react';
-import { Button } from '@/src/components/ui/button';
-import { Badge } from '@/src/components/ui/badge';
+import {
+  CheckCircle,
+  ClipboardCheck,
+  Edit,
+  Eye,
+  MoreVertical,
+  PlayCircle,
+  Plus,
+  Trash2,
+  XCircle,
+} from "lucide-react";
+import { Button } from "@/src/components/ui/button";
+import { Badge } from "@/src/components/ui/badge";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/src/components/ui/card';
+} from "@/src/components/ui/card";
 import {
   Table,
   TableBody,
@@ -17,24 +27,24 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/src/components/ui/table';
+} from "@/src/components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/src/components/ui/dropdown-menu';
-import { Edit, Trash2, Eye, MoreVertical, PlayCircle, CheckCircle, XCircle } from 'lucide-react';
-import type { MotBooking, MotBookingStatus } from '@/src/models/mot/MotBooking';
+} from "@/src/components/ui/dropdown-menu";
 import {
+  formatMotVehicleLine,
   getMotStatusColor,
   getMotStatusLabel,
   getMotTestTypeLabel,
-  formatMotVehicleLine,
-} from '@/src/models/mot/MotBooking';
-import { formatBookingDateTime } from './motBookingUtils';
-import type { MotBookingFiltersState } from './types';
+  type MotBooking,
+  type MotBookingStatus,
+} from "@/src/models/mot/MotBooking";
+import { formatBookingDateTime } from "./motBookingUtils";
+import type { MotBookingFiltersState } from "./types";
 
 type MotBookingsListCardProps = {
   bookings: MotBooking[];
@@ -61,8 +71,8 @@ export function MotBookingsListCard({
 }: MotBookingsListCardProps) {
   const hasActiveFilters =
     filters.searchTerm ||
-    filters.status !== 'all' ||
-    filters.testType !== 'all' ||
+    filters.status !== "all" ||
+    filters.testType !== "all" ||
     filters.dateFrom ||
     filters.dateTo;
 
@@ -74,8 +84,8 @@ export function MotBookingsListCard({
           <h3 className="mt-4 text-lg font-semibold">No MOT bookings found</h3>
           <p className="mt-2 text-muted-foreground">
             {hasActiveFilters
-              ? 'Try adjusting your filters or search terms.'
-              : 'Get started by creating your first MOT booking.'}
+              ? "Try adjusting your filters or search terms."
+              : "Get started by creating your first MOT booking."}
           </p>
           {!hasActiveFilters && (
             <Button onClick={onAddBooking} className="mt-4">
@@ -92,7 +102,9 @@ export function MotBookingsListCard({
     <Card>
       <CardHeader>
         <CardTitle>MOT Bookings ({totalCount})</CardTitle>
-        <CardDescription>Manage scheduled MOT checkup appointments</CardDescription>
+        <CardDescription>
+          Manage scheduled MOT checkup appointments
+        </CardDescription>
       </CardHeader>
       <CardContent className="p-0 sm:p-6 pt-0">
         <div className="rounded-md border overflow-x-auto">
@@ -114,13 +126,19 @@ export function MotBookingsListCard({
                   <TableCell>
                     <div className="font-medium">{booking.customer_name}</div>
                     {booking.customer_phone && (
-                      <div className="text-sm text-muted-foreground">{booking.customer_phone}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {booking.customer_phone}
+                      </div>
                     )}
                   </TableCell>
                   <TableCell>{formatMotVehicleLine(booking)}</TableCell>
                   <TableCell>{formatBookingDateTime(booking)}</TableCell>
-                  <TableCell>{getMotTestTypeLabel(booking.test_type)}</TableCell>
-                  <TableCell>{formatCurrency(Number(booking.price) || 0)}</TableCell>
+                  <TableCell>
+                    {getMotTestTypeLabel(booking.test_type)}
+                  </TableCell>
+                  <TableCell>
+                    {formatCurrency(Number(booking.price) || 0)}
+                  </TableCell>
                   <TableCell>
                     <Badge className={getMotStatusColor(booking.status)}>
                       {getMotStatusLabel(booking.status)}
@@ -143,22 +161,32 @@ export function MotBookingsListCard({
                           Edit
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => onStatusChange(booking, 'confirmed')}>
+                        <DropdownMenuItem
+                          onClick={() => onStatusChange(booking, "confirmed")}
+                        >
                           Confirm
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onStatusChange(booking, 'in_progress')}>
+                        <DropdownMenuItem
+                          onClick={() => onStatusChange(booking, "in_progress")}
+                        >
                           <PlayCircle className="mr-2 h-4 w-4" />
                           Start test
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onStatusChange(booking, 'passed')}>
+                        <DropdownMenuItem
+                          onClick={() => onStatusChange(booking, "passed")}
+                        >
                           <CheckCircle className="mr-2 h-4 w-4" />
                           Mark passed
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onStatusChange(booking, 'failed')}>
+                        <DropdownMenuItem
+                          onClick={() => onStatusChange(booking, "failed")}
+                        >
                           <XCircle className="mr-2 h-4 w-4" />
                           Mark failed
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onStatusChange(booking, 'cancelled')}>
+                        <DropdownMenuItem
+                          onClick={() => onStatusChange(booking, "cancelled")}
+                        >
                           Cancel booking
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />

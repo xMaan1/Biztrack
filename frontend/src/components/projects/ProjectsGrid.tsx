@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import type { Project } from '@/src/models';
-import type { ProjectDeleteMode } from '@/src/types/projects';
-import { ProjectCard } from './ProjectCard';
+import type { Project } from "@/src/models";
+import type { ProjectDeleteMode } from "@/src/types/projects";
+import { ProjectCard } from "./ProjectCard";
 
 interface ProjectsGridProps {
   projects: Project[];

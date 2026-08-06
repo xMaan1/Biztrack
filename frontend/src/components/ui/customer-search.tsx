@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Input } from './input';
-import { Label } from './label';
-import { Button } from './button';
-import { Badge } from './badge';
-import { Search, User, Building, X, Check } from 'lucide-react';
-import { Customer } from '../../services/CustomerService';
-import InvoiceService from '../../services/InvoiceService';
-import { getCustomerDisplayName } from '@/src/utils/customerUtils';
+import React, { useState, useEffect, useRef } from "react";
+import { Input } from "./input";
+import { Label } from "./label";
+import { Button } from "./button";
+import { Badge } from "./badge";
+import { Search, User, Building, X, Check } from "lucide-react";
+import { Customer } from "../../services/CustomerService";
+import InvoiceService from "../../services/InvoiceService";
+import { getCustomerDisplayName } from "@/src/utils/customerUtils";
 
 interface CustomerSearchProps {
   value?: Customer | null;
@@ -23,31 +23,36 @@ interface CustomerSearchProps {
 export function CustomerSearch({
   value,
   onSelect,
-  placeholder = 'Search customers...',
-  label = 'Customer',
+  placeholder = "Search customers...",
+  label = "Customer",
   required = false,
   error,
-  className = '',
+  className = "",
 }: CustomerSearchProps) {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(value || null);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
+    value || null,
+  );
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Handle click outside to close dropdown
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     }
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -61,7 +66,10 @@ export function CustomerSearch({
 
       setLoading(true);
       try {
-        const results = await InvoiceService.searchCustomers(searchQuery.trim(), 10);
+        const results = await InvoiceService.searchCustomers(
+          searchQuery.trim(),
+          10,
+        );
         setCustomers(results);
       } catch (error) {
         setCustomers([]);
@@ -81,14 +89,14 @@ export function CustomerSearch({
 
   const handleCustomerSelect = (customer: Customer) => {
     setSelectedCustomer(customer);
-    setSearchQuery('');
+    setSearchQuery("");
     setIsOpen(false);
     onSelect(customer);
   };
 
   const handleClearSelection = () => {
     setSelectedCustomer(null);
-    setSearchQuery('');
+    setSearchQuery("");
     onSelect(null);
   };
 
@@ -102,7 +110,7 @@ export function CustomerSearch({
   };
 
   const getCustomerTypeIcon = (customer: Customer) => {
-    return customer.customerType === 'business' ? (
+    return customer.customerType === "business" ? (
       <Building className="h-4 w-4" />
     ) : (
       <User className="h-4 w-4" />
@@ -111,20 +119,25 @@ export function CustomerSearch({
 
   const getCustomerStatusColor = (status: string) => {
     switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800';
-      case 'inactive':
-        return 'bg-gray-100 text-gray-800';
-      case 'blocked':
-        return 'bg-red-100 text-red-800';
+      case "active":
+        return "bg-green-100 text-green-800";
+      case "inactive":
+        return "bg-gray-100 text-gray-800";
+      case "blocked":
+        return "bg-red-100 text-red-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   return (
     <div className={`relative ${className}`} ref={searchRef}>
-      <Label htmlFor="customer-search" className={required ? 'after:content-[\'*\'] after:text-red-500 after:ml-1' : ''}>
+      <Label
+        htmlFor="customer-search"
+        className={
+          required ? "after:content-['*'] after:text-red-500 after:ml-1" : ""
+        }
+      >
         {label}
       </Label>
 
@@ -135,11 +148,15 @@ export function CustomerSearch({
             ref={inputRef}
             id="customer-search"
             type="text"
-            value={selectedCustomer ? getCustomerDisplayName(selectedCustomer) : searchQuery}
+            value={
+              selectedCustomer
+                ? getCustomerDisplayName(selectedCustomer)
+                : searchQuery
+            }
             onChange={handleInputChange}
             onFocus={handleInputFocus}
-            placeholder={selectedCustomer ? '' : placeholder}
-            className={`pl-10 pr-10 ${error ? 'border-red-500' : ''}`}
+            placeholder={selectedCustomer ? "" : placeholder}
+            className={`pl-10 pr-10 ${error ? "border-red-500" : ""}`}
             disabled={!!selectedCustomer}
           />
           {selectedCustomer && (
@@ -180,14 +197,22 @@ export function CustomerSearch({
                           <div className="font-medium text-gray-900">
                             {getCustomerDisplayName(customer)}
                           </div>
-                          <div className="text-sm text-gray-500">{customer.email}</div>
+                          <div className="text-sm text-gray-500">
+                            {customer.email}
+                          </div>
                           {customer.phone && (
-                            <div className="text-sm text-gray-500">{customer.phone}</div>
+                            <div className="text-sm text-gray-500">
+                              {customer.phone}
+                            </div>
                           )}
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Badge className={getCustomerStatusColor(customer.customerStatus)}>
+                        <Badge
+                          className={getCustomerStatusColor(
+                            customer.customerStatus,
+                          )}
+                        >
                           {customer.customerStatus}
                         </Badge>
                         {selectedCustomer?.id === customer.id && (
@@ -200,7 +225,7 @@ export function CustomerSearch({
               </div>
             ) : searchQuery.trim().length >= 2 ? (
               <div className="p-4 text-center text-gray-500">
-                No customers found for "{searchQuery}"
+                No customers found for &quot;{searchQuery}&quot;
               </div>
             ) : (
               <div className="p-4 text-center text-gray-500">
@@ -211,9 +236,7 @@ export function CustomerSearch({
         )}
       </div>
 
-      {error && (
-        <p className="text-red-500 text-sm mt-1">{error}</p>
-      )}
+      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
 
       {/* Selected Customer Details */}
       {selectedCustomer && (
@@ -225,22 +248,30 @@ export function CustomerSearch({
                 <div className="font-medium text-gray-900">
                   {getCustomerDisplayName(selectedCustomer)}
                 </div>
-                <div className="text-sm text-gray-600">{selectedCustomer.email}</div>
+                <div className="text-sm text-gray-600">
+                  {selectedCustomer.email}
+                </div>
                 {selectedCustomer.phone && (
-                  <div className="text-sm text-gray-600">{selectedCustomer.phone}</div>
+                  <div className="text-sm text-gray-600">
+                    {selectedCustomer.phone}
+                  </div>
                 )}
                 {selectedCustomer.address && (
-                  <div className="text-sm text-gray-600">{selectedCustomer.address}</div>
+                  <div className="text-sm text-gray-600">
+                    {selectedCustomer.address}
+                  </div>
                 )}
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Badge className={getCustomerStatusColor(selectedCustomer.customerStatus)}>
+              <Badge
+                className={getCustomerStatusColor(
+                  selectedCustomer.customerStatus,
+                )}
+              >
                 {selectedCustomer.customerStatus}
               </Badge>
-              <Badge variant="outline">
-                {selectedCustomer.customerType}
-              </Badge>
+              <Badge variant="outline">{selectedCustomer.customerType}</Badge>
             </div>
           </div>
         </div>

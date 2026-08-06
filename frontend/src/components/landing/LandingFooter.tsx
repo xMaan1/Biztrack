@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { BizTrackLogo } from '@/src/components/brand/BizTrackLogo';
-import { VerifiedCompanyBadge } from '@/src/components/common/VerifiedCompanyBadge';
+import { BizTrackLogo } from "@/src/components/brand/BizTrackLogo";
+import { VerifiedCompanyBadge } from "@/src/components/common/VerifiedCompanyBadge";
 
 export function LandingFooter() {
   return (

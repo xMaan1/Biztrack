@@ -1,9 +1,8 @@
-'use client';
+"use client";
 
-import { cn } from '@/src/lib/utils';
-import { Check } from 'lucide-react';
-import type { MotWizardStep } from './wizardTypes';
-import { MOT_WIZARD_STEPS } from './wizardTypes';
+import { cn } from "@/src/lib/utils";
+import { Check } from "lucide-react";
+import { MOT_WIZARD_STEPS, type MotWizardStep } from "./wizardTypes";
 
 type MotBookingStepNavProps = {
   currentStep: MotWizardStep;
@@ -30,29 +29,29 @@ export function MotBookingStepNav({
             disabled={!isAvailable}
             onClick={() => isAvailable && onStepClick?.(step)}
             className={cn(
-              'group relative overflow-hidden rounded-2xl border p-4 text-left transition-all duration-300',
+              "group relative overflow-hidden rounded-2xl border p-4 text-left transition-all duration-300",
               isActive &&
-                'scale-[1.02] border-transparent bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 text-white shadow-lg shadow-indigo-500/25',
+                "scale-[1.02] border-transparent bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 text-white shadow-lg shadow-indigo-500/25",
               isComplete &&
                 !isActive &&
-                'border-emerald-200 bg-emerald-50/80 hover:border-emerald-300',
+                "border-emerald-200 bg-emerald-50/80 hover:border-emerald-300",
               !isActive &&
                 !isComplete &&
                 isAvailable &&
-                'border-border bg-card hover:border-primary/40 hover:shadow-md',
+                "border-border bg-card hover:border-primary/40 hover:shadow-md",
               !isAvailable &&
                 !isComplete &&
-                'cursor-not-allowed border-dashed border-muted bg-muted/30 opacity-60',
+                "cursor-not-allowed border-dashed border-muted bg-muted/30 opacity-60",
             )}
           >
             <div className="flex items-start justify-between gap-2">
               <span
                 className={cn(
-                  'text-xs font-bold tracking-widest',
-                  isActive ? 'text-white/80' : 'text-muted-foreground',
+                  "text-xs font-bold tracking-widest",
+                  isActive ? "text-white/80" : "text-muted-foreground",
                 )}
               >
-                {String(step).padStart(2, '0')}
+                {String(step).padStart(2, "0")}
               </span>
               {isComplete && !isActive && (
                 <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white">
@@ -62,8 +61,8 @@ export function MotBookingStepNav({
             </div>
             <p
               className={cn(
-                'mt-2 text-sm font-semibold uppercase tracking-wide',
-                isActive ? 'text-white' : 'text-foreground',
+                "mt-2 text-sm font-semibold uppercase tracking-wide",
+                isActive ? "text-white" : "text-foreground",
               )}
             >
               {label}

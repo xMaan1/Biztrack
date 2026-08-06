@@ -66,7 +66,7 @@ export default function StockMovementsPage() {
   return (
     <ModuleGuard
       module="inventory"
-      fallback={<div>You don't have access to Inventory module</div>}
+      fallback={<div>You don&apos;t have access to Inventory module</div>}
     >
       <StockMovementsContent />
     </ModuleGuard>

@@ -1,26 +1,26 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { ModuleGuard } from '../../../components/guards/PermissionGuard';
+import React, { useState, useEffect } from "react";
+import { ModuleGuard } from "../../../components/guards/PermissionGuard";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Badge } from '@/src/components/ui/badge';
-import { Input } from '@/src/components/ui/input';
-import { Label } from '@/src/components/ui/label';
-import { CountrySelect } from '@/src/components/ui/country-select';
+} from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { Badge } from "@/src/components/ui/badge";
+import { Input } from "@/src/components/ui/input";
+import { Label } from "@/src/components/ui/label";
+import { CountrySelect } from "@/src/components/ui/country-select";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
+} from "@/src/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -28,7 +28,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/src/components/ui/dialog';
+} from "@/src/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -36,7 +36,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/src/components/ui/table';
+} from "@/src/components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,61 +44,65 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/src/components/ui/dropdown-menu';
+} from "@/src/components/ui/dropdown-menu";
 import {
+  AlertCircle,
+  Building2,
+  Camera,
+  CheckCircle,
+  Edit,
+  ExternalLink,
+  MoreHorizontal,
+  Paperclip,
+  Phone,
   Plus,
   Search,
-  MoreHorizontal,
-  Edit,
   Trash2,
-  Phone,
-  User,
-  Building2,
-  Users,
-  AlertCircle,
-  CheckCircle,
-  XCircle,
   Upload,
-  Paperclip,
-  ExternalLink,
-} from 'lucide-react';
-import {
+  User,
+  UserPlus,
+  Users,
+  X,
+  XCircle,
+} from "lucide-react";
+import crmService, {
   CustomerService,
-  Customer,
-  CustomerCreate,
-  CustomerUpdate,
-  CustomerStats,
-  Guarantor,
-  GuarantorCreate,
-  CustomerAttachment,
-  LabeledEmailItem,
-  LabeledPhoneItem,
-} from '@/src/services/CRMService';
+  type Customer,
+  type CustomerAttachment,
+  type CustomerCreate,
+  type CustomerStats,
+  type CustomerUpdate,
+  type Guarantor,
+  type GuarantorCreate,
+  type LabeledEmailItem,
+  type LabeledPhoneItem,
+} from "@/src/services/CRMService";
 import {
   LabeledContactFields,
   defaultEmailRowsFromEntity,
   defaultPhoneRowsFromEntity,
-} from '@/src/components/crm/LabeledContactFields';
-import crmService from '@/src/services/CRMService';
-import fileUploadService from '@/src/services/FileUploadService';
-import { DashboardLayout } from '../../../components/layout';
-import { toast } from 'sonner';
-import CustomerImportDialog from '../../../components/crm/CustomerImportDialog';
-import { CreateCustomerDialog } from '@/src/components/crm/CreateCustomerDialog';
-import { CustomerTypeNameFields } from '@/src/components/crm/CustomerTypeNameFields';
+} from "@/src/components/crm/LabeledContactFields";
+import fileUploadService from "@/src/services/FileUploadService";
+import { DashboardLayout } from "../../../components/layout";
+import { toast } from "sonner";
+import CustomerImportDialog from "../../../components/crm/CustomerImportDialog";
+import { CreateCustomerDialog } from "@/src/components/crm/CreateCustomerDialog";
+import { CustomerTypeNameFields } from "@/src/components/crm/CustomerTypeNameFields";
 import {
   buildCustomerCreatePayload,
   getCustomerDisplayName,
   isBusinessPlaceholderLastName,
   validateCustomerNameFields,
-} from '@/src/utils/customerUtils';
-import { extractErrorMessage } from '@/src/utils/errorUtils';
-import { Camera, X, UserPlus } from 'lucide-react';
-import { Textarea } from '@/src/components/ui/textarea';
+} from "@/src/utils/customerUtils";
+import { extractErrorMessage } from "@/src/utils/errorUtils";
+import { Textarea } from "@/src/components/ui/textarea";
 
 export default function CustomersPage() {
   return (
-    <ModuleGuard module="crm" fallback={<div>You don't have access to CRM module</div>}>
+    <ModuleGuard
+      module="crm"
+      fallback={<div>You don&apos;t have access to CRM module</div>}
+    >
       <CustomersContent />
     </ModuleGuard>
   );
@@ -108,9 +112,9 @@ function CustomersContent() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [stats, setStats] = useState<CustomerStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -118,43 +122,49 @@ function CustomersContent() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
+  const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(
+    null,
+  );
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
     null,
   );
   const [formData, setFormData] = useState<CustomerCreate>({
-    firstName: '',
-    lastName: '',
-    emails: [{ value: '', label: 'personal' }] as LabeledEmailItem[],
-    phones: [{ value: '', label: 'work' }] as LabeledPhoneItem[],
-    cnic: '',
-    address: '',
-    city: '',
-    state: '',
-    country: '',
-    postalCode: '',
-    customerType: 'individual',
-    customerStatus: 'active',
+    firstName: "",
+    lastName: "",
+    emails: [{ value: "", label: "personal" }] as LabeledEmailItem[],
+    phones: [{ value: "", label: "work" }] as LabeledPhoneItem[],
+    cnic: "",
+    address: "",
+    city: "",
+    state: "",
+    country: "",
+    postalCode: "",
+    customerType: "individual",
+    customerStatus: "active",
     creditLimit: undefined,
     currentBalance: undefined,
-      paymentTerms: 'Cash',
+    paymentTerms: "Cash",
     tags: [],
-    description: '',
+    description: "",
     attachments: [] as CustomerAttachment[],
   });
-  const [customerPhotoPreview, setCustomerPhotoPreview] = useState<string | null>(null);
+  const [customerPhotoPreview, setCustomerPhotoPreview] = useState<
+    string | null
+  >(null);
   const [guarantors, setGuarantors] = useState<Guarantor[]>([]);
   const [guarantorDialogOpen, setGuarantorDialogOpen] = useState(false);
   const [guarantorForm, setGuarantorForm] = useState<GuarantorCreate>({
-    name: '',
-    mobile: '',
-    cnic: '',
-    residential_address: '',
-    official_address: '',
-    occupation: '',
-    relation: '',
+    name: "",
+    mobile: "",
+    cnic: "",
+    residential_address: "",
+    official_address: "",
+    occupation: "",
+    relation: "",
   });
-  const [editingGuarantorId, setEditingGuarantorId] = useState<string | null>(null);
+  const [editingGuarantorId, setEditingGuarantorId] = useState<string | null>(
+    null,
+  );
   const [photoRemoved, setPhotoRemoved] = useState(false);
   const customerPhotoInputRef = React.useRef<HTMLInputElement>(null);
   const attachmentFileInputEditRef = React.useRef<HTMLInputElement>(null);
@@ -179,8 +189,8 @@ function CustomersContent() {
         skip,
         itemsPerPage,
         searchTerm || undefined,
-        statusFilter === 'all' ? undefined : statusFilter,
-        typeFilter === 'all' ? undefined : typeFilter,
+        statusFilter === "all" ? undefined : statusFilter,
+        typeFilter === "all" ? undefined : typeFilter,
       );
       const customersData = response.customers ?? [];
       const total = response.total ?? 0;
@@ -188,7 +198,7 @@ function CustomersContent() {
       setTotalCount(total);
       setTotalPages(Math.max(1, Math.ceil(total / itemsPerPage)));
     } catch (error) {
-      toast.error(extractErrorMessage(error, 'Failed to load customers'));
+      toast.error(extractErrorMessage(error, "Failed to load customers"));
     } finally {
       setLoading(false);
     }
@@ -198,8 +208,7 @@ function CustomersContent() {
     try {
       const statsData = await CustomerService.getCustomerStats();
       setStats(statsData);
-    } catch (error: any) {
-    }
+    } catch (error: any) {}
   };
 
   const handleUpdateCustomer = async () => {
@@ -218,40 +227,43 @@ function CustomersContent() {
         try {
           await CustomerService.deleteCustomerPhoto(selectedCustomer.id);
         } catch (e) {
-          toast.warning(extractErrorMessage(e, 'Photo could not be removed'));
+          toast.warning(extractErrorMessage(e, "Photo could not be removed"));
         }
       }
       if (customerPhotoPreview) {
         try {
-          await CustomerService.uploadCustomerPhoto(selectedCustomer.id, customerPhotoPreview);
+          await CustomerService.uploadCustomerPhoto(
+            selectedCustomer.id,
+            customerPhotoPreview,
+          );
         } catch (e) {
-          toast.warning(extractErrorMessage(e, 'Photo upload failed'));
+          toast.warning(extractErrorMessage(e, "Photo upload failed"));
         }
       }
       const updatePayload: CustomerUpdate = buildCustomerCreatePayload(
         formData as CustomerCreate,
       );
       await CustomerService.updateCustomer(selectedCustomer.id, updatePayload);
-      toast.success('Customer updated successfully');
+      toast.success("Customer updated successfully");
       setIsEditDialogOpen(false);
       resetForm();
       loadCustomers();
       loadStats();
     } catch (error: any) {
-      toast.error(extractErrorMessage(error, 'Failed to update customer'));
+      toast.error(extractErrorMessage(error, "Failed to update customer"));
     }
   };
 
   const handleDeleteCustomer = async (customerId: string) => {
     try {
       await CustomerService.deleteCustomer(customerId);
-      toast.success('Customer deleted successfully');
+      toast.success("Customer deleted successfully");
       setIsDeleteDialogOpen(false);
       setCustomerToDelete(null);
       loadCustomers();
       loadStats();
     } catch (error: any) {
-      toast.error(extractErrorMessage(error, 'Failed to delete customer'));
+      toast.error(extractErrorMessage(error, "Failed to delete customer"));
     }
   };
 
@@ -267,23 +279,23 @@ function CustomersContent() {
 
   const resetForm = () => {
     setFormData({
-      firstName: '',
-      lastName: '',
-      emails: [{ value: '', label: 'personal' }],
-      phones: [{ value: '', label: 'work' }],
-      cnic: '',
-      address: '',
-      city: '',
-      state: '',
-      country: '',
-      postalCode: '',
-      customerType: 'individual',
-      customerStatus: 'active',
+      firstName: "",
+      lastName: "",
+      emails: [{ value: "", label: "personal" }],
+      phones: [{ value: "", label: "work" }],
+      cnic: "",
+      address: "",
+      city: "",
+      state: "",
+      country: "",
+      postalCode: "",
+      customerType: "individual",
+      customerStatus: "active",
       creditLimit: undefined,
       currentBalance: undefined,
-      paymentTerms: 'Cash',
+      paymentTerms: "Cash",
       tags: [],
-      description: '',
+      description: "",
       attachments: [],
     });
     setSelectedCustomer(null);
@@ -294,27 +306,28 @@ function CustomersContent() {
 
   const openEditDialog = async (customer: Customer) => {
     setSelectedCustomer(customer);
-    const isBusiness = customer.customerType === 'business';
+    const isBusiness = customer.customerType === "business";
     setFormData({
       firstName: customer.firstName,
-      lastName: isBusiness && isBusinessPlaceholderLastName(customer.lastName)
-        ? ''
-        : customer.lastName,
+      lastName:
+        isBusiness && isBusinessPlaceholderLastName(customer.lastName)
+          ? ""
+          : customer.lastName,
       emails: defaultEmailRowsFromEntity(customer),
       phones: defaultPhoneRowsFromEntity(customer),
-      cnic: customer.cnic || '',
-      address: customer.address || '',
-      city: customer.city || '',
-      state: customer.state || '',
-      country: customer.country || '',
-      postalCode: customer.postalCode || '',
+      cnic: customer.cnic || "",
+      address: customer.address || "",
+      city: customer.city || "",
+      state: customer.state || "",
+      country: customer.country || "",
+      postalCode: customer.postalCode || "",
       customerType: customer.customerType,
       customerStatus: customer.customerStatus,
       creditLimit: customer.creditLimit,
       currentBalance: customer.currentBalance,
       paymentTerms: customer.paymentTerms,
       tags: customer.tags,
-      description: customer.description || '',
+      description: customer.description || "",
       attachments: customer.attachments || [],
     });
     setCustomerPhotoPreview(null);
@@ -328,16 +341,20 @@ function CustomersContent() {
     }
   };
 
-  const handleCustomerPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCustomerPhotoChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = e.target.files?.[0];
-    if (!file || !file.type.startsWith('image/')) return;
+    if (!file || !file.type.startsWith("image/")) return;
     const reader = new FileReader();
     reader.onload = () => setCustomerPhotoPreview(reader.result as string);
     reader.readAsDataURL(file);
     setPhotoRemoved(false);
   };
 
-  const handleAttachmentFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAttachmentFile = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setAttachmentUploading(true);
@@ -354,12 +371,12 @@ function CustomersContent() {
           },
         ],
       }));
-      toast.success('File attached');
+      toast.success("File attached");
     } catch (err) {
-      toast.error(extractErrorMessage(err, 'Upload failed'));
+      toast.error(extractErrorMessage(err, "Upload failed"));
     } finally {
       setAttachmentUploading(false);
-      e.target.value = '';
+      e.target.value = "";
     }
   };
 
@@ -372,7 +389,7 @@ function CustomersContent() {
         try {
           await fileUploadService.deleteFile(key);
         } catch {
-          toast.warning('Removed from list; storage delete may have failed');
+          toast.warning("Removed from list; storage delete may have failed");
         }
       }
     }
@@ -385,27 +402,35 @@ function CustomersContent() {
   const handleAddGuarantor = async () => {
     if (!selectedCustomer || !guarantorForm.name.trim()) return;
     try {
-      const g = await crmService.createGuarantor(selectedCustomer.id, guarantorForm);
+      const g = await crmService.createGuarantor(
+        selectedCustomer.id,
+        guarantorForm,
+      );
       setGuarantors((prev) => [...prev, g]);
       setGuarantorForm(emptyGuarantorForm);
       setGuarantorDialogOpen(false);
-      toast.success('Guarantor added');
+      toast.success("Guarantor added");
     } catch (err) {
-      toast.error(extractErrorMessage(err, 'Failed to add guarantor'));
+      toast.error(extractErrorMessage(err, "Failed to add guarantor"));
     }
   };
 
   const handleUpdateGuarantor = async () => {
     if (!editingGuarantorId) return;
     try {
-      const updated = await crmService.updateGuarantor(editingGuarantorId, guarantorForm);
-      setGuarantors((prev) => prev.map((g) => (g.id === editingGuarantorId ? updated : g)));
+      const updated = await crmService.updateGuarantor(
+        editingGuarantorId,
+        guarantorForm,
+      );
+      setGuarantors((prev) =>
+        prev.map((g) => (g.id === editingGuarantorId ? updated : g)),
+      );
       setEditingGuarantorId(null);
       setGuarantorForm(emptyGuarantorForm);
       setGuarantorDialogOpen(false);
-      toast.success('Guarantor updated');
+      toast.success("Guarantor updated");
     } catch (err) {
-      toast.error(extractErrorMessage(err, 'Failed to update guarantor'));
+      toast.error(extractErrorMessage(err, "Failed to update guarantor"));
     }
   };
 
@@ -413,13 +438,21 @@ function CustomersContent() {
     try {
       await crmService.deleteGuarantor(id);
       setGuarantors((prev) => prev.filter((g) => g.id !== id));
-      toast.success('Guarantor removed');
+      toast.success("Guarantor removed");
     } catch (err) {
-      toast.error(extractErrorMessage(err, 'Failed to remove guarantor'));
+      toast.error(extractErrorMessage(err, "Failed to remove guarantor"));
     }
   };
 
-  const emptyGuarantorForm: GuarantorCreate = { name: '', mobile: '', cnic: '', residential_address: '', official_address: '', occupation: '', relation: '' };
+  const emptyGuarantorForm: GuarantorCreate = {
+    name: "",
+    mobile: "",
+    cnic: "",
+    residential_address: "",
+    official_address: "",
+    occupation: "",
+    relation: "",
+  };
 
   const openAddGuarantor = () => {
     setGuarantorForm(emptyGuarantorForm);
@@ -430,12 +463,12 @@ function CustomersContent() {
   const openEditGuarantor = (g: Guarantor) => {
     setGuarantorForm({
       name: g.name,
-      mobile: g.mobile || '',
-      cnic: g.cnic || '',
-      residential_address: g.residential_address || '',
-      official_address: g.official_address || '',
-      occupation: g.occupation || '',
-      relation: g.relation || '',
+      mobile: g.mobile || "",
+      cnic: g.cnic || "",
+      residential_address: g.residential_address || "",
+      official_address: g.official_address || "",
+      occupation: g.occupation || "",
+      relation: g.relation || "",
     });
     setEditingGuarantorId(g.id);
     setGuarantorDialogOpen(true);
@@ -448,9 +481,9 @@ function CustomersContent() {
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      active: { color: 'bg-green-100 text-green-800', icon: CheckCircle },
-      inactive: { color: 'bg-gray-100 text-gray-800', icon: XCircle },
-      blocked: { color: 'bg-red-100 text-red-800', icon: AlertCircle },
+      active: { color: "bg-green-100 text-green-800", icon: CheckCircle },
+      inactive: { color: "bg-gray-100 text-gray-800", icon: XCircle },
+      blocked: { color: "bg-red-100 text-red-800", icon: AlertCircle },
     };
     const config =
       statusConfig[status as keyof typeof statusConfig] ||
@@ -466,8 +499,8 @@ function CustomersContent() {
 
   const getTypeBadge = (type: string) => {
     const typeConfig = {
-      individual: { color: 'bg-blue-100 text-blue-800', icon: User },
-      business: { color: 'bg-purple-100 text-purple-800', icon: Building2 },
+      individual: { color: "bg-blue-100 text-blue-800", icon: User },
+      business: { color: "bg-purple-100 text-purple-800", icon: Building2 },
     };
     const config =
       typeConfig[type as keyof typeof typeConfig] || typeConfig.individual;
@@ -654,7 +687,7 @@ function CustomersContent() {
             <CardDescription>
               {totalCount > 0
                 ? `Showing ${(currentPage - 1) * itemsPerPage + 1}-${Math.min(currentPage * itemsPerPage, totalCount)} of ${totalCount} customers`
-                : 'No customers found'}
+                : "No customers found"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -693,13 +726,13 @@ function CustomersContent() {
                             </div>
                             <div className="text-sm text-muted-foreground">
                               {(() => {
-                                const ev = (customer.emails || []).filter(
-                                  (e) => e.value.trim(),
+                                const ev = (customer.emails || []).filter((e) =>
+                                  e.value.trim(),
                                 );
                                 if (ev.length > 0) {
-                                  return ev.map((e) => e.value).join(', ');
+                                  return ev.map((e) => e.value).join(", ");
                                 }
-                                return customer.email || '—';
+                                return customer.email || "—";
                               })()}
                             </div>
                           </div>
@@ -718,7 +751,7 @@ function CustomersContent() {
                                         ? [
                                             {
                                               value: customer.phone,
-                                              label: 'work' as const,
+                                              label: "work" as const,
                                             },
                                           ]
                                         : []),
@@ -726,7 +759,7 @@ function CustomersContent() {
                                         ? [
                                             {
                                               value: customer.mobile,
-                                              label: 'personal' as const,
+                                              label: "personal" as const,
                                             },
                                           ]
                                         : []),
@@ -752,10 +785,11 @@ function CustomersContent() {
                             {(customer.address || customer.city) && (
                               <div className="text-sm text-muted-foreground">
                                 {customer.address && customer.address}
-                                {customer.address && customer.city && ', '}
+                                {customer.address && customer.city && ", "}
                                 {customer.city}
                                 {customer.state && `, ${customer.state}`}
-                                {customer.postalCode && ` ${customer.postalCode}`}
+                                {customer.postalCode &&
+                                  ` ${customer.postalCode}`}
                               </div>
                             )}
                           </div>
@@ -772,7 +806,7 @@ function CustomersContent() {
                               Rs. {(customer.creditLimit ?? 0).toLocaleString()}
                             </div>
                             <div className="text-sm text-muted-foreground">
-                              Balance: Rs.{' '}
+                              Balance: Rs.{" "}
                               {(customer.currentBalance ?? 0).toLocaleString()}
                             </div>
                           </div>
@@ -855,17 +889,27 @@ function CustomersContent() {
                 onClick={() => customerPhotoInputRef.current?.click()}
               >
                 {customerPhotoPreview ? (
-                  <img src={customerPhotoPreview} alt="Preview" className="w-full h-full object-cover" />
+                  <img
+                    src={customerPhotoPreview}
+                    alt="Preview"
+                    className="w-full h-full object-cover"
+                  />
                 ) : photoRemoved ? (
                   <Camera className="h-8 w-8 text-muted-foreground" />
                 ) : selectedCustomer?.image_url ? (
-                  <img src={selectedCustomer.image_url} alt="Customer" className="w-full h-full object-cover" />
+                  <img
+                    src={selectedCustomer.image_url}
+                    alt="Customer"
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
                   <Camera className="h-8 w-8 text-muted-foreground" />
                 )}
               </div>
               <div>
-                <Label className="text-sm text-muted-foreground">Customer photo</Label>
+                <Label className="text-sm text-muted-foreground">
+                  Customer photo
+                </Label>
                 <input
                   ref={customerPhotoInputRef}
                   type="file"
@@ -874,20 +918,34 @@ function CustomersContent() {
                   onChange={handleCustomerPhotoChange}
                 />
                 <div className="flex gap-2 mt-1">
-                  <Button type="button" variant="outline" size="sm" onClick={() => customerPhotoInputRef.current?.click()}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => customerPhotoInputRef.current?.click()}
+                  >
                     Change
                   </Button>
-                  {(selectedCustomer?.image_url || customerPhotoPreview) && !photoRemoved && (
-                    <Button type="button" variant="outline" size="sm" onClick={() => { setCustomerPhotoPreview(null); setPhotoRemoved(true); }}>
-                      <X className="h-3 w-3 mr-1" /> Remove
-                    </Button>
-                  )}
+                  {(selectedCustomer?.image_url || customerPhotoPreview) &&
+                    !photoRemoved && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setCustomerPhotoPreview(null);
+                          setPhotoRemoved(true);
+                        }}
+                      >
+                        <X className="h-3 w-3 mr-1" /> Remove
+                      </Button>
+                    )}
                 </div>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <CustomerTypeNameFields
-                customerType={formData.customerType || 'individual'}
+                customerType={formData.customerType || "individual"}
                 firstName={formData.firstName}
                 lastName={formData.lastName}
                 typeFieldId="editCustomerType"
@@ -898,10 +956,10 @@ function CustomersContent() {
                   setFormData((prev) => ({
                     ...prev,
                     customerType: type,
-                    ...(type === 'business'
-                      ? { lastName: '' }
-                      : prev.customerType === 'business'
-                        ? { firstName: '', lastName: '' }
+                    ...(type === "business"
+                      ? { lastName: "" }
+                      : prev.customerType === "business"
+                        ? { firstName: "", lastName: "" }
                         : {}),
                   }))
                 }
@@ -913,8 +971,8 @@ function CustomersContent() {
                 }
               />
               <LabeledContactFields
-                emails={formData.emails || [{ value: '', label: 'personal' }]}
-                phones={formData.phones || [{ value: '', label: 'work' }]}
+                emails={formData.emails || [{ value: "", label: "personal" }]}
+                phones={formData.phones || [{ value: "", label: "work" }]}
                 onEmailsChange={(emails) =>
                   setFormData({ ...formData, emails })
                 }
@@ -941,9 +999,9 @@ function CustomersContent() {
                     setFormData({
                       ...formData,
                       customerStatus: value as
-                        | 'active'
-                        | 'inactive'
-                        | 'blocked',
+                        | "active"
+                        | "inactive"
+                        | "blocked",
                     })
                   }
                 >
@@ -962,12 +1020,12 @@ function CustomersContent() {
                 <Input
                   id="editCreditLimit"
                   type="number"
-                  value={formData.creditLimit ?? ''}
+                  value={formData.creditLimit ?? ""}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
                       creditLimit:
-                        e.target.value === ''
+                        e.target.value === ""
                           ? undefined
                           : parseFloat(e.target.value) || 0,
                     })
@@ -982,7 +1040,11 @@ function CustomersContent() {
                   onValueChange={(value) =>
                     setFormData({
                       ...formData,
-                      paymentTerms: value as 'Credit' | 'Card' | 'Cash' | 'Due Payments',
+                      paymentTerms: value as
+                        | "Credit"
+                        | "Card"
+                        | "Cash"
+                        | "Due Payments",
                     })
                   }
                 >
@@ -1033,9 +1095,7 @@ function CustomersContent() {
               <div>
                 <CountrySelect
                   value={formData.country}
-                  onChange={(country) =>
-                    setFormData({ ...formData, country })
-                  }
+                  onChange={(country) => setFormData({ ...formData, country })}
                   placeholder="Select country"
                 />
               </div>
@@ -1054,12 +1114,12 @@ function CustomersContent() {
                 <Label htmlFor="editTags">Tags (comma separated)</Label>
                 <Input
                   id="editTags"
-                  value={formData.tags?.join(', ') || ''}
+                  value={formData.tags?.join(", ") || ""}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
                       tags: e.target.value
-                        .split(',')
+                        .split(",")
                         .map((tag) => tag.trim())
                         .filter(Boolean),
                     })
@@ -1071,7 +1131,7 @@ function CustomersContent() {
                 <Label htmlFor="editDescription">Description</Label>
                 <Textarea
                   id="editDescription"
-                  value={formData.description || ''}
+                  value={formData.description || ""}
                   onChange={(e) =>
                     setFormData({ ...formData, description: e.target.value })
                   }
@@ -1098,9 +1158,11 @@ function CustomersContent() {
                     onClick={() => attachmentFileInputEditRef.current?.click()}
                   >
                     <Paperclip className="h-4 w-4 mr-1" />
-                    {attachmentUploading ? 'Uploading…' : 'Add file'}
+                    {attachmentUploading ? "Uploading…" : "Add file"}
                   </Button>
-                  <span className="text-xs text-muted-foreground">PDF, DOC, DOCX (max 10MB)</span>
+                  <span className="text-xs text-muted-foreground">
+                    PDF, DOC, DOCX (max 10MB)
+                  </span>
                 </div>
                 {(formData.attachments || []).length > 0 && (
                   <ul className="border rounded-md divide-y text-sm">
@@ -1109,8 +1171,11 @@ function CustomersContent() {
                         key={`${att.url}-${idx}`}
                         className="flex items-center justify-between gap-2 px-3 py-2"
                       >
-                        <span className="truncate flex-1" title={att.original_filename || att.url}>
-                          {att.original_filename || 'Attachment'}
+                        <span
+                          className="truncate flex-1"
+                          title={att.original_filename || att.url}
+                        >
+                          {att.original_filename || "Attachment"}
                         </span>
                         <div className="flex items-center gap-1 shrink-0">
                           <a
@@ -1140,13 +1205,22 @@ function CustomersContent() {
             </div>
             <div className="border-t pt-4 mt-4">
               <div className="flex items-center justify-between mb-2">
-                <Label className="text-sm font-medium">Guarantors / Friends</Label>
-                <Button type="button" variant="outline" size="sm" onClick={openAddGuarantor}>
+                <Label className="text-sm font-medium">
+                  Guarantors / Friends
+                </Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={openAddGuarantor}
+                >
                   <UserPlus className="h-4 w-4 mr-1" /> Add
                 </Button>
               </div>
               {guarantors.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-2">No guarantors added.</p>
+                <p className="text-sm text-muted-foreground py-2">
+                  No guarantors added.
+                </p>
               ) : (
                 <div className="border rounded overflow-hidden">
                   <Table>
@@ -1162,15 +1236,25 @@ function CustomersContent() {
                     <TableBody>
                       {guarantors.map((g) => (
                         <TableRow key={g.id}>
-                          <TableCell className="font-medium">{g.name}</TableCell>
-                          <TableCell>{g.mobile || '-'}</TableCell>
-                          <TableCell>{g.cnic || '-'}</TableCell>
-                          <TableCell>{g.relation || '-'}</TableCell>
+                          <TableCell className="font-medium">
+                            {g.name}
+                          </TableCell>
+                          <TableCell>{g.mobile || "-"}</TableCell>
+                          <TableCell>{g.cnic || "-"}</TableCell>
+                          <TableCell>{g.relation || "-"}</TableCell>
                           <TableCell>
-                            <Button variant="ghost" size="sm" onClick={() => openEditGuarantor(g)}>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openEditGuarantor(g)}
+                            >
                               <Edit className="h-3 w-3" />
                             </Button>
-                            <Button variant="ghost" size="sm" onClick={() => handleDeleteGuarantor(g.id)}>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteGuarantor(g.id)}
+                            >
                               <Trash2 className="h-3 w-3 text-red-600" />
                             </Button>
                           </TableCell>
@@ -1193,45 +1277,112 @@ function CustomersContent() {
           </DialogContent>
         </Dialog>
 
-        <Dialog open={guarantorDialogOpen} onOpenChange={setGuarantorDialogOpen}>
+        <Dialog
+          open={guarantorDialogOpen}
+          onOpenChange={setGuarantorDialogOpen}
+        >
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{editingGuarantorId ? 'Edit Guarantor' : 'Add Guarantor'}</DialogTitle>
+              <DialogTitle>
+                {editingGuarantorId ? "Edit Guarantor" : "Add Guarantor"}
+              </DialogTitle>
             </DialogHeader>
             <div className="grid gap-3">
               <div>
                 <Label>Name *</Label>
-                <Input value={guarantorForm.name} onChange={(e) => setGuarantorForm((p) => ({ ...p, name: e.target.value }))} placeholder="Full name" />
+                <Input
+                  value={guarantorForm.name}
+                  onChange={(e) =>
+                    setGuarantorForm((p) => ({ ...p, name: e.target.value }))
+                  }
+                  placeholder="Full name"
+                />
               </div>
               <div>
                 <Label>Mobile</Label>
-                <Input value={guarantorForm.mobile} onChange={(e) => setGuarantorForm((p) => ({ ...p, mobile: e.target.value }))} placeholder="03XX-XXXXXXX" />
+                <Input
+                  value={guarantorForm.mobile}
+                  onChange={(e) =>
+                    setGuarantorForm((p) => ({ ...p, mobile: e.target.value }))
+                  }
+                  placeholder="03XX-XXXXXXX"
+                />
               </div>
               <div>
                 <Label>CNIC</Label>
-                <Input value={guarantorForm.cnic} onChange={(e) => setGuarantorForm((p) => ({ ...p, cnic: e.target.value }))} placeholder="XXXXX-XXXXXXX-X" />
+                <Input
+                  value={guarantorForm.cnic}
+                  onChange={(e) =>
+                    setGuarantorForm((p) => ({ ...p, cnic: e.target.value }))
+                  }
+                  placeholder="XXXXX-XXXXXXX-X"
+                />
               </div>
               <div>
                 <Label>Residential Address</Label>
-                <Input value={guarantorForm.residential_address} onChange={(e) => setGuarantorForm((p) => ({ ...p, residential_address: e.target.value }))} placeholder="Address" />
+                <Input
+                  value={guarantorForm.residential_address}
+                  onChange={(e) =>
+                    setGuarantorForm((p) => ({
+                      ...p,
+                      residential_address: e.target.value,
+                    }))
+                  }
+                  placeholder="Address"
+                />
               </div>
               <div>
                 <Label>Official Address</Label>
-                <Input value={guarantorForm.official_address} onChange={(e) => setGuarantorForm((p) => ({ ...p, official_address: e.target.value }))} placeholder="Office address" />
+                <Input
+                  value={guarantorForm.official_address}
+                  onChange={(e) =>
+                    setGuarantorForm((p) => ({
+                      ...p,
+                      official_address: e.target.value,
+                    }))
+                  }
+                  placeholder="Office address"
+                />
               </div>
               <div>
                 <Label>Occupation</Label>
-                <Input value={guarantorForm.occupation} onChange={(e) => setGuarantorForm((p) => ({ ...p, occupation: e.target.value }))} placeholder="Job" />
+                <Input
+                  value={guarantorForm.occupation}
+                  onChange={(e) =>
+                    setGuarantorForm((p) => ({
+                      ...p,
+                      occupation: e.target.value,
+                    }))
+                  }
+                  placeholder="Job"
+                />
               </div>
               <div>
                 <Label>Relation</Label>
-                <Input value={guarantorForm.relation} onChange={(e) => setGuarantorForm((p) => ({ ...p, relation: e.target.value }))} placeholder="e.g. FRIEND" />
+                <Input
+                  value={guarantorForm.relation}
+                  onChange={(e) =>
+                    setGuarantorForm((p) => ({
+                      ...p,
+                      relation: e.target.value,
+                    }))
+                  }
+                  placeholder="e.g. FRIEND"
+                />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setGuarantorDialogOpen(false)}>Cancel</Button>
-              <Button onClick={handleGuarantorDialogSubmit} disabled={!guarantorForm.name.trim()}>
-                {editingGuarantorId ? 'Update' : 'Add'}
+              <Button
+                variant="outline"
+                onClick={() => setGuarantorDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleGuarantorDialogSubmit}
+                disabled={!guarantorForm.name.trim()}
+              >
+                {editingGuarantorId ? "Update" : "Add"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -1243,24 +1394,23 @@ function CustomersContent() {
             <DialogHeader>
               <DialogTitle>Delete Customer</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete{' '}
+                Are you sure you want to delete{" "}
                 <strong>
                   {customerToDelete
                     ? getCustomerDisplayName(customerToDelete)
-                    : ''}
+                    : ""}
                 </strong>
                 ? This action cannot be undone.
               </DialogDescription>
             </DialogHeader>
             <div className="flex justify-end space-x-2 mt-4">
-              <Button
-                variant="outline"
-                onClick={closeDeleteDialog}
-              >
+              <Button variant="outline" onClick={closeDeleteDialog}>
                 Cancel
               </Button>
               <Button
-                onClick={() => customerToDelete && handleDeleteCustomer(customerToDelete.id)}
+                onClick={() =>
+                  customerToDelete && handleDeleteCustomer(customerToDelete.id)
+                }
                 className="bg-red-600 hover:bg-red-700"
               >
                 Delete

@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
-import type { Product } from '@/src/models/pos';
-import type { InvoiceItemCreate } from '@/src/models/sales';
-import { useCurrency } from '@/src/contexts/CurrencyContext';
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
+import type { Product } from "@/src/models/pos";
+import type { InvoiceItemCreate } from "@/src/models/sales";
+import { useCurrency } from "@/src/contexts/CurrencyContext";
 import {
   lineGross,
   lineNet,
   resolveItemUnit,
   type CommerceItemNumericField,
   type CommerceItemTextField,
-} from '@/src/utils/sales/commerceInvoiceUtils';
-import { UnitOfMeasureSelect } from '../UnitOfMeasureSelect';
-import { Trash2 } from 'lucide-react';
-import { COMMERCE_INLINE_EDIT_CLS } from './constants';
+} from "@/src/utils/sales/commerceInvoiceUtils";
+import { UnitOfMeasureSelect } from "../UnitOfMeasureSelect";
+import { Trash2 } from "lucide-react";
+import { COMMERCE_INLINE_EDIT_CLS } from "./constants";
 
 type CommerceInvoiceLineItemsTableProps = {
   items: InvoiceItemCreate[];
@@ -71,17 +71,29 @@ export function CommerceInvoiceLineItemsTable({
   return (
     <section className="w-full min-w-0 overflow-hidden rounded-lg border border-border">
       {itemsError && (
-        <p className="bg-destructive/10 px-3 py-1.5 text-sm text-destructive">{itemsError}</p>
+        <p className="bg-destructive/10 px-3 py-1.5 text-sm text-destructive">
+          {itemsError}
+        </p>
       )}
       <div className="overflow-x-auto">
         <table className="w-full min-w-0 border-collapse text-sm table-fixed md:min-w-[720px] lg:min-w-0 lg:table-auto">
           <thead>
             <tr className="bg-primary text-primary-foreground">
-              <th className="border border-primary/80 px-2 py-1.5 text-left font-semibold">S No</th>
-              <th className="border border-primary/80 px-2 py-1.5 text-left font-semibold">Name</th>
-              <th className="border border-primary/80 px-2 py-1.5 text-right font-semibold">Qty</th>
-              <th className="border border-primary/80 px-2 py-1.5 text-left font-semibold">Units</th>
-              <th className="border border-primary/80 px-2 py-1.5 text-right font-semibold">Rate</th>
+              <th className="border border-primary/80 px-2 py-1.5 text-left font-semibold">
+                S No
+              </th>
+              <th className="border border-primary/80 px-2 py-1.5 text-left font-semibold">
+                Name
+              </th>
+              <th className="border border-primary/80 px-2 py-1.5 text-right font-semibold">
+                Qty
+              </th>
+              <th className="border border-primary/80 px-2 py-1.5 text-left font-semibold">
+                Units
+              </th>
+              <th className="border border-primary/80 px-2 py-1.5 text-right font-semibold">
+                Rate
+              </th>
               <th className="border border-primary/80 px-2 py-1.5 text-right font-semibold">
                 G Amount
               </th>
@@ -103,11 +115,19 @@ export function CommerceInvoiceLineItemsTable({
                 <td className="border border-border px-2 py-1">
                   <Input
                     type="text"
-                    value={getItemTextFieldValue(index, 'description', item.description)}
+                    value={getItemTextFieldValue(
+                      index,
+                      "description",
+                      item.description,
+                    )}
                     onChange={(e) =>
-                      onItemTextFieldChange(index, 'description', e.target.value)
+                      onItemTextFieldChange(
+                        index,
+                        "description",
+                        e.target.value,
+                      )
                     }
-                    onBlur={() => onItemTextFieldBlur(index, 'description')}
+                    onBlur={() => onItemTextFieldBlur(index, "description")}
                     className={`${COMMERCE_INLINE_EDIT_CLS} w-full min-w-[120px]`}
                   />
                 </td>
@@ -115,9 +135,11 @@ export function CommerceInvoiceLineItemsTable({
                   <Input
                     type="text"
                     inputMode="decimal"
-                    value={getItemFieldValue(index, 'quantity', item.quantity)}
-                    onChange={(e) => onItemFieldChange(index, 'quantity', e.target.value)}
-                    onBlur={() => onItemFieldBlur(index, 'quantity')}
+                    value={getItemFieldValue(index, "quantity", item.quantity)}
+                    onChange={(e) =>
+                      onItemFieldChange(index, "quantity", e.target.value)
+                    }
+                    onBlur={() => onItemFieldBlur(index, "quantity")}
                     className={`${COMMERCE_INLINE_EDIT_CLS} ml-auto w-20 text-right`}
                   />
                 </td>
@@ -125,10 +147,12 @@ export function CommerceInvoiceLineItemsTable({
                   <UnitOfMeasureSelect
                     value={getItemTextFieldValue(
                       index,
-                      'unit',
-                      resolveItemUnit(item, products) || 'piece',
+                      "unit",
+                      resolveItemUnit(item, products) || "piece",
                     )}
-                    onChange={(unit) => onItemTextFieldChange(index, 'unit', unit)}
+                    onChange={(unit) =>
+                      onItemTextFieldChange(index, "unit", unit)
+                    }
                     className={`${COMMERCE_INLINE_EDIT_CLS} h-8 w-full min-w-[88px]`}
                   />
                 </td>
@@ -136,9 +160,15 @@ export function CommerceInvoiceLineItemsTable({
                   <Input
                     type="text"
                     inputMode="decimal"
-                    value={getItemFieldValue(index, 'salePrice', item.salePrice)}
-                    onChange={(e) => onItemFieldChange(index, 'salePrice', e.target.value)}
-                    onBlur={() => onItemFieldBlur(index, 'salePrice')}
+                    value={getItemFieldValue(
+                      index,
+                      "salePrice",
+                      item.salePrice,
+                    )}
+                    onChange={(e) =>
+                      onItemFieldChange(index, "salePrice", e.target.value)
+                    }
+                    onBlur={() => onItemFieldBlur(index, "salePrice")}
                     className={`${COMMERCE_INLINE_EDIT_CLS} ml-auto w-24 text-right`}
                   />
                 </td>
@@ -149,9 +179,11 @@ export function CommerceInvoiceLineItemsTable({
                   <Input
                     type="text"
                     inputMode="decimal"
-                    value={getItemFieldValue(index, 'discount', item.discount)}
-                    onChange={(e) => onItemFieldChange(index, 'discount', e.target.value)}
-                    onBlur={() => onItemFieldBlur(index, 'discount')}
+                    value={getItemFieldValue(index, "discount", item.discount)}
+                    onChange={(e) =>
+                      onItemFieldChange(index, "discount", e.target.value)
+                    }
+                    onBlur={() => onItemFieldBlur(index, "discount")}
                     className={`${COMMERCE_INLINE_EDIT_CLS} ml-auto w-20 text-right`}
                   />
                 </td>

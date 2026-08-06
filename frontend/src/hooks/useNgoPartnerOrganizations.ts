@@ -1,32 +1,36 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import { toast } from 'sonner';
-import ngoService from '@/src/services/NgoService';
-import type { PartnerOrganization, PartnerOrganizationCreate } from '@/src/models/ngo';
-import { extractErrorMessage } from '@/src/utils/errorUtils';
+import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
+import ngoService from "@/src/services/NgoService";
+import type {
+  PartnerOrganization,
+  PartnerOrganizationCreate,
+} from "@/src/models/ngo";
+import { extractErrorMessage } from "@/src/utils/errorUtils";
 import {
   PARTNERS_PAGE_LIMIT,
   buildPartnerPayload,
   emptyPartnerForm,
   partnerToFormData,
-} from '@/src/utils/ngo/partnerOrganizationUtils';
+} from "@/src/utils/ngo/partnerOrganizationUtils";
 
 export function useNgoPartnerOrganizations() {
   const limit = PARTNERS_PAGE_LIMIT;
   const [organizations, setOrganizations] = useState<PartnerOrganization[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [appliedSearch, setAppliedSearch] = useState('');
-  const [sectorFilter, setSectorFilter] = useState('');
-  const [sizeFilter, setSizeFilter] = useState('');
+  const [search, setSearch] = useState("");
+  const [appliedSearch, setAppliedSearch] = useState("");
+  const [sectorFilter, setSectorFilter] = useState("");
+  const [sizeFilter, setSizeFilter] = useState("");
   const [page, setPage] = useState(1);
   const [formOpen, setFormOpen] = useState(false);
   const [viewOpen, setViewOpen] = useState(false);
   const [editing, setEditing] = useState<PartnerOrganization | null>(null);
   const [viewing, setViewing] = useState<PartnerOrganization | null>(null);
-  const [formData, setFormData] = useState<PartnerOrganizationCreate>(emptyPartnerForm());
+  const [formData, setFormData] =
+    useState<PartnerOrganizationCreate>(emptyPartnerForm());
   const [submitLoading, setSubmitLoading] = useState(false);
 
   const loadOrganizations = useCallback(async () => {
@@ -42,7 +46,9 @@ export function useNgoPartnerOrganizations() {
       setOrganizations(res.organizations);
       setTotal(res.total);
     } catch (e) {
-      toast.error(extractErrorMessage(e, 'Failed to load partner organizations'));
+      toast.error(
+        extractErrorMessage(e, "Failed to load partner organizations"),
+      );
     } finally {
       setLoading(false);
     }
@@ -58,10 +64,10 @@ export function useNgoPartnerOrganizations() {
   };
 
   const resetFilters = () => {
-    setSearch('');
-    setAppliedSearch('');
-    setSectorFilter('');
-    setSizeFilter('');
+    setSearch("");
+    setAppliedSearch("");
+    setSectorFilter("");
+    setSizeFilter("");
     setPage(1);
   };
 
@@ -85,22 +91,24 @@ export function useNgoPartnerOrganizations() {
   const handleSubmit = async () => {
     const payload = buildPartnerPayload(formData);
     if (!payload) {
-      toast.error('Name and email are required');
+      toast.error("Name and email are required");
       return;
     }
     try {
       setSubmitLoading(true);
       if (editing) {
         await ngoService.updatePartnerOrganization(editing.id, payload);
-        toast.success('Partner organization updated');
+        toast.success("Partner organization updated");
       } else {
         await ngoService.createPartnerOrganization(payload);
-        toast.success('Partner organization created');
+        toast.success("Partner organization created");
       }
       setFormOpen(false);
       await loadOrganizations();
     } catch (e) {
-      toast.error(extractErrorMessage(e, 'Failed to save partner organization'));
+      toast.error(
+        extractErrorMessage(e, "Failed to save partner organization"),
+      );
     } finally {
       setSubmitLoading(false);
     }
@@ -109,10 +117,12 @@ export function useNgoPartnerOrganizations() {
   const handleDelete = async (org: PartnerOrganization) => {
     try {
       await ngoService.deletePartnerOrganization(org.id);
-      toast.success('Partner organization deleted');
+      toast.success("Partner organization deleted");
       await loadOrganizations();
     } catch (e) {
-      toast.error(extractErrorMessage(e, 'Failed to delete partner organization'));
+      toast.error(
+        extractErrorMessage(e, "Failed to delete partner organization"),
+      );
       throw e;
     }
   };

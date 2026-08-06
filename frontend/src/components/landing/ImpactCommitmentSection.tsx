@@ -1,58 +1,50 @@
-'use client';
+"use client";
 
-import { Button } from '../ui/button';
-import {
-  CharityPartnerCard,
-  type CharityPartner,
-} from './CharityPartnerCard';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '../ui/card';
-import { Heart, Leaf, Recycle, FileX2, ArrowRight } from 'lucide-react';
+import { Button } from "../ui/button";
+import { CharityPartnerCard, type CharityPartner } from "./CharityPartnerCard";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Heart, Leaf, Recycle, FileX2, ArrowRight } from "lucide-react";
 
 const CHARITY_PARTNERS: CharityPartner[] = [
   {
-    name: 'Hopeful Welfare Foundation',
-    href: 'https://hopefulwelfare.org/',
-    logo: '/partners/hopeful-welfare-foundation.png',
+    name: "Hopeful Welfare Foundation",
+    href: "https://hopefulwelfare.org/",
+    logo: "/partners/hopeful-welfare-foundation.png",
     width: 1378,
     height: 1118,
-    label: 'Hopeful Welfare Foundation',
+    label: "Hopeful Welfare Foundation",
     imageQuality: 100,
     unoptimized: true,
-    logoFrameClassName: 'bg-gradient-to-br from-white to-slate-50',
+    logoFrameClassName: "bg-gradient-to-br from-white to-slate-50",
   },
   {
-    name: 'IKCA',
-    href: 'https://www.ikca.org.uk/',
-    logo: '/partners/ikca.png',
+    name: "IKCA",
+    href: "https://www.ikca.org.uk/",
+    logo: "/partners/ikca.png",
     width: 161,
     height: 78,
-    label: 'Imran Khan Cancer Appeal',
-    logoClassName: 'max-h-[3.25rem] max-w-[11rem]',
+    label: "Imran Khan Cancer Appeal",
+    logoClassName: "max-h-[3.25rem] max-w-[11rem]",
   },
 ];
 
 const SUSTAINABILITY_ITEMS = [
   {
-    title: 'Carbon neutrality',
+    title: "Carbon neutrality",
     description:
-      'Supporting initiatives that reduce emissions and move toward net-zero impact.',
+      "Supporting initiatives that reduce emissions and move toward net-zero impact.",
     icon: Leaf,
   },
   {
-    title: 'Sustainable operations',
+    title: "Sustainable operations",
     description:
-      'Responsible resource use across our teams, partners, and day-to-day operations.',
+      "Responsible resource use across our teams, partners, and day-to-day operations.",
     icon: Recycle,
   },
   {
-    title: 'Digital-first processes',
+    title: "Digital-first processes",
     description:
-      'Paperless workflows that cut waste while keeping business operations efficient.',
+      "Paperless workflows that cut waste while keeping business operations efficient.",
     icon: FileX2,
   },
 ] as const;

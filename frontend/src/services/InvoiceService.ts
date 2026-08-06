@@ -1,4 +1,4 @@
-import { apiService } from './ApiService';
+import { apiService } from "./ApiService";
 import {
   Invoice,
   InvoiceCreate,
@@ -14,11 +14,17 @@ import {
   ApplyPaymentToInstallmentRequest,
   DeliveryNote,
   DeliveryNoteCreate,
-} from '../models/sales';
-import { Customer, CustomerCreate, CustomerUpdate, CustomersResponse, CustomerService } from './CustomerService';
+} from "../models/sales";
+import {
+  Customer,
+  CustomerCreate,
+  CustomerUpdate,
+  CustomersResponse,
+  CustomerService,
+} from "./CustomerService";
 
 class InvoiceService {
-  private baseUrl = '/invoices';
+  private baseUrl = "/invoices";
 
   // Invoice CRUD operations
   async createInvoice(invoiceData: InvoiceCreate): Promise<Invoice> {
@@ -37,16 +43,16 @@ class InvoiceService {
     limit: number = 10,
   ): Promise<{ invoices: Invoice[]; pagination: any }> {
     const params = new URLSearchParams();
-    params.append('page', page.toString());
-    params.append('limit', limit.toString());
+    params.append("page", page.toString());
+    params.append("limit", limit.toString());
 
     const filterParamKeys: Record<string, string> = {
-      customerId: 'customer_id',
-      dateFrom: 'date_from',
-      dateTo: 'date_to',
-      amountFrom: 'amount_from',
-      amountTo: 'amount_to',
-      orderPrefix: 'order_prefix',
+      customerId: "customer_id",
+      dateFrom: "date_from",
+      dateTo: "date_to",
+      amountFrom: "amount_from",
+      amountTo: "amount_to",
+      orderPrefix: "order_prefix",
     };
 
     Object.entries(filters).forEach(([key, value]) => {
@@ -86,7 +92,7 @@ class InvoiceService {
   async sendInvoiceEmail(
     invoiceId: string,
     toEmail?: string,
-    message?: string
+    message?: string,
   ): Promise<{ message: string; warning?: string }> {
     const body: any = {};
     if (toEmail) {
@@ -97,7 +103,7 @@ class InvoiceService {
     }
     const response = await apiService.post(
       `${this.baseUrl}/${invoiceId}/send`,
-      Object.keys(body).length > 0 ? body : undefined
+      Object.keys(body).length > 0 ? body : undefined,
     );
     return response;
   }
@@ -124,7 +130,9 @@ class InvoiceService {
   }
 
   async bulkMarkAsUnpaid(invoiceIds: string[]): Promise<void> {
-    await apiService.post(`${this.baseUrl}/bulk/mark-as-unpaid`, { invoiceIds });
+    await apiService.post(`${this.baseUrl}/bulk/mark-as-unpaid`, {
+      invoiceIds,
+    });
   }
 
   async bulkDeleteInvoices(invoiceIds: string[]): Promise<void> {
@@ -132,50 +140,79 @@ class InvoiceService {
   }
 
   async downloadInvoice(invoiceId: string): Promise<Blob> {
-    const response = await apiService.get(`${this.baseUrl}/${invoiceId}/download`, {
-      responseType: 'blob',
-    });
+    const response = await apiService.get(
+      `${this.baseUrl}/${invoiceId}/download`,
+      {
+        responseType: "blob",
+      },
+    );
     return response;
   }
 
-  async createInstallmentPlan(data: InstallmentPlanCreate): Promise<InstallmentPlan> {
-    const response = await apiService.post('/installments/installment-plans', data);
+  async createInstallmentPlan(
+    data: InstallmentPlanCreate,
+  ): Promise<InstallmentPlan> {
+    const response = await apiService.post(
+      "/installments/installment-plans",
+      data,
+    );
     return response;
   }
 
-  async getInstallmentPlansByInvoice(invoiceId: string): Promise<InstallmentPlan[]> {
-    const response = await apiService.get(`/installments/installment-plans?invoice_id=${encodeURIComponent(invoiceId)}`);
+  async getInstallmentPlansByInvoice(
+    invoiceId: string,
+  ): Promise<InstallmentPlan[]> {
+    const response = await apiService.get(
+      `/installments/installment-plans?invoice_id=${encodeURIComponent(invoiceId)}`,
+    );
     return response;
   }
 
-  async getAllInstallmentPlans(skip: number = 0, limit: number = 100): Promise<InstallmentPlan[]> {
-    const response = await apiService.get(`/installments/installment-plans?skip=${skip}&limit=${limit}`);
+  async getAllInstallmentPlans(
+    skip: number = 0,
+    limit: number = 100,
+  ): Promise<InstallmentPlan[]> {
+    const response = await apiService.get(
+      `/installments/installment-plans?skip=${skip}&limit=${limit}`,
+    );
     return response;
   }
 
   async getInstallmentPlan(planId: string): Promise<InstallmentPlan> {
-    const response = await apiService.get(`/installments/installment-plans/${planId}`);
+    const response = await apiService.get(
+      `/installments/installment-plans/${planId}`,
+    );
     return response;
   }
 
-  async getInvoiceInstallmentPlan(invoiceId: string): Promise<InstallmentPlan | null> {
-    const response = await apiService.get(`/installments/invoices/${invoiceId}/installment-plan`);
+  async getInvoiceInstallmentPlan(
+    invoiceId: string,
+  ): Promise<InstallmentPlan | null> {
+    const response = await apiService.get(
+      `/installments/invoices/${invoiceId}/installment-plan`,
+    );
     return response ?? null;
   }
 
-  async updateInstallmentPlan(planId: string, data: InstallmentPlanUpdate): Promise<InstallmentPlan> {
-    const response = await apiService.patch(`/installments/installment-plans/${planId}`, data);
+  async updateInstallmentPlan(
+    planId: string,
+    data: InstallmentPlanUpdate,
+  ): Promise<InstallmentPlan> {
+    const response = await apiService.patch(
+      `/installments/installment-plans/${planId}`,
+      data,
+    );
     return response;
   }
 
   async applyPaymentToInstallment(
     planId: string,
     installmentId: string,
-    data: ApplyPaymentToInstallmentRequest
+    data: ApplyPaymentToInstallmentRequest,
   ): Promise<any> {
     const response = await apiService.post(
       `/installments/installment-plans/${planId}/installments/${installmentId}/apply-payment`,
-      data
+      data,
     );
     return response;
   }
@@ -183,21 +220,25 @@ class InvoiceService {
   async getCustomerInfoPdf(planId: string): Promise<Blob> {
     const blob = await apiService.get<Blob>(
       `/installments/installment-plans/${planId}/customer-info-pdf`,
-      { responseType: 'blob' }
+      { responseType: "blob" },
     );
     return blob;
   }
 
   async createDeliveryNote(data: DeliveryNoteCreate): Promise<DeliveryNote> {
-    const response = await apiService.post('/delivery-notes', data);
+    const response = await apiService.post("/delivery-notes", data);
     return response;
   }
 
-  async getDeliveryNotes(invoiceId?: string, skip: number = 0, limit: number = 100): Promise<DeliveryNote[]> {
+  async getDeliveryNotes(
+    invoiceId?: string,
+    skip: number = 0,
+    limit: number = 100,
+  ): Promise<DeliveryNote[]> {
     const params = new URLSearchParams();
-    params.append('skip', skip.toString());
-    params.append('limit', limit.toString());
-    if (invoiceId) params.append('invoice_id', invoiceId);
+    params.append("skip", skip.toString());
+    params.append("limit", limit.toString());
+    if (invoiceId) params.append("invoice_id", invoiceId);
     const response = await apiService.get(`/delivery-notes?${params}`);
     return response ?? [];
   }
@@ -207,7 +248,9 @@ class InvoiceService {
   }
 
   async downloadDeliveryNotePdf(id: string): Promise<Blob> {
-    const blob = await apiService.get<Blob>(`/delivery-notes/${id}/download`, { responseType: 'blob' });
+    const blob = await apiService.get<Blob>(`/delivery-notes/${id}/download`, {
+      responseType: "blob",
+    });
     return blob;
   }
 
@@ -250,8 +293,8 @@ class InvoiceService {
     limit: number = 10,
   ): Promise<{ payments: Payment[]; pagination: any }> {
     const params = new URLSearchParams();
-    params.append('page', page.toString());
-    params.append('limit', limit.toString());
+    params.append("page", page.toString());
+    params.append("limit", limit.toString());
 
     // Add filters, filtering out undefined values and converting to strings
     Object.entries(filters).forEach(([key, value]) => {
@@ -283,57 +326,57 @@ class InvoiceService {
 
   getStatusColor(status: string): string {
     const statusColors: { [key: string]: string } = {
-      draft: 'bg-gray-100 text-gray-800',
-      sent: 'bg-blue-100 text-blue-800',
-      viewed: 'bg-yellow-100 text-yellow-800',
-      paid: 'bg-green-100 text-green-800',
-      partially_paid: 'bg-orange-100 text-orange-800',
-      overdue: 'bg-red-100 text-red-800',
-      cancelled: 'bg-red-100 text-red-800',
-      void: 'bg-gray-100 text-gray-800',
+      draft: "bg-gray-100 text-gray-800",
+      sent: "bg-blue-100 text-blue-800",
+      viewed: "bg-yellow-100 text-yellow-800",
+      paid: "bg-green-100 text-green-800",
+      partially_paid: "bg-orange-100 text-orange-800",
+      overdue: "bg-red-100 text-red-800",
+      cancelled: "bg-red-100 text-red-800",
+      void: "bg-gray-100 text-gray-800",
     };
-    return statusColors[status] || 'bg-gray-100 text-gray-800';
+    return statusColors[status] || "bg-gray-100 text-gray-800";
   }
 
   getStatusLabel(status: string): string {
     const statusLabels: { [key: string]: string } = {
-      draft: 'Draft',
-      sent: 'Sent',
-      viewed: 'Viewed',
-      paid: 'Paid',
-      partially_paid: 'Partially Paid',
-      overdue: 'Overdue',
-      cancelled: 'Cancelled',
-      void: 'Void',
+      draft: "Draft",
+      sent: "Sent",
+      viewed: "Viewed",
+      paid: "Paid",
+      partially_paid: "Partially Paid",
+      overdue: "Overdue",
+      cancelled: "Cancelled",
+      void: "Void",
     };
     return statusLabels[status] || status;
   }
 
   getPaymentMethodLabel(method: string): string {
     const methodLabels: { [key: string]: string } = {
-      credit_card: 'Credit Card',
-      bank_transfer: 'Bank Transfer',
-      cash: 'Cash',
-      check: 'Check',
-      paypal: 'PayPal',
-      stripe: 'Stripe',
-      other: 'Other',
+      credit_card: "Credit Card",
+      bank_transfer: "Bank Transfer",
+      cash: "Cash",
+      check: "Check",
+      paypal: "PayPal",
+      stripe: "Stripe",
+      other: "Other",
     };
     return methodLabels[method] || method;
   }
 
-  formatCurrency(amount: number, currency: string = 'USD'): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
+  formatCurrency(amount: number, currency: string = "USD"): string {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
       currency: currency,
     }).format(amount);
   }
 
   formatDate(dateString: string): string {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   }
 
@@ -358,7 +401,13 @@ class InvoiceService {
     status?: string,
     customerType?: string,
   ): Promise<CustomersResponse> {
-    return CustomerService.getCustomers(skip, limit, search, status, customerType);
+    return CustomerService.getCustomers(
+      skip,
+      limit,
+      search,
+      status,
+      customerType,
+    );
   }
 
   async getCustomerById(id: string): Promise<Customer> {

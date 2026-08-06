@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { Clock } from 'lucide-react';
-import { Lead } from '@/src/models/crm';
+import { Clock } from "lucide-react";
+import { Lead } from "@/src/models/crm";
 
 type Props = {
   lead: Lead;
@@ -16,11 +16,11 @@ export function LeadOpenTaskBanner({ lead }: Props) {
         <div className="font-medium">
           {lead.openTask.dueAt
             ? new Date(lead.openTask.dueAt).toLocaleString()
-            : 'No due date'}
+            : "No due date"}
         </div>
         <div>Title: {lead.openTask.title}</div>
         <div>Status: {lead.openTask.status}</div>
-        <div>User: {lead.openTask.assignedToName || '—'}</div>
+        <div>User: {lead.openTask.assignedToName || "—"}</div>
       </div>
     </div>
   );

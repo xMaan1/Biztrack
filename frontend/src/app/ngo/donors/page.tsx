@@ -1,21 +1,24 @@
-'use client';
+"use client";
 
-import { DashboardLayout } from '@/src/components/layout';
-import { ModuleGuard } from '@/src/components/guards/PermissionGuard';
-import { DonorFormDialog } from '@/src/components/ngo/donors/DonorFormDialog';
-import { DonorViewDialog } from '@/src/components/ngo/donors/DonorViewDialog';
-import { DonorsFiltersCard } from '@/src/components/ngo/donors/DonorsFiltersCard';
-import { DonorsPageHeader } from '@/src/components/ngo/donors/DonorsPageHeader';
-import { DonorsTable } from '@/src/components/ngo/donors/DonorsTable';
-import { useCurrency } from '@/src/contexts/CurrencyContext';
-import { useConfirm } from '@/src/contexts/ConfirmContext';
-import { useNgoDonors } from '@/src/hooks/useNgoDonors';
-import type { Donor } from '@/src/models/ngo';
-import { donorPaginationRange } from '@/src/utils/ngo/donorUtils';
+import { DashboardLayout } from "@/src/components/layout";
+import { ModuleGuard } from "@/src/components/guards/PermissionGuard";
+import { DonorFormDialog } from "@/src/components/ngo/donors/DonorFormDialog";
+import { DonorViewDialog } from "@/src/components/ngo/donors/DonorViewDialog";
+import { DonorsFiltersCard } from "@/src/components/ngo/donors/DonorsFiltersCard";
+import { DonorsPageHeader } from "@/src/components/ngo/donors/DonorsPageHeader";
+import { DonorsTable } from "@/src/components/ngo/donors/DonorsTable";
+import { useCurrency } from "@/src/contexts/CurrencyContext";
+import { useConfirm } from "@/src/contexts/ConfirmContext";
+import { useNgoDonors } from "@/src/hooks/useNgoDonors";
+import type { Donor } from "@/src/models/ngo";
+import { donorPaginationRange } from "@/src/utils/ngo/donorUtils";
 
 export default function NgoDonorsPage() {
   return (
-    <ModuleGuard module="ngo" fallback={<div>You don&apos;t have access to the NGO module</div>}>
+    <ModuleGuard
+      module="ngo"
+      fallback={<div>You don&apos;t have access to the NGO module</div>}
+    >
       <NgoDonorsContent />
     </ModuleGuard>
   );
@@ -33,9 +36,9 @@ function NgoDonorsContent() {
 
   const confirmDelete = async (donor: Donor) => {
     const ok = await confirm({
-      title: 'Delete donor',
+      title: "Delete donor",
       description: `Remove ${donor.full_name}? This cannot be undone.`,
-      confirmLabel: 'Delete',
+      confirmLabel: "Delete",
       destructive: true,
     });
     if (!ok) return;

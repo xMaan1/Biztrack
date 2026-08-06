@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Table,
   TableBody,
@@ -8,17 +8,17 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../ui/table';
-import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
-import { Checkbox } from '../ui/checkbox';
+} from "../ui/table";
+import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
+import { Checkbox } from "../ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from '../ui/dropdown-menu';
+} from "../ui/dropdown-menu";
 import {
   Eye,
   Edit,
@@ -32,14 +32,14 @@ import {
   XCircle,
   MessageCircle,
   Mail,
-} from 'lucide-react';
-import { useCurrency } from '@/src/contexts/CurrencyContext';
-import { Invoice } from '../../models/sales';
-import InvoiceService from '../../services/InvoiceService';
-import { extractErrorMessage } from '../../utils/errorUtils';
-import { toast } from 'sonner';
-import { useConfirm } from '@/src/contexts/ConfirmContext';
-import { SendInvoiceEmailDialog } from './SendInvoiceEmailDialog';
+} from "lucide-react";
+import { useCurrency } from "@/src/contexts/CurrencyContext";
+import { Invoice } from "../../models/sales";
+import InvoiceService from "../../services/InvoiceService";
+import { extractErrorMessage } from "../../utils/errorUtils";
+import { toast } from "sonner";
+import { useConfirm } from "@/src/contexts/ConfirmContext";
+import { SendInvoiceEmailDialog } from "./SendInvoiceEmailDialog";
 
 interface InvoiceListProps {
   invoices: Invoice[];
@@ -76,11 +76,14 @@ export function InvoiceList({
   const confirm = useConfirm();
   const { formatCurrency } = useCurrency();
   const [downloading, setDownloading] = useState<string | null>(null);
-  const [selectedInvoices, setSelectedInvoices] = useState<Set<string>>(new Set());
+  const [selectedInvoices, setSelectedInvoices] = useState<Set<string>>(
+    new Set(),
+  );
   const [bulkLoading, setBulkLoading] = useState<string | null>(null);
   const [sendingEmail, setSendingEmail] = useState<string | null>(null);
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
-  const [selectedInvoiceForEmail, setSelectedInvoiceForEmail] = useState<Invoice | null>(null);
+  const [selectedInvoiceForEmail, setSelectedInvoiceForEmail] =
+    useState<Invoice | null>(null);
   const [sharingWhatsApp, setSharingWhatsApp] = useState<string | null>(null);
 
   const handleSendEmail = (invoice: Invoice) => {
@@ -88,18 +91,34 @@ export function InvoiceList({
     setEmailDialogOpen(true);
   };
 
-  const handleEmailSend = async (invoiceId: string, toEmail: string, message?: string) => {
+  const handleEmailSend = async (
+    invoiceId: string,
+    toEmail: string,
+    message?: string,
+  ) => {
     try {
       setSendingEmail(invoiceId);
-      const response = await InvoiceService.sendInvoiceEmail(invoiceId, toEmail, message);
-      
+      const response = await InvoiceService.sendInvoiceEmail(
+        invoiceId,
+        toEmail,
+        message,
+      );
+
       if (response?.warning) {
-        toast.warning(response.message || 'Invoice status updated but email could not be sent. Please check SMTP configuration.');
+        toast.warning(
+          response.message ||
+            "Invoice status updated but email could not be sent. Please check SMTP configuration.",
+        );
       } else {
-        toast.success(response?.message || `Invoice sent successfully to ${toEmail}`);
+        toast.success(
+          response?.message || `Invoice sent successfully to ${toEmail}`,
+        );
       }
     } catch (error: any) {
-      const errorMessage = extractErrorMessage(error, 'Failed to send invoice via email');
+      const errorMessage = extractErrorMessage(
+        error,
+        "Failed to send invoice via email",
+      );
       toast.error(errorMessage);
       throw error;
     } finally {
@@ -108,10 +127,10 @@ export function InvoiceList({
   };
 
   const openWhatsAppShare = (url: string) => {
-    const anchor = document.createElement('a');
+    const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.target = '_blank';
-    anchor.rel = 'noopener noreferrer';
+    anchor.target = "_blank";
+    anchor.rel = "noopener noreferrer";
     document.body.appendChild(anchor);
     anchor.click();
     anchor.remove();
@@ -123,9 +142,7 @@ export function InvoiceList({
       const res = await InvoiceService.sendInvoiceWhatsApp(invoice.id);
       openWhatsAppShare(res.whatsapp_url);
     } catch (error: unknown) {
-      toast.error(
-        extractErrorMessage(error, 'Could not open WhatsApp'),
-      );
+      toast.error(extractErrorMessage(error, "Could not open WhatsApp"));
     } finally {
       setSharingWhatsApp(null);
     }
@@ -133,7 +150,7 @@ export function InvoiceList({
 
   const handleBulkSendWhatsApp = async () => {
     if (selectedInvoices.size !== 1) {
-      toast.info('Select one invoice, then use Share on WhatsApp.');
+      toast.info("Select one invoice, then use Share on WhatsApp.");
       return;
     }
     const invoice = invoices.find((inv) => selectedInvoices.has(inv.id));
@@ -146,27 +163,33 @@ export function InvoiceList({
 
       const blob = await InvoiceService.downloadInvoice(invoiceId);
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `invoice-${invoiceId}.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      toast.success('Invoice downloaded successfully!');
+      toast.success("Invoice downloaded successfully!");
     } catch (error: any) {
       if (error.response?.status === 400) {
-        const errorMessage = extractErrorMessage(error, 'Error downloading invoice');
+        const errorMessage = extractErrorMessage(
+          error,
+          "Error downloading invoice",
+        );
 
-        if (errorMessage.includes('customization is required')) {
-          toast.error('Please customize your invoice template first using the \'Customize Invoice\' button.', {
-            duration: 5000,
-          });
+        if (errorMessage.includes("customization is required")) {
+          toast.error(
+            "Please customize your invoice template first using the 'Customize Invoice' button.",
+            {
+              duration: 5000,
+            },
+          );
         } else {
           toast.error(errorMessage);
         }
       } else {
-        toast.error('Error downloading invoice');
+        toast.error("Error downloading invoice");
       }
     } finally {
       setDownloading(null);
@@ -176,7 +199,7 @@ export function InvoiceList({
   // Bulk operation handlers
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedInvoices(new Set(invoices.map(invoice => invoice.id)));
+      setSelectedInvoices(new Set(invoices.map((invoice) => invoice.id)));
     } else {
       setSelectedInvoices(new Set());
     }
@@ -194,14 +217,14 @@ export function InvoiceList({
 
   const handleBulkSend = async () => {
     if (!onBulkSend || selectedInvoices.size === 0) return;
-    
-    setBulkLoading('send');
+
+    setBulkLoading("send");
     try {
       await onBulkSend(Array.from(selectedInvoices));
       setSelectedInvoices(new Set());
       toast.success(`${selectedInvoices.size} invoices sent successfully!`);
     } catch (error) {
-      toast.error('Failed to send invoices');
+      toast.error("Failed to send invoices");
     } finally {
       setBulkLoading(null);
     }
@@ -209,14 +232,14 @@ export function InvoiceList({
 
   const handleBulkMarkAsPaid = async () => {
     if (!onBulkMarkAsPaid || selectedInvoices.size === 0) return;
-    
-    setBulkLoading('paid');
+
+    setBulkLoading("paid");
     try {
       await onBulkMarkAsPaid(Array.from(selectedInvoices));
       setSelectedInvoices(new Set());
       toast.success(`${selectedInvoices.size} invoices marked as paid!`);
     } catch (error) {
-      toast.error('Failed to mark invoices as paid');
+      toast.error("Failed to mark invoices as paid");
     } finally {
       setBulkLoading(null);
     }
@@ -224,14 +247,14 @@ export function InvoiceList({
 
   const handleBulkMarkAsUnpaid = async () => {
     if (!onBulkMarkAsUnpaid || selectedInvoices.size === 0) return;
-    
-    setBulkLoading('unpaid');
+
+    setBulkLoading("unpaid");
     try {
       await onBulkMarkAsUnpaid(Array.from(selectedInvoices));
       setSelectedInvoices(new Set());
       toast.success(`${selectedInvoices.size} invoices marked as unpaid!`);
     } catch (error) {
-      toast.error('Failed to mark invoices as unpaid');
+      toast.error("Failed to mark invoices as unpaid");
     } finally {
       setBulkLoading(null);
     }
@@ -243,24 +266,26 @@ export function InvoiceList({
     const ok = await confirm({
       description: `Are you sure you want to delete ${selectedInvoices.size} invoices? This action cannot be undone.`,
       destructive: true,
-      confirmLabel: 'Delete',
+      confirmLabel: "Delete",
     });
     if (!ok) return;
 
-    setBulkLoading('delete');
+    setBulkLoading("delete");
     try {
       await onBulkDelete(Array.from(selectedInvoices));
       setSelectedInvoices(new Set());
       toast.success(`${selectedInvoices.size} invoices deleted successfully!`);
     } catch (error) {
-      toast.error('Failed to delete invoices');
+      toast.error("Failed to delete invoices");
     } finally {
       setBulkLoading(null);
     }
   };
 
-  const isAllSelected = invoices.length > 0 && selectedInvoices.size === invoices.length;
-  const isIndeterminate = selectedInvoices.size > 0 && selectedInvoices.size < invoices.length;
+  const isAllSelected =
+    invoices.length > 0 && selectedInvoices.size === invoices.length;
+  const isIndeterminate =
+    selectedInvoices.size > 0 && selectedInvoices.size < invoices.length;
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -286,17 +311,18 @@ export function InvoiceList({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <span className="text-sm font-medium text-blue-800">
-                {selectedInvoices.size} invoice{selectedInvoices.size !== 1 ? 's' : ''} selected
+                {selectedInvoices.size} invoice
+                {selectedInvoices.size !== 1 ? "s" : ""} selected
               </span>
               <div className="flex gap-2">
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={handleBulkSend}
-                  disabled={bulkLoading === 'send'}
+                  disabled={bulkLoading === "send"}
                   className="text-blue-600 border-blue-300 hover:bg-blue-100"
                 >
-                  {bulkLoading === 'send' ? (
+                  {bulkLoading === "send" ? (
                     <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-blue-300 border-t-blue-600" />
                   ) : (
                     <Send className="mr-2 h-4 w-4" />
@@ -307,10 +333,10 @@ export function InvoiceList({
                   size="sm"
                   variant="outline"
                   onClick={handleBulkSendWhatsApp}
-                  disabled={bulkLoading === 'whatsapp'}
+                  disabled={bulkLoading === "whatsapp"}
                   className="text-green-600 border-green-300 hover:bg-green-100"
                 >
-                  {bulkLoading === 'whatsapp' ? (
+                  {bulkLoading === "whatsapp" ? (
                     <>
                       <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-green-300 border-t-green-600" />
                       Opening WhatsApp...
@@ -326,10 +352,10 @@ export function InvoiceList({
                   size="sm"
                   variant="outline"
                   onClick={handleBulkMarkAsPaid}
-                  disabled={bulkLoading === 'paid'}
+                  disabled={bulkLoading === "paid"}
                   className="text-green-600 border-green-300 hover:bg-green-100"
                 >
-                  {bulkLoading === 'paid' ? (
+                  {bulkLoading === "paid" ? (
                     <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-green-300 border-t-green-600" />
                   ) : (
                     <CheckCircle className="mr-2 h-4 w-4" />
@@ -340,10 +366,10 @@ export function InvoiceList({
                   size="sm"
                   variant="outline"
                   onClick={handleBulkMarkAsUnpaid}
-                  disabled={bulkLoading === 'unpaid'}
+                  disabled={bulkLoading === "unpaid"}
                   className="text-orange-600 border-orange-300 hover:bg-orange-100"
                 >
-                  {bulkLoading === 'unpaid' ? (
+                  {bulkLoading === "unpaid" ? (
                     <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-orange-300 border-t-orange-600" />
                   ) : (
                     <XCircle className="mr-2 h-4 w-4" />
@@ -354,10 +380,10 @@ export function InvoiceList({
                   size="sm"
                   variant="outline"
                   onClick={handleBulkDelete}
-                  disabled={bulkLoading === 'delete'}
+                  disabled={bulkLoading === "delete"}
                   className="text-red-600 border-red-300 hover:bg-red-100"
                 >
-                  {bulkLoading === 'delete' ? (
+                  {bulkLoading === "delete" ? (
                     <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-red-300 border-t-red-600" />
                   ) : (
                     <Trash2 className="mr-2 h-4 w-4" />
@@ -388,7 +414,7 @@ export function InvoiceList({
                   checked={isAllSelected}
                   onCheckedChange={handleSelectAll}
                   ref={(el) => {
-                    if (el && 'indeterminate' in el) {
+                    if (el && "indeterminate" in el) {
                       (el as HTMLInputElement).indeterminate = isIndeterminate;
                     }
                   }}
@@ -407,17 +433,22 @@ export function InvoiceList({
           </TableHeader>
           <TableBody>
             {invoices.map((invoice) => (
-              <TableRow key={invoice.id} className={selectedInvoices.has(invoice.id) ? 'bg-blue-50' : ''}>
+              <TableRow
+                key={invoice.id}
+                className={selectedInvoices.has(invoice.id) ? "bg-blue-50" : ""}
+              >
                 <TableCell>
                   <Checkbox
                     checked={selectedInvoices.has(invoice.id)}
-                    onCheckedChange={(checked) => handleSelectInvoice(invoice.id, checked as boolean)}
+                    onCheckedChange={(checked) =>
+                      handleSelectInvoice(invoice.id, checked as boolean)
+                    }
                   />
                 </TableCell>
                 <TableCell className="font-medium">
                   {invoice.invoiceNumber}
                 </TableCell>
-                <TableCell>{invoice.orderNumber || '-'}</TableCell>
+                <TableCell>{invoice.orderNumber || "-"}</TableCell>
                 <TableCell>
                   <div>
                     <div className="font-medium">{invoice.customerName}</div>
@@ -443,8 +474,8 @@ export function InvoiceList({
                     <span
                       className={
                         InvoiceService.isOverdue(invoice.dueDate)
-                          ? 'text-red-600 font-medium'
-                          : ''
+                          ? "text-red-600 font-medium"
+                          : ""
                       }
                     >
                       {InvoiceService.formatDate(invoice.dueDate)}
@@ -470,8 +501,8 @@ export function InvoiceList({
                     <span
                       className={
                         invoice.balance > 0
-                          ? 'text-red-600 font-medium'
-                          : 'text-green-600 font-medium'
+                          ? "text-red-600 font-medium"
+                          : "text-green-600 font-medium"
                       }
                     >
                       {formatCurrency(invoice.balance)}
@@ -527,7 +558,7 @@ export function InvoiceList({
                           </>
                         )}
                       </DropdownMenuItem>
-                      {invoice.status !== 'paid' && (
+                      {invoice.status !== "paid" && (
                         <DropdownMenuItem
                           onClick={() => onMarkAsPaid(invoice.id)}
                         >
@@ -601,7 +632,6 @@ export function InvoiceList({
         invoice={selectedInvoiceForEmail}
         onSend={handleEmailSend}
       />
-
     </div>
   );
 }

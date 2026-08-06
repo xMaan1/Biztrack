@@ -1,15 +1,27 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { SuperAdminGuard } from '@/src/components/guards/PermissionGuard';
-import { apiService } from '@/src/services/ApiService';
-import { DashboardLayout } from '@/src/components/layout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Badge } from '@/src/components/ui/badge';
-import { Input } from '@/src/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/src/components/ui/select';
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { SuperAdminGuard } from "@/src/components/guards/PermissionGuard";
+import { apiService } from "@/src/services/ApiService";
+import { DashboardLayout } from "@/src/components/layout";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { Badge } from "@/src/components/ui/badge";
+import { Input } from "@/src/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/src/components/ui/select";
 import {
   Table,
   TableBody,
@@ -17,7 +29,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/src/components/ui/table';
+} from "@/src/components/ui/table";
 import {
   Search,
   RefreshCw,
@@ -26,10 +38,10 @@ import {
   CheckCircle,
   XCircle,
   Loader2,
-} from 'lucide-react';
-import { useCurrency } from '@/src/contexts/CurrencyContext';
-import { toast } from 'sonner';
-import { extractErrorMessage } from '@/src/utils/errorUtils';
+} from "lucide-react";
+import { useCurrency } from "@/src/contexts/CurrencyContext";
+import { toast } from "sonner";
+import { extractErrorMessage } from "@/src/utils/errorUtils";
 
 interface Subscription {
   id: string;
@@ -73,8 +85,8 @@ function AdminSubscriptionsContent() {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [stats, setStats] = useState<SubscriptionStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [syncing, setSyncing] = useState<string | null>(null);
 
   useEffect(() => {
@@ -84,17 +96,17 @@ function AdminSubscriptionsContent() {
   const loadSubscriptions = async () => {
     try {
       setLoading(true);
-      const response = await apiService.get('/admin/subscriptions');
-      
+      const response = await apiService.get("/admin/subscriptions");
+
       if (response.subscriptions) {
         setSubscriptions(response.subscriptions);
       }
-      
+
       if (response.stats) {
         setStats(response.stats);
       }
     } catch (error) {
-      toast.error(extractErrorMessage(error, 'Failed to load subscriptions'));
+      toast.error(extractErrorMessage(error, "Failed to load subscriptions"));
     } finally {
       setLoading(false);
     }
@@ -104,27 +116,36 @@ function AdminSubscriptionsContent() {
     try {
       setSyncing(subscriptionId);
       await apiService.syncSubscriptionStatus(tenantId);
-      toast.success('Subscription status synced successfully');
+      toast.success("Subscription status synced successfully");
       await loadSubscriptions();
     } catch (error) {
-      toast.error(extractErrorMessage(error, 'Failed to sync subscription'));
+      toast.error(extractErrorMessage(error, "Failed to sync subscription"));
     } finally {
       setSyncing(null);
     }
   };
 
   const getStatusBadge = (status: string) => {
-    const statusConfig: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; icon: any }> = {
-      active: { variant: 'default', icon: CheckCircle },
-      trial: { variant: 'secondary', icon: AlertTriangle },
-      cancelled: { variant: 'destructive', icon: XCircle },
-      expired: { variant: 'destructive', icon: XCircle },
-      inactive: { variant: 'secondary', icon: AlertTriangle },
+    const statusConfig: Record<
+      string,
+      {
+        variant: "default" | "secondary" | "destructive" | "outline";
+        icon: any;
+      }
+    > = {
+      active: { variant: "default", icon: CheckCircle },
+      trial: { variant: "secondary", icon: AlertTriangle },
+      cancelled: { variant: "destructive", icon: XCircle },
+      expired: { variant: "destructive", icon: XCircle },
+      inactive: { variant: "secondary", icon: AlertTriangle },
     };
 
-    const config = statusConfig[status.toLowerCase()] || { variant: 'secondary' as const, icon: AlertTriangle };
+    const config = statusConfig[status.toLowerCase()] || {
+      variant: "secondary" as const,
+      icon: AlertTriangle,
+    };
     const Icon = config.icon;
-    
+
     return (
       <Badge variant={config.variant} className="flex items-center gap-1 w-fit">
         <Icon className="h-3 w-3" />
@@ -134,13 +155,15 @@ function AdminSubscriptionsContent() {
   };
 
   const filteredSubscriptions = subscriptions.filter((sub) => {
-    const matchesSearch = 
+    const matchesSearch =
       sub.tenant_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       sub.plan.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       sub.id.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesStatus = statusFilter === 'all' || sub.status.toLowerCase() === statusFilter.toLowerCase();
-    
+
+    const matchesStatus =
+      statusFilter === "all" ||
+      sub.status.toLowerCase() === statusFilter.toLowerCase();
+
     return matchesSearch && matchesStatus;
   });
 
@@ -159,7 +182,9 @@ function AdminSubscriptionsContent() {
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Subscription Management</h1>
-          <p className="text-muted-foreground mt-1">Manage all tenant subscriptions</p>
+          <p className="text-muted-foreground mt-1">
+            Manage all tenant subscriptions
+          </p>
         </div>
 
         {stats && (
@@ -177,7 +202,9 @@ function AdminSubscriptionsContent() {
                 <CardDescription>Active</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-green-600">{stats.active}</div>
+                <div className="text-2xl font-bold text-green-600">
+                  {stats.active}
+                </div>
               </CardContent>
             </Card>
             <Card>
@@ -185,7 +212,9 @@ function AdminSubscriptionsContent() {
                 <CardDescription>Trial</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-blue-600">{stats.trial}</div>
+                <div className="text-2xl font-bold text-blue-600">
+                  {stats.trial}
+                </div>
               </CardContent>
             </Card>
             <Card>
@@ -193,7 +222,9 @@ function AdminSubscriptionsContent() {
                 <CardDescription>Cancelled</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-orange-600">{stats.cancelled}</div>
+                <div className="text-2xl font-bold text-orange-600">
+                  {stats.cancelled}
+                </div>
               </CardContent>
             </Card>
             <Card>
@@ -201,7 +232,9 @@ function AdminSubscriptionsContent() {
                 <CardDescription>Expired</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-red-600">{stats.expired}</div>
+                <div className="text-2xl font-bold text-red-600">
+                  {stats.expired}
+                </div>
               </CardContent>
             </Card>
             <Card>
@@ -209,7 +242,9 @@ function AdminSubscriptionsContent() {
                 <CardDescription>Inactive</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-gray-600">{stats.inactive}</div>
+                <div className="text-2xl font-bold text-gray-600">
+                  {stats.inactive}
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -220,7 +255,9 @@ function AdminSubscriptionsContent() {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle>All Subscriptions</CardTitle>
-                <CardDescription>View and manage tenant subscriptions</CardDescription>
+                <CardDescription>
+                  View and manage tenant subscriptions
+                </CardDescription>
               </div>
               <Button variant="outline" onClick={loadSubscriptions}>
                 <RefreshCw className="h-4 w-4 mr-2" />
@@ -274,7 +311,10 @@ function AdminSubscriptionsContent() {
                 <TableBody>
                   {filteredSubscriptions.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                      <TableCell
+                        colSpan={9}
+                        className="text-center py-8 text-muted-foreground"
+                      >
                         No subscriptions found
                       </TableCell>
                     </TableRow>
@@ -287,22 +327,31 @@ function AdminSubscriptionsContent() {
                         <TableCell>
                           <div>
                             <div className="font-medium">{sub.plan.name}</div>
-                            <div className="text-sm text-muted-foreground">{sub.plan.planType}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {sub.plan.planType}
+                            </div>
                           </div>
                         </TableCell>
                         <TableCell>{getStatusBadge(sub.status)}</TableCell>
                         <TableCell>
-                          {sub.plan?.price != null ? formatCurrency(sub.plan.price) : 'N/A'}/{sub.plan?.billingCycle === 'monthly' ? 'mo' : 'yr'}
+                          {sub.plan?.price != null
+                            ? formatCurrency(sub.plan.price)
+                            : "N/A"}
+                          /{sub.plan?.billingCycle === "monthly" ? "mo" : "yr"}
                         </TableCell>
                         <TableCell>
                           {new Date(sub.startDate).toLocaleDateString()}
                         </TableCell>
                         <TableCell>
-                          {sub.endDate ? new Date(sub.endDate).toLocaleDateString() : 'N/A'}
+                          {sub.endDate
+                            ? new Date(sub.endDate).toLocaleDateString()
+                            : "N/A"}
                         </TableCell>
                         <TableCell>
-                          <Badge variant={sub.autoRenew ? 'default' : 'secondary'}>
-                            {sub.autoRenew ? 'Yes' : 'No'}
+                          <Badge
+                            variant={sub.autoRenew ? "default" : "secondary"}
+                          >
+                            {sub.autoRenew ? "Yes" : "No"}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -312,7 +361,7 @@ function AdminSubscriptionsContent() {
                                 {sub.stripe_subscription_id.substring(0, 20)}...
                               </span>
                             ) : (
-                              'N/A'
+                              "N/A"
                             )}
                           </div>
                         </TableCell>
@@ -322,16 +371,22 @@ function AdminSubscriptionsContent() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleSync(sub.id, sub.tenant_id)}
+                                onClick={() =>
+                                  handleSync(sub.id, sub.tenant_id)
+                                }
                                 disabled={syncing === sub.id}
                               >
-                                <RefreshCw className={`h-3 w-3 ${syncing === sub.id ? 'animate-spin' : ''}`} />
+                                <RefreshCw
+                                  className={`h-3 w-3 ${syncing === sub.id ? "animate-spin" : ""}`}
+                                />
                               </Button>
                             )}
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => router.push(`/admin/tenants/${sub.tenant_id}`)}
+                              onClick={() =>
+                                router.push(`/admin/tenants/${sub.tenant_id}`)
+                              }
                             >
                               <Eye className="h-3 w-3" />
                             </Button>

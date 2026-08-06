@@ -1,26 +1,28 @@
-'use client';
+"use client";
 
-import React, { useEffect, useRef } from 'react';
-import { useNotifications } from '../../contexts/NotificationContext';
-import NotificationItem from './NotificationItem';
-import { Button } from '../ui/button';
-import { Separator } from '../ui/separator';
-import { Check, X, Settings } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useRef } from "react";
+import { useNotifications } from "../../contexts/NotificationContext";
+import NotificationItem from "./NotificationItem";
+import { Button } from "../ui/button";
+import { Separator } from "../ui/separator";
+import { Check, X, Settings } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface NotificationDropdownProps {
   onClose: () => void;
 }
 
-export default function NotificationDropdown({ onClose }: NotificationDropdownProps) {
+export default function NotificationDropdown({
+  onClose,
+}: NotificationDropdownProps) {
   const {
     notifications,
     unreadCount,
     loading,
     markAllAsRead,
-    loadNotifications
+    loadNotifications,
   } = useNotifications();
-  
+
   const router = useRouter();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -32,30 +34,32 @@ export default function NotificationDropdown({ onClose }: NotificationDropdownPr
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         onClose();
       }
     }
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [onClose]);
 
   const handleMarkAllAsRead = async () => {
     try {
       await markAllAsRead();
-    } catch (error) {
-    }
+    } catch (error) {}
   };
 
   const handleViewAll = () => {
     onClose();
-    router.push('/notifications');
+    router.push("/notifications");
   };
 
   const handleSettings = () => {
     onClose();
-    router.push('/notifications/settings');
+    router.push("/notifications/settings");
   };
 
   return (
@@ -114,7 +118,9 @@ export default function NotificationDropdown({ onClose }: NotificationDropdownPr
           <div className="p-8 text-center text-gray-500">
             <div className="text-4xl mb-2">🔔</div>
             <p>No notifications yet</p>
-            <p className="text-sm">We'll notify you when something important happens</p>
+            <p className="text-sm">
+              We&apos;ll notify you when something important happens
+            </p>
           </div>
         ) : (
           <div className="divide-y divide-gray-100">

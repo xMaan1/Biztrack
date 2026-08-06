@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   Dialog,
@@ -6,9 +6,9 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/src/components/ui/dialog';
-import { Button } from '@/src/components/ui/button';
-import type { SupplierDeleteDialogProps } from './types';
+} from "@/src/components/ui/dialog";
+import { Button } from "@/src/components/ui/button";
+import type { SupplierDeleteDialogProps } from "./types";
 
 export function SupplierDeleteDialog({
   open,
@@ -23,8 +23,8 @@ export function SupplierDeleteDialog({
         <DialogHeader>
           <DialogTitle>Delete Supplier</DialogTitle>
           <DialogDescription>
-            Are you sure you want to delete <strong>{supplier?.name}</strong>? This action cannot
-            be undone.
+            Are you sure you want to delete <strong>{supplier?.name}</strong>?
+            This action cannot be undone.
           </DialogDescription>
         </DialogHeader>
         <div className="mt-4 flex justify-end space-x-2">

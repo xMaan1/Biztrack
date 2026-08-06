@@ -1,14 +1,11 @@
-'use client';
+"use client";
 
-import React, { useEffect, useMemo, useState } from 'react';
-import { Card, CardContent } from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
-import { Badge } from '../../components/ui/badge';
-import {
-  Avatar,
-  AvatarFallback,
-} from '../../components/ui/avatar';
-import { Progress } from '../../components/ui/progress';
+import React, { useEffect, useMemo, useState } from "react";
+import { Card, CardContent } from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
+import { Badge } from "../../components/ui/badge";
+import { Avatar, AvatarFallback } from "../../components/ui/avatar";
+import { Progress } from "../../components/ui/progress";
 import {
   MoreVertical,
   User,
@@ -23,27 +20,27 @@ import {
   Edit,
   AlertTriangle,
   MessageCircle,
-} from 'lucide-react';
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-} from '../../components/ui/dropdown-menu';
+} from "../../components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '../../components/ui/dialog';
-import { Task, TaskStatus, TaskPriority, SubTask } from '../../models/task';
+} from "../../components/ui/dialog";
+import { Task, TaskStatus, TaskPriority, SubTask } from "../../models/task";
 import {
   formatDurationHms,
   getEstimatedDurationSeconds,
   hasEstimatedDuration,
-} from '../../utils/taskTimeUtils';
-import { TaskMessagesPanel } from './TaskMessagesPanel';
+} from "../../utils/taskTimeUtils";
+import { TaskMessagesPanel } from "./TaskMessagesPanel";
 
 interface TaskCardProps {
   task: Task;
@@ -313,14 +310,14 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 {formatDurationHms(liveTrackedSeconds)}
                 {hasEstimatedDuration(task)
                   ? ` / ${formatDurationHms(estimatedSeconds)}`
-                  : ''}
+                  : ""}
               </span>
             </div>
           )}
           {liveRemainingSeconds !== null && hasEstimatedDuration(task) && (
             <div className="flex items-center gap-1">
               <span
-                className={`text-xs ${isTimeLow ? 'font-semibold text-amber-700' : 'text-gray-500'}`}
+                className={`text-xs ${isTimeLow ? "font-semibold text-amber-700" : "text-gray-500"}`}
               >
                 {formatDurationHms(liveRemainingSeconds)} left
               </span>
@@ -362,7 +359,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 variant="ghost"
                 size="icon"
                 onClick={() => setShowSubtasks(!showSubtasks)}
-                title={showSubtasks ? 'Hide Subtasks' : 'Show Subtasks'}
+                title={showSubtasks ? "Hide Subtasks" : "Show Subtasks"}
               >
                 {showSubtasks ? (
                   <ChevronUp className="h-4 w-4" />
@@ -408,8 +405,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                   <span
                     className={
                       subtask.status === TaskStatus.COMPLETED
-                        ? 'line-through opacity-70 text-gray-500'
-                        : ''
+                        ? "line-through opacity-70 text-gray-500"
+                        : ""
                     }
                   >
                     {subtask.title}

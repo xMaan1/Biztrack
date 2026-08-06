@@ -1,72 +1,110 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/src/components/ui/dialog';
-import { Input } from '@/src/components/ui/input';
-import { Label } from '@/src/components/ui/label';
-import { Textarea } from '@/src/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/src/components/ui/select';
-import { Switch } from '@/src/components/ui/switch';
-import { Badge } from '@/src/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/src/components/ui/table';
-import { Plus, Eye, Edit, Trash2 } from 'lucide-react';
-import { useCurrency } from '@/src/contexts/CurrencyContext';
-import { toast } from 'sonner';
-import { tillService } from '@/src/services/TillService';
-import { bankingService } from '@/src/services/BankingService';
-import type { Till, TillCreate, TillUpdate, TillTransaction, TillTransactionCreate, TillTransactionType, BankAccount } from '@/src/models/banking';
-import { getTillTransactionTypeLabel, getTillTransactionTypeColor } from '@/src/models/banking';
-import { formatDate } from '@/src/lib/utils';
+import React, { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/src/components/ui/dialog";
+import { Input } from "@/src/components/ui/input";
+import { Label } from "@/src/components/ui/label";
+import { Textarea } from "@/src/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/src/components/ui/select";
+import { Switch } from "@/src/components/ui/switch";
+import { Badge } from "@/src/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/src/components/ui/table";
+import { Plus, Eye, Edit, Trash2 } from "lucide-react";
+import { useCurrency } from "@/src/contexts/CurrencyContext";
+import { toast } from "sonner";
+import { tillService } from "@/src/services/TillService";
+import { bankingService } from "@/src/services/BankingService";
+import {
+  getTillTransactionTypeLabel,
+  getTillTransactionTypeColor,
+  type BankAccount,
+  type Till,
+  type TillCreate,
+  type TillTransaction,
+  type TillTransactionCreate,
+  type TillTransactionType,
+  type TillUpdate,
+} from "@/src/models/banking";
+import { formatDate } from "@/src/lib/utils";
 
 function getTillApiErrorMessage(error: unknown, fallback: string): string {
   const err = error as { response?: { data?: { detail?: unknown } } };
   const d = err.response?.data?.detail;
-  if (typeof d === 'string') return d;
+  if (typeof d === "string") return d;
   if (Array.isArray(d)) {
     const msgs = d
       .map((x: { msg?: string }) => x?.msg)
       .filter((m): m is string => Boolean(m));
-    if (msgs.length) return msgs.join(', ');
+    if (msgs.length) return msgs.join(", ");
   }
   return fallback;
 }
 
 function validateTillCreate(data: TillCreate): string | null {
-  const name = (data.name ?? '').trim();
-  if (!name) return 'Till name is required';
-  if (name.length > 200) return 'Till name must be 200 characters or less';
+  const name = (data.name ?? "").trim();
+  if (!name) return "Till name is required";
+  if (name.length > 200) return "Till name must be 200 characters or less";
   const bal = data.initialBalance ?? 0;
-  if (typeof bal !== 'number' || !Number.isFinite(bal)) {
-    return 'Initial balance must be a valid number';
+  if (typeof bal !== "number" || !Number.isFinite(bal)) {
+    return "Initial balance must be a valid number";
   }
-  if (bal < -1e15 || bal > 1e15) return 'Initial balance is out of allowed range';
-  if (data.location != null && String(data.location).length > 500) return 'Location is too long';
+  if (bal < -1e15 || bal > 1e15)
+    return "Initial balance is out of allowed range";
+  if (data.location != null && String(data.location).length > 500)
+    return "Location is too long";
   if (data.description != null && String(data.description).length > 2000) {
-    return 'Description is too long';
+    return "Description is too long";
   }
-  const cur = (data.currency ?? 'USD').trim();
-  if (!cur || cur.length > 10) return 'Currency is invalid';
+  const cur = (data.currency ?? "USD").trim();
+  if (!cur || cur.length > 10) return "Currency is invalid";
   return null;
 }
 
 function validateTillUpdate(data: TillUpdate): string | null {
   if (data.name !== undefined && data.name !== null) {
     const name = String(data.name).trim();
-    if (!name) return 'Till name cannot be empty';
-    if (name.length > 200) return 'Till name must be 200 characters or less';
+    if (!name) return "Till name cannot be empty";
+    if (name.length > 200) return "Till name must be 200 characters or less";
   }
   if (data.initialBalance !== undefined && data.initialBalance !== null) {
     const bal = data.initialBalance;
-    if (typeof bal !== 'number' || !Number.isFinite(bal)) {
-      return 'Initial balance must be a valid number';
+    if (typeof bal !== "number" || !Number.isFinite(bal)) {
+      return "Initial balance must be a valid number";
     }
-    if (bal < -1e15 || bal > 1e15) return 'Initial balance is out of allowed range';
+    if (bal < -1e15 || bal > 1e15)
+      return "Initial balance is out of allowed range";
   }
-  if (data.location != null && String(data.location).length > 500) return 'Location is too long';
+  if (data.location != null && String(data.location).length > 500)
+    return "Location is too long";
   if (data.description != null && String(data.description).length > 2000) {
-    return 'Description is too long';
+    return "Description is too long";
   }
   return null;
 }
@@ -89,47 +127,47 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
   const [tillToDelete, setTillToDelete] = useState<Till | null>(null);
   const [loading, setLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  
+
   React.useEffect(() => {
     loadBankAccounts();
   }, []);
-  
+
   const loadBankAccounts = async () => {
     try {
       const accounts = await bankingService.getBankAccounts(true);
       setBankAccounts(accounts);
-    } catch (error) {
-    }
+    } catch (error) {}
   };
-  
+
   const [tillFormData, setTillFormData] = useState<TillCreate>({
-    name: '',
-    location: '',
+    name: "",
+    location: "",
     initialBalance: 0,
-    currency: 'USD',
-    description: '',
+    currency: "USD",
+    description: "",
   });
 
   const [editTillFormData, setEditTillFormData] = useState<TillUpdate>({
-    name: '',
-    location: '',
+    name: "",
+    location: "",
     initialBalance: 0,
     isActive: true,
-    description: '',
+    description: "",
   });
 
-  const [transactionFormData, setTransactionFormData] = useState<TillTransactionCreate>({
-    tillId: '',
-    bankAccountId: undefined,
-    transactionDate: new Date().toISOString().split('T')[0],
-    transactionType: 'deposit' as TillTransactionType,
-    amount: 0,
-    currency: 'USD',
-    description: '',
-    reason: '',
-    referenceNumber: '',
-    notes: '',
-  });
+  const [transactionFormData, setTransactionFormData] =
+    useState<TillTransactionCreate>({
+      tillId: "",
+      bankAccountId: undefined,
+      transactionDate: new Date().toISOString().split("T")[0],
+      transactionType: "deposit" as TillTransactionType,
+      amount: 0,
+      currency: "USD",
+      description: "",
+      reason: "",
+      referenceNumber: "",
+      notes: "",
+    });
 
   const handleCreateTill = async () => {
     const payload: TillCreate = {
@@ -146,18 +184,18 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
     try {
       setLoading(true);
       await tillService.createTill(payload);
-      toast.success('Till created successfully');
+      toast.success("Till created successfully");
       setShowCreateTillModal(false);
       setTillFormData({
-        name: '',
-        location: '',
+        name: "",
+        location: "",
         initialBalance: 0,
-        currency: 'USD',
-        description: '',
+        currency: "USD",
+        description: "",
       });
       onRefresh();
     } catch (error) {
-      toast.error(getTillApiErrorMessage(error, 'Failed to create till'));
+      toast.error(getTillApiErrorMessage(error, "Failed to create till"));
     } finally {
       setLoading(false);
     }
@@ -167,10 +205,10 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
     setTillToEdit(till);
     setEditTillFormData({
       name: till.name,
-      location: till.location || '',
+      location: till.location || "",
       initialBalance: till.initialBalance || 0,
       isActive: till.isActive,
-      description: till.description || '',
+      description: till.description || "",
     });
     setShowEditTillModal(true);
   };
@@ -179,11 +217,11 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
     setShowEditTillModal(false);
     setTillToEdit(null);
     setEditTillFormData({
-      name: '',
-      location: '',
+      name: "",
+      location: "",
       initialBalance: 0,
       isActive: true,
-      description: '',
+      description: "",
     });
   };
 
@@ -204,11 +242,11 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
     try {
       setLoading(true);
       await tillService.updateTill(tillToEdit.id, payload);
-      toast.success('Till updated successfully');
+      toast.success("Till updated successfully");
       closeEditModal();
       onRefresh();
     } catch (error) {
-      toast.error(getTillApiErrorMessage(error, 'Failed to update till'));
+      toast.error(getTillApiErrorMessage(error, "Failed to update till"));
     } finally {
       setLoading(false);
     }
@@ -230,11 +268,11 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
     try {
       setDeleteLoading(true);
       await tillService.deleteTill(tillToDelete.id);
-      toast.success('Till deleted successfully');
+      toast.success("Till deleted successfully");
       closeDeleteModal();
       onRefresh();
     } catch (error) {
-      toast.error('Failed to delete till');
+      toast.error("Failed to delete till");
     } finally {
       setDeleteLoading(false);
     }
@@ -247,7 +285,7 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
       const trans = await tillService.getTillTransactions(till.id);
       setTransactions(trans);
     } catch (error) {
-      toast.error('Failed to load transactions');
+      toast.error("Failed to load transactions");
     } finally {
       setLoading(false);
     }
@@ -262,24 +300,24 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
         ...transactionFormData,
         tillId: selectedTill.id,
       });
-      toast.success('Transaction created successfully');
+      toast.success("Transaction created successfully");
       setShowTransactionModal(false);
       setTransactionFormData({
         tillId: selectedTill.id,
         bankAccountId: undefined,
-        transactionDate: new Date().toISOString().split('T')[0],
-        transactionType: 'deposit' as TillTransactionType,
+        transactionDate: new Date().toISOString().split("T")[0],
+        transactionType: "deposit" as TillTransactionType,
         amount: 0,
-        currency: 'USD',
-        description: '',
-        reason: '',
-        referenceNumber: '',
-        notes: '',
+        currency: "USD",
+        description: "",
+        reason: "",
+        referenceNumber: "",
+        notes: "",
       });
       await handleViewTransactions(selectedTill);
       onRefresh();
     } catch (error) {
-      toast.error('Failed to create transaction');
+      toast.error("Failed to create transaction");
     } finally {
       setLoading(false);
     }
@@ -293,9 +331,14 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <h2 className="text-2xl font-bold tracking-tight">Till Management</h2>
-          <p className="text-muted-foreground">Manage physical cash in the office</p>
+          <p className="text-muted-foreground">
+            Manage physical cash in the office
+          </p>
         </div>
-        <Button onClick={() => setShowCreateTillModal(true)} className="w-full shrink-0 sm:w-auto">
+        <Button
+          onClick={() => setShowCreateTillModal(true)}
+          className="w-full shrink-0 sm:w-auto"
+        >
           <Plus className="h-4 w-4 mr-2" />
           Create Till
         </Button>
@@ -303,10 +346,15 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
 
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
         {tills.map((till) => (
-          <Card key={till.id} className="hover:shadow-lg transition-shadow overflow-hidden min-w-0">
+          <Card
+            key={till.id}
+            className="hover:shadow-lg transition-shadow overflow-hidden min-w-0"
+          >
             <CardHeader className="space-y-2 pb-3">
               <div className="flex flex-wrap items-start justify-between gap-2">
-                <CardTitle className="text-lg leading-tight break-words pr-2">{till.name}</CardTitle>
+                <CardTitle className="text-lg leading-tight break-words pr-2">
+                  {till.name}
+                </CardTitle>
                 {till.isActive ? (
                   <Badge className="bg-green-500">Active</Badge>
                 ) : (
@@ -317,12 +365,18 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
             <CardContent>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Current Balance:</span>
-                  <span className="text-xl font-bold">{formatCurrency(till.currentBalance)}</span>
+                  <span className="text-sm text-muted-foreground">
+                    Current Balance:
+                  </span>
+                  <span className="text-xl font-bold">
+                    {formatCurrency(till.currentBalance)}
+                  </span>
                 </div>
                 {till.location && (
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Location:</span>
+                    <span className="text-sm text-muted-foreground">
+                      Location:
+                    </span>
                     <span className="text-sm">{till.location}</span>
                   </div>
                 )}
@@ -366,7 +420,9 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Create Till</DialogTitle>
-            <DialogDescription>Create a new till for managing physical cash</DialogDescription>
+            <DialogDescription>
+              Create a new till for managing physical cash
+            </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
@@ -375,7 +431,9 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
                 id="name"
                 value={tillFormData.name}
                 maxLength={200}
-                onChange={(e) => setTillFormData({ ...tillFormData, name: e.target.value })}
+                onChange={(e) =>
+                  setTillFormData({ ...tillFormData, name: e.target.value })
+                }
                 placeholder="e.g., Main Office Drawer"
               />
             </div>
@@ -385,7 +443,9 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
                 id="location"
                 value={tillFormData.location}
                 maxLength={500}
-                onChange={(e) => setTillFormData({ ...tillFormData, location: e.target.value })}
+                onChange={(e) =>
+                  setTillFormData({ ...tillFormData, location: e.target.value })
+                }
                 placeholder="e.g., Office Reception"
               />
             </div>
@@ -411,7 +471,12 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
                 id="description"
                 value={tillFormData.description}
                 maxLength={2000}
-                onChange={(e) => setTillFormData({ ...tillFormData, description: e.target.value })}
+                onChange={(e) =>
+                  setTillFormData({
+                    ...tillFormData,
+                    description: e.target.value,
+                  })
+                }
                 placeholder="Add any notes about this till"
               />
             </div>
@@ -420,21 +485,35 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateTillModal(false)}>Cancel</Button>
-            <Button onClick={handleCreateTill} disabled={loading || createTillError !== null}>
+            <Button
+              variant="outline"
+              onClick={() => setShowCreateTillModal(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCreateTill}
+              disabled={loading || createTillError !== null}
+            >
               Create Till
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={selectedTill !== null} onOpenChange={() => setSelectedTill(null)}>
+      <Dialog
+        open={selectedTill !== null}
+        onOpenChange={() => setSelectedTill(null)}
+      >
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Transactions - {selectedTill?.name}</DialogTitle>
-            <DialogDescription>Current Balance: {formatCurrency(selectedTill?.currentBalance || 0)}</DialogDescription>
+            <DialogDescription>
+              Current Balance:{" "}
+              {formatCurrency(selectedTill?.currentBalance || 0)}
+            </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4">
             <div className="flex justify-end">
               <Button onClick={() => setShowTransactionModal(true)}>
@@ -461,26 +540,48 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
                     <TableRow key={t.id}>
                       <TableCell>{formatDate(t.transactionDate)}</TableCell>
                       <TableCell>
-                        <Badge className={getTillTransactionTypeColor(t.transactionType)}>
+                        <Badge
+                          className={getTillTransactionTypeColor(
+                            t.transactionType,
+                          )}
+                        >
                           {getTillTransactionTypeLabel(t.transactionType)}
                         </Badge>
                       </TableCell>
-                      <TableCell className={t.transactionType === 'deposit' ? 'text-green-600' : 'text-red-600'}>
-                        {t.transactionType === 'deposit' ? '+' : '-'}{formatCurrency(t.amount)}
+                      <TableCell
+                        className={
+                          t.transactionType === "deposit"
+                            ? "text-green-600"
+                            : "text-red-600"
+                        }
+                      >
+                        {t.transactionType === "deposit" ? "+" : "-"}
+                        {formatCurrency(t.amount)}
                       </TableCell>
-                      <TableCell className="font-medium">{formatCurrency(t.runningBalance)}</TableCell>
+                      <TableCell className="font-medium">
+                        {formatCurrency(t.runningBalance)}
+                      </TableCell>
                       <TableCell>
                         {t.bankAccount ? (
-                          <span className="text-sm">{t.bankAccount.accountName || t.bankAccount.bankName}</span>
+                          <span className="text-sm">
+                            {t.bankAccount.accountName ||
+                              t.bankAccount.bankName}
+                          </span>
                         ) : (
-                          <span className="text-sm text-muted-foreground">—</span>
+                          <span className="text-sm text-muted-foreground">
+                            —
+                          </span>
                         )}
                       </TableCell>
                       <TableCell>
                         {t.bankAccount ? (
-                          <span className="font-medium text-blue-600">{formatCurrency(t.bankAccount.currentBalance || 0)}</span>
+                          <span className="font-medium text-blue-600">
+                            {formatCurrency(t.bankAccount.currentBalance || 0)}
+                          </span>
                         ) : (
-                          <span className="text-sm text-muted-foreground">—</span>
+                          <span className="text-sm text-muted-foreground">
+                            —
+                          </span>
                         )}
                       </TableCell>
                       <TableCell>{t.description}</TableCell>
@@ -493,18 +594,28 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showTransactionModal} onOpenChange={setShowTransactionModal}>
+      <Dialog
+        open={showTransactionModal}
+        onOpenChange={setShowTransactionModal}
+      >
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Add Transaction</DialogTitle>
-            <DialogDescription>Record a deposit or withdrawal from the till</DialogDescription>
+            <DialogDescription>
+              Record a deposit or withdrawal from the till
+            </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="transactionType">Transaction Type *</Label>
               <Select
                 value={transactionFormData.transactionType}
-                onValueChange={(value) => setTransactionFormData({ ...transactionFormData, transactionType: value as TillTransactionType })}
+                onValueChange={(value) =>
+                  setTransactionFormData({
+                    ...transactionFormData,
+                    transactionType: value as TillTransactionType,
+                  })
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -520,7 +631,12 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
               <Label htmlFor="bankAccountId">Bank Account (Optional)</Label>
               <Select
                 value={transactionFormData.bankAccountId || undefined}
-                onValueChange={(value) => setTransactionFormData({ ...transactionFormData, bankAccountId: value === 'none' ? undefined : value })}
+                onValueChange={(value) =>
+                  setTransactionFormData({
+                    ...transactionFormData,
+                    bankAccountId: value === "none" ? undefined : value,
+                  })
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select bank account (optional)" />
@@ -529,7 +645,8 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
                   <SelectItem value="none">None</SelectItem>
                   {bankAccounts.map((account) => (
                     <SelectItem key={account.id} value={account.id}>
-                      {account.accountName} ({account.bankName}) - {formatCurrency(account.currentBalance || 0)}
+                      {account.accountName} ({account.bankName}) -{" "}
+                      {formatCurrency(account.currentBalance || 0)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -542,7 +659,12 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
                 type="number"
                 step="0.01"
                 value={transactionFormData.amount}
-                onChange={(e) => setTransactionFormData({ ...transactionFormData, amount: parseFloat(e.target.value) || 0 })}
+                onChange={(e) =>
+                  setTransactionFormData({
+                    ...transactionFormData,
+                    amount: parseFloat(e.target.value) || 0,
+                  })
+                }
               />
             </div>
             <div className="grid gap-2">
@@ -550,7 +672,12 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
               <Textarea
                 id="description"
                 value={transactionFormData.description}
-                onChange={(e) => setTransactionFormData({ ...transactionFormData, description: e.target.value })}
+                onChange={(e) =>
+                  setTransactionFormData({
+                    ...transactionFormData,
+                    description: e.target.value,
+                  })
+                }
                 placeholder="What is this transaction for?"
               />
             </div>
@@ -559,7 +686,12 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
               <Input
                 id="reason"
                 value={transactionFormData.reason}
-                onChange={(e) => setTransactionFormData({ ...transactionFormData, reason: e.target.value })}
+                onChange={(e) =>
+                  setTransactionFormData({
+                    ...transactionFormData,
+                    reason: e.target.value,
+                  })
+                }
                 placeholder="Optional reason"
               />
             </div>
@@ -568,7 +700,12 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
               <Input
                 id="referenceNumber"
                 value={transactionFormData.referenceNumber}
-                onChange={(e) => setTransactionFormData({ ...transactionFormData, referenceNumber: e.target.value })}
+                onChange={(e) =>
+                  setTransactionFormData({
+                    ...transactionFormData,
+                    referenceNumber: e.target.value,
+                  })
+                }
                 placeholder="Optional reference"
               />
             </div>
@@ -577,14 +714,27 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
               <Textarea
                 id="notes"
                 value={transactionFormData.notes}
-                onChange={(e) => setTransactionFormData({ ...transactionFormData, notes: e.target.value })}
+                onChange={(e) =>
+                  setTransactionFormData({
+                    ...transactionFormData,
+                    notes: e.target.value,
+                  })
+                }
                 placeholder="Additional notes"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowTransactionModal(false)}>Cancel</Button>
-            <Button onClick={handleCreateTransaction} disabled={loading || !transactionFormData.description}>
+            <Button
+              variant="outline"
+              onClick={() => setShowTransactionModal(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCreateTransaction}
+              disabled={loading || !transactionFormData.description}
+            >
               Add Transaction
             </Button>
           </DialogFooter>
@@ -604,7 +754,12 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
                 id="edit-name"
                 value={editTillFormData.name}
                 maxLength={200}
-                onChange={(e) => setEditTillFormData({ ...editTillFormData, name: e.target.value })}
+                onChange={(e) =>
+                  setEditTillFormData({
+                    ...editTillFormData,
+                    name: e.target.value,
+                  })
+                }
                 placeholder="e.g., Main Office Drawer"
               />
             </div>
@@ -614,7 +769,12 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
                 id="edit-location"
                 value={editTillFormData.location}
                 maxLength={500}
-                onChange={(e) => setEditTillFormData({ ...editTillFormData, location: e.target.value })}
+                onChange={(e) =>
+                  setEditTillFormData({
+                    ...editTillFormData,
+                    location: e.target.value,
+                  })
+                }
                 placeholder="e.g., Office Reception"
               />
             </div>
@@ -640,7 +800,12 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
                 id="edit-description"
                 value={editTillFormData.description}
                 maxLength={2000}
-                onChange={(e) => setEditTillFormData({ ...editTillFormData, description: e.target.value })}
+                onChange={(e) =>
+                  setEditTillFormData({
+                    ...editTillFormData,
+                    description: e.target.value,
+                  })
+                }
                 placeholder="Add any notes about this till"
               />
             </div>
@@ -648,7 +813,12 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
               <Switch
                 id="edit-isActive"
                 checked={editTillFormData.isActive}
-                onCheckedChange={(checked) => setEditTillFormData({ ...editTillFormData, isActive: checked })}
+                onCheckedChange={(checked) =>
+                  setEditTillFormData({
+                    ...editTillFormData,
+                    isActive: checked,
+                  })
+                }
               />
               <Label htmlFor="edit-isActive">Active</Label>
             </div>
@@ -657,9 +827,14 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={closeEditModal}>Cancel</Button>
-            <Button onClick={handleUpdateTill} disabled={loading || editTillError !== null}>
-              {loading ? 'Updating...' : 'Update Till'}
+            <Button variant="outline" onClick={closeEditModal}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleUpdateTill}
+              disabled={loading || editTillError !== null}
+            >
+              {loading ? "Updating..." : "Update Till"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -670,8 +845,9 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
           <DialogHeader>
             <DialogTitle>Delete Till</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete the till "{tillToDelete?.name}"? 
-              This action will permanently delete the till and all its transactions. This cannot be undone.
+              Are you sure you want to delete the till &quot;
+              {tillToDelete?.name}&quot;? This action will permanently delete
+              the till and all its transactions. This cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end space-x-2 mt-4">
@@ -687,7 +863,7 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
               disabled={deleteLoading}
               className="bg-red-600 hover:bg-red-700"
             >
-              {deleteLoading ? 'Deleting...' : 'Delete'}
+              {deleteLoading ? "Deleting..." : "Delete"}
             </Button>
           </div>
         </DialogContent>
@@ -695,5 +871,3 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
     </div>
   );
 }
-
-

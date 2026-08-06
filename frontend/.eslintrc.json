@@ -1,7 +1,5 @@
 {
-  "extends": [
-    "next/core-web-vitals"
-  ],
+  "extends": ["next/core-web-vitals"],
   "rules": {
     // Basic code quality rules only
     "no-console": "warn",
@@ -16,7 +14,7 @@
     "comma-dangle": ["error", "always-multiline"],
     "semi": ["error", "always"],
     "max-len": ["warn", { "code": 120, "ignoreUrls": true }],
-    
+
     // React specific rules
     "react/prop-types": "off",
     "react/react-in-jsx-scope": "off",

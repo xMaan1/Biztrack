@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   AlertDialog,
@@ -9,7 +9,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/src/components/ui/alert-dialog';
+} from "@/src/components/ui/alert-dialog";
 
 type MotBookingDeleteDialogProps = {
   open: boolean;
@@ -33,12 +33,16 @@ export function MotBookingDeleteDialog({
           <AlertDialogTitle>Delete MOT booking?</AlertDialogTitle>
           <AlertDialogDescription>
             This will permanently delete the MOT booking
-            {customerName ? ` for ${customerName}` : ''}. This action cannot be undone.
+            {customerName ? ` for ${customerName}` : ""}. This action cannot be
+            undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel onClick={onCancel}>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+          <AlertDialogAction
+            onClick={onConfirm}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
             Delete
           </AlertDialogAction>
         </AlertDialogFooter>

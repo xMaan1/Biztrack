@@ -1,21 +1,21 @@
 export enum StockMovementType {
-  INBOUND = 'inbound',
-  OUTBOUND = 'outbound',
-  TRANSFER = 'transfer',
-  ADJUSTMENT = 'adjustment',
-  RETURN = 'return',
-  DAMAGE = 'damage',
-  EXPIRY = 'expiry',
-  CYCLE_COUNT = 'cycle_count',
-  INSTOCK = 'instock',
+  INBOUND = "inbound",
+  OUTBOUND = "outbound",
+  TRANSFER = "transfer",
+  ADJUSTMENT = "adjustment",
+  RETURN = "return",
+  DAMAGE = "damage",
+  EXPIRY = "expiry",
+  CYCLE_COUNT = "cycle_count",
+  INSTOCK = "instock",
 }
 
 export enum StockMovementStatus {
-  PENDING = 'pending',
-  IN_PROGRESS = 'in_progress',
-  COMPLETED = 'completed',
-  CANCELLED = 'cancelled',
-  FAILED = 'failed',
+  PENDING = "pending",
+  IN_PROGRESS = "in_progress",
+  COMPLETED = "completed",
+  CANCELLED = "cancelled",
+  FAILED = "failed",
 }
 
 export interface StockMovement {

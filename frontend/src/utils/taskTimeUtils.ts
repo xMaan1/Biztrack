@@ -1,9 +1,7 @@
-export function durationToSeconds(
-  hours = 0,
-  minutes = 0,
-  seconds = 0,
-): number {
-  return Math.max(0, hours) * 3600 + Math.max(0, minutes) * 60 + Math.max(0, seconds);
+export function durationToSeconds(hours = 0, minutes = 0, seconds = 0): number {
+  return (
+    Math.max(0, hours) * 3600 + Math.max(0, minutes) * 60 + Math.max(0, seconds)
+  );
 }
 
 export function secondsToDuration(totalSeconds?: number | null): {
@@ -52,11 +50,13 @@ export function hasEstimatedDuration(task: {
   if (task.estimatedDurationSeconds && task.estimatedDurationSeconds > 0) {
     return true;
   }
-  return durationToSeconds(
-    task.estimatedHours || 0,
-    task.estimatedMinutes || 0,
-    task.estimatedSeconds || 0,
-  ) > 0;
+  return (
+    durationToSeconds(
+      task.estimatedHours || 0,
+      task.estimatedMinutes || 0,
+      task.estimatedSeconds || 0,
+    ) > 0
+  );
 }
 
 export function getEstimatedDurationSeconds(task: {

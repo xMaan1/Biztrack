@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { ArrowRight, Boxes } from 'lucide-react';
-import { Button } from '@/src/components/ui/button';
+import Link from "next/link";
+import { ArrowRight, Boxes } from "lucide-react";
+import { Button } from "@/src/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/src/components/ui/card';
-import type { NgoSnapshot } from '@/src/types/ngoDashboard';
+} from "@/src/components/ui/card";
+import type { NgoSnapshot } from "@/src/types/ngoDashboard";
 
 type NgoInventoryStatusCardProps = {
   snapshot: NgoSnapshot;

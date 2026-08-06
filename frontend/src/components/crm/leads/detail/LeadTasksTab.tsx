@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
-import { Textarea } from '@/src/components/ui/textarea';
-import { Badge } from '@/src/components/ui/badge';
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
+import { Textarea } from "@/src/components/ui/textarea";
+import { Badge } from "@/src/components/ui/badge";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
-import { LeadTaskItem } from '@/src/models/crm';
-import CRMService from '@/src/services/CRMService';
+} from "@/src/components/ui/select";
+import { LeadTaskItem } from "@/src/models/crm";
+import CRMService from "@/src/services/CRMService";
 
 type Props = {
   leadId: string;
@@ -81,8 +81,8 @@ export function LeadTasksTab({
           variant="outline"
           size="sm"
           onClick={() => {
-            setTaskTitle('');
-            setTaskDetails('');
+            setTaskTitle("");
+            setTaskDetails("");
           }}
         >
           Clear
@@ -98,8 +98,8 @@ export function LeadTasksTab({
               dueAt: new Date(taskDue).toISOString(),
               flagged: true,
             });
-            setTaskTitle('');
-            setTaskDetails('');
+            setTaskTitle("");
+            setTaskDetails("");
             loadTabData();
             reload();
           }}
@@ -117,7 +117,7 @@ export function LeadTasksTab({
             <div className="flex justify-between items-center mt-1">
               <Badge className="capitalize">{t.status}</Badge>
               <span className="text-xs text-muted-foreground">
-                {t.dueAt ? new Date(t.dueAt).toLocaleString() : ''}
+                {t.dueAt ? new Date(t.dueAt).toLocaleString() : ""}
                 {t.overdue && (
                   <span className="text-red-500 ml-1 font-medium">OVERDUE</span>
                 )}
@@ -165,7 +165,7 @@ export function LeadTasksTab({
           size="sm"
           onClick={() => setShowCompletedTasks((v) => !v)}
         >
-          {showCompletedTasks ? 'Hide completed' : 'Show completed'}
+          {showCompletedTasks ? "Hide completed" : "Show completed"}
         </Button>
       </div>
     </div>

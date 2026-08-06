@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { buttonVariants } from '@/src/components/ui/button';
+import * as React from "react";
+import { buttonVariants } from "@/src/components/ui/button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,8 +11,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/src/components/ui/alert-dialog';
-import { cn } from '@/src/lib/utils';
+} from "@/src/components/ui/alert-dialog";
+import { cn } from "@/src/lib/utils";
 
 export type ConfirmOptions = {
   title?: string;
@@ -65,7 +65,7 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {options?.title ?? 'Are you sure?'}
+              {options?.title ?? "Are you sure?"}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {options?.description}
@@ -73,20 +73,20 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel type="button">
-              {options?.cancelLabel ?? 'Cancel'}
+              {options?.cancelLabel ?? "Cancel"}
             </AlertDialogCancel>
             <AlertDialogAction
               type="button"
               className={cn(
                 options?.destructive &&
-                  buttonVariants({ variant: 'destructive' }),
+                  buttonVariants({ variant: "destructive" }),
               )}
               onClick={(e) => {
                 e.preventDefault();
                 settle(true);
               }}
             >
-              {options?.confirmLabel ?? 'Continue'}
+              {options?.confirmLabel ?? "Continue"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -98,7 +98,7 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
 export function useConfirm() {
   const ctx = React.useContext(ConfirmContext);
   if (!ctx) {
-    throw new Error('useConfirm must be used within ConfirmProvider');
+    throw new Error("useConfirm must be used within ConfirmProvider");
   }
   return ctx;
 }

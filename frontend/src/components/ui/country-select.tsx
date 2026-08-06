@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Input } from './input';
-import { Label } from './label';
-import { Button } from './button';
-import { Search, Globe, X, Check } from 'lucide-react';
-import { COUNTRIES, COUNTRY_ALIASES } from '@/src/data/countries';
+import React, { useState, useRef, useEffect, useMemo } from "react";
+import { Input } from "./input";
+import { Label } from "./label";
+import { Button } from "./button";
+import { Search, Globe, X, Check } from "lucide-react";
+import { COUNTRIES, COUNTRY_ALIASES } from "@/src/data/countries";
 
 interface CountrySelectProps {
   value?: string;
@@ -26,26 +26,29 @@ function canonicalCountry(name: string): string {
 export function CountrySelect({
   value,
   onChange,
-  placeholder = 'Select country...',
-  label = 'Country',
+  placeholder = "Select country...",
+  label = "Country",
   required = false,
   error,
-  className = '',
+  className = "",
 }: CountrySelectProps) {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const selectedRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const selected = value || '';
+  const selected = value || "";
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (selectedRef.current && !selectedRef.current.contains(event.target as Node)) {
+      if (
+        selectedRef.current &&
+        !selectedRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const filtered = useMemo(() => {
@@ -74,14 +77,14 @@ export function CountrySelect({
 
   const handleSelect = (country: string) => {
     onChange(country);
-    setSearchQuery('');
+    setSearchQuery("");
     setIsOpen(false);
     inputRef.current?.blur();
   };
 
   const handleClear = () => {
-    onChange('');
-    setSearchQuery('');
+    onChange("");
+    setSearchQuery("");
     setIsOpen(false);
     inputRef.current?.focus();
   };
@@ -99,12 +102,17 @@ export function CountrySelect({
         onChange(canonical);
       }
     }
-    setSearchQuery('');
+    setSearchQuery("");
   };
 
   return (
     <div className={`relative ${className}`} ref={selectedRef}>
-      <Label htmlFor="country-search" className={required ? "after:content-['*'] after:text-red-500 after:ml-1" : ''}>
+      <Label
+        htmlFor="country-search"
+        className={
+          required ? "after:content-['*'] after:text-red-500 after:ml-1" : ""
+        }
+      >
         {label}
       </Label>
       <div className="relative">
@@ -114,12 +122,14 @@ export function CountrySelect({
             ref={inputRef}
             id="country-search"
             type="text"
-            value={selected ? (searchQuery ? searchQuery : selected) : searchQuery}
+            value={
+              selected ? (searchQuery ? searchQuery : selected) : searchQuery
+            }
             onChange={handleInputChange}
             onFocus={() => setIsOpen(true)}
             onBlur={handleBlur}
-            placeholder={selected ? '' : placeholder}
-            className={`pl-10 pr-10 ${error ? 'border-red-500' : ''}`}
+            placeholder={selected ? "" : placeholder}
+            className={`pl-10 pr-10 ${error ? "border-red-500" : ""}`}
             autoComplete="off"
           />
           {selected && (
@@ -150,14 +160,20 @@ export function CountrySelect({
                   >
                     <div className="flex items-center gap-3">
                       <Globe className="h-4 w-4 text-gray-500 shrink-0" />
-                      <span className="font-medium text-gray-900">{country}</span>
+                      <span className="font-medium text-gray-900">
+                        {country}
+                      </span>
                     </div>
-                    {selected === country && <Check className="h-4 w-4 text-green-600" />}
+                    {selected === country && (
+                      <Check className="h-4 w-4 text-green-600" />
+                    )}
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="p-4 text-center text-gray-500">No countries found for &quot;{searchQuery}&quot;</div>
+              <div className="p-4 text-center text-gray-500">
+                No countries found for &quot;{searchQuery}&quot;
+              </div>
             )}
           </div>
         )}

@@ -1,45 +1,45 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { Alert, AlertDescription } from '../ui/alert';
-import { Loader2, Eye, EyeOff } from 'lucide-react';
-import { useAuth } from '@/src/contexts/AuthContext';
-import { LoginCredentials, RegisterData } from '@/src/models/auth';
-import { apiService } from '@/src/services/ApiService';
-import { extractErrorMessage } from '@/src/utils/errorUtils';
-import { toast } from 'sonner';
-import { VerifiedCompanyBadge } from '@/src/components/common/VerifiedCompanyBadge';
+import { useState } from "react";
+import Link from "next/link";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { Alert, AlertDescription } from "../ui/alert";
+import { Loader2, Eye, EyeOff } from "lucide-react";
+import { useAuth } from "@/src/contexts/AuthContext";
+import { LoginCredentials, RegisterData } from "@/src/models/auth";
+import { apiService } from "@/src/services/ApiService";
+import { extractErrorMessage } from "@/src/utils/errorUtils";
+import { toast } from "sonner";
+import { VerifiedCompanyBadge } from "@/src/components/common/VerifiedCompanyBadge";
 
 interface AuthFormProps {
-  mode: 'login' | 'signup';
+  mode: "login" | "signup";
   onSuccess: () => void;
 }
 
 export default function AuthForm({ mode, onSuccess }: AuthFormProps) {
   const { login } = useAuth();
   const [formData, setFormData] = useState({
-    userName: '',
-    email: '',
-    password: '',
-    firstName: '',
-    lastName: '',
+    userName: "",
+    email: "",
+    password: "",
+    firstName: "",
+    lastName: "",
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
-      if (mode === 'login') {
+      if (mode === "login") {
         const success = await login({
           email: formData.email,
           password: formData.password,
@@ -48,7 +48,7 @@ export default function AuthForm({ mode, onSuccess }: AuthFormProps) {
         if (success) {
           onSuccess();
         } else {
-          const errorMessage = 'Invalid email or password';
+          const errorMessage = "Invalid email or password";
           setError(errorMessage);
           toast.error(errorMessage);
         }
@@ -70,20 +70,21 @@ export default function AuthForm({ mode, onSuccess }: AuthFormProps) {
           if (loginSuccess) {
             onSuccess();
           } else {
-            const errorMessage = 'Registration successful but automatic login failed. Please sign in manually.';
+            const errorMessage =
+              "Registration successful but automatic login failed. Please sign in manually.";
             setError(errorMessage);
             toast.error(errorMessage);
           }
         }
       }
     } catch (err: any) {
-      let errorMessage = 'An error occurred';
+      let errorMessage = "An error occurred";
       if (err?.request && !err?.response) {
-        errorMessage = 'No response from server. Please check your connection.';
+        errorMessage = "No response from server. Please check your connection.";
       } else if (err?.response?.data) {
         const data = err.response.data;
-        if (typeof data.detail === 'string') errorMessage = data.detail;
-        else if (typeof data.message === 'string') errorMessage = data.message;
+        if (typeof data.detail === "string") errorMessage = data.detail;
+        else if (typeof data.message === "string") errorMessage = data.message;
         else errorMessage = extractErrorMessage(err, errorMessage);
       } else {
         errorMessage = extractErrorMessage(err, errorMessage);
@@ -100,12 +101,12 @@ export default function AuthForm({ mode, onSuccess }: AuthFormProps) {
       <Card className="w-full max-w-md modern-card">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-            {mode === 'login' ? 'Welcome Back' : 'Create Account'}
+            {mode === "login" ? "Welcome Back" : "Create Account"}
           </CardTitle>
           <p className="text-gray-600 mt-2">
-            {mode === 'login'
-              ? 'Sign in to your account'
-              : 'Sign up to get started'}
+            {mode === "login"
+              ? "Sign in to your account"
+              : "Sign up to get started"}
           </p>
         </CardHeader>
 
@@ -132,7 +133,7 @@ export default function AuthForm({ mode, onSuccess }: AuthFormProps) {
               />
             </div>
 
-            {mode === 'signup' && (
+            {mode === "signup" && (
               <>
                 <div className="space-y-2">
                   <Label htmlFor="userName">Username</Label>
@@ -179,7 +180,7 @@ export default function AuthForm({ mode, onSuccess }: AuthFormProps) {
               <div className="relative">
                 <Input
                   id="password"
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   required
                   value={formData.password}
                   onChange={(e) =>
@@ -192,7 +193,7 @@ export default function AuthForm({ mode, onSuccess }: AuthFormProps) {
                   tabIndex={-1}
                   onClick={() => setShowPassword((p) => !p)}
                   className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4" />
@@ -203,7 +204,7 @@ export default function AuthForm({ mode, onSuccess }: AuthFormProps) {
               </div>
             </div>
 
-            {mode === 'login' && (
+            {mode === "login" && (
               <div className="text-right">
                 <Link
                   href="/reset-password"
@@ -224,10 +225,10 @@ export default function AuthForm({ mode, onSuccess }: AuthFormProps) {
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Please wait
                 </>
-              ) : mode === 'login' ? (
-                'Sign In'
+              ) : mode === "login" ? (
+                "Sign In"
               ) : (
-                'Create Account'
+                "Create Account"
               )}
             </Button>
           </form>

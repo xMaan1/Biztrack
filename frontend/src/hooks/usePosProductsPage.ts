@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { apiService } from '@/src/services/ApiService';
-import type { Product, POSCategoriesResponse } from '@/src/models/pos';
-import type { ProductFiltersState } from '@/src/components/pos/products/types';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { apiService } from "@/src/services/ApiService";
+import type { Product, POSCategoriesResponse } from "@/src/models/pos";
+import type { ProductFiltersState } from "@/src/components/pos/products/types";
 import {
   defaultFilters,
   filterProducts,
-} from '@/src/components/pos/products/productUtils';
+} from "@/src/components/pos/products/productUtils";
 
 export function usePosProductsPage() {
   const searchParams = useSearchParams();
@@ -26,7 +26,8 @@ export function usePosProductsPage() {
 
   const fetchCategories = useCallback(async () => {
     try {
-      const data: POSCategoriesResponse = await apiService.get('/pos/categories');
+      const data: POSCategoriesResponse =
+        await apiService.get("/pos/categories");
       setCategories(data.categories || []);
     } catch {
       setCategories([]);
@@ -35,7 +36,7 @@ export function usePosProductsPage() {
 
   const fetchProducts = useCallback(async () => {
     try {
-      const response = await apiService.get('/pos/products');
+      const response = await apiService.get("/pos/products");
       setProducts(response.products || []);
     } catch {
       setProducts([]);
@@ -55,12 +56,12 @@ export function usePosProductsPage() {
   }, []);
 
   useEffect(() => {
-    if (searchParams.get('openAdd') !== 'true') return;
+    if (searchParams.get("openAdd") !== "true") return;
     openNewProductDialog();
     const params = new URLSearchParams(searchParams.toString());
-    params.delete('openAdd');
+    params.delete("openAdd");
     const nextQuery = params.toString();
-    router.replace(nextQuery ? `/pos/products?${nextQuery}` : '/pos/products');
+    router.replace(nextQuery ? `/pos/products?${nextQuery}` : "/pos/products");
   }, [searchParams, router, openNewProductDialog]);
 
   const handleEdit = useCallback((product: Product) => {
@@ -90,8 +91,7 @@ export function usePosProductsPage() {
       await fetchProducts();
       setIsDeleteDialogOpen(false);
       setProductToDelete(null);
-    } catch {
-    }
+    } catch {}
   }, [productToDelete, fetchProducts]);
 
   const handleDeleteCancel = useCallback(() => {

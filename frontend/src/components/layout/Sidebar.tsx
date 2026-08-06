@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useSidebar } from '../../hooks/useSidebar';
+import { useSidebar } from "../../hooks/useSidebar";
 import {
   SidebarHeader,
   SidebarSearch,
   SidebarNav,
   SidebarFooter,
   SidebarCollapseToggle,
-} from './app-sidebar';
+} from "./app-sidebar";
 
 interface SidebarProps {
   collapsed?: boolean;
@@ -41,7 +41,10 @@ export default function Sidebar({
   return (
     <div className="relative flex h-full min-h-0 w-full flex-col border-r border-gray-200 bg-white/95 shadow-xl backdrop-blur-md">
       {onToggleCollapse && (
-        <SidebarCollapseToggle collapsed={collapsed} onToggle={onToggleCollapse} />
+        <SidebarCollapseToggle
+          collapsed={collapsed}
+          onToggle={onToggleCollapse}
+        />
       )}
       <SidebarHeader
         planLabel={!collapsed && planInfo ? getPlanDisplayName() : undefined}

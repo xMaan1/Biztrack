@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   Users,
@@ -7,63 +7,63 @@ import {
   ShoppingCart,
   Package,
   LineChart,
-} from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { cn } from '@/src/lib/utils';
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { cn } from "@/src/lib/utils";
 
 const MODULES = [
   {
     icon: Users,
-    title: 'CRM & Customers',
+    title: "CRM & Customers",
     description:
-      'Manage leads, contacts, companies, and opportunities in one pipeline.',
-    accent: 'blue' as const,
+      "Manage leads, contacts, companies, and opportunities in one pipeline.",
+    accent: "blue" as const,
   },
   {
     icon: Target,
-    title: 'Sales & Quotes',
+    title: "Sales & Quotes",
     description:
-      'Quotes, contracts, invoices, and delivery notes tied to your CRM.',
-    accent: 'green' as const,
+      "Quotes, contracts, invoices, and delivery notes tied to your CRM.",
+    accent: "green" as const,
   },
   {
     icon: FolderKanban,
-    title: 'Projects & Tasks',
+    title: "Projects & Tasks",
     description:
-      'Plan work, assign teams, track time, and deliver on schedule.',
-    accent: 'blue' as const,
+      "Plan work, assign teams, track time, and deliver on schedule.",
+    accent: "blue" as const,
   },
   {
     icon: Package,
-    title: 'Inventory & Warehouses',
+    title: "Inventory & Warehouses",
     description:
-      'Stock movements, purchase orders, alerts, and multi-location control.',
-    accent: 'green' as const,
+      "Stock movements, purchase orders, alerts, and multi-location control.",
+    accent: "green" as const,
   },
   {
     icon: ShoppingCart,
-    title: 'POS & Commerce',
+    title: "POS & Commerce",
     description:
-      'Retail-ready point of sale with products, shifts, and reports.',
-    accent: 'blue' as const,
+      "Retail-ready point of sale with products, shifts, and reports.",
+    accent: "blue" as const,
   },
   {
     icon: LineChart,
-    title: 'Analytics & Ledger',
+    title: "Analytics & Ledger",
     description:
-      'Financial visibility with dashboards, ledger, and business reporting.',
-    accent: 'green' as const,
+      "Financial visibility with dashboards, ledger, and business reporting.",
+    accent: "green" as const,
   },
 ];
 
 const accentStyles = {
   blue: {
-    card: 'border-blue-200/70 bg-gradient-to-br from-blue-50/90 to-white hover:border-blue-300',
-    icon: 'bg-blue-600 text-white',
+    card: "border-blue-200/70 bg-gradient-to-br from-blue-50/90 to-white hover:border-blue-300",
+    icon: "bg-blue-600 text-white",
   },
   green: {
-    card: 'border-emerald-200/70 bg-gradient-to-br from-emerald-50/90 to-white hover:border-emerald-300',
-    icon: 'bg-emerald-600 text-white',
+    card: "border-emerald-200/70 bg-gradient-to-br from-emerald-50/90 to-white hover:border-emerald-300",
+    icon: "bg-emerald-600 text-white",
   },
 };
 
@@ -94,14 +94,14 @@ export function ProductCrmOverviewSection() {
               <Card
                 key={mod.title}
                 className={cn(
-                  'border shadow-sm transition-all duration-300 hover:shadow-md',
+                  "border shadow-sm transition-all duration-300 hover:shadow-md",
                   styles.card,
                 )}
               >
                 <CardHeader className="pb-2">
                   <div
                     className={cn(
-                      'mb-3 flex h-11 w-11 items-center justify-center rounded-xl',
+                      "mb-3 flex h-11 w-11 items-center justify-center rounded-xl",
                       styles.icon,
                     )}
                   >

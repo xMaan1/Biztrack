@@ -1,7 +1,10 @@
-import { useState, useCallback } from 'react';
-import { useApiService } from './useApiService';
-import { CustomOptionsService, CustomOption } from '../services/CustomOptionsService';
-import { useCachedApi } from './useCachedApi';
+import { useState, useCallback } from "react";
+import { useApiService } from "./useApiService";
+import {
+  CustomOptionsService,
+  CustomOption,
+} from "../services/CustomOptionsService";
+import { useCachedApi } from "./useCachedApi";
 
 export function useCustomDepartments() {
   const apiService = useApiService();
@@ -10,14 +13,14 @@ export function useCustomDepartments() {
   );
 
   // Use cached API for departments with longer TTL since they don't change often
-  const { 
-    data: customDepartments, 
-    loading: departmentsLoading, 
-    refetch: refetchDepartments 
+  const {
+    data: customDepartments,
+    loading: departmentsLoading,
+    refetch: refetchDepartments,
   } = useCachedApi<CustomOption[]>(
-    'custom-departments',
+    "custom-departments",
     () => customOptionsService.getCustomDepartments(),
-    { ttl: 15 * 60 * 1000 } // 15 minutes cache
+    { ttl: 15 * 60 * 1000 }, // 15 minutes cache
   );
 
   // Create custom department

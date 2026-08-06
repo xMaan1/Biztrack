@@ -1,20 +1,22 @@
-'use client';
+"use client";
 
-import React, { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
-import { DashboardLayout } from '../../components/layout';
-import { PermissionGuard } from '../../components/guards/PermissionGuard';
-import { useAuth } from '../../contexts/AuthContext';
-import { usePlanInfo } from '../../hooks/usePlanInfo';
-import HealthcareDashboard from '../../components/dashboard/HealthcareDashboard';
-import NgoDashboard from '../../components/dashboard/NgoDashboard';
-import StandardPlanDashboard from '../../components/dashboard/StandardPlanDashboard';
-import { PLAN_TYPE_NGO } from '../../constants/planTypes';
+import React, { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
+import { DashboardLayout } from "../../components/layout";
+import { PermissionGuard } from "../../components/guards/PermissionGuard";
+import { useAuth } from "../../contexts/AuthContext";
+import { usePlanInfo } from "../../hooks/usePlanInfo";
+import HealthcareDashboard from "../../components/dashboard/HealthcareDashboard";
+import NgoDashboard from "../../components/dashboard/NgoDashboard";
+import StandardPlanDashboard from "../../components/dashboard/StandardPlanDashboard";
+import { PLAN_TYPE_NGO } from "../../constants/planTypes";
 
 export default function DashboardPage() {
   return (
-    <PermissionGuard fallback={<div>Please log in to access the dashboard</div>}>
+    <PermissionGuard
+      fallback={<div>Please log in to access the dashboard</div>}
+    >
       <DashboardGate />
     </PermissionGuard>
   );
@@ -24,11 +26,11 @@ function DashboardGate() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const { planInfo, loading: planLoading } = usePlanInfo();
-  const isSuperAdmin = user?.userRole === 'super_admin';
+  const isSuperAdmin = user?.userRole === "super_admin";
 
   useEffect(() => {
     if (!authLoading && isSuperAdmin) {
-      router.replace('/admin/tenants');
+      router.replace("/admin/tenants");
     }
   }, [authLoading, isSuperAdmin, router]);
 
@@ -72,7 +74,7 @@ function DashboardGate() {
     );
   }
 
-  if (planInfo.planType === 'healthcare') {
+  if (planInfo.planType === "healthcare") {
     return <HealthcareDashboard />;
   }
 

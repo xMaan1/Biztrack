@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { Button } from '@/src/components/ui/button';
-import { ArrowLeft, CheckCircle2 } from 'lucide-react';
-import type { MotWizardData, MotWizardStep } from '../wizardTypes';
+import { Button } from "@/src/components/ui/button";
+import { ArrowLeft, CheckCircle2 } from "lucide-react";
+import type { MotWizardData, MotWizardStep } from "../wizardTypes";
 import {
   calculateTotalCost,
   formatBookingDateTime,
@@ -11,7 +11,7 @@ import {
   formatVehicleSummary,
   getDeliveryOptionLabel,
   getSelectedMotServices,
-} from '../wizardUtils';
+} from "../wizardUtils";
 
 type Step5ConfirmSummaryProps = {
   data: MotWizardData;
@@ -66,8 +66,12 @@ export function Step5ConfirmSummary({
   return (
     <div className="space-y-8">
       <div>
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Step 05</p>
-        <h2 className="mt-2 text-3xl font-bold tracking-tight">Confirm Your Booking</h2>
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">
+          Step 05
+        </p>
+        <h2 className="mt-2 text-3xl font-bold tracking-tight">
+          Confirm Your Booking
+        </h2>
         <p className="mt-2 text-muted-foreground">
           Review all details below. Press confirm to complete your MOT booking.
         </p>
@@ -75,20 +79,31 @@ export function Step5ConfirmSummary({
 
       <div className="rounded-2xl border-2 bg-muted/20 p-6">
         <SummaryBlock title="Your Vehicle" step={1} onEdit={onEditStep}>
-          <p className="font-semibold uppercase">{formatVehicleSummary(data)}</p>
-          <p className="text-muted-foreground">{data.vehicle.registration.toUpperCase()}</p>
+          <p className="font-semibold uppercase">
+            {formatVehicleSummary(data)}
+          </p>
+          <p className="text-muted-foreground">
+            {data.vehicle.registration.toUpperCase()}
+          </p>
           <p className="text-muted-foreground">{data.vehicle.mileage} miles</p>
         </SummaryBlock>
 
         <SummaryBlock title="Your Services" step={2} onEdit={onEditStep}>
-          {getSelectedMotServices(data.services, inspectionPrice).map((service) => (
-            <div key={service.id} className="flex justify-between font-medium">
-              <span>{service.label}</span>
-              <span>£{service.price.toFixed(2)}</span>
-            </div>
-          ))}
+          {getSelectedMotServices(data.services, inspectionPrice).map(
+            (service) => (
+              <div
+                key={service.id}
+                className="flex justify-between font-medium"
+              >
+                <span>{service.label}</span>
+                <span>£{service.price.toFixed(2)}</span>
+              </div>
+            ),
+          )}
           {data.services.otherServices.trim() && (
-            <p className="text-muted-foreground">{data.services.otherServices}</p>
+            <p className="text-muted-foreground">
+              {data.services.otherServices}
+            </p>
           )}
           <p className="text-xs text-muted-foreground">
             {getDeliveryOptionLabel(data.dateTime.deliveryOption)}
@@ -97,7 +112,10 @@ export function Step5ConfirmSummary({
 
         <SummaryBlock title="Your Date and Time" step={3} onEdit={onEditStep}>
           <p className="font-medium">
-            {formatBookingDateTime(data.dateTime.bookingDate, data.dateTime.bookingTime)}
+            {formatBookingDateTime(
+              data.dateTime.bookingDate,
+              data.dateTime.bookingTime,
+            )}
           </p>
         </SummaryBlock>
 
@@ -117,12 +135,18 @@ export function Step5ConfirmSummary({
             <span className="uppercase tracking-wide">Total Cost*</span>
             <span>£{total.toFixed(2)}</span>
           </div>
-          <p className="mt-1 text-xs text-muted-foreground">*Payable on day of appointment</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            *Payable on day of appointment
+          </p>
         </div>
       </div>
 
       <div className="flex flex-wrap gap-3">
-        <Button variant="outline" onClick={onBack} className="h-12 rounded-xl gap-2">
+        <Button
+          variant="outline"
+          onClick={onBack}
+          className="h-12 rounded-xl gap-2"
+        >
           <ArrowLeft className="h-4 w-4" />
           Back
         </Button>
@@ -132,7 +156,7 @@ export function Step5ConfirmSummary({
           className="h-12 flex-1 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 px-8 text-sm font-bold uppercase tracking-wider hover:from-emerald-700 hover:to-green-700 sm:flex-none"
         >
           <CheckCircle2 className="mr-2 h-4 w-4" />
-          {confirming ? 'Booking...' : 'Confirm Booking'}
+          {confirming ? "Booking..." : "Confirm Booking"}
         </Button>
       </div>
     </div>

@@ -1,23 +1,23 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { ModuleGuard } from '../../../components/guards/PermissionGuard';
+import React, { useEffect, useState } from "react";
+import { ModuleGuard } from "../../../components/guards/PermissionGuard";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from '../../../components/ui/card';
-import { Button } from '../../../components/ui/button';
-import { Badge } from '../../../components/ui/badge';
-import { Input } from '../../../components/ui/input';
+} from "../../../components/ui/card";
+import { Button } from "../../../components/ui/button";
+import { Badge } from "../../../components/ui/badge";
+import { Input } from "../../../components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../../components/ui/select';
+} from "../../../components/ui/select";
 import {
   Table,
   TableBody,
@@ -25,7 +25,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../../../components/ui/table';
+} from "../../../components/ui/table";
 import {
   Truck,
   Plus,
@@ -37,9 +37,9 @@ import {
   Building2,
   ClipboardList,
   Package,
-} from 'lucide-react';
-import { useAuth } from '../../../contexts/AuthContext';
-import { inventoryService } from '../../../services/InventoryService';
+} from "lucide-react";
+import { useAuth } from "../../../contexts/AuthContext";
+import { inventoryService } from "../../../services/InventoryService";
 import {
   Receiving,
   ReceivingCreate,
@@ -47,9 +47,9 @@ import {
   ReceivingUpdate,
   PurchaseOrder,
   Warehouse,
-} from '../../../models/inventory';
-import { DashboardLayout } from '../../../components/layout';
-import { formatDate } from '../../../lib/utils';
+} from "../../../models/inventory";
+import { DashboardLayout } from "../../../components/layout";
+import { formatDate } from "../../../lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -57,27 +57,30 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '../../../components/ui/dialog';
-import { Label } from '../../../components/ui/label';
-import { Textarea } from '../../../components/ui/textarea';
-import { toast } from 'sonner';
+} from "../../../components/ui/dialog";
+import { Label } from "../../../components/ui/label";
+import { Textarea } from "../../../components/ui/textarea";
+import { toast } from "sonner";
 
 export default function ReceivingPage() {
   return (
-    <ModuleGuard module="inventory" fallback={<div>You don't have access to Inventory module</div>}>
+    <ModuleGuard
+      module="inventory"
+      fallback={<div>You don&apos;t have access to Inventory module</div>}
+    >
       <ReceivingContent />
     </ModuleGuard>
   );
 }
 
 function ReceivingContent() {
-  const { } = useAuth();
+  const {} = useAuth();
   const [receivings, setReceivings] = useState<Receiving[]>([]);
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isProcessModalOpen, setIsProcessModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -85,18 +88,20 @@ function ReceivingContent() {
   const [viewReceiving, setViewReceiving] = useState<Receiving | null>(null);
   const [viewLoading, setViewLoading] = useState(false);
   const [editReceiving, setEditReceiving] = useState<Receiving | null>(null);
-  const [editNotes, setEditNotes] = useState('');
-  const [editStatus, setEditStatus] = useState<string>('');
+  const [editNotes, setEditNotes] = useState("");
+  const [editStatus, setEditStatus] = useState<string>("");
   const [editSaving, setEditSaving] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const [selectedReceiving, setSelectedReceiving] = useState<Receiving | null>(null);
+  const [selectedReceiving, setSelectedReceiving] = useState<Receiving | null>(
+    null,
+  );
   const [newReceiving, setNewReceiving] = useState<ReceivingCreate>({
-    receivingNumber: '',
-    purchaseOrderId: '',
-    warehouseId: '',
-    receivedDate: '',
-    notes: '',
+    receivingNumber: "",
+    purchaseOrderId: "",
+    warehouseId: "",
+    receivedDate: "",
+    notes: "",
     items: [],
   });
   const [selectedPO, setSelectedPO] = useState<PurchaseOrder | null>(null);
@@ -129,7 +134,7 @@ function ReceivingContent() {
         }));
       }
     } catch (error) {
-      } finally {
+    } finally {
       setLoading(false);
     }
   };
@@ -142,7 +147,7 @@ function ReceivingContent() {
       receiving.notes?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus =
-      statusFilter === 'all' ||
+      statusFilter === "all" ||
       !statusFilter ||
       receiving.status === statusFilter;
 
@@ -165,11 +170,11 @@ function ReceivingContent() {
     try {
       setDeleteLoading(true);
       await inventoryService.deleteReceiving(selectedReceiving.id);
-      toast.success('Receiving deleted successfully');
+      toast.success("Receiving deleted successfully");
       fetchData();
       closeDeleteModal();
     } catch (error) {
-      toast.error('Failed to delete receiving. Please try again.');
+      toast.error("Failed to delete receiving. Please try again.");
     } finally {
       setDeleteLoading(false);
     }
@@ -200,7 +205,7 @@ function ReceivingContent() {
       !newReceiving.warehouseId ||
       !newReceiving.receivedDate
     ) {
-      toast.error('Please fill in all required fields');
+      toast.error("Please fill in all required fields");
       return;
     }
 
@@ -210,7 +215,7 @@ function ReceivingContent() {
       );
 
       if (invalidItems.length > 0) {
-        toast.error('Received quantities cannot exceed ordered quantities');
+        toast.error("Received quantities cannot exceed ordered quantities");
         return;
       }
     }
@@ -218,12 +223,12 @@ function ReceivingContent() {
     try {
       setIsSubmitting(true);
       await inventoryService.createReceiving(newReceiving);
-      toast.success('Receiving processed successfully');
+      toast.success("Receiving processed successfully");
       setIsProcessModalOpen(false);
       resetForm();
       fetchData();
     } catch (error) {
-      toast.error('Failed to process receiving. Please try again.');
+      toast.error("Failed to process receiving. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -231,11 +236,11 @@ function ReceivingContent() {
 
   const resetForm = () => {
     setNewReceiving({
-      receivingNumber: '',
-      warehouseId: warehouses.length > 0 ? warehouses[0].id : '',
-      receivedDate: new Date().toISOString().split('T')[0], // Today's date
-      purchaseOrderId: '',
-      notes: '',
+      receivingNumber: "",
+      warehouseId: warehouses.length > 0 ? warehouses[0].id : "",
+      receivedDate: new Date().toISOString().split("T")[0], // Today's date
+      purchaseOrderId: "",
+      notes: "",
       items: [],
     });
     setSelectedPO(null);
@@ -255,7 +260,7 @@ function ReceivingContent() {
       const res = await inventoryService.getReceiving(receiving.id);
       setViewReceiving(res.receiving);
     } catch {
-      toast.error('Failed to load receiving details');
+      toast.error("Failed to load receiving details");
       setIsViewModalOpen(false);
       setViewReceiving(null);
     } finally {
@@ -270,10 +275,10 @@ function ReceivingContent() {
       const res = await inventoryService.getReceiving(receiving.id);
       const r = res.receiving;
       setEditReceiving(r);
-      setEditNotes(r.notes ?? '');
+      setEditNotes(r.notes ?? "");
       setEditStatus(String(r.status));
     } catch {
-      toast.error('Failed to load receiving for edit');
+      toast.error("Failed to load receiving for edit");
       setIsEditModalOpen(false);
       setEditReceiving(null);
     }
@@ -288,12 +293,12 @@ function ReceivingContent() {
         status: editStatus as ReceivingStatus,
       };
       await inventoryService.updateReceiving(editReceiving.id, payload);
-      toast.success('Receiving updated');
+      toast.success("Receiving updated");
       setIsEditModalOpen(false);
       setEditReceiving(null);
       fetchData();
     } catch {
-      toast.error('Failed to update receiving');
+      toast.error("Failed to update receiving");
     } finally {
       setEditSaving(false);
     }
@@ -301,12 +306,12 @@ function ReceivingContent() {
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      pending: { variant: 'secondary', label: 'Pending' },
-      in_progress: { variant: 'default', label: 'In Progress' },
-      completed: { variant: 'default', label: 'Completed' },
-      partial: { variant: 'outline', label: 'Partial' },
-      cancelled: { variant: 'destructive', label: 'Cancelled' },
-      failed: { variant: 'destructive', label: 'Failed' },
+      pending: { variant: "secondary", label: "Pending" },
+      in_progress: { variant: "default", label: "In Progress" },
+      completed: { variant: "default", label: "Completed" },
+      partial: { variant: "outline", label: "Partial" },
+      cancelled: { variant: "destructive", label: "Cancelled" },
+      failed: { variant: "destructive", label: "Failed" },
     };
 
     const config =
@@ -426,7 +431,7 @@ function ReceivingContent() {
                       <TableCell>{getStatusBadge(receiving.status)}</TableCell>
                       <TableCell>
                         <div className="max-w-48 truncate">
-                          {receiving.notes || 'No notes'}
+                          {receiving.notes || "No notes"}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -470,11 +475,11 @@ function ReceivingContent() {
                   No receivings found
                 </h3>
                 <p className="text-muted-foreground mb-4">
-                  {searchTerm || statusFilter !== 'all'
-                    ? 'Try adjusting your search terms or filters'
-                    : 'Get started by processing your first receiving'}
+                  {searchTerm || statusFilter !== "all"
+                    ? "Try adjusting your search terms or filters"
+                    : "Get started by processing your first receiving"}
                 </p>
-                {!searchTerm && statusFilter === 'all' && (
+                {!searchTerm && statusFilter === "all" && (
                   <Button onClick={() => setIsProcessModalOpen(true)}>
                     <Plus className="mr-2 h-4 w-4" />
                     Process Receiving
@@ -507,7 +512,7 @@ function ReceivingContent() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {receivings.filter((r) => r.status === 'pending').length}
+                {receivings.filter((r) => r.status === "pending").length}
               </div>
               <p className="text-xs text-muted-foreground">
                 Awaiting processing
@@ -522,7 +527,7 @@ function ReceivingContent() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {receivings.filter((r) => r.status === 'in_progress').length}
+                {receivings.filter((r) => r.status === "in_progress").length}
               </div>
               <p className="text-xs text-muted-foreground">
                 Currently processing
@@ -537,7 +542,7 @@ function ReceivingContent() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {receivings.filter((r) => r.status === 'completed').length}
+                {receivings.filter((r) => r.status === "completed").length}
               </div>
               <p className="text-xs text-muted-foreground">
                 Successfully received
@@ -567,7 +572,7 @@ function ReceivingContent() {
                       {purchaseOrders
                         .filter(
                           (po) =>
-                            po.status === 'ordered' || po.status === 'approved',
+                            po.status === "ordered" || po.status === "approved",
                         )
                         .map((po) => (
                           <SelectItem key={po.id} value={po.id}>
@@ -724,7 +729,7 @@ function ReceivingContent() {
                   !newReceiving.receivedDate
                 }
               >
-                {isSubmitting ? 'Processing...' : 'Process Receiving'}
+                {isSubmitting ? "Processing..." : "Process Receiving"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -740,7 +745,7 @@ function ReceivingContent() {
           <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
-                Receiving {viewReceiving?.receivingNumber ?? ''}
+                Receiving {viewReceiving?.receivingNumber ?? ""}
               </DialogTitle>
               <DialogDescription>
                 Incoming shipment details and line items
@@ -754,7 +759,9 @@ function ReceivingContent() {
               <div className="space-y-6 py-2">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-muted-foreground">Purchase order</Label>
+                    <Label className="text-muted-foreground">
+                      Purchase order
+                    </Label>
                     <p className="font-medium">
                       {poLabel(viewReceiving.purchaseOrderId)}
                     </p>
@@ -766,7 +773,9 @@ function ReceivingContent() {
                     </p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">Received date</Label>
+                    <Label className="text-muted-foreground">
+                      Received date
+                    </Label>
                     <p className="font-medium">
                       {formatDate(viewReceiving.receivedDate)}
                     </p>
@@ -780,9 +789,7 @@ function ReceivingContent() {
                   <div className="sm:col-span-2">
                     <Label className="text-muted-foreground">Notes</Label>
                     <p className="text-sm mt-1 whitespace-pre-wrap">
-                      {viewReceiving.notes?.trim()
-                        ? viewReceiving.notes
-                        : '—'}
+                      {viewReceiving.notes?.trim() ? viewReceiving.notes : "—"}
                     </p>
                   </div>
                   <div>
@@ -795,7 +802,9 @@ function ReceivingContent() {
 
                 {viewReceiving.items && viewReceiving.items.length > 0 ? (
                   <div className="space-y-2">
-                    <Label className="text-base font-semibold">Line items</Label>
+                    <Label className="text-base font-semibold">
+                      Line items
+                    </Label>
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -803,8 +812,12 @@ function ReceivingContent() {
                           <TableHead>SKU</TableHead>
                           <TableHead className="text-right">Ordered</TableHead>
                           <TableHead className="text-right">Received</TableHead>
-                          <TableHead className="text-right">Unit cost</TableHead>
-                          <TableHead className="text-right">Line total</TableHead>
+                          <TableHead className="text-right">
+                            Unit cost
+                          </TableHead>
+                          <TableHead className="text-right">
+                            Line total
+                          </TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -827,7 +840,8 @@ function ReceivingContent() {
                             </TableCell>
                             <TableCell className="text-right">
                               {(
-                                (item.receivedQuantity ?? 0) * (item.unitCost ?? 0)
+                                (item.receivedQuantity ?? 0) *
+                                (item.unitCost ?? 0)
                               ).toFixed(2)}
                             </TableCell>
                           </TableRow>
@@ -857,15 +871,15 @@ function ReceivingContent() {
             setIsEditModalOpen(open);
             if (!open) {
               setEditReceiving(null);
-              setEditNotes('');
-              setEditStatus('');
+              setEditNotes("");
+              setEditStatus("");
             }
           }}
         >
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>
-                Edit receiving {editReceiving?.receivingNumber ?? ''}
+                Edit receiving {editReceiving?.receivingNumber ?? ""}
               </DialogTitle>
               <DialogDescription>
                 Update status and notes for this receiving record
@@ -916,7 +930,7 @@ function ReceivingContent() {
                 onClick={() => void handleSaveEdit()}
                 disabled={editSaving || !editReceiving}
               >
-                {editSaving ? 'Saving…' : 'Save'}
+                {editSaving ? "Saving…" : "Save"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -928,8 +942,9 @@ function ReceivingContent() {
             <DialogHeader>
               <DialogTitle>Delete Receiving</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete receiving{' '}
-                <strong>{selectedReceiving?.receivingNumber}</strong>? This action cannot be undone.
+                Are you sure you want to delete receiving{" "}
+                <strong>{selectedReceiving?.receivingNumber}</strong>? This
+                action cannot be undone.
               </DialogDescription>
             </DialogHeader>
             <div className="flex justify-end space-x-2 mt-4">
@@ -945,7 +960,7 @@ function ReceivingContent() {
                 disabled={deleteLoading}
                 className="bg-red-600 hover:bg-red-700"
               >
-                {deleteLoading ? 'Deleting...' : 'Delete'}
+                {deleteLoading ? "Deleting..." : "Delete"}
               </Button>
             </div>
           </DialogContent>

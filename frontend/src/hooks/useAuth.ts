@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { User, LoginCredentials } from '@/src/models/auth';
-import { apiService } from '@/src/services/ApiService';
-import { SessionManager } from '@/src/services/SessionManager';
-import { toast } from 'sonner';
+import { useState, useEffect } from "react";
+import { User, LoginCredentials } from "@/src/models/auth";
+import { apiService } from "@/src/services/ApiService";
+import { SessionManager } from "@/src/services/SessionManager";
+import { toast } from "sonner";
 
 interface Tenant {
   id: string;
@@ -99,17 +99,18 @@ export function useAuth() {
     try {
       await apiService.logout();
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to logout';
+      const errorMessage =
+        error?.response?.data?.detail || error?.message || "Failed to logout";
       toast.error(`Logout Error: ${errorMessage}`);
-      } finally {
+    } finally {
       const sessionManager = new SessionManager();
       setUser(null);
       setTenants([]);
       setCurrentTenant(null);
       sessionManager.clearSession();
       apiService.setTenantId(null);
-      if (typeof window !== 'undefined') {
-        window.location.href = '/login';
+      if (typeof window !== "undefined") {
+        window.location.href = "/login";
       }
     }
   };
@@ -128,7 +129,7 @@ export function useAuth() {
   const refreshUser = async () => {
     try {
       const response = await apiService.getCurrentUser();
-      console.log('Refreshed user data:', response);
+      console.log("Refreshed user data:", response);
       if (response) {
         setUser(response);
         const sessionManager = new SessionManager();
@@ -137,13 +138,15 @@ export function useAuth() {
           sessionManager.setSession(
             session.token,
             response,
-            session.expiresAt ? Math.floor((session.expiresAt - Date.now()) / 1000) : undefined,
-            session.refreshToken
+            session.expiresAt
+              ? Math.floor((session.expiresAt - Date.now()) / 1000)
+              : undefined,
+            session.refreshToken,
           );
         }
       }
     } catch (error) {
-      console.error('Failed to refresh user:', error);
+      console.error("Failed to refresh user:", error);
     }
   };
 

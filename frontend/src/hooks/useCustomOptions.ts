@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useApiService } from './useApiService';
+import { useState, useEffect, useCallback } from "react";
+import { useApiService } from "./useApiService";
 import {
   CustomOptionsService,
   CustomOption,
-} from '../services/CustomOptionsService';
+} from "../services/CustomOptionsService";
 
 export function useCustomOptions() {
   const apiService = useApiService();
@@ -63,14 +63,16 @@ export function useCustomOptions() {
       setCustomDepartments(Array.isArray(departments) ? departments : []);
       setCustomLeaveTypes(Array.isArray(leaveTypes) ? leaveTypes : []);
       setCustomLeadSources(Array.isArray(leadSources) ? leadSources : []);
-      setCustomContactSources(Array.isArray(contactSources) ? contactSources : []);
+      setCustomContactSources(
+        Array.isArray(contactSources) ? contactSources : [],
+      );
       setCustomCompanyIndustries(
         Array.isArray(companyIndustries) ? companyIndustries : [],
       );
       setCustomContactTypes(Array.isArray(contactTypes) ? contactTypes : []);
       setCustomIndustries(Array.isArray(industries) ? industries : []);
     } catch (error) {
-      } finally {
+    } finally {
       setLoading((prev) => ({ ...prev, all: false }));
     }
   }, [customOptionsService]);

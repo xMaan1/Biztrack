@@ -1,20 +1,20 @@
-import { Badge } from '@/src/components/ui/badge';
-import { Button } from '@/src/components/ui/button';
+import { Badge } from "@/src/components/ui/badge";
+import { Button } from "@/src/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/src/components/ui/dialog';
-import type { DonorLead } from '@/src/models/ngo';
+} from "@/src/components/ui/dialog";
+import type { DonorLead } from "@/src/models/ngo";
 import {
   donorLeadSourceLabel,
   donorLeadStatusBadgeClass,
   donorLeadStatusLabel,
   formatDonorLeadDate,
-} from '@/src/utils/ngo/donorLeadUtils';
-import { DonorLeadDetailRow } from './DonorLeadDetailRow';
+} from "@/src/utils/ngo/donorLeadUtils";
+import { DonorLeadDetailRow } from "./DonorLeadDetailRow";
 
 type DonorLeadViewDialogProps = {
   open: boolean;
@@ -40,9 +40,12 @@ export function DonorLeadViewDialog({
         {lead && (
           <div className="space-y-1 text-sm">
             <DonorLeadDetailRow label="Full Name" value={lead.full_name} />
-            <DonorLeadDetailRow label="Email" value={lead.email || '—'} />
-            <DonorLeadDetailRow label="Phone" value={lead.phone || '—'} />
-            <DonorLeadDetailRow label="Organization" value={lead.organization || '—'} />
+            <DonorLeadDetailRow label="Email" value={lead.email || "—"} />
+            <DonorLeadDetailRow label="Phone" value={lead.phone || "—"} />
+            <DonorLeadDetailRow
+              label="Organization"
+              value={lead.organization || "—"}
+            />
             <DonorLeadDetailRow
               label="Expected Donation"
               value={
@@ -59,15 +62,21 @@ export function DonorLeadViewDialog({
                 </Badge>
               }
             />
-            <DonorLeadDetailRow label="Lead Source" value={donorLeadSourceLabel(lead.source)} />
+            <DonorLeadDetailRow
+              label="Lead Source"
+              value={donorLeadSourceLabel(lead.source)}
+            />
             <DonorLeadDetailRow
               label="Assigned To"
-              value={lead.assigned_to || 'Unassigned'}
+              value={lead.assigned_to || "Unassigned"}
             />
-            <DonorLeadDetailRow label="Created Date" value={formatDonorLeadDate(lead.createdAt)} />
+            <DonorLeadDetailRow
+              label="Created Date"
+              value={formatDonorLeadDate(lead.createdAt)}
+            />
             <DonorLeadDetailRow
               label="Notes"
-              value={<span className="italic">{lead.notes || 'No notes'}</span>}
+              value={<span className="italic">{lead.notes || "No notes"}</span>}
             />
           </div>
         )}
@@ -75,7 +84,10 @@ export function DonorLeadViewDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Close
           </Button>
-          <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={onEdit}>
+          <Button
+            className="bg-emerald-600 hover:bg-emerald-700"
+            onClick={onEdit}
+          >
             Edit
           </Button>
         </DialogFooter>

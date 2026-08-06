@@ -1,24 +1,25 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { useNotifications } from '../../contexts/NotificationContext';
-import NotificationItem from './NotificationItem';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { Badge } from '../ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { 
-  Check, 
-  Filter, 
-  Search, 
-  RefreshCw
-} from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { useNotifications } from "../../contexts/NotificationContext";
+import NotificationItem from "./NotificationItem";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import { Badge } from "../ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Check, Filter, Search, RefreshCw } from "lucide-react";
 import {
   NotificationCategory,
   NotificationType,
-  getCategoryDisplayName
-} from '../../models/notifications';
+  getCategoryDisplayName,
+} from "../../models/notifications";
 
 export default function NotificationList() {
   const {
@@ -28,14 +29,14 @@ export default function NotificationList() {
     error,
     loadNotifications,
     markAllAsRead,
-    refreshNotifications
+    refreshNotifications,
   } = useNotifications();
 
   const [filters, setFilters] = useState({
     is_read: undefined as boolean | undefined,
     category: undefined as NotificationCategory | undefined,
     type: undefined as NotificationType | undefined,
-    search: ''
+    search: "",
   });
   const [page, setPage] = useState(1);
 
@@ -44,23 +45,21 @@ export default function NotificationList() {
   }, [filters, page, loadNotifications]);
 
   const handleFilterChange = (key: string, value: any) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+    setFilters((prev) => ({ ...prev, [key]: value }));
     setPage(1);
   };
 
   const handleMarkAllAsRead = async () => {
     try {
       await markAllAsRead();
-    } catch (error) {
-    }
+    } catch (error) {}
   };
 
   const handleRefresh = async () => {
     await refreshNotifications();
   };
 
-
-  const filteredNotifications = notifications.filter(notification => {
+  const filteredNotifications = notifications.filter((notification) => {
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
       return (
@@ -78,7 +77,9 @@ export default function NotificationList() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
           <p className="text-gray-600">
-            {unreadCount > 0 ? `${unreadCount} unread notifications` : 'All caught up!'}
+            {unreadCount > 0
+              ? `${unreadCount} unread notifications`
+              : "All caught up!"}
           </p>
         </div>
         <div className="flex items-center space-x-2">
@@ -88,15 +89,13 @@ export default function NotificationList() {
             onClick={handleRefresh}
             disabled={loading}
           >
-            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw
+              className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
+            />
             Refresh
           </Button>
           {unreadCount > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleMarkAllAsRead}
-            >
+            <Button variant="outline" size="sm" onClick={handleMarkAllAsRead}>
               <Check className="h-4 w-4 mr-2" />
               Mark All Read
             </Button>
@@ -121,19 +120,25 @@ export default function NotificationList() {
                 <Input
                   placeholder="Search notifications..."
                   value={filters.search}
-                  onChange={(e) => handleFilterChange('search', e.target.value)}
+                  onChange={(e) => handleFilterChange("search", e.target.value)}
                   className="pl-10"
                 />
               </div>
             </div>
-            
+
             <div>
               <label className="text-sm font-medium mb-2 block">Status</label>
               <Select
-                value={filters.is_read === undefined ? 'all' : filters.is_read ? 'read' : 'unread'}
+                value={
+                  filters.is_read === undefined
+                    ? "all"
+                    : filters.is_read
+                      ? "read"
+                      : "unread"
+                }
                 onValueChange={(value) => {
-                  const isRead = value === 'all' ? undefined : value === 'read';
-                  handleFilterChange('is_read', isRead);
+                  const isRead = value === "all" ? undefined : value === "read";
+                  handleFilterChange("is_read", isRead);
                 }}
               >
                 <SelectTrigger>
@@ -146,14 +151,17 @@ export default function NotificationList() {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div>
               <label className="text-sm font-medium mb-2 block">Category</label>
               <Select
-                value={filters.category || 'all'}
+                value={filters.category || "all"}
                 onValueChange={(value) => {
-                  const category = value === 'all' ? undefined : value as NotificationCategory;
-                  handleFilterChange('category', category);
+                  const category =
+                    value === "all"
+                      ? undefined
+                      : (value as NotificationCategory);
+                  handleFilterChange("category", category);
                 }}
               >
                 <SelectTrigger>
@@ -161,7 +169,7 @@ export default function NotificationList() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Categories</SelectItem>
-                  {Object.values(NotificationCategory).map(category => (
+                  {Object.values(NotificationCategory).map((category) => (
                     <SelectItem key={category} value={category}>
                       {getCategoryDisplayName(category)}
                     </SelectItem>
@@ -169,14 +177,15 @@ export default function NotificationList() {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div>
               <label className="text-sm font-medium mb-2 block">Type</label>
               <Select
-                value={filters.type || 'all'}
+                value={filters.type || "all"}
                 onValueChange={(value) => {
-                  const type = value === 'all' ? undefined : value as NotificationType;
-                  handleFilterChange('type', type);
+                  const type =
+                    value === "all" ? undefined : (value as NotificationType);
+                  handleFilterChange("type", type);
                 }}
               >
                 <SelectTrigger>
@@ -184,7 +193,7 @@ export default function NotificationList() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Types</SelectItem>
-                  {Object.values(NotificationType).map(type => (
+                  {Object.values(NotificationType).map((type) => (
                     <SelectItem key={type} value={type}>
                       {type.charAt(0).toUpperCase() + type.slice(1)}
                     </SelectItem>
@@ -213,22 +222,26 @@ export default function NotificationList() {
           <CardContent className="text-center py-12">
             <div className="text-6xl mb-4">🔔</div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              {filters.search || filters.is_read !== undefined || filters.category || filters.type
-                ? 'No notifications match your filters'
-                : 'No notifications yet'
-              }
+              {filters.search ||
+              filters.is_read !== undefined ||
+              filters.category ||
+              filters.type
+                ? "No notifications match your filters"
+                : "No notifications yet"}
             </h3>
             <p className="text-gray-500">
-              {filters.search || filters.is_read !== undefined || filters.category || filters.type
-                ? 'Try adjusting your filters to see more notifications'
-                : 'We\'ll notify you when something important happens'
-              }
+              {filters.search ||
+              filters.is_read !== undefined ||
+              filters.category ||
+              filters.type
+                ? "Try adjusting your filters to see more notifications"
+                : "We'll notify you when something important happens"}
             </p>
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-4">
-          {filteredNotifications.map(notification => (
+          {filteredNotifications.map((notification) => (
             <NotificationItem
               key={notification.id}
               notification={notification}
@@ -248,7 +261,7 @@ export default function NotificationList() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setPage(prev => Math.max(1, prev - 1))}
+              onClick={() => setPage((prev) => Math.max(1, prev - 1))}
               disabled={page === 1}
             >
               Previous
@@ -257,7 +270,7 @@ export default function NotificationList() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setPage(prev => prev + 1)}
+              onClick={() => setPage((prev) => prev + 1)}
               disabled={filteredNotifications.length < 20}
             >
               Next

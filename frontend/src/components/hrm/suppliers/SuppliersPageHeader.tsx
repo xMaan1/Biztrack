@@ -1,10 +1,12 @@
-'use client';
+"use client";
 
-import { Plus } from 'lucide-react';
-import { Button } from '@/src/components/ui/button';
-import type { SuppliersPageHeaderProps } from './types';
+import { Plus } from "lucide-react";
+import { Button } from "@/src/components/ui/button";
+import type { SuppliersPageHeaderProps } from "./types";
 
-export function SuppliersPageHeader({ onAddSupplier }: SuppliersPageHeaderProps) {
+export function SuppliersPageHeader({
+  onAddSupplier,
+}: SuppliersPageHeaderProps) {
   return (
     <div className="flex items-center justify-between">
       <div>

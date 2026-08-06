@@ -1,6 +1,6 @@
-import { apiService } from './ApiService';
+import { apiService } from "./ApiService";
 
-export type AgentDateQuickFilter = 'today' | '7d' | '30d' | '90d' | 'all';
+export type AgentDateQuickFilter = "today" | "7d" | "30d" | "90d" | "all";
 
 export type AgentLevelInfo = {
   key: string;
@@ -148,13 +148,13 @@ export type ContactLedger = {
 
 function buildParams(filters?: AgentPortalFilters): string {
   const params = new URLSearchParams();
-  if (filters?.dateFrom) params.append('date_from', filters.dateFrom);
-  if (filters?.dateTo) params.append('date_to', filters.dateTo);
-  if (filters?.quickFilter && filters.quickFilter !== 'all')
-    params.append('quick_filter', filters.quickFilter);
-  if (filters?.agentId) params.append('agent_id', filters.agentId);
+  if (filters?.dateFrom) params.append("date_from", filters.dateFrom);
+  if (filters?.dateTo) params.append("date_to", filters.dateTo);
+  if (filters?.quickFilter && filters.quickFilter !== "all")
+    params.append("quick_filter", filters.quickFilter);
+  if (filters?.agentId) params.append("agent_id", filters.agentId);
   const qs = params.toString();
-  return qs ? `?${qs}` : '';
+  return qs ? `?${qs}` : "";
 }
 
 class AgentPortalService {
@@ -166,21 +166,32 @@ class AgentPortalService {
     return apiService.get(`/agent-portal/earnings${buildParams(filters)}`);
   }
 
-  async getAchievements(filters?: AgentPortalFilters): Promise<AgentAchievements> {
+  async getAchievements(
+    filters?: AgentPortalFilters,
+  ): Promise<AgentAchievements> {
     return apiService.get(`/agent-portal/achievements${buildParams(filters)}`);
   }
 
-  async getPipeline(filters?: AgentPortalFilters): Promise<{ pipeline: PipelineStage[] }> {
+  async getPipeline(
+    filters?: AgentPortalFilters,
+  ): Promise<{ pipeline: PipelineStage[] }> {
     return apiService.get(`/agent-portal/pipeline${buildParams(filters)}`);
   }
 
-  async getLeads(page = 1, limit = 20, filters?: AgentPortalFilters): Promise<AgentLeadsResponse> {
-    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
-    if (filters?.dateFrom) params.append('date_from', filters.dateFrom);
-    if (filters?.dateTo) params.append('date_to', filters.dateTo);
-    if (filters?.quickFilter && filters.quickFilter !== 'all')
-      params.append('quick_filter', filters.quickFilter);
-    if (filters?.agentId) params.append('agent_id', filters.agentId);
+  async getLeads(
+    page = 1,
+    limit = 20,
+    filters?: AgentPortalFilters,
+  ): Promise<AgentLeadsResponse> {
+    const params = new URLSearchParams({
+      page: String(page),
+      limit: String(limit),
+    });
+    if (filters?.dateFrom) params.append("date_from", filters.dateFrom);
+    if (filters?.dateTo) params.append("date_to", filters.dateTo);
+    if (filters?.quickFilter && filters.quickFilter !== "all")
+      params.append("quick_filter", filters.quickFilter);
+    if (filters?.agentId) params.append("agent_id", filters.agentId);
     return apiService.get(`/agent-portal/leads?${params.toString()}`);
   }
 
@@ -188,20 +199,35 @@ class AgentPortalService {
     return apiService.get(`/agent-portal/team${buildParams(filters)}`);
   }
 
-  async getLeaderboard(filters?: AgentPortalFilters): Promise<{ leaderboard: LeaderboardRow[] }> {
+  async getLeaderboard(
+    filters?: AgentPortalFilters,
+  ): Promise<{ leaderboard: LeaderboardRow[] }> {
     return apiService.get(`/agent-portal/leaderboard${buildParams(filters)}`);
   }
 
-  async getTargets(year?: number, month?: number): Promise<{ targets: SalesTargetItem[] }> {
+  async getTargets(
+    year?: number,
+    month?: number,
+  ): Promise<{ targets: SalesTargetItem[] }> {
     const params = new URLSearchParams();
-    if (year) params.append('year', String(year));
-    if (month) params.append('month', String(month));
+    if (year) params.append("year", String(year));
+    if (month) params.append("month", String(month));
     const qs = params.toString();
-    return apiService.get(`/agent-portal/targets${qs ? `?${qs}` : ''}`);
+    return apiService.get(`/agent-portal/targets${qs ? `?${qs}` : ""}`);
   }
 
-  async setTarget(userId: string, year: number, month: number, targetAmount: number): Promise<void> {
-    await apiService.post('/agent-portal/targets', { userId, year, month, targetAmount });
+  async setTarget(
+    userId: string,
+    year: number,
+    month: number,
+    targetAmount: number,
+  ): Promise<void> {
+    await apiService.post("/agent-portal/targets", {
+      userId,
+      year,
+      month,
+      targetAmount,
+    });
   }
 
   async getContactLedger(contactId: string): Promise<ContactLedger> {

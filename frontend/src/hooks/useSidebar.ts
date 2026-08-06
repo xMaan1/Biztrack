@@ -1,21 +1,31 @@
-'use client';
+"use client";
 
-import { useState, useMemo, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
-import { usePathname } from 'next/navigation';
-import { usePlanInfo } from './usePlanInfo';
-import { useAuth } from '../contexts/AuthContext';
-import { usePermissions } from './usePermissions';
-import { apiService } from '../services/ApiService';
-import { SIDEBAR_PATH_PERMISSIONS } from '@/src/constants/rbacPermissions';
+import {
+  useState,
+  useMemo,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useCallback,
+} from "react";
+import { usePathname } from "next/navigation";
+import { usePlanInfo } from "./usePlanInfo";
+import { useAuth } from "../contexts/AuthContext";
+import { usePermissions } from "./usePermissions";
+import { apiService } from "../services/ApiService";
+import { SIDEBAR_PATH_PERMISSIONS } from "@/src/constants/rbacPermissions";
 import {
   allMenuItems,
   superAdminMenuItems,
-} from '@/src/constants/sidebarMenuItems';
-import type { MenuItem, SubMenuItem } from '@/src/types/sidebar';
+} from "@/src/constants/sidebarMenuItems";
+import type { MenuItem, SubMenuItem } from "@/src/types/sidebar";
 
-const TENANT_MOT_BOOK_PATH = '__tenant_mot_book__';
+const TENANT_MOT_BOOK_PATH = "__tenant_mot_book__";
 
-function resolveTenantMotMenuPaths(items: MenuItem[], tenantDomain?: string | null): MenuItem[] {
+function resolveTenantMotMenuPaths(
+  items: MenuItem[],
+  tenantDomain?: string | null,
+): MenuItem[] {
   return items.map((item) => {
     if (!item.subItems) return item;
 
@@ -34,44 +44,44 @@ function resolveTenantMotMenuPaths(items: MenuItem[], tenantDomain?: string | nu
   });
 }
 
-const SIDEBAR_STORAGE_SEARCH = 'biztrack:sidebar:search';
-const SIDEBAR_STORAGE_EXPANDED = 'biztrack:sidebar:expanded';
-const SIDEBAR_STORAGE_SCROLL = 'biztrack:sidebar:scroll';
+const SIDEBAR_STORAGE_SEARCH = "biztrack:sidebar:search";
+const SIDEBAR_STORAGE_EXPANDED = "biztrack:sidebar:expanded";
+const SIDEBAR_STORAGE_SCROLL = "biztrack:sidebar:scroll";
 
 const MODULE_MAP: Record<string, string> = {
-  CRM: 'crm',
-  Customers: 'crm',
-  Sales: 'sales',
-  Invoicing: 'sales',
-  'Create Invoice': 'sales',
-  'Invoice Dashboard': 'sales',
-  HRM: 'hrm',
-  'HRM Management': 'hrm',
-  Inventory: 'inventory',
-  Finance: 'finance',
-  Banking: 'banking',
-  Ledger: 'ledger',
-  'Financial Ledger': 'ledger',
-  POS: 'pos',
-  Projects: 'projects',
-  'Project Management': 'projects',
-  Production: 'production',
-  'Workshop Management': 'production',
-  'Quality Control': 'quality',
-  Events: 'events',
-  Reports: 'reports',
-  Dashboard: 'dashboard',
-  Healthcare: 'healthcare',
-  'Donor Management': 'ngo',
-  'Donation Management': 'ngo',
-  'Gift & Inventory': 'ngo',
-  'Volunteer Management': 'ngo',
-  'Relief Projects': 'projects',
-  'Charity Reports': 'reports',
-  'Charity Events': 'events',
-  'Charity Banking': 'banking',
-  'Fund Accounting': 'ledger',
-  'User Management': 'users',
+  CRM: "crm",
+  Customers: "crm",
+  Sales: "sales",
+  Invoicing: "sales",
+  "Create Invoice": "sales",
+  "Invoice Dashboard": "sales",
+  HRM: "hrm",
+  "HRM Management": "hrm",
+  Inventory: "inventory",
+  Finance: "finance",
+  Banking: "banking",
+  Ledger: "ledger",
+  "Financial Ledger": "ledger",
+  POS: "pos",
+  Projects: "projects",
+  "Project Management": "projects",
+  Production: "production",
+  "Workshop Management": "production",
+  "Quality Control": "quality",
+  Events: "events",
+  Reports: "reports",
+  Dashboard: "dashboard",
+  Healthcare: "healthcare",
+  "Donor Management": "ngo",
+  "Donation Management": "ngo",
+  "Gift & Inventory": "ngo",
+  "Volunteer Management": "ngo",
+  "Relief Projects": "projects",
+  "Charity Reports": "reports",
+  "Charity Events": "events",
+  "Charity Banking": "banking",
+  "Fund Accounting": "ledger",
+  "User Management": "users",
 };
 
 function getModuleForMenuItem(item: MenuItem): string | null {
@@ -79,7 +89,7 @@ function getModuleForMenuItem(item: MenuItem): string | null {
 }
 
 export function useSidebar() {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const pathname = usePathname();
   const { planInfo, loading: planLoading } = usePlanInfo();
@@ -93,26 +103,30 @@ export function useSidebar() {
   } = usePermissions();
 
   const navRef = useRef<HTMLElement | null>(null);
-  const scrollSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scrollSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
   const didRestoreScrollRef = useRef(false);
   const [persistReady, setPersistReady] = useState(false);
 
   const purchaseOrdersNavLabel = useCallback(
     (subItem: SubMenuItem) =>
-      subItem.path === '/inventory/purchase-orders' && planInfo?.planType === 'healthcare'
-        ? 'Medical supply orders'
+      subItem.path === "/inventory/purchase-orders" &&
+      planInfo?.planType === "healthcare"
+        ? "Medical supply orders"
         : subItem.text,
     [planInfo?.planType],
   );
 
-  const isSuperAdmin = user?.userRole === 'super_admin';
+  const isSuperAdmin = user?.userRole === "super_admin";
 
   const hasMenuRoleAccess = useCallback(
     (roles?: string[]) => {
-      if (!roles || roles.length === 0 || roles.includes('*')) return true;
-      if (isSuperAdmin && roles.includes('super_admin')) return true;
-      if (isOwner() && (roles.includes('owner') || roles.includes('admin'))) return true;
-      if (roles.includes('admin') && hasPermission('users:view')) return true;
+      if (!roles || roles.length === 0 || roles.includes("*")) return true;
+      if (isSuperAdmin && roles.includes("super_admin")) return true;
+      if (isOwner() && (roles.includes("owner") || roles.includes("admin")))
+        return true;
+      if (roles.includes("admin") && hasPermission("users:view")) return true;
       if (user?.userRole && roles.includes(user.userRole)) return true;
       return false;
     },
@@ -122,16 +136,16 @@ export function useSidebar() {
   const hasPathPermission = useCallback(
     (path?: string) => {
       if (!path || isSuperAdmin || isOwner()) return true;
-      if (path === '/sales/invoice-dashboard') {
+      if (path === "/sales/invoice-dashboard") {
         return (
-          hasPermission('sales:invoices:view') ||
-          hasPermission('sales:invoice_dashboard:view')
+          hasPermission("sales:invoices:view") ||
+          hasPermission("sales:invoice_dashboard:view")
         );
       }
-      if (path === '/sales/invoices' || path === '/invoices') {
+      if (path === "/sales/invoices" || path === "/invoices") {
         return (
-          hasPermission('sales:invoices:create') ||
-          hasPermission('sales:invoices:update')
+          hasPermission("sales:invoices:create") ||
+          hasPermission("sales:invoices:update")
         );
       }
       const requiredPermission = SIDEBAR_PATH_PERMISSIONS[path];
@@ -150,8 +164,7 @@ export function useSidebar() {
         const arr = JSON.parse(ex) as string[];
         if (Array.isArray(arr)) setExpandedItems(new Set(arr));
       }
-    } catch {
-    }
+    } catch {}
     setPersistReady(true);
   }, []);
 
@@ -159,8 +172,7 @@ export function useSidebar() {
     if (!persistReady) return;
     try {
       sessionStorage.setItem(SIDEBAR_STORAGE_SEARCH, searchQuery);
-    } catch {
-    }
+    } catch {}
   }, [searchQuery, persistReady]);
 
   useEffect(() => {
@@ -168,9 +180,11 @@ export function useSidebar() {
     try {
       const expandedArr: string[] = [];
       expandedItems.forEach((x) => expandedArr.push(x));
-      sessionStorage.setItem(SIDEBAR_STORAGE_EXPANDED, JSON.stringify(expandedArr));
-    } catch {
-    }
+      sessionStorage.setItem(
+        SIDEBAR_STORAGE_EXPANDED,
+        JSON.stringify(expandedArr),
+      );
+    } catch {}
   }, [expandedItems, persistReady]);
 
   useLayoutEffect(() => {
@@ -184,8 +198,7 @@ export function useSidebar() {
       const n = parseInt(raw, 10);
       if (Number.isNaN(n)) return;
       el.scrollTop = n;
-    } catch {
-    }
+    } catch {}
   }, [planLoading]);
 
   useEffect(() => {
@@ -205,8 +218,7 @@ export function useSidebar() {
     scrollSaveTimeoutRef.current = setTimeout(() => {
       try {
         sessionStorage.setItem(SIDEBAR_STORAGE_SCROLL, String(el.scrollTop));
-      } catch {
-      }
+      } catch {}
       scrollSaveTimeoutRef.current = null;
     }, 120);
   }, []);
@@ -244,59 +256,61 @@ export function useSidebar() {
 
     const tenantItems = resolveTenantMotMenuPaths(
       allMenuItems.filter((item) => {
-      const isAvailableForPlan =
-        item.planTypes.includes('*') || item.planTypes.includes(currentPlanType);
+        const isAvailableForPlan =
+          item.planTypes.includes("*") ||
+          item.planTypes.includes(currentPlanType);
 
-      if (!isAvailableForPlan) return false;
-      if (!hasMenuRoleAccess(item.roles)) return false;
+        if (!isAvailableForPlan) return false;
+        if (!hasMenuRoleAccess(item.roles)) return false;
 
-      if (!isOwner()) {
-        if (item.path && !hasPathPermission(item.path)) {
+        if (!isOwner()) {
+          if (item.path && !hasPathPermission(item.path)) {
+            return false;
+          }
+          const moduleName = getModuleForMenuItem(item);
+          if (moduleName && !hasModuleAccess(moduleName)) {
+            return false;
+          }
+          if (item.subItems?.length) {
+            const hasVisibleChild = item.subItems.some((subItem) => {
+              const subItemAvailable =
+                (subItem.planTypes.includes("*") ||
+                  subItem.planTypes.includes(currentPlanType)) &&
+                hasMenuRoleAccess(subItem.roles);
+              return subItemAvailable && hasPathPermission(subItem.path);
+            });
+            if (!hasVisibleChild) return false;
+          }
+        }
+
+        if (searchQuery.trim()) {
+          const query = searchQuery.toLowerCase();
+
+          if (item.text.toLowerCase().includes(query)) {
+            return true;
+          }
+
+          if (item.subItems) {
+            return item.subItems.some((subItem) => {
+              const subItemAvailable =
+                (subItem.planTypes.includes("*") ||
+                  subItem.planTypes.includes(currentPlanType)) &&
+                hasMenuRoleAccess(subItem.roles);
+              const label = purchaseOrdersNavLabel(subItem);
+              return (
+                subItemAvailable &&
+                hasPathPermission(subItem.path) &&
+                (label.toLowerCase().includes(query) ||
+                  subItem.text.toLowerCase().includes(query))
+              );
+            });
+          }
+
           return false;
         }
-        const module = getModuleForMenuItem(item);
-        if (module && !hasModuleAccess(module)) {
-          return false;
-        }
-        if (item.subItems?.length) {
-          const hasVisibleChild = item.subItems.some((subItem) => {
-            const subItemAvailable =
-              (subItem.planTypes.includes('*') ||
-                subItem.planTypes.includes(currentPlanType)) &&
-              hasMenuRoleAccess(subItem.roles);
-            return subItemAvailable && hasPathPermission(subItem.path);
-          });
-          if (!hasVisibleChild) return false;
-        }
-      }
 
-      if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase();
-
-        if (item.text.toLowerCase().includes(query)) {
-          return true;
-        }
-
-        if (item.subItems) {
-          return item.subItems.some((subItem) => {
-            const subItemAvailable =
-              (subItem.planTypes.includes('*') ||
-                subItem.planTypes.includes(currentPlanType)) &&
-              hasMenuRoleAccess(subItem.roles);
-            const label = purchaseOrdersNavLabel(subItem);
-            return (
-              subItemAvailable &&
-              hasPathPermission(subItem.path) &&
-              (label.toLowerCase().includes(query) || subItem.text.toLowerCase().includes(query))
-            );
-          });
-        }
-
-        return false;
-      }
-
-      return true;
-    }),
+        return true;
+      }),
       apiService.getCurrentTenant()?.domain,
     );
 
@@ -334,23 +348,26 @@ export function useSidebar() {
       });
       return changed ? next : prev;
     });
-  }, [searchQuery, planLoading, planInfo?.planType, user?.userRole, rbacInitializing]);
+  }, [
+    searchQuery,
+    planLoading,
+    planInfo?.planType,
+    user?.userRole,
+    rbacInitializing,
+  ]);
 
   const isActive = useCallback(
     (path: string, exact: boolean = false) => {
-      if (path === '/sales/invoice-dashboard') {
+      if (path === "/sales/invoice-dashboard") {
         return (
-          pathname === '/sales/invoice-dashboard' ||
-          pathname.startsWith('/sales/invoice-dashboard/')
+          pathname === "/sales/invoice-dashboard" ||
+          pathname.startsWith("/sales/invoice-dashboard/")
         );
       }
-      if (path === '/sales/invoices' || path === '/invoices') {
-        return (
-          pathname === path ||
-          pathname.startsWith(`${path}/`)
-        );
+      if (path === "/sales/invoices" || path === "/invoices") {
+        return pathname === path || pathname.startsWith(`${path}/`);
       }
-      if (path === '/' || exact) {
+      if (path === "/" || exact) {
         return pathname === path;
       }
       return pathname.startsWith(path);
@@ -359,22 +376,22 @@ export function useSidebar() {
   );
 
   const getPlanDisplayName = useCallback(() => {
-    if (user?.userRole === 'super_admin') {
-      return 'Super Admin';
+    if (user?.userRole === "super_admin") {
+      return "Super Admin";
     }
-    if (!planInfo) return 'Loading...';
+    if (!planInfo) return "Loading...";
 
     switch (planInfo.planType) {
-      case 'workshop':
-        return 'Workshop Master';
-      case 'commerce':
-        return 'Commerce Pro';
-      case 'agency':
-        return 'Agency Pro';
-      case 'healthcare':
-        return 'Healthcare Suite';
-      case 'ngo':
-        return 'Charity Pro';
+      case "workshop":
+        return "Workshop Master";
+      case "commerce":
+        return "Commerce Pro";
+      case "agency":
+        return "Agency Pro";
+      case "healthcare":
+        return "Healthcare Suite";
+      case "ngo":
+        return "Charity Pro";
       default:
         return planInfo.planName;
     }
@@ -383,16 +400,17 @@ export function useSidebar() {
   const isSubItemAvailable = useCallback(
     (subItem: SubMenuItem) => {
       if (!hasMenuRoleAccess(subItem.roles)) return false;
-      if (isSuperAdmin && subItem.roles?.includes('super_admin')) return true;
-      if (subItem.planTypes.includes('*')) return true;
+      if (isSuperAdmin && subItem.roles?.includes("super_admin")) return true;
+      if (subItem.planTypes.includes("*")) return true;
       return planInfo != null && subItem.planTypes.includes(planInfo.planType);
     },
     [hasMenuRoleAccess, isSuperAdmin, planInfo],
   );
 
-  const clearSearch = useCallback(() => setSearchQuery(''), []);
+  const clearSearch = useCallback(() => setSearchQuery(""), []);
 
-  const sidebarLoading = isSuperAdmin && !apiService.getTenantId() ? false : planLoading;
+  const sidebarLoading =
+    isSuperAdmin && !apiService.getTenantId() ? false : planLoading;
 
   return {
     searchQuery,

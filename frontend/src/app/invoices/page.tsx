@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { CreateInvoicePage } from '@/src/components/sales/CreateInvoicePage';
+import { CreateInvoicePage } from "@/src/components/sales/CreateInvoicePage";
 
 export default function InvoicesPage() {
   return <CreateInvoicePage />;

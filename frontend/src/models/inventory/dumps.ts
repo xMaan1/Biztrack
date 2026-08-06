@@ -1,4 +1,4 @@
-import { StockMovement } from './stockMovement';
+import { StockMovement } from "./stockMovement";
 
 export interface DumpItem extends StockMovement {
   productName?: string;
@@ -71,23 +71,23 @@ export interface DumpsStatsResponse {
 }
 
 export enum DamageReason {
-  HANDLING_DAMAGE = 'handling_damage',
-  STORAGE_DAMAGE = 'storage_damage',
-  EXPIRY = 'expiry',
-  CONTAMINATION = 'contamination',
-  EQUIPMENT_FAILURE = 'equipment_failure',
-  NATURAL_DISASTER = 'natural_disaster',
-  THEFT = 'theft',
-  OTHER = 'other',
+  HANDLING_DAMAGE = "handling_damage",
+  STORAGE_DAMAGE = "storage_damage",
+  EXPIRY = "expiry",
+  CONTAMINATION = "contamination",
+  EQUIPMENT_FAILURE = "equipment_failure",
+  NATURAL_DISASTER = "natural_disaster",
+  THEFT = "theft",
+  OTHER = "other",
 }
 
 export const DamageReasonLabels: Record<DamageReason, string> = {
-  [DamageReason.HANDLING_DAMAGE]: 'Handling Damage',
-  [DamageReason.STORAGE_DAMAGE]: 'Storage Damage',
-  [DamageReason.EXPIRY]: 'Expired',
-  [DamageReason.CONTAMINATION]: 'Contamination',
-  [DamageReason.EQUIPMENT_FAILURE]: 'Equipment Failure',
-  [DamageReason.NATURAL_DISASTER]: 'Natural Disaster',
-  [DamageReason.THEFT]: 'Theft',
-  [DamageReason.OTHER]: 'Other',
+  [DamageReason.HANDLING_DAMAGE]: "Handling Damage",
+  [DamageReason.STORAGE_DAMAGE]: "Storage Damage",
+  [DamageReason.EXPIRY]: "Expired",
+  [DamageReason.CONTAMINATION]: "Contamination",
+  [DamageReason.EQUIPMENT_FAILURE]: "Equipment Failure",
+  [DamageReason.NATURAL_DISASTER]: "Natural Disaster",
+  [DamageReason.THEFT]: "Theft",
+  [DamageReason.OTHER]: "Other",
 };

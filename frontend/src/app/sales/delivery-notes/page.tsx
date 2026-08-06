@@ -1,34 +1,38 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../../../components/ui/card';
-import { Button } from '../../../components/ui/button';
-import { Label } from '../../../components/ui/label';
+} from "../../../components/ui/card";
+import { Button } from "../../../components/ui/button";
+import { Label } from "../../../components/ui/label";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '../../../components/ui/dialog';
+} from "../../../components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../../components/ui/select';
-import { DashboardLayout } from '../../../components/layout';
-import InvoiceService from '../../../services/InvoiceService';
-import { DeliveryNote, DeliveryNoteCreate, Invoice } from '../../../models/sales';
-import { Truck, Plus, FileDown } from 'lucide-react';
-import { extractErrorMessage } from '../../../utils/errorUtils';
-import { toast } from 'sonner';
+} from "../../../components/ui/select";
+import { DashboardLayout } from "../../../components/layout";
+import InvoiceService from "../../../services/InvoiceService";
+import {
+  DeliveryNote,
+  DeliveryNoteCreate,
+  Invoice,
+} from "../../../models/sales";
+import { Truck, Plus, FileDown } from "lucide-react";
+import { extractErrorMessage } from "../../../utils/errorUtils";
+import { toast } from "sonner";
 
 export default function DeliveryNotesPage() {
   const [notes, setNotes] = useState<DeliveryNote[]>([]);
@@ -36,8 +40,8 @@ export default function DeliveryNotesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
-  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string>('');
-  const [noteText, setNoteText] = useState('');
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string>("");
+  const [noteText, setNoteText] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
@@ -49,7 +53,7 @@ export default function DeliveryNotesPage() {
       const data = await InvoiceService.getDeliveryNotes(undefined, 0, 200);
       setNotes(data || []);
     } catch (err) {
-      setError(extractErrorMessage(err, 'Failed to load delivery notes'));
+      setError(extractErrorMessage(err, "Failed to load delivery notes"));
     } finally {
       setLoading(false);
     }
@@ -71,15 +75,15 @@ export default function DeliveryNotesPage() {
   useEffect(() => {
     if (createOpen) {
       loadInvoices();
-      setSelectedInvoiceId('');
-      setNoteText('');
+      setSelectedInvoiceId("");
+      setNoteText("");
       setCreateError(null);
     }
   }, [createOpen, loadInvoices]);
 
   const handleCreate = async () => {
     if (!selectedInvoiceId) {
-      setCreateError('Please select an invoice');
+      setCreateError("Please select an invoice");
       return;
     }
     setSubmitting(true);
@@ -90,11 +94,13 @@ export default function DeliveryNotesPage() {
         note: noteText.trim() || undefined,
       };
       await InvoiceService.createDeliveryNote(payload);
-      toast.success('Delivery note created');
+      toast.success("Delivery note created");
       setCreateOpen(false);
       loadNotes();
     } catch (err) {
-      setCreateError(extractErrorMessage(err, 'Failed to create delivery note'));
+      setCreateError(
+        extractErrorMessage(err, "Failed to create delivery note"),
+      );
     } finally {
       setSubmitting(false);
     }
@@ -105,33 +111,35 @@ export default function DeliveryNotesPage() {
     try {
       const blob = await InvoiceService.downloadDeliveryNotePdf(dn.id);
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `delivery-note-${dn.invoice_number || dn.invoice_id}-${dn.id.slice(0, 8)}.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      toast.success('PDF downloaded');
+      toast.success("PDF downloaded");
     } catch (err) {
-      toast.error(extractErrorMessage(err, 'Failed to download PDF'));
+      toast.error(extractErrorMessage(err, "Failed to download PDF"));
     } finally {
       setDownloadingId(null);
     }
   }, []);
 
   const formatDate = (d: string) =>
-    new Date(d).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+    new Date(d).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
 
   if (loading) {
     return (
       <DashboardLayout>
         <div className="container mx-auto p-6">
-          <div className="flex items-center justify-center h-64">Loading...</div>
+          <div className="flex items-center justify-center h-64">
+            Loading...
+          </div>
         </div>
       </DashboardLayout>
     );
@@ -170,12 +178,15 @@ export default function DeliveryNotesPage() {
         <Card>
           <CardHeader>
             <CardTitle>Delivery Notes</CardTitle>
-            <CardDescription>All delivery notes associated with invoices.</CardDescription>
+            <CardDescription>
+              All delivery notes associated with invoices.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {notes.length === 0 ? (
               <p className="text-gray-500 py-8 text-center">
-                No delivery notes yet. Click &quot;Create delivery note&quot; to add one.
+                No delivery notes yet. Click &quot;Create delivery note&quot; to
+                add one.
               </p>
             ) : (
               <div className="overflow-x-auto">
@@ -192,11 +203,13 @@ export default function DeliveryNotesPage() {
                   <tbody>
                     {notes.map((dn) => (
                       <tr key={dn.id} className="border-b hover:bg-gray-50">
-                        <td className="py-2 font-medium">{dn.invoice_number ?? dn.invoice_id}</td>
-                        <td className="py-2">{dn.customer_name ?? '—'}</td>
+                        <td className="py-2 font-medium">
+                          {dn.invoice_number ?? dn.invoice_id}
+                        </td>
+                        <td className="py-2">{dn.customer_name ?? "—"}</td>
                         <td className="py-2">{formatDate(dn.created_at)}</td>
                         <td className="py-2 text-gray-600 max-w-xs truncate">
-                          {dn.note || '—'}
+                          {dn.note || "—"}
                         </td>
                         <td className="py-2 text-right">
                           <Button
@@ -206,7 +219,9 @@ export default function DeliveryNotesPage() {
                             disabled={downloadingId === dn.id}
                           >
                             <FileDown className="h-4 w-4 mr-1" />
-                            {downloadingId === dn.id ? 'Downloading...' : 'Download PDF'}
+                            {downloadingId === dn.id
+                              ? "Downloading..."
+                              : "Download PDF"}
                           </Button>
                         </td>
                       </tr>
@@ -226,7 +241,10 @@ export default function DeliveryNotesPage() {
             <div className="space-y-4">
               <div>
                 <Label>Invoice</Label>
-                <Select value={selectedInvoiceId} onValueChange={setSelectedInvoiceId}>
+                <Select
+                  value={selectedInvoiceId}
+                  onValueChange={setSelectedInvoiceId}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select invoice" />
                   </SelectTrigger>
@@ -256,7 +274,7 @@ export default function DeliveryNotesPage() {
                   Cancel
                 </Button>
                 <Button onClick={handleCreate} disabled={submitting}>
-                  {submitting ? 'Creating...' : 'Create'}
+                  {submitting ? "Creating..." : "Create"}
                 </Button>
               </div>
             </div>

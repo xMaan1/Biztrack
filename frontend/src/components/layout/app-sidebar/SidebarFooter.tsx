@@ -1,4 +1,4 @@
-import { VerifiedCompanyBadge } from '@/src/components/common/VerifiedCompanyBadge';
+import { VerifiedCompanyBadge } from "@/src/components/common/VerifiedCompanyBadge";
 
 interface SidebarFooterProps {
   collapsed?: boolean;

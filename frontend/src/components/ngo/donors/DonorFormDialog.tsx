@@ -1,23 +1,23 @@
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
-import { Label } from '@/src/components/ui/label';
-import { Textarea } from '@/src/components/ui/textarea';
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
+import { Label } from "@/src/components/ui/label";
+import { Textarea } from "@/src/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/src/components/ui/dialog';
+} from "@/src/components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
-import type { DonorCreate, DonorStatus, DonorType } from '@/src/models/ngo';
-import { DONOR_TYPE_OPTIONS } from '@/src/utils/ngo/donorUtils';
+} from "@/src/components/ui/select";
+import type { DonorCreate, DonorStatus, DonorType } from "@/src/models/ngo";
+import { DONOR_TYPE_OPTIONS } from "@/src/utils/ngo/donorUtils";
 
 type DonorFormDialogProps = {
   open: boolean;
@@ -38,13 +38,14 @@ export function DonorFormDialog({
   onSubmit,
   submitLoading,
 }: DonorFormDialogProps) {
-  const patch = (partial: Partial<DonorCreate>) => onFormChange({ ...formData, ...partial });
+  const patch = (partial: Partial<DonorCreate>) =>
+    onFormChange({ ...formData, ...partial });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{editing ? 'Edit Donor' : 'Add New Donor'}</DialogTitle>
+          <DialogTitle>{editing ? "Edit Donor" : "Add New Donor"}</DialogTitle>
         </DialogHeader>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="space-y-2">
@@ -64,12 +65,15 @@ export function DonorFormDialog({
           </div>
           <div className="space-y-2">
             <Label>Phone</Label>
-            <Input value={formData.phone ?? ''} onChange={(e) => patch({ phone: e.target.value })} />
+            <Input
+              value={formData.phone ?? ""}
+              onChange={(e) => patch({ phone: e.target.value })}
+            />
           </div>
           <div className="space-y-2">
             <Label>Organization</Label>
             <Input
-              value={formData.organization ?? ''}
+              value={formData.organization ?? ""}
               onChange={(e) => patch({ organization: e.target.value })}
             />
           </div>
@@ -110,7 +114,7 @@ export function DonorFormDialog({
             <Label>Address</Label>
             <Textarea
               rows={2}
-              value={formData.address ?? ''}
+              value={formData.address ?? ""}
               onChange={(e) => patch({ address: e.target.value })}
             />
           </div>
@@ -118,7 +122,7 @@ export function DonorFormDialog({
             <Label>Notes</Label>
             <Textarea
               rows={2}
-              value={formData.notes ?? ''}
+              value={formData.notes ?? ""}
               onChange={(e) => patch({ notes: e.target.value })}
             />
           </div>
@@ -132,7 +136,7 @@ export function DonorFormDialog({
             disabled={submitLoading}
             className="bg-emerald-600 hover:bg-emerald-700"
           >
-            {submitLoading ? 'Saving...' : 'Save Donor'}
+            {submitLoading ? "Saving..." : "Save Donor"}
           </Button>
         </DialogFooter>
       </DialogContent>

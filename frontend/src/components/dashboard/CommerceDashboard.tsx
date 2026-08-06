@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
-import { Progress } from '../ui/progress';
-import { useCurrency } from '@/src/contexts/CurrencyContext';
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
+import { Progress } from "../ui/progress";
+import { useCurrency } from "@/src/contexts/CurrencyContext";
 import {
   ShoppingCart,
   BarChart3,
@@ -18,7 +18,7 @@ import {
   ArrowRight,
   ShoppingBag,
   Target,
-} from 'lucide-react';
+} from "lucide-react";
 
 interface CommerceStats {
   totalProjects: number;
@@ -42,11 +42,11 @@ export default function CommerceDashboard({
   onNavigate,
 }: CommerceDashboardProps) {
   const { getCurrencySymbol } = useCurrency();
-  const handleCreateProject = () => onNavigate('/projects');
-  const handleNewSale = () => onNavigate('/pos/sale');
-  const handleViewSales = () => onNavigate('/sales');
-  const handleViewInventory = () => onNavigate('/inventory');
-  const handleAddInvestment = () => onNavigate('/ledger/investments');
+  const handleCreateProject = () => onNavigate("/projects");
+  const handleNewSale = () => onNavigate("/pos/sale");
+  const handleViewSales = () => onNavigate("/sales");
+  const handleViewInventory = () => onNavigate("/inventory");
+  const handleAddInvestment = () => onNavigate("/ledger/investments");
 
   return (
     <div className="space-y-8">
@@ -96,7 +96,8 @@ export default function CommerceDashboard({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {getCurrencySymbol()}{(stats.totalSales ?? 0).toLocaleString()}
+              {getCurrencySymbol()}
+              {(stats.totalSales ?? 0).toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground">This month</p>
           </CardContent>
@@ -124,7 +125,8 @@ export default function CommerceDashboard({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">
-              {getCurrencySymbol()}{stats.averageOrderValue ?? 0}
+              {getCurrencySymbol()}
+              {stats.averageOrderValue ?? 0}
             </div>
             <p className="text-xs text-muted-foreground">Per transaction</p>
           </CardContent>
@@ -208,7 +210,7 @@ export default function CommerceDashboard({
                 <Badge variant="secondary">12</Badge>
               </div>
               <div className="flex items-center justify-between p-2 bg-blue-50 rounded-lg">
-                <span className="text-sm">Today's Sales</span>
+                <span className="text-sm">Today&apos;s Sales</span>
                 <Badge variant="default">{getCurrencySymbol()}2,450</Badge>
               </div>
             </div>
@@ -236,7 +238,7 @@ export default function CommerceDashboard({
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Button
-              onClick={() => onNavigate('/pos')}
+              onClick={() => onNavigate("/pos")}
               variant="outline"
               className="h-20 flex-col gap-2"
             >
@@ -245,7 +247,7 @@ export default function CommerceDashboard({
             </Button>
 
             <Button
-              onClick={() => onNavigate('/crm')}
+              onClick={() => onNavigate("/crm")}
               variant="outline"
               className="h-20 flex-col gap-2"
             >
@@ -254,7 +256,7 @@ export default function CommerceDashboard({
             </Button>
 
             <Button
-              onClick={() => onNavigate('/inventory')}
+              onClick={() => onNavigate("/inventory")}
               variant="outline"
               className="h-20 flex-col gap-2"
             >
@@ -263,7 +265,7 @@ export default function CommerceDashboard({
             </Button>
 
             <Button
-              onClick={() => onNavigate('/reports')}
+              onClick={() => onNavigate("/reports")}
               variant="outline"
               className="h-20 flex-col gap-2"
             >

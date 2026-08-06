@@ -1,23 +1,17 @@
-'use client';
+"use client";
 
-import {
-  CheckCircle,
-  Edit,
-  FolderOpen,
-  Users,
-  XCircle,
-} from 'lucide-react';
-import { Badge } from '@/src/components/ui/badge';
-import { Button } from '@/src/components/ui/button';
+import { CheckCircle, Edit, FolderOpen, Users, XCircle } from "lucide-react";
+import { Badge } from "@/src/components/ui/badge";
+import { Button } from "@/src/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/src/components/ui/card';
-import type { AdminPlan } from '@/src/types/adminPlan';
-import { getPlanTypeColor, getPlanTypeIcon } from './planTypeDisplay';
+} from "@/src/components/ui/card";
+import type { AdminPlan } from "@/src/types/adminPlan";
+import { getPlanTypeColor, getPlanTypeIcon } from "./planTypeDisplay";
 
 type AdminPlanCardProps = {
   plan: AdminPlan;
@@ -45,7 +39,9 @@ export function AdminPlanCard({
               <CardDescription>{plan.description}</CardDescription>
             </div>
           </div>
-          <Badge className={getPlanTypeColor(plan.planType)}>{plan.planType}</Badge>
+          <Badge className={getPlanTypeColor(plan.planType)}>
+            {plan.planType}
+          </Badge>
         </div>
       </CardHeader>
       <CardContent>
@@ -104,10 +100,10 @@ export function AdminPlanCard({
               )}
               <span
                 className={`text-sm font-medium ${
-                  plan.isActive ? 'text-green-600' : 'text-red-600'
+                  plan.isActive ? "text-green-600" : "text-red-600"
                 }`}
               >
-                {plan.isActive ? 'Active' : 'Inactive'}
+                {plan.isActive ? "Active" : "Inactive"}
               </span>
             </div>
           </div>

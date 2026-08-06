@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { ArrowRight, PieChart } from 'lucide-react';
-import { Button } from '@/src/components/ui/button';
+import Link from "next/link";
+import { ArrowRight, PieChart } from "lucide-react";
+import { Button } from "@/src/components/ui/button";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from '@/src/components/ui/card';
-import { Progress } from '@/src/components/ui/progress';
-import type { NgoSnapshot } from '@/src/types/ngoDashboard';
+} from "@/src/components/ui/card";
+import { Progress } from "@/src/components/ui/progress";
+import type { NgoSnapshot } from "@/src/types/ngoDashboard";
 
 type NgoDonationOverviewCardProps = {
   snapshot: NgoSnapshot;
@@ -52,7 +52,9 @@ export function NgoDonationOverviewCard({
             <div className="text-2xl font-bold text-emerald-600">
               {snapshot.activeCampaigns}
             </div>
-            <div className="text-xs text-muted-foreground">Active campaigns</div>
+            <div className="text-xs text-muted-foreground">
+              Active campaigns
+            </div>
           </div>
           <div className="rounded-xl bg-blue-50 p-4 text-center">
             <div className="text-2xl font-bold text-blue-600">

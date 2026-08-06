@@ -1,17 +1,36 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { SuperAdminGuard } from '@/src/components/guards/PermissionGuard';
-import { apiService } from '@/src/services/ApiService';
-import { DashboardLayout } from '../../../components/layout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Badge } from '@/src/components/ui/badge';
-import { Input } from '@/src/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/src/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/src/components/ui/dialog';
-import { Checkbox } from '@/src/components/ui/checkbox';
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { SuperAdminGuard } from "@/src/components/guards/PermissionGuard";
+import { apiService } from "@/src/services/ApiService";
+import { DashboardLayout } from "../../../components/layout";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { Badge } from "@/src/components/ui/badge";
+import { Input } from "@/src/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/src/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/src/components/ui/dialog";
+import { Checkbox } from "@/src/components/ui/checkbox";
 import {
   Building2,
   Users,
@@ -22,7 +41,7 @@ import {
   BarChart3,
   CreditCard,
   Trash2,
-} from 'lucide-react';
+} from "lucide-react";
 
 interface Tenant {
   id: string;
@@ -91,8 +110,8 @@ function AdminTenantsContent() {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [adminStats, setAdminStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   // Delete tenant modal state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -108,58 +127,69 @@ function AdminTenantsContent() {
   const fetchTenants = async () => {
     try {
       setLoading(true);
-      const response = await apiService.get('/admin/tenants');
+      const response = await apiService.get("/admin/tenants");
       setTenants(response);
     } catch (error) {
-      } finally {
+    } finally {
       setLoading(false);
     }
   };
 
   const fetchAdminStats = async () => {
     try {
-      const response = await apiService.get('/admin/stats');
+      const response = await apiService.get("/admin/stats");
       setAdminStats(response);
-    } catch (error) {
-      }
+    } catch (error) {}
   };
 
   const viewTenantDetails = (tenantId: string) => {
     router.push(`/admin/tenants/${tenantId}`);
   };
 
-  const toggleTenantStatus = async (tenantId: string, currentStatus: boolean) => {
+  const toggleTenantStatus = async (
+    tenantId: string,
+    currentStatus: boolean,
+  ) => {
     try {
       await apiService.put(`/admin/tenants/${tenantId}/status`, {
         is_active: !currentStatus,
       });
 
       // Update local state
-      setTenants(prev => prev.map(tenant =>
-        tenant.id === tenantId
-          ? { ...tenant, isActive: !currentStatus }
-          : tenant,
-      ));
+      setTenants((prev) =>
+        prev.map((tenant) =>
+          tenant.id === tenantId
+            ? { ...tenant, isActive: !currentStatus }
+            : tenant,
+        ),
+      );
 
       // Update admin stats
       if (adminStats) {
-        setAdminStats(prev => prev ? {
-          ...prev,
-          tenants: {
-            ...prev.tenants,
-            active: currentStatus ? prev.tenants.active - 1 : prev.tenants.active + 1,
-            inactive: currentStatus ? prev.tenants.inactive + 1 : prev.tenants.inactive - 1,
-          },
-        } : null);
+        setAdminStats((prev) =>
+          prev
+            ? {
+                ...prev,
+                tenants: {
+                  ...prev.tenants,
+                  active: currentStatus
+                    ? prev.tenants.active - 1
+                    : prev.tenants.active + 1,
+                  inactive: currentStatus
+                    ? prev.tenants.inactive + 1
+                    : prev.tenants.inactive - 1,
+                },
+              }
+            : null,
+        );
       }
-    } catch (error) {
-      }
+    } catch (error) {}
   };
 
   const handleDeleteTenant = async () => {
     if (!selectedTenant) return;
 
-    setActionLoading('delete-tenant');
+    setActionLoading("delete-tenant");
     try {
       await apiService.delete(`/admin/tenants/${selectedTenant.id}`, {
         data: {
@@ -168,26 +198,36 @@ function AdminTenantsContent() {
       });
 
       // Remove tenant from local state
-      setTenants(prev => prev.filter(tenant => tenant.id !== selectedTenant.id));
+      setTenants((prev) =>
+        prev.filter((tenant) => tenant.id !== selectedTenant.id),
+      );
 
       // Update admin stats
       if (adminStats) {
-        setAdminStats(prev => prev ? {
-          ...prev,
-          tenants: {
-            ...prev.tenants,
-            total: prev.tenants.total - 1,
-            active: selectedTenant.isActive ? prev.tenants.active - 1 : prev.tenants.active,
-            inactive: selectedTenant.isActive ? prev.tenants.inactive : prev.tenants.inactive - 1,
-          },
-        } : null);
+        setAdminStats((prev) =>
+          prev
+            ? {
+                ...prev,
+                tenants: {
+                  ...prev.tenants,
+                  total: prev.tenants.total - 1,
+                  active: selectedTenant.isActive
+                    ? prev.tenants.active - 1
+                    : prev.tenants.active,
+                  inactive: selectedTenant.isActive
+                    ? prev.tenants.inactive
+                    : prev.tenants.inactive - 1,
+                },
+              }
+            : null,
+        );
       }
 
       setShowDeleteModal(false);
       setSelectedTenant(null);
       setDeleteAllData(false);
     } catch (error) {
-      } finally {
+    } finally {
       setActionLoading(null);
     }
   };
@@ -202,12 +242,14 @@ function AdminTenantsContent() {
     return new Date(dateString).toLocaleDateString();
   };
 
-  const filteredTenants = tenants.filter(tenant => {
-    const matchesSearch = tenant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         tenant.domain.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'all' ||
-                         (statusFilter === 'active' && tenant.isActive) ||
-                         (statusFilter === 'inactive' && !tenant.isActive);
+  const filteredTenants = tenants.filter((tenant) => {
+    const matchesSearch =
+      tenant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      tenant.domain.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus =
+      statusFilter === "all" ||
+      (statusFilter === "active" && tenant.isActive) ||
+      (statusFilter === "inactive" && !tenant.isActive);
     return matchesSearch && matchesStatus;
   });
 
@@ -232,8 +274,12 @@ function AdminTenantsContent() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Tenant Management</h1>
-            <p className="text-gray-600 mt-2">Manage all tenants and their subscriptions</p>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Tenant Management
+            </h1>
+            <p className="text-gray-600 mt-2">
+              Manage all tenants and their subscriptions
+            </p>
           </div>
         </div>
 
@@ -242,24 +288,33 @@ function AdminTenantsContent() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Tenants</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Total Tenants
+                </CardTitle>
                 <Building2 className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{adminStats.tenants.total}</div>
+                <div className="text-2xl font-bold">
+                  {adminStats.tenants.total}
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  {adminStats.tenants.active} active, {adminStats.tenants.inactive} inactive
+                  {adminStats.tenants.active} active,{" "}
+                  {adminStats.tenants.inactive} inactive
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Total Users
+                </CardTitle>
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{adminStats.users.total}</div>
+                <div className="text-2xl font-bold">
+                  {adminStats.users.total}
+                </div>
                 <p className="text-xs text-muted-foreground">
                   {adminStats.users.active} active users
                 </p>
@@ -268,11 +323,15 @@ function AdminTenantsContent() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Subscriptions</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Subscriptions
+                </CardTitle>
                 <CreditCard className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{adminStats.subscriptions.total}</div>
+                <div className="text-2xl font-bold">
+                  {adminStats.subscriptions.total}
+                </div>
                 <p className="text-xs text-muted-foreground">
                   {adminStats.subscriptions.active} active subscriptions
                 </p>
@@ -281,11 +340,15 @@ function AdminTenantsContent() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Plan Distribution</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Plan Distribution
+                </CardTitle>
                 <BarChart3 className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{adminStats.planDistribution.length}</div>
+                <div className="text-2xl font-bold">
+                  {adminStats.planDistribution.length}
+                </div>
                 <p className="text-xs text-muted-foreground">
                   Different plan types
                 </p>
@@ -324,8 +387,8 @@ function AdminTenantsContent() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg">{tenant.name}</CardTitle>
-                  <Badge variant={tenant.isActive ? 'default' : 'secondary'}>
-                    {tenant.isActive ? 'Active' : 'Inactive'}
+                  <Badge variant={tenant.isActive ? "default" : "secondary"}>
+                    {tenant.isActive ? "Active" : "Inactive"}
                   </Badge>
                 </div>
                 <CardDescription>{tenant.domain}</CardDescription>
@@ -339,12 +402,14 @@ function AdminTenantsContent() {
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-500">Plan:</span>
                     <span className="font-medium">
-                      {tenant.subscription?.plan?.name || 'No Plan'}
+                      {tenant.subscription?.plan?.name || "No Plan"}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-500">Created:</span>
-                    <span className="font-medium">{formatDate(tenant.createdAt)}</span>
+                    <span className="font-medium">
+                      {formatDate(tenant.createdAt)}
+                    </span>
                   </div>
                 </div>
 
@@ -361,7 +426,9 @@ function AdminTenantsContent() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => toggleTenantStatus(tenant.id, tenant.isActive)}
+                    onClick={() =>
+                      toggleTenantStatus(tenant.id, tenant.isActive)
+                    }
                     className="flex-1"
                   >
                     {tenant.isActive ? (
@@ -369,15 +436,16 @@ function AdminTenantsContent() {
                     ) : (
                       <ToggleRight className="h-4 w-4 mr-1" />
                     )}
-                    {tenant.isActive ? 'Deactivate' : 'Activate'}
+                    {tenant.isActive ? "Deactivate" : "Activate"}
                   </Button>
                   <Button
                     variant="destructive"
                     size="sm"
                     onClick={() => openDeleteModal(tenant)}
-                    disabled={actionLoading === 'delete-tenant'}
+                    disabled={actionLoading === "delete-tenant"}
                   >
-                    {actionLoading === 'delete-tenant' && selectedTenant?.id === tenant.id ? (
+                    {actionLoading === "delete-tenant" &&
+                    selectedTenant?.id === tenant.id ? (
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                     ) : (
                       <Trash2 className="h-4 w-4" />
@@ -393,12 +461,13 @@ function AdminTenantsContent() {
         {filteredTenants.length === 0 && (
           <div className="text-center py-12">
             <Building2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No tenants found</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No tenants found
+            </h3>
             <p className="text-gray-500">
-              {searchQuery || statusFilter !== 'all'
-                ? 'Try adjusting your search or filter criteria.'
-                : 'No tenants have been created yet.'
-              }
+              {searchQuery || statusFilter !== "all"
+                ? "Try adjusting your search or filter criteria."
+                : "No tenants have been created yet."}
             </p>
           </div>
         )}
@@ -410,7 +479,8 @@ function AdminTenantsContent() {
           <DialogHeader>
             <DialogTitle className="text-red-600">Delete Tenant</DialogTitle>
             <DialogDescription>
-              This action cannot be undone. Are you sure you want to delete this tenant?
+              This action cannot be undone. Are you sure you want to delete this
+              tenant?
             </DialogDescription>
           </DialogHeader>
 
@@ -418,7 +488,8 @@ function AdminTenantsContent() {
             <div className="space-y-4">
               <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
                 <p className="font-medium text-red-800">
-                  Do you confirm deleting this tenant: <span className="font-bold">{selectedTenant.name}</span>?
+                  Do you confirm deleting this tenant:{" "}
+                  <span className="font-bold">{selectedTenant.name}</span>?
                 </p>
               </div>
 
@@ -427,7 +498,9 @@ function AdminTenantsContent() {
                   <Checkbox
                     id="deleteAllData"
                     checked={deleteAllData}
-                    onCheckedChange={(checked: boolean) => setDeleteAllData(checked)}
+                    onCheckedChange={(checked: boolean) =>
+                      setDeleteAllData(checked)
+                    }
                   />
                   <label
                     htmlFor="deleteAllData"
@@ -440,8 +513,10 @@ function AdminTenantsContent() {
                 {deleteAllData && (
                   <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                     <p className="text-sm text-yellow-800">
-                      ⚠️ <strong>Warning:</strong> This will permanently delete all users, invoices, projects,
-                      customers, and all other data associated with this tenant. This action cannot be undone.
+                      ⚠️ <strong>Warning:</strong> This will permanently delete
+                      all users, invoices, projects, customers, and all other
+                      data associated with this tenant. This action cannot be
+                      undone.
                     </p>
                   </div>
                 )}
@@ -457,22 +532,22 @@ function AdminTenantsContent() {
                 setSelectedTenant(null);
                 setDeleteAllData(false);
               }}
-              disabled={actionLoading === 'delete-tenant'}
+              disabled={actionLoading === "delete-tenant"}
             >
               Cancel
             </Button>
             <Button
               variant="destructive"
               onClick={handleDeleteTenant}
-              disabled={actionLoading === 'delete-tenant'}
+              disabled={actionLoading === "delete-tenant"}
             >
-              {actionLoading === 'delete-tenant' ? (
+              {actionLoading === "delete-tenant" ? (
                 <div className="flex items-center gap-2">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                   Deleting...
                 </div>
               ) : (
-                'Delete Tenant'
+                "Delete Tenant"
               )}
             </Button>
           </DialogFooter>

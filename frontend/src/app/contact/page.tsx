@@ -1,11 +1,11 @@
-import type { Metadata } from 'next';
-import { MarketingPageShell } from '@/src/components/marketing/MarketingPageShell';
-import { ContactMessageForm } from '@/src/components/marketing/ContactMessageForm';
-import { COMPANY_REGISTRATION } from '@/src/constants/companyRegistration';
+import type { Metadata } from "next";
+import { MarketingPageShell } from "@/src/components/marketing/MarketingPageShell";
+import { ContactMessageForm } from "@/src/components/marketing/ContactMessageForm";
+import { COMPANY_REGISTRATION } from "@/src/constants/companyRegistration";
 
 export const metadata: Metadata = {
-  title: 'Contact - BizTrack UK LTD',
-  description: 'Contact BizTrack UK LTD for support and enquiries.',
+  title: "Contact - BizTrack UK LTD",
+  description: "Contact BizTrack UK LTD for support and enquiries.",
 };
 
 export default function ContactPage() {
@@ -20,11 +20,11 @@ export default function ContactPage() {
           <h2 className="text-lg font-semibold text-slate-900">Company Info</h2>
           <div className="mt-4 space-y-3 text-sm text-slate-600">
             <p>
-              <span className="font-medium text-slate-800">Phone:</span>{' '}
+              <span className="font-medium text-slate-800">Phone:</span>{" "}
               {COMPANY_REGISTRATION.supportPhone}
             </p>
             <p>
-              <span className="font-medium text-slate-800">Email:</span>{' '}
+              <span className="font-medium text-slate-800">Email:</span>{" "}
               <a
                 href={`mailto:${COMPANY_REGISTRATION.supportEmail}`}
                 className="text-emerald-700 hover:underline"

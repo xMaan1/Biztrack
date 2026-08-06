@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { Building2, ShieldCheck, MapPin, Hash } from 'lucide-react';
-import { Card, CardContent } from '../ui/card';
-import { VerifiedCompanyBadge } from '../common/VerifiedCompanyBadge';
-import { COMPANY_REGISTRATION } from '@/src/constants/companyRegistration';
+import { Building2, ShieldCheck, MapPin, Hash } from "lucide-react";
+import { Card, CardContent } from "../ui/card";
+import { VerifiedCompanyBadge } from "../common/VerifiedCompanyBadge";
+import { COMPANY_REGISTRATION } from "@/src/constants/companyRegistration";
 
 export function CompanyVerificationSection() {
   return (

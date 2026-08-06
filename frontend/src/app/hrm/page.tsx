@@ -1,42 +1,37 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { ModuleGuard } from '@/src/components/guards/PermissionGuard';
+import React from "react";
+import { ModuleGuard } from "@/src/components/guards/PermissionGuard";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Badge } from '@/src/components/ui/badge';
-import { Progress } from '@/src/components/ui/progress';
-import { useCurrency } from '@/src/contexts/CurrencyContext';
+} from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { Badge } from "@/src/components/ui/badge";
+import { Progress } from "@/src/components/ui/progress";
+import { useCurrency } from "@/src/contexts/CurrencyContext";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '@/src/components/ui/tabs';
-import {
-  Users,
-  UserPlus,
-  Award,
-  GraduationCap,
-  Briefcase,
-} from 'lucide-react';
-import HRMService from '@/src/services/HRMService';
-import {
-  HRMDashboard,
-} from '@/src/models/hrm';
-import Link from 'next/link';
-import { DashboardLayout } from '../../components/layout';
-import { useCachedApi } from '../../hooks/useCachedApi';
+} from "@/src/components/ui/tabs";
+import { Users, UserPlus, Award, GraduationCap, Briefcase } from "lucide-react";
+import HRMService from "@/src/services/HRMService";
+import { HRMDashboard } from "@/src/models/hrm";
+import Link from "next/link";
+import { DashboardLayout } from "../../components/layout";
+import { useCachedApi } from "../../hooks/useCachedApi";
 
 export default function HRMDashboardPage() {
   return (
-    <ModuleGuard module="hrm" fallback={<div>You don't have access to HRM module</div>}>
+    <ModuleGuard
+      module="hrm"
+      fallback={<div>You don&apos;t have access to HRM module</div>}
+    >
       <HRMDashboardContent />
     </ModuleGuard>
   );
@@ -44,10 +39,15 @@ export default function HRMDashboardPage() {
 
 function HRMDashboardContent() {
   const { getCurrencySymbol } = useCurrency();
-  const { data: dashboard, loading, error, refetch } = useCachedApi<HRMDashboard>(
-    'hrm_dashboard',
+  const {
+    data: dashboard,
+    loading,
+    error,
+    refetch,
+  } = useCachedApi<HRMDashboard>(
+    "hrm_dashboard",
     () => HRMService.getDashboard(),
-    { ttl: 30000 }
+    { ttl: 30000 },
   );
 
   if (loading) {
@@ -152,7 +152,8 @@ function HRMDashboardContent() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {getCurrencySymbol()}{dashboard.metrics.averageSalary.toLocaleString()}
+                {getCurrencySymbol()}
+                {dashboard.metrics.averageSalary.toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground">Monthly average</p>
             </CardContent>
@@ -238,7 +239,7 @@ function HRMDashboardContent() {
                               {HRMService.getDepartmentIcon(dept)}
                             </span>
                             <span className="capitalize">
-                              {dept.replace('_', ' ')}
+                              {dept.replace("_", " ")}
                             </span>
                           </div>
                           <Badge variant="secondary">
@@ -330,7 +331,7 @@ function HRMDashboardContent() {
                             employee.employeeType,
                           )}
                         >
-                          {employee.employeeType.replace('_', ' ')}
+                          {employee.employeeType.replace("_", " ")}
                         </Badge>
                       </div>
                     </div>
@@ -404,7 +405,7 @@ function HRMDashboardContent() {
                               app.status,
                             )}
                           >
-                            {app.status.replace('_', ' ')}
+                            {app.status.replace("_", " ")}
                           </Badge>
                         </div>
                       </div>
@@ -449,7 +450,7 @@ function HRMDashboardContent() {
                               review.status,
                             )}
                           >
-                            {review.status.replace('_', ' ')}
+                            {review.status.replace("_", " ")}
                           </Badge>
                           <span className="text-xs text-gray-500">
                             {HRMService.formatDate(review.reviewDate)}
@@ -489,7 +490,7 @@ function HRMDashboardContent() {
                             {leave.leaveType} - {leave.totalDays} days
                           </div>
                           <div className="text-xs text-gray-500">
-                            {HRMService.formatDate(leave.startDate)} -{' '}
+                            {HRMService.formatDate(leave.startDate)} -{" "}
                             {HRMService.formatDate(leave.endDate)}
                           </div>
                         </div>
@@ -536,7 +537,7 @@ function HRMDashboardContent() {
                             {program.provider}
                           </div>
                           <div className="text-xs text-gray-500">
-                            {HRMService.formatDate(program.startDate)} -{' '}
+                            {HRMService.formatDate(program.startDate)} -{" "}
                             {HRMService.formatDate(program.endDate)}
                           </div>
                         </div>
@@ -546,10 +547,11 @@ function HRMDashboardContent() {
                               program.status,
                             )}
                           >
-                            {program.status.replace('_', ' ')}
+                            {program.status.replace("_", " ")}
                           </Badge>
                           <span className="text-sm font-medium">
-                            {getCurrencySymbol()}{program.cost}
+                            {getCurrencySymbol()}
+                            {program.cost}
                           </span>
                         </div>
                       </div>

@@ -1,12 +1,18 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { DashboardLayout } from '@/src/components/layout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Switch } from '@/src/components/ui/switch';
-import { Separator } from '@/src/components/ui/separator';
-import { Badge } from '@/src/components/ui/badge';
+import React, { useState, useEffect } from "react";
+import { DashboardLayout } from "@/src/components/layout";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { Switch } from "@/src/components/ui/switch";
+import { Separator } from "@/src/components/ui/separator";
+import { Badge } from "@/src/components/ui/badge";
 import {
   Settings,
   Bell,
@@ -17,15 +23,15 @@ import {
   AlertCircle,
   Loader2,
   CheckCircle,
-} from 'lucide-react';
-import { toast } from 'sonner';
-import { useNotifications } from '@/src/contexts/NotificationContext';
+} from "lucide-react";
+import { toast } from "sonner";
+import { useNotifications } from "@/src/contexts/NotificationContext";
 import {
   NotificationCategory,
   NotificationPreference,
   NotificationPreferenceUpdate,
   getCategoryDisplayName,
-} from '@/src/models/notifications';
+} from "@/src/models/notifications";
 
 const NOTIFICATION_CATEGORIES: NotificationCategory[] = [
   NotificationCategory.SYSTEM,
@@ -39,28 +45,30 @@ const NOTIFICATION_CATEGORIES: NotificationCategory[] = [
 
 const NOTIFICATION_CHANNELS = [
   {
-    id: 'email',
-    name: 'Email',
-    description: 'Receive notifications via email',
+    id: "email",
+    name: "Email",
+    description: "Receive notifications via email",
     icon: Mail,
   },
   {
-    id: 'push',
-    name: 'Push Notifications',
-    description: 'Receive push notifications on your device',
+    id: "push",
+    name: "Push Notifications",
+    description: "Receive push notifications on your device",
     icon: Smartphone,
   },
   {
-    id: 'in_app',
-    name: 'In-App Notifications',
-    description: 'Show notifications within the application',
+    id: "in_app",
+    name: "In-App Notifications",
+    description: "Show notifications within the application",
     icon: Monitor,
   },
 ];
 
 export default function NotificationSettingsPage() {
   const { preferences, loading, updatePreference } = useNotifications();
-  const [localPreferences, setLocalPreferences] = useState<NotificationPreference[]>([]);
+  const [localPreferences, setLocalPreferences] = useState<
+    NotificationPreference[]
+  >([]);
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -70,47 +78,50 @@ export default function NotificationSettingsPage() {
       setHasChanges(false);
     } else {
       // Initialize with default preferences if none exist
-      const defaultPreferences: NotificationPreference[] = NOTIFICATION_CATEGORIES.map(category => ({
-        id: `default-${category}`,
-        tenant_id: '',
-        user_id: '',
-        category,
-        email_enabled: true,
-        push_enabled: true,
-        in_app_enabled: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }));
+      const defaultPreferences: NotificationPreference[] =
+        NOTIFICATION_CATEGORIES.map((category) => ({
+          id: `default-${category}`,
+          tenant_id: "",
+          user_id: "",
+          category,
+          email_enabled: true,
+          push_enabled: true,
+          in_app_enabled: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }));
       setLocalPreferences(defaultPreferences);
     }
   }, [preferences]);
 
   const handlePreferenceChange = (
     category: NotificationCategory,
-    channel: 'email' | 'push' | 'in_app',
-    enabled: boolean
+    channel: "email" | "push" | "in_app",
+    enabled: boolean,
   ) => {
-    setLocalPreferences(prev => {
-      const existingPreference = prev.find(pref => pref.category === category);
-      
+    setLocalPreferences((prev) => {
+      const existingPreference = prev.find(
+        (pref) => pref.category === category,
+      );
+
       if (existingPreference) {
         // Update existing preference
-        const updated = prev.map(pref => 
-          pref.category === category 
+        const updated = prev.map((pref) =>
+          pref.category === category
             ? { ...pref, [`${channel}_enabled`]: enabled }
-            : pref
+            : pref,
         );
         return updated;
       } else {
         // Create new preference if it doesn't exist
         const newPreference: NotificationPreference = {
           id: `new-${category}`,
-          tenant_id: '',
-          user_id: '',
+          tenant_id: "",
+          user_id: "",
           category,
-          email_enabled: channel === 'email' ? enabled : true,
-          push_enabled: channel === 'push' ? enabled : true,
-          in_app_enabled: channel === 'in_app' ? enabled : true,
+          email_enabled: channel === "email" ? enabled : true,
+          push_enabled: channel === "push" ? enabled : true,
+          in_app_enabled: channel === "in_app" ? enabled : true,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         };
@@ -122,16 +133,18 @@ export default function NotificationSettingsPage() {
   };
 
   const getPreferenceForCategory = (category: NotificationCategory) => {
-    const preference = localPreferences.find(pref => pref.category === category);
+    const preference = localPreferences.find(
+      (pref) => pref.category === category,
+    );
     return preference;
   };
 
   const handleSave = async () => {
     try {
       setSaving(true);
-      
+
       const updates: NotificationPreferenceUpdate[] = [];
-      
+
       for (const category of NOTIFICATION_CATEGORIES) {
         const preference = getPreferenceForCategory(category);
         if (preference) {
@@ -144,30 +157,33 @@ export default function NotificationSettingsPage() {
         }
       }
 
-      await Promise.all(updates.map(update => updatePreference(update)));
-      
+      await Promise.all(updates.map((update) => updatePreference(update)));
+
       setHasChanges(false);
-      toast.success('Notification preferences updated successfully!');
+      toast.success("Notification preferences updated successfully!");
     } catch (error) {
-      toast.error('Failed to update notification preferences. Please try again.');
+      toast.error(
+        "Failed to update notification preferences. Please try again.",
+      );
     } finally {
       setSaving(false);
     }
   };
 
   const handleResetToDefaults = () => {
-    const defaultPreferences: NotificationPreference[] = NOTIFICATION_CATEGORIES.map(category => ({
-      id: `default-${category}`,
-      tenant_id: '',
-      user_id: '',
-      category,
-      email_enabled: true,
-      push_enabled: true,
-      in_app_enabled: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }));
-    
+    const defaultPreferences: NotificationPreference[] =
+      NOTIFICATION_CATEGORIES.map((category) => ({
+        id: `default-${category}`,
+        tenant_id: "",
+        user_id: "",
+        category,
+        email_enabled: true,
+        push_enabled: true,
+        in_app_enabled: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }));
+
     setLocalPreferences(defaultPreferences);
     setHasChanges(true);
   };
@@ -179,7 +195,9 @@ export default function NotificationSettingsPage() {
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-              <p className="text-gray-600">Loading notification preferences...</p>
+              <p className="text-gray-600">
+                Loading notification preferences...
+              </p>
             </div>
           </div>
         </div>
@@ -194,8 +212,12 @@ export default function NotificationSettingsPage() {
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Notification Settings</h1>
-              <p className="text-gray-600">Manage your notification preferences and channels</p>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Notification Settings
+              </h1>
+              <p className="text-gray-600">
+                Manage your notification preferences and channels
+              </p>
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -216,7 +238,7 @@ export default function NotificationSettingsPage() {
                 ) : (
                   <Save className="h-4 w-4" />
                 )}
-                {saving ? 'Saving...' : 'Save Changes'}
+                {saving ? "Saving..." : "Save Changes"}
               </Button>
             </div>
           </div>
@@ -229,7 +251,8 @@ export default function NotificationSettingsPage() {
                 Notification Channels
               </CardTitle>
               <CardDescription>
-                Choose how you want to receive notifications for different categories
+                Choose how you want to receive notifications for different
+                categories
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -240,7 +263,9 @@ export default function NotificationSettingsPage() {
                       <channel.icon className="h-5 w-5 text-blue-600" />
                       <h3 className="font-medium">{channel.name}</h3>
                     </div>
-                    <p className="text-sm text-gray-600">{channel.description}</p>
+                    <p className="text-sm text-gray-600">
+                      {channel.description}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -262,7 +287,7 @@ export default function NotificationSettingsPage() {
               {NOTIFICATION_CATEGORIES.map((category, index) => {
                 const preference = getPreferenceForCategory(category);
                 const categoryDisplayName = getCategoryDisplayName(category);
-                
+
                 return (
                   <div key={category}>
                     <div className="flex items-center justify-between p-4 border rounded-lg">
@@ -273,26 +298,37 @@ export default function NotificationSettingsPage() {
                         <div>
                           <h3 className="font-medium">{categoryDisplayName}</h3>
                           <p className="text-sm text-gray-600">
-                            {category.replace('_', ' ').toUpperCase()}
+                            {category.replace("_", " ").toUpperCase()}
                           </p>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center gap-6">
                         {NOTIFICATION_CHANNELS.map((channel) => (
-                          <div key={channel.id} className="flex items-center gap-2">
+                          <div
+                            key={channel.id}
+                            className="flex items-center gap-2"
+                          >
                             <channel.icon className="h-4 w-4 text-gray-500" />
                             <Switch
-                              checked={preference?.[`${channel.id}_enabled` as keyof NotificationPreference] as boolean || false}
-                              onCheckedChange={(enabled) => 
-                                handlePreferenceChange(category, channel.id as 'email' | 'push' | 'in_app', enabled)
+                              checked={
+                                (preference?.[
+                                  `${channel.id}_enabled` as keyof NotificationPreference
+                                ] as boolean) || false
+                              }
+                              onCheckedChange={(enabled) =>
+                                handlePreferenceChange(
+                                  category,
+                                  channel.id as "email" | "push" | "in_app",
+                                  enabled,
+                                )
                               }
                             />
                           </div>
                         ))}
                       </div>
                     </div>
-                    
+
                     {index < NOTIFICATION_CATEGORIES.length - 1 && (
                       <Separator className="my-4" />
                     )}
@@ -313,16 +349,25 @@ export default function NotificationSettingsPage() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {NOTIFICATION_CHANNELS.map((channel) => {
-                  const enabledCount = localPreferences.filter(pref => 
-                    pref[`${channel.id}_enabled` as keyof NotificationPreference]
+                  const enabledCount = localPreferences.filter(
+                    (pref) =>
+                      pref[
+                        `${channel.id}_enabled` as keyof NotificationPreference
+                      ],
                   ).length;
-                  
+
                   return (
-                    <div key={channel.id} className="text-center p-4 border rounded-lg">
+                    <div
+                      key={channel.id}
+                      className="text-center p-4 border rounded-lg"
+                    >
                       <channel.icon className="h-6 w-6 mx-auto mb-2 text-blue-600" />
                       <h3 className="font-medium mb-1">{channel.name}</h3>
-                      <Badge variant={enabledCount > 0 ? "default" : "secondary"}>
-                        {enabledCount} of {NOTIFICATION_CATEGORIES.length} enabled
+                      <Badge
+                        variant={enabledCount > 0 ? "default" : "secondary"}
+                      >
+                        {enabledCount} of {NOTIFICATION_CATEGORIES.length}{" "}
+                        enabled
                       </Badge>
                     </div>
                   );
@@ -336,7 +381,8 @@ export default function NotificationSettingsPage() {
             <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
               <AlertCircle className="h-4 w-4 text-yellow-600" />
               <span className="text-sm text-yellow-800">
-                You have unsaved changes. Don't forget to save your notification preferences.
+                You have unsaved changes. Don&apos;t forget to save your
+                notification preferences.
               </span>
             </div>
           )}

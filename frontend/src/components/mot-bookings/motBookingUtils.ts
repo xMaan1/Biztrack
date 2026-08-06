@@ -1,67 +1,69 @@
-import type {
-  MotBooking,
-  MotBookingCreate,
-  MotTestType,
-  MotBookingStatus,
-} from '@/src/models/mot/MotBooking';
-import { MOT_TIME_SLOTS } from '@/src/models/mot/MotBooking';
-import type { MotBookingFiltersState, MotBookingFormData } from './types';
+import {
+  MOT_TIME_SLOTS,
+  type MotBooking,
+  type MotBookingCreate,
+  type MotBookingStatus,
+  type MotTestType,
+} from "@/src/models/mot/MotBooking";
+import type { MotBookingFiltersState, MotBookingFormData } from "./types";
 
 export function defaultFilters(): MotBookingFiltersState {
   return {
-    searchTerm: '',
-    status: 'all',
-    testType: 'all',
-    dateFrom: '',
-    dateTo: '',
+    searchTerm: "",
+    status: "all",
+    testType: "all",
+    dateFrom: "",
+    dateTo: "",
   };
 }
 
 export function emptyMotBookingFormData(): MotBookingFormData {
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toISOString().split("T")[0];
   const firstSlot = MOT_TIME_SLOTS[0];
   return {
-    customerName: '',
-    customerPhone: '',
-    customerEmail: '',
-    vehicleRegistration: '',
-    vehicleMake: '',
-    vehicleModel: '',
+    customerName: "",
+    customerPhone: "",
+    customerEmail: "",
+    vehicleRegistration: "",
+    vehicleMake: "",
+    vehicleModel: "",
     bookingDate: today,
     startTime: firstSlot.start,
     endTime: firstSlot.end,
-    testType: 'standard',
-    status: 'scheduled',
+    testType: "standard",
+    status: "scheduled",
     price: 54.85,
-    mileage: '',
-    motExpiryDate: '',
-    notes: '',
-    resultNotes: '',
+    mileage: "",
+    motExpiryDate: "",
+    notes: "",
+    resultNotes: "",
   };
 }
 
 export function bookingToFormData(booking: MotBooking): MotBookingFormData {
   return {
-    customerName: booking.customer_name || '',
-    customerPhone: booking.customer_phone || '',
-    customerEmail: booking.customer_email || '',
-    vehicleRegistration: booking.vehicle_registration || '',
-    vehicleMake: booking.vehicle_make || '',
-    vehicleModel: booking.vehicle_model || '',
-    bookingDate: booking.booking_date?.slice(0, 10) || '',
-    startTime: booking.start_time || '',
-    endTime: booking.end_time || '',
-    testType: booking.test_type || 'standard',
-    status: booking.status || 'scheduled',
+    customerName: booking.customer_name || "",
+    customerPhone: booking.customer_phone || "",
+    customerEmail: booking.customer_email || "",
+    vehicleRegistration: booking.vehicle_registration || "",
+    vehicleMake: booking.vehicle_make || "",
+    vehicleModel: booking.vehicle_model || "",
+    bookingDate: booking.booking_date?.slice(0, 10) || "",
+    startTime: booking.start_time || "",
+    endTime: booking.end_time || "",
+    testType: booking.test_type || "standard",
+    status: booking.status || "scheduled",
     price: Number(booking.price) || 0,
-    mileage: booking.mileage || '',
-    motExpiryDate: booking.mot_expiry_date?.slice(0, 10) || '',
-    notes: booking.notes || '',
-    resultNotes: booking.result_notes || '',
+    mileage: booking.mileage || "",
+    motExpiryDate: booking.mot_expiry_date?.slice(0, 10) || "",
+    notes: booking.notes || "",
+    resultNotes: booking.result_notes || "",
   };
 }
 
-export function formDataToPayload(formData: MotBookingFormData): MotBookingCreate {
+export function formDataToPayload(
+  formData: MotBookingFormData,
+): MotBookingCreate {
   return {
     customer_name: formData.customerName || undefined,
     customer_phone: formData.customerPhone || undefined,
@@ -87,9 +89,11 @@ export function filterBookings(
   filters: MotBookingFiltersState,
 ): MotBooking[] {
   return bookings.filter((booking) => {
-    if (filters.status !== 'all' && booking.status !== filters.status) return false;
-    if (filters.testType !== 'all' && booking.test_type !== filters.testType) return false;
-    const bookingDate = booking.booking_date?.slice(0, 10) || '';
+    if (filters.status !== "all" && booking.status !== filters.status)
+      return false;
+    if (filters.testType !== "all" && booking.test_type !== filters.testType)
+      return false;
+    const bookingDate = booking.booking_date?.slice(0, 10) || "";
     if (filters.dateFrom && bookingDate < filters.dateFrom) return false;
     if (filters.dateTo && bookingDate > filters.dateTo) return false;
     if (filters.searchTerm) {
@@ -102,7 +106,7 @@ export function filterBookings(
         booking.vehicle_model,
       ]
         .filter(Boolean)
-        .join(' ')
+        .join(" ")
         .toLowerCase();
       if (!haystack.includes(term)) return false;
     }
@@ -124,7 +128,7 @@ export function timeSlotKey(formData: MotBookingFormData): string {
 }
 
 export function formatBookingDateTime(booking: MotBooking): string {
-  const date = booking.booking_date?.slice(0, 10) || '';
-  if (!date) return '';
-  return `${date} ${booking.start_time || ''}`.trim();
+  const date = booking.booking_date?.slice(0, 10) || "";
+  if (!date) return "";
+  return `${date} ${booking.start_time || ""}`.trim();
 }

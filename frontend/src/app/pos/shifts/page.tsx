@@ -1,23 +1,23 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
-import { Label } from '@/src/components/ui/label';
+} from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
+import { Label } from "@/src/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
-import { Badge } from '@/src/components/ui/badge';
+} from "@/src/components/ui/select";
+import { Badge } from "@/src/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -25,37 +25,31 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/src/components/ui/dialog';
-import { useAuth } from '@/src/hooks/useAuth';
-import { apiService } from '@/src/services/ApiService';
-import { POSShift, POSShiftStatus } from '@/src/models/pos';
-import {
-  Clock,
-  Plus,
-  Search,
-  Filter,
-  Eye,
-} from 'lucide-react';
-import { DashboardLayout } from '../../../components/layout';
-import { useConfirm } from '@/src/contexts/ConfirmContext';
-import { useCurrency } from '../../../contexts/CurrencyContext';
+} from "@/src/components/ui/dialog";
+import { useAuth } from "@/src/hooks/useAuth";
+import { apiService } from "@/src/services/ApiService";
+import { POSShift, POSShiftStatus } from "@/src/models/pos";
+import { Clock, Plus, Search, Filter, Eye } from "lucide-react";
+import { DashboardLayout } from "../../../components/layout";
+import { useConfirm } from "@/src/contexts/ConfirmContext";
+import { useCurrency } from "../../../contexts/CurrencyContext";
 
 const POSShifts = () => {
   const confirm = useConfirm();
-  const { } = useAuth();
+  const {} = useAuth();
   const { formatCurrency } = useCurrency();
   const [shifts, setShifts] = useState<POSShift[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState<POSShiftStatus | 'all'>(
-    'all',
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState<POSShiftStatus | "all">(
+    "all",
   );
   const [selectedShift, setSelectedShift] = useState<POSShift | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isNewShiftOpen, setIsNewShiftOpen] = useState(false);
   const [newShiftData, setNewShiftData] = useState({
     openingBalance: 0,
-    notes: '',
+    notes: "",
   });
 
   useEffect(() => {
@@ -64,47 +58,45 @@ const POSShifts = () => {
 
   const fetchShifts = async () => {
     try {
-      const response = await apiService.get('/pos/shifts');
+      const response = await apiService.get("/pos/shifts");
       setShifts(response.shifts || []);
     } catch (error) {
-      } finally {
+    } finally {
       setLoading(false);
     }
   };
 
   const handleOpenShift = async () => {
     try {
-      await apiService.post('/pos/shifts', {
+      await apiService.post("/pos/shifts", {
         openingBalance: newShiftData.openingBalance,
         notes: newShiftData.notes,
       });
 
       setNewShiftData({
         openingBalance: 0,
-        notes: '',
+        notes: "",
       });
       setIsNewShiftOpen(false);
       fetchShifts();
-    } catch (error) {
-      }
+    } catch (error) {}
   };
 
   const handleCloseShift = async (shiftId: string) => {
     const ok = await confirm({
-      description: 'Are you sure you want to close this shift?',
-      confirmLabel: 'Close shift',
+      description: "Are you sure you want to close this shift?",
+      confirmLabel: "Close shift",
     });
     if (!ok) return;
 
     try {
       await apiService.put(`/pos/shifts/${shiftId}`, {
-        status: 'closed',
+        status: "closed",
         closingBalance: 0, // This should be calculated from actual cash in drawer
-        notes: 'Shift closed',
+        notes: "Shift closed",
       });
       fetchShifts();
-    } catch (error) {
-      }
+    } catch (error) {}
   };
 
   const handleViewDetails = (shift: POSShift) => {
@@ -118,30 +110,29 @@ const POSShifts = () => {
       shift.cashierName.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus =
-      selectedStatus === 'all' || shift.status === selectedStatus;
+      selectedStatus === "all" || shift.status === selectedStatus;
 
     return matchesSearch && matchesStatus;
   });
 
-
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   const getStatusColor = (status: POSShiftStatus) => {
     switch (status) {
       case POSShiftStatus.OPEN:
-        return 'bg-green-100 text-green-800';
+        return "bg-green-100 text-green-800";
       case POSShiftStatus.CLOSED:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -202,7 +193,7 @@ const POSShifts = () => {
                 <Select
                   value={selectedStatus}
                   onValueChange={(value: string) =>
-                    setSelectedStatus(value as POSShiftStatus | 'all')
+                    setSelectedStatus(value as POSShiftStatus | "all")
                   }
                 >
                   <SelectTrigger>
@@ -223,8 +214,8 @@ const POSShifts = () => {
                 <Button
                   variant="outline"
                   onClick={() => {
-                    setSearchTerm('');
-                    setSelectedStatus('all');
+                    setSearchTerm("");
+                    setSelectedStatus("all");
                   }}
                 >
                   Clear Filters
@@ -295,7 +286,7 @@ const POSShifts = () => {
 
                     {shift.status === POSShiftStatus.OPEN && (
                       <div className="text-sm text-muted-foreground">
-                        Duration:{' '}
+                        Duration:{" "}
                         {Math.floor(
                           (Date.now() - new Date(shift.openedAt).getTime()) /
                             (1000 * 60 * 60),
@@ -336,11 +327,11 @@ const POSShifts = () => {
             <Clock className="mx-auto h-12 w-12 text-muted-foreground" />
             <h3 className="mt-4 text-lg font-semibold">No shifts found</h3>
             <p className="mt-2 text-muted-foreground">
-              {searchTerm || selectedStatus !== 'all'
-                ? 'Try adjusting your filters or search terms.'
-                : 'No shifts have been created yet.'}
+              {searchTerm || selectedStatus !== "all"
+                ? "Try adjusting your filters or search terms."
+                : "No shifts have been created yet."}
             </p>
-            {!searchTerm && selectedStatus === 'all' && (
+            {!searchTerm && selectedStatus === "all" && (
               <Button onClick={() => setIsNewShiftOpen(true)} className="mt-4">
                 <Plus className="mr-2 h-4 w-4" />
                 Open First Shift

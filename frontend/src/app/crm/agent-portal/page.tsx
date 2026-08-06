@@ -1,16 +1,40 @@
-'use client';
+"use client";
 
-import React, { useCallback, useEffect, useState } from 'react';
-import { ModuleGuard } from '@/src/components/guards/PermissionGuard';
-import { DashboardLayout } from '@/src/components/layout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
-import { Badge } from '@/src/components/ui/badge';
-import { Progress } from '@/src/components/ui/progress';
-import { Input } from '@/src/components/ui/input';
-import { Button } from '@/src/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/src/components/ui/tabs';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/src/components/ui/table';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/src/components/ui/select';
+import React, { useCallback, useEffect, useState } from "react";
+import { ModuleGuard } from "@/src/components/guards/PermissionGuard";
+import { DashboardLayout } from "@/src/components/layout";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/src/components/ui/card";
+import { Badge } from "@/src/components/ui/badge";
+import { Progress } from "@/src/components/ui/progress";
+import { Input } from "@/src/components/ui/input";
+import { Button } from "@/src/components/ui/button";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/src/components/ui/tabs";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/src/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/src/components/ui/select";
 import agentPortalService, {
   AgentAchievements,
   AgentEarnings,
@@ -20,38 +44,53 @@ import agentPortalService, {
   LeaderboardRow,
   PipelineStage,
   TeamMember,
-} from '@/src/services/AgentPortalService';
-import { AgentPortalDateFilter } from '@/src/components/crm/agent-portal/AgentPortalDateFilter';
-import { useCurrency } from '@/src/contexts/CurrencyContext';
-import { useRBAC, type UserWithPermissions } from '@/src/contexts/RBACContext';
-import { Target, TrendingUp, Trophy, Users, DollarSign, Award } from 'lucide-react';
-import { toast } from 'sonner';
+} from "@/src/services/AgentPortalService";
+import { AgentPortalDateFilter } from "@/src/components/crm/agent-portal/AgentPortalDateFilter";
+import { useCurrency } from "@/src/contexts/CurrencyContext";
+import { useRBAC, type UserWithPermissions } from "@/src/contexts/RBACContext";
+import {
+  Target,
+  TrendingUp,
+  Trophy,
+  Users,
+  DollarSign,
+  Award,
+} from "lucide-react";
+import { toast } from "sonner";
 
 function stageLabel(stage: string): string {
-  return stage.split('_').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  return stage
+    .split("_")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
 }
 
-function isManager(userPermissions: ReturnType<typeof useRBAC>['userPermissions']) {
+function isManager(
+  userPermissions: ReturnType<typeof useRBAC>["userPermissions"],
+) {
   if (!userPermissions) return false;
   if (userPermissions.is_owner) return true;
-  const name = userPermissions.role?.name || '';
-  return name === 'owner' || name.endsWith('_manager');
+  const name = userPermissions.role?.name || "";
+  return name === "owner" || name.endsWith("_manager");
 }
 
 export default function AgentPortalPage() {
   return (
-    <ModuleGuard module="crm" fallback={<div>You don't have access to CRM module</div>}>
+    <ModuleGuard
+      module="crm"
+      fallback={<div>You don&apos;t have access to CRM module</div>}
+    >
       <AgentPortalContent />
     </ModuleGuard>
   );
 }
 
 function agentOptionId(u: UserWithPermissions): string {
-  return u.id || '';
+  return u.id || "";
 }
 
 function agentOptionLabel(u: UserWithPermissions): string {
-  const name = [u.firstName, u.lastName].filter(Boolean).join(' ').trim();
+  const name = [u.firstName, u.lastName].filter(Boolean).join(" ").trim();
   return name || u.userName || u.email;
 }
 
@@ -59,20 +98,28 @@ function AgentPortalContent() {
   const { formatCurrency } = useCurrency();
   const { userPermissions, tenantUsers, fetchTenantUsers } = useRBAC();
   const manager = isManager(userPermissions);
-  const [tab, setTab] = useState('overview');
-  const [filters, setFilters] = useState<AgentPortalFilters>({ quickFilter: '30d' });
+  const [tab, setTab] = useState("overview");
+  const [filters, setFilters] = useState<AgentPortalFilters>({
+    quickFilter: "30d",
+  });
   const [overview, setOverview] = useState<AgentOverview | null>(null);
   const [earnings, setEarnings] = useState<AgentEarnings | null>(null);
-  const [achievements, setAchievements] = useState<AgentAchievements | null>(null);
+  const [achievements, setAchievements] = useState<AgentAchievements | null>(
+    null,
+  );
   const [pipeline, setPipeline] = useState<PipelineStage[]>([]);
   const [leads, setLeads] = useState<AgentLeadsResponse | null>(null);
   const [team, setTeam] = useState<TeamMember[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [targetUserId, setTargetUserId] = useState<string | undefined>(undefined);
-  const [targetAmount, setTargetAmount] = useState('10000');
+  const [targetUserId, setTargetUserId] = useState<string | undefined>(
+    undefined,
+  );
+  const [targetAmount, setTargetAmount] = useState("10000");
 
-  const agentUsers = (tenantUsers || []).filter((u) => agentOptionId(u) && u.isActive !== false);
+  const agentUsers = (tenantUsers || []).filter(
+    (u) => agentOptionId(u) && u.isActive !== false,
+  );
 
   useEffect(() => {
     if (!manager) return;
@@ -114,7 +161,7 @@ function AgentPortalContent() {
 
   const saveTarget = async () => {
     if (!targetUserId) {
-      toast.error('Select an agent');
+      toast.error("Select an agent");
       return;
     }
     try {
@@ -124,10 +171,10 @@ function AgentPortalContent() {
         now.getMonth() + 1,
         parseFloat(targetAmount) || 0,
       );
-      toast.success('Target updated');
+      toast.success("Target updated");
       load();
     } catch {
-      toast.error('Failed to set target');
+      toast.error("Failed to set target");
     }
   };
 
@@ -147,7 +194,9 @@ function AgentPortalContent() {
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold">Sales Agent Portal</h1>
-            <p className="text-muted-foreground">Performance, earnings, pipeline, and achievements</p>
+            <p className="text-muted-foreground">
+              Performance, earnings, pipeline, and achievements
+            </p>
           </div>
           {level && (
             <div className="flex items-center gap-3 rounded-lg border px-4 py-2 bg-muted/30">
@@ -155,7 +204,8 @@ function AgentPortalContent() {
               <div>
                 <p className="font-semibold">{level.current.label}</p>
                 <p className="text-xs text-muted-foreground">
-                  Target {level.targetAchievementPct}% · Installments {level.installmentCompletionPct ?? 0}%
+                  Target {level.targetAchievementPct}% · Installments{" "}
+                  {level.installmentCompletionPct ?? 0}%
                 </p>
               </div>
               <Progress value={level.progressPct} className="w-24 h-2" />
@@ -166,17 +216,20 @@ function AgentPortalContent() {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Global Date Filter</CardTitle>
-            <CardDescription>Applies across Overview, Earnings, Pipeline, Leads, and Achievements</CardDescription>
+            <CardDescription>
+              Applies across Overview, Earnings, Pipeline, Leads, and
+              Achievements
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <AgentPortalDateFilter filters={filters} onChange={setFilters} />
             {manager && (
               <Select
-                value={filters.agentId || 'self'}
+                value={filters.agentId || "self"}
                 onValueChange={(v) =>
                   setFilters((f) => ({
                     ...f,
-                    agentId: v === 'self' ? undefined : v,
+                    agentId: v === "self" ? undefined : v,
                   }))
                 }
               >
@@ -210,7 +263,11 @@ function AgentPortalContent() {
           </TabsList>
 
           <TabsContent value="overview" className="mt-4">
-            <OverviewTab overview={overview} formatCurrency={formatCurrency} leaderboard={leaderboard} />
+            <OverviewTab
+              overview={overview}
+              formatCurrency={formatCurrency}
+              leaderboard={leaderboard}
+            />
           </TabsContent>
           <TabsContent value="earnings" className="mt-4">
             <EarningsTab earnings={earnings} formatCurrency={formatCurrency} />
@@ -231,10 +288,7 @@ function AgentPortalContent() {
                   <CardTitle>Set Monthly Target</CardTitle>
                 </CardHeader>
                 <CardContent className="flex flex-col sm:flex-row gap-3">
-                  <Select
-                    value={targetUserId}
-                    onValueChange={setTargetUserId}
-                  >
+                  <Select value={targetUserId} onValueChange={setTargetUserId}>
                     <SelectTrigger className="sm:w-48">
                       <SelectValue placeholder="Select agent" />
                     </SelectTrigger>
@@ -285,12 +339,32 @@ function OverviewTab({
 }) {
   if (!overview) return null;
   const kpis = [
-    { label: 'Total Earnings', value: formatCurrency(overview.totalEarnings), icon: DollarSign },
-    { label: 'Deals Closed', value: String(overview.dealsClosed), icon: Target },
-    { label: 'Pending Installments', value: formatCurrency(overview.pendingInstallments), icon: TrendingUp },
-    { label: 'Target Achievement', value: `${overview.targetAchievementPct}%`, icon: Award },
-    { label: 'Remaining Target', value: formatCurrency(overview.remainingTargetAmount), icon: Target },
-    { label: 'Win Rate', value: `${overview.winRatePct}%`, icon: TrendingUp },
+    {
+      label: "Total Earnings",
+      value: formatCurrency(overview.totalEarnings),
+      icon: DollarSign,
+    },
+    {
+      label: "Deals Closed",
+      value: String(overview.dealsClosed),
+      icon: Target,
+    },
+    {
+      label: "Pending Installments",
+      value: formatCurrency(overview.pendingInstallments),
+      icon: TrendingUp,
+    },
+    {
+      label: "Target Achievement",
+      value: `${overview.targetAchievementPct}%`,
+      icon: Award,
+    },
+    {
+      label: "Remaining Target",
+      value: formatCurrency(overview.remainingTargetAmount),
+      icon: Target,
+    },
+    { label: "Win Rate", value: `${overview.winRatePct}%`, icon: TrendingUp },
   ];
   return (
     <div className="space-y-4">
@@ -330,7 +404,9 @@ function OverviewTab({
                     <TableCell className="font-medium">{r.name}</TableCell>
                     <TableCell>{formatCurrency(r.totalEarnings)}</TableCell>
                     <TableCell>{r.dealsClosed}</TableCell>
-                    <TableCell>{r.level.current.icon} {r.level.current.label}</TableCell>
+                    <TableCell>
+                      {r.level.current.icon} {r.level.current.label}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -353,10 +429,32 @@ function EarningsTab({
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card><CardHeader className="pb-2"><CardDescription>Total Earnings</CardDescription><CardTitle>{formatCurrency(earnings.totalEarnings)}</CardTitle></CardHeader></Card>
-        <Card><CardHeader className="pb-2"><CardDescription>Deal Closed Value</CardDescription><CardTitle>{formatCurrency(earnings.dealClosedValue)}</CardTitle></CardHeader></Card>
-        <Card><CardHeader className="pb-2"><CardDescription>Pending Installments</CardDescription><CardTitle>{formatCurrency(earnings.pendingInstallments)}</CardTitle></CardHeader></Card>
-        <Card><CardHeader className="pb-2"><CardDescription>Win Rate</CardDescription><CardTitle>{earnings.winRatePct}%</CardTitle></CardHeader></Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Total Earnings</CardDescription>
+            <CardTitle>{formatCurrency(earnings.totalEarnings)}</CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Deal Closed Value</CardDescription>
+            <CardTitle>{formatCurrency(earnings.dealClosedValue)}</CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Pending Installments</CardDescription>
+            <CardTitle>
+              {formatCurrency(earnings.pendingInstallments)}
+            </CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Win Rate</CardDescription>
+            <CardTitle>{earnings.winRatePct}%</CardTitle>
+          </CardHeader>
+        </Card>
       </div>
       <Card>
         <CardHeader>
@@ -398,7 +496,10 @@ function LeadsTab({ leads }: { leads: AgentLeadsResponse | null }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2"><Users className="w-5 h-5" />My Leads ({leads.total})</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <Users className="w-5 h-5" />
+          My Leads ({leads.total})
+        </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
         <Table>
@@ -418,11 +519,15 @@ function LeadsTab({ leads }: { leads: AgentLeadsResponse | null }) {
                 className="cursor-pointer"
                 onClick={() => (window.location.href = `/crm/leads/${l.id}`)}
               >
-                <TableCell className="font-medium">{l.firstName} {l.lastName}</TableCell>
+                <TableCell className="font-medium">
+                  {l.firstName} {l.lastName}
+                </TableCell>
                 <TableCell>{l.email}</TableCell>
-                <TableCell>{l.company || '—'}</TableCell>
-                <TableCell>{l.leadSource || '—'}</TableCell>
-                <TableCell><Badge variant="outline">{l.status}</Badge></TableCell>
+                <TableCell>{l.company || "—"}</TableCell>
+                <TableCell>{l.leadSource || "—"}</TableCell>
+                <TableCell>
+                  <Badge variant="outline">{l.status}</Badge>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -432,7 +537,13 @@ function LeadsTab({ leads }: { leads: AgentLeadsResponse | null }) {
   );
 }
 
-function PipelineTab({ pipeline, formatCurrency }: { pipeline: PipelineStage[]; formatCurrency: (n: number) => string }) {
+function PipelineTab({
+  pipeline,
+  formatCurrency,
+}: {
+  pipeline: PipelineStage[];
+  formatCurrency: (n: number) => string;
+}) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {pipeline.map((s) => (
@@ -450,17 +561,27 @@ function PipelineTab({ pipeline, formatCurrency }: { pipeline: PipelineStage[]; 
   );
 }
 
-function AchievementsTab({ achievements }: { achievements: AgentAchievements | null }) {
+function AchievementsTab({
+  achievements,
+}: {
+  achievements: AgentAchievements | null;
+}) {
   if (!achievements) return null;
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Trophy className="w-5 h-5" />Badges</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Trophy className="w-5 h-5" />
+            Badges
+          </CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {achievements.badges.map((b) => (
-            <div key={b.key} className={`rounded-lg border p-4 ${b.earned ? 'bg-primary/5 border-primary/30' : 'opacity-60'}`}>
+            <div
+              key={b.key}
+              className={`rounded-lg border p-4 ${b.earned ? "bg-primary/5 border-primary/30" : "opacity-60"}`}
+            >
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-xl">{b.icon}</span>
                 <span className="font-semibold">{b.label}</span>
@@ -472,7 +593,9 @@ function AchievementsTab({ achievements }: { achievements: AgentAchievements | n
         </CardContent>
       </Card>
       <Card>
-        <CardHeader><CardTitle>Milestones</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle>Milestones</CardTitle>
+        </CardHeader>
         <CardContent className="space-y-3">
           {achievements.milestones.map((m) => (
             <div key={m.pct} className="flex items-center gap-3">
@@ -482,9 +605,19 @@ function AchievementsTab({ achievements }: { achievements: AgentAchievements | n
                   <span>{m.label}</span>
                   <span>{m.pct}%</span>
                 </div>
-                <Progress value={m.unlocked ? 100 : Math.min(achievements.targetAchievementPct, m.pct) / m.pct * 100} />
+                <Progress
+                  value={
+                    m.unlocked
+                      ? 100
+                      : (Math.min(achievements.targetAchievementPct, m.pct) /
+                          m.pct) *
+                        100
+                  }
+                />
               </div>
-              <Badge variant={m.unlocked ? 'default' : 'secondary'}>{m.unlocked ? 'Unlocked' : 'Locked'}</Badge>
+              <Badge variant={m.unlocked ? "default" : "secondary"}>
+                {m.unlocked ? "Unlocked" : "Locked"}
+              </Badge>
             </div>
           ))}
         </CardContent>
@@ -493,7 +626,13 @@ function AchievementsTab({ achievements }: { achievements: AgentAchievements | n
   );
 }
 
-function TeamTab({ team, formatCurrency }: { team: TeamMember[]; formatCurrency: (n: number) => string }) {
+function TeamTab({
+  team,
+  formatCurrency,
+}: {
+  team: TeamMember[];
+  formatCurrency: (n: number) => string;
+}) {
   return (
     <Card>
       <CardHeader>
@@ -520,7 +659,9 @@ function TeamTab({ team, formatCurrency }: { team: TeamMember[]; formatCurrency:
                 <TableCell>{m.dealsClosed}</TableCell>
                 <TableCell>{m.targetAchievementPct}%</TableCell>
                 <TableCell>{m.winRatePct}%</TableCell>
-                <TableCell>{m.level.current.icon} {m.level.current.label}</TableCell>
+                <TableCell>
+                  {m.level.current.icon} {m.level.current.label}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

@@ -1,22 +1,17 @@
-'use client';
+"use client";
 
-import { Check, Loader2 } from 'lucide-react';
-import { cn } from '@/src/lib/utils';
-import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '../ui/card';
+import { Check, Loader2 } from "lucide-react";
+import { cn } from "@/src/lib/utils";
+import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 
 const PLAN_DISPLAY_ORDER = [
-  'agency',
-  'commerce',
-  'workshop',
-  'healthcare',
-  'ngo',
+  "agency",
+  "commerce",
+  "workshop",
+  "healthcare",
+  "ngo",
 ] as const;
 
 function sortPlansForDisplay(plans: LandingPlan[]): LandingPlan[] {
@@ -74,29 +69,31 @@ function LandingPlanCard({
   onSubscribe,
 }: LandingPlanCardProps) {
   const highlightBadge =
-    plan.planType === 'ngo' ? (
-      <Badge className="bg-violet-600 px-4 py-1.5 text-white">For Nonprofits</Badge>
-    ) : plan.planType === 'enterprise' ? (
+    plan.planType === "ngo" ? (
+      <Badge className="bg-violet-600 px-4 py-1.5 text-white">
+        For Nonprofits
+      </Badge>
+    ) : plan.planType === "enterprise" ? (
       <Badge className="bg-blue-600 px-4 py-1.5 text-white">Most Popular</Badge>
     ) : null;
 
   return (
     <Card
       className={cn(
-        'relative flex h-full flex-col border shadow-sm transition-all duration-300 hover:shadow-lg',
-        plan.planType === 'ngo' &&
-          'border-violet-400 ring-2 ring-violet-200/60',
-        plan.planType === 'enterprise' &&
-          'border-blue-400 ring-2 ring-blue-200/60 lg:scale-[1.02]',
-        plan.planType !== 'ngo' &&
-          plan.planType !== 'enterprise' &&
-          'border-slate-200 hover:border-blue-200',
+        "relative flex h-full flex-col border shadow-sm transition-all duration-300 hover:shadow-lg",
+        plan.planType === "ngo" &&
+          "border-violet-400 ring-2 ring-violet-200/60",
+        plan.planType === "enterprise" &&
+          "border-blue-400 ring-2 ring-blue-200/60 lg:scale-[1.02]",
+        plan.planType !== "ngo" &&
+          plan.planType !== "enterprise" &&
+          "border-slate-200 hover:border-blue-200",
       )}
     >
       <CardHeader
         className={cn(
-          'pb-4 text-center',
-          highlightBadge ? 'space-y-3 pt-6' : 'pt-8',
+          "pb-4 text-center",
+          highlightBadge ? "space-y-3 pt-6" : "pt-8",
         )}
       >
         {highlightBadge && (
@@ -139,7 +136,7 @@ function LandingPlanCard({
           className="mt-auto w-full bg-blue-600 hover:bg-blue-700"
           onClick={() => onSubscribe(plan)}
         >
-          {isAuthenticated ? 'Create Workspace' : 'Start Free Trial'}
+          {isAuthenticated ? "Create Workspace" : "Start Free Trial"}
         </Button>
       </CardContent>
     </Card>
@@ -194,12 +191,11 @@ export function LandingPricingSection({
             {bottomRow.length > 0 && (
               <div
                 className={cn(
-                  'mx-auto grid max-w-6xl grid-cols-1 gap-6 pt-1 sm:gap-8',
-                  bottomRow.length === 1 && 'max-w-md',
+                  "mx-auto grid max-w-6xl grid-cols-1 gap-6 pt-1 sm:gap-8",
+                  bottomRow.length === 1 && "max-w-md",
                   bottomRow.length === 2 &&
-                    'max-w-4xl sm:grid-cols-2 lg:max-w-5xl',
-                  bottomRow.length >= 3 &&
-                    'sm:grid-cols-2 lg:grid-cols-3',
+                    "max-w-4xl sm:grid-cols-2 lg:max-w-5xl",
+                  bottomRow.length >= 3 && "sm:grid-cols-2 lg:grid-cols-3",
                 )}
               >
                 {bottomRow.map((plan) => (

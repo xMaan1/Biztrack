@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { DashboardLayout } from '@/src/components/layout';
+import React, { useState, useEffect, useCallback } from "react";
+import { DashboardLayout } from "@/src/components/layout";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
-import { Label } from '@/src/components/ui/label';
-import { Textarea } from '@/src/components/ui/textarea';
+} from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
+import { Label } from "@/src/components/ui/label";
+import { Textarea } from "@/src/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +20,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/src/components/ui/dialog';
+} from "@/src/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -28,12 +28,19 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/src/components/ui/table';
-import { UserPlus, Edit, Trash2, ChevronRight, ChevronLeft, History } from 'lucide-react';
-import healthcareService from '@/src/services/HealthcareService';
-import type { Patient, PatientCreate } from '@/src/models/healthcare';
-import { toast } from 'sonner';
-import Link from 'next/link';
+} from "@/src/components/ui/table";
+import {
+  UserPlus,
+  Edit,
+  Trash2,
+  ChevronRight,
+  ChevronLeft,
+  History,
+} from "lucide-react";
+import healthcareService from "@/src/services/HealthcareService";
+import type { Patient, PatientCreate } from "@/src/models/healthcare";
+import { toast } from "sonner";
+import Link from "next/link";
 
 export default function HealthcarePatientsPage() {
   return (
@@ -47,7 +54,7 @@ function PatientsContent() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const limit = 20;
   const totalPages = Math.ceil(total / limit) || 1;
@@ -59,12 +66,12 @@ function PatientsContent() {
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   const [formData, setFormData] = useState<PatientCreate>({
-    full_name: '',
-    phone: '',
-    email: '',
-    date_of_birth: '',
-    address: '',
-    notes: '',
+    full_name: "",
+    phone: "",
+    email: "",
+    date_of_birth: "",
+    address: "",
+    notes: "",
   });
 
   const loadPatients = useCallback(async () => {
@@ -78,7 +85,7 @@ function PatientsContent() {
       setPatients(res.patients);
       setTotal(res.total);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Failed to load patients');
+      toast.error(e instanceof Error ? e.message : "Failed to load patients");
     } finally {
       setLoading(false);
     }
@@ -91,12 +98,12 @@ function PatientsContent() {
   const openAdd = () => {
     setEditingPatient(null);
     setFormData({
-      full_name: '',
-      phone: '',
-      email: '',
-      date_of_birth: '',
-      address: '',
-      notes: '',
+      full_name: "",
+      phone: "",
+      email: "",
+      date_of_birth: "",
+      address: "",
+      notes: "",
     });
     setFormOpen(true);
   };
@@ -105,11 +112,11 @@ function PatientsContent() {
     setEditingPatient(p);
     setFormData({
       full_name: p.full_name,
-      phone: p.phone ?? '',
-      email: p.email ?? '',
-      date_of_birth: p.date_of_birth ?? '',
-      address: p.address ?? '',
-      notes: p.notes ?? '',
+      phone: p.phone ?? "",
+      email: p.email ?? "",
+      date_of_birth: p.date_of_birth ?? "",
+      address: p.address ?? "",
+      notes: p.notes ?? "",
     });
     setFormOpen(true);
   };
@@ -125,7 +132,7 @@ function PatientsContent() {
 
   const handleSubmit = async () => {
     if (!formData.full_name.trim()) {
-      toast.error('Full name is required');
+      toast.error("Full name is required");
       return;
     }
     try {
@@ -140,21 +147,26 @@ function PatientsContent() {
       };
       if (editingPatient) {
         await healthcareService.updatePatient(editingPatient.id, payload);
-        toast.success('Patient updated');
+        toast.success("Patient updated");
       } else {
         await healthcareService.createPatient(payload);
-        toast.success('Patient added');
+        toast.success("Patient added");
       }
       setFormOpen(false);
       loadPatients();
     } catch (e: unknown) {
       const msg =
-        e && typeof e === 'object' && 'response' in e && e.response && typeof e.response === 'object' && 'data' in e.response
+        e &&
+        typeof e === "object" &&
+        "response" in e &&
+        e.response &&
+        typeof e.response === "object" &&
+        "data" in e.response
           ? (e.response as { data?: { detail?: string } }).data?.detail
           : e instanceof Error
             ? e.message
-            : 'Request failed';
-      toast.error(typeof msg === 'string' ? msg : JSON.stringify(msg));
+            : "Request failed";
+      toast.error(typeof msg === "string" ? msg : JSON.stringify(msg));
     } finally {
       setSubmitLoading(false);
     }
@@ -165,18 +177,23 @@ function PatientsContent() {
     try {
       setDeleteLoading(true);
       await healthcareService.deletePatient(patientToDelete.id);
-      toast.success('Patient deleted');
+      toast.success("Patient deleted");
       setDeleteDialogOpen(false);
       setPatientToDelete(null);
       loadPatients();
     } catch (e: unknown) {
       const msg =
-        e && typeof e === 'object' && 'response' in e && e.response && typeof e.response === 'object' && 'data' in e.response
+        e &&
+        typeof e === "object" &&
+        "response" in e &&
+        e.response &&
+        typeof e.response === "object" &&
+        "data" in e.response
           ? (e.response as { data?: { detail?: string } }).data?.detail
           : e instanceof Error
             ? e.message
-            : 'Delete failed';
-      toast.error(typeof msg === 'string' ? msg : JSON.stringify(msg));
+            : "Delete failed";
+      toast.error(typeof msg === "string" ? msg : JSON.stringify(msg));
     } finally {
       setDeleteLoading(false);
     }
@@ -219,7 +236,7 @@ function PatientsContent() {
         <CardHeader>
           <CardTitle>Patients</CardTitle>
           <CardDescription>
-            {total} patient{total !== 1 ? 's' : ''} total
+            {total} patient{total !== 1 ? "s" : ""} total
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -251,7 +268,9 @@ function PatientsContent() {
           {loading ? (
             <div className="py-12 text-center text-gray-500">Loading...</div>
           ) : patients.length === 0 ? (
-            <div className="py-12 text-center text-gray-500">No patients yet. Add one to use when creating appointments.</div>
+            <div className="py-12 text-center text-gray-500">
+              No patients yet. Add one to use when creating appointments.
+            </div>
           ) : (
             <Table>
               <TableHeader>
@@ -267,17 +286,23 @@ function PatientsContent() {
                 {patients.map((p) => (
                   <TableRow key={p.id}>
                     <TableCell className="font-medium">{p.full_name}</TableCell>
-                    <TableCell>{p.phone || '—'}</TableCell>
-                    <TableCell>{p.email || '—'}</TableCell>
-                    <TableCell>{p.date_of_birth || '—'}</TableCell>
+                    <TableCell>{p.phone || "—"}</TableCell>
+                    <TableCell>{p.email || "—"}</TableCell>
+                    <TableCell>{p.date_of_birth || "—"}</TableCell>
                     <TableCell className="text-right">
                       <Button variant="ghost" size="sm" asChild>
-                        <Link href={`/healthcare/patient-history?patient=${p.id}`}>
+                        <Link
+                          href={`/healthcare/patient-history?patient=${p.id}`}
+                        >
                           <History className="w-4 h-4 mr-1" />
                           View history
                         </Link>
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => openEdit(p)}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openEdit(p)}
+                      >
                         <Edit className="w-4 h-4 mr-1" />
                         Edit
                       </Button>
@@ -302,15 +327,19 @@ function PatientsContent() {
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
         <DialogContent className="sm:max-w-[480px]">
           <DialogHeader>
-            <DialogTitle>{editingPatient ? 'Edit Patient' : 'Add Patient'}</DialogTitle>
-            <DialogDescription>Patient details for appointments</DialogDescription>
+            <DialogTitle>
+              {editingPatient ? "Edit Patient" : "Add Patient"}
+            </DialogTitle>
+            <DialogDescription>
+              Patient details for appointments
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>Full name</Label>
               <Input
                 value={formData.full_name}
-                onChange={(e) => handleFormChange('full_name', e.target.value)}
+                onChange={(e) => handleFormChange("full_name", e.target.value)}
                 placeholder="Patient full name"
               />
             </div>
@@ -318,8 +347,8 @@ function PatientsContent() {
               <div className="space-y-2">
                 <Label>Phone</Label>
                 <Input
-                  value={formData.phone ?? ''}
-                  onChange={(e) => handleFormChange('phone', e.target.value)}
+                  value={formData.phone ?? ""}
+                  onChange={(e) => handleFormChange("phone", e.target.value)}
                   placeholder="Optional"
                 />
               </div>
@@ -327,8 +356,8 @@ function PatientsContent() {
                 <Label>Email</Label>
                 <Input
                   type="email"
-                  value={formData.email ?? ''}
-                  onChange={(e) => handleFormChange('email', e.target.value)}
+                  value={formData.email ?? ""}
+                  onChange={(e) => handleFormChange("email", e.target.value)}
                   placeholder="Optional"
                 />
               </div>
@@ -337,15 +366,17 @@ function PatientsContent() {
               <Label>Date of birth</Label>
               <Input
                 type="date"
-                value={formData.date_of_birth ?? ''}
-                onChange={(e) => handleFormChange('date_of_birth', e.target.value)}
+                value={formData.date_of_birth ?? ""}
+                onChange={(e) =>
+                  handleFormChange("date_of_birth", e.target.value)
+                }
               />
             </div>
             <div className="space-y-2">
               <Label>Address</Label>
               <Textarea
-                value={formData.address ?? ''}
-                onChange={(e) => handleFormChange('address', e.target.value)}
+                value={formData.address ?? ""}
+                onChange={(e) => handleFormChange("address", e.target.value)}
                 placeholder="Optional"
                 rows={2}
               />
@@ -353,8 +384,8 @@ function PatientsContent() {
             <div className="space-y-2">
               <Label>Notes</Label>
               <Textarea
-                value={formData.notes ?? ''}
-                onChange={(e) => handleFormChange('notes', e.target.value)}
+                value={formData.notes ?? ""}
+                onChange={(e) => handleFormChange("notes", e.target.value)}
                 placeholder="Optional"
                 rows={2}
               />
@@ -365,7 +396,11 @@ function PatientsContent() {
               Cancel
             </Button>
             <Button onClick={handleSubmit} disabled={submitLoading}>
-              {submitLoading ? 'Saving...' : editingPatient ? 'Update' : 'Create'}
+              {submitLoading
+                ? "Saving..."
+                : editingPatient
+                  ? "Update"
+                  : "Create"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -376,15 +411,24 @@ function PatientsContent() {
           <DialogHeader>
             <DialogTitle>Delete Patient</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete {patientToDelete?.full_name ?? 'this patient'}? This cannot be undone.
+              Are you sure you want to delete{" "}
+              {patientToDelete?.full_name ?? "this patient"}? This cannot be
+              undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+            >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDelete} disabled={deleteLoading}>
-              {deleteLoading ? 'Deleting...' : 'Delete'}
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={deleteLoading}
+            >
+              {deleteLoading ? "Deleting..." : "Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>

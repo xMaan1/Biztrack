@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import { Input } from '@/src/components/ui/input';
+import { Input } from "@/src/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
-import type { Customer } from '@/src/services/CustomerService';
-import type { InvoiceCreate } from '@/src/models/sales';
-import { getCustomerDisplayName } from '@/src/utils/customerUtils';
-import { COMMERCE_INPUT_CLS } from './constants';
-import { AddCustomerButton } from './AddCustomerButton';
-import { InlineField } from './InlineField';
+} from "@/src/components/ui/select";
+import type { Customer } from "@/src/services/CustomerService";
+import type { InvoiceCreate } from "@/src/models/sales";
+import { getCustomerDisplayName } from "@/src/utils/customerUtils";
+import { COMMERCE_INPUT_CLS } from "./constants";
+import { AddCustomerButton } from "./AddCustomerButton";
+import { InlineField } from "./InlineField";
 
 type CommerceInvoiceDetailsSectionProps = {
   formData: InvoiceCreate;
@@ -47,7 +47,7 @@ export function CommerceInvoiceDetailsSection({
           <InlineField label="Order Number:">
             <Input
               id="orderNumber"
-              value={formData.orderNumber || ''}
+              value={formData.orderNumber || ""}
               readOnly
               placeholder="Auto-generated (ORD-YYYYMMDD-0001)"
               className={`${COMMERCE_INPUT_CLS} bg-muted`}
@@ -60,25 +60,33 @@ export function CommerceInvoiceDetailsSection({
             <Input
               id="orderTime"
               type="datetime-local"
-              value={formData.orderTime || ''}
+              value={formData.orderTime || ""}
               onChange={(e) => onOrderTimeChange(e.target.value)}
               className={COMMERCE_INPUT_CLS}
             />
           </InlineField>
-          <InlineField label="Due Date:" labelClassName="text-destructive" required>
+          <InlineField
+            label="Due Date:"
+            labelClassName="text-destructive"
+            required
+          >
             <Input
               id="dueDate"
               type="date"
               value={formData.dueDate}
-              onChange={(e) => onInputChange('dueDate', e.target.value)}
-              className={`${COMMERCE_INPUT_CLS} ${errors.dueDate ? 'border-destructive' : ''}`}
+              onChange={(e) => onInputChange("dueDate", e.target.value)}
+              className={`${COMMERCE_INPUT_CLS} ${errors.dueDate ? "border-destructive" : ""}`}
             />
           </InlineField>
           {errors.dueDate && (
-            <p className="pl-[116px] text-xs text-destructive">{errors.dueDate}</p>
+            <p className="pl-[116px] text-xs text-destructive">
+              {errors.dueDate}
+            </p>
           )}
           {errors.issueDate && (
-            <p className="pl-[116px] text-xs text-destructive">{errors.issueDate}</p>
+            <p className="pl-[116px] text-xs text-destructive">
+              {errors.issueDate}
+            </p>
           )}
         </div>
       </div>
@@ -96,15 +104,20 @@ export function CommerceInvoiceDetailsSection({
                 placeholder="Search by name, email, phone..."
                 className={`${COMMERCE_INPUT_CLS} h-10 min-w-0 flex-1`}
               />
-              <Select value={selectedCustomer?.id || ''} onValueChange={onCustomerPick}>
+              <Select
+                value={selectedCustomer?.id || ""}
+                onValueChange={onCustomerPick}
+              >
                 <SelectTrigger
-                  className={`${COMMERCE_INPUT_CLS} h-10 w-full shrink-0 md:w-[220px] ${errors.customer ? 'border-destructive' : ''}`}
+                  className={`${COMMERCE_INPUT_CLS} h-10 w-full shrink-0 md:w-[220px] ${errors.customer ? "border-destructive" : ""}`}
                 >
                   <SelectValue placeholder="Select customer" />
                 </SelectTrigger>
                 <SelectContent>
                   {selectedCustomer &&
-                    !customerOptions.some((c) => c.id === selectedCustomer.id) && (
+                    !customerOptions.some(
+                      (c) => c.id === selectedCustomer.id,
+                    ) && (
                       <SelectItem value={selectedCustomer.id}>
                         {getCustomerDisplayName(selectedCustomer)}
                       </SelectItem>
@@ -117,7 +130,10 @@ export function CommerceInvoiceDetailsSection({
                 </SelectContent>
               </Select>
               {onNewCustomer ? (
-                <AddCustomerButton onClick={onNewCustomer} className="w-full shrink-0 md:w-auto" />
+                <AddCustomerButton
+                  onClick={onNewCustomer}
+                  className="w-full shrink-0 md:w-auto"
+                />
               ) : null}
             </div>
             {errors.customer ? (

@@ -1,33 +1,37 @@
-import type { Product, ProductCreate, UnitOfMeasure } from '@/src/models/pos';
-import { UnitOfMeasure as UnitOfMeasureEnum } from '@/src/models/pos';
-import type { ProductFiltersState, ProductFormData } from './types';
+import {
+  UnitOfMeasure as UnitOfMeasureEnum,
+  type Product,
+  type ProductCreate,
+  type UnitOfMeasure,
+} from "@/src/models/pos";
+import type { ProductFiltersState, ProductFormData } from "./types";
 
 export function getDefaultDateOfPurchase(): string {
-  return new Date().toISOString().split('T')[0];
+  return new Date().toISOString().split("T")[0];
 }
 
 export function emptyProductFormData(): ProductFormData {
   return {
-    name: '',
-    sku: '',
-    description: '',
-    category: 'other',
-    productType: '',
+    name: "",
+    sku: "",
+    description: "",
+    category: "other",
+    productType: "",
     packSize: 1,
-    brand: '',
-    supplierId: '',
+    brand: "",
+    supplierId: "",
     salePrice: 0,
     costPerUnitPrice: 0,
     stockQuantity: 0,
     minStockLevel: 5,
     unitOfMeasure: UnitOfMeasureEnum.PIECE,
-    barcode: '',
-    expiryDate: '',
-    batchNumber: '',
-    serialNumber: '',
-    mfgDate: '',
+    barcode: "",
+    expiryDate: "",
+    batchNumber: "",
+    serialNumber: "",
+    mfgDate: "",
     dateOfPurchase: getDefaultDateOfPurchase(),
-    modelNo: '',
+    modelNo: "",
   };
 }
 
@@ -35,24 +39,24 @@ export function productToFormData(product: Product): ProductFormData {
   return {
     name: product.name,
     sku: product.sku,
-    description: product.description || '',
+    description: product.description || "",
     category: product.category,
-    productType: product.productType || '',
+    productType: product.productType || "",
     packSize: product.packSize ?? 1,
-    brand: product.brand || '',
-    supplierId: product.supplierId || '',
+    brand: product.brand || "",
+    supplierId: product.supplierId || "",
     salePrice: product.salePrice,
     costPerUnitPrice: product.costPerUnitPrice,
     stockQuantity: product.stockQuantity,
     minStockLevel: product.minStockLevel,
     unitOfMeasure: product.unitOfMeasure || UnitOfMeasureEnum.PIECE,
-    barcode: product.barcode || '',
-    expiryDate: product.expiryDate || '',
-    batchNumber: product.batchNumber || '',
-    serialNumber: product.serialNumber || '',
-    mfgDate: product.mfgDate || '',
+    barcode: product.barcode || "",
+    expiryDate: product.expiryDate || "",
+    batchNumber: product.batchNumber || "",
+    serialNumber: product.serialNumber || "",
+    mfgDate: product.mfgDate || "",
     dateOfPurchase: product.dateOfPurchase || getDefaultDateOfPurchase(),
-    modelNo: product.modelNo || '',
+    modelNo: product.modelNo || "",
   };
 }
 
@@ -93,7 +97,7 @@ export function filterProducts(
       (product.barcode && product.barcode.toLowerCase().includes(q));
 
     const matchesCategory =
-      selectedCategory === 'all' || product.category === selectedCategory;
+      selectedCategory === "all" || product.category === selectedCategory;
 
     const matchesLowStock =
       !showLowStock || product.stockQuantity <= product.minStockLevel;
@@ -103,23 +107,28 @@ export function filterProducts(
 }
 
 export function formatProductDate(dateString: string): string {
-  if (!dateString) return 'N/A';
-  return new Date(dateString).toLocaleDateString('en-US');
+  if (!dateString) return "N/A";
+  return new Date(dateString).toLocaleDateString("en-US");
 }
 
 export function formatCategoryLabel(category: string): string {
-  return category.charAt(0).toUpperCase() + category.slice(1).replace(/_/g, ' ');
+  return (
+    category.charAt(0).toUpperCase() + category.slice(1).replace(/_/g, " ")
+  );
 }
 
-export function profitMarginPercent(salePrice: number, costPerUnitPrice: number): string {
-  if (!costPerUnitPrice) return '0.0';
+export function profitMarginPercent(
+  salePrice: number,
+  costPerUnitPrice: number,
+): string {
+  if (!costPerUnitPrice) return "0.0";
   return (((salePrice - costPerUnitPrice) / costPerUnitPrice) * 100).toFixed(1);
 }
 
 export function defaultFilters(): ProductFiltersState {
   return {
-    searchTerm: '',
-    selectedCategory: 'all',
+    searchTerm: "",
+    selectedCategory: "all",
     showLowStock: false,
   };
 }

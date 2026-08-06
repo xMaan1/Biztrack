@@ -1,7 +1,7 @@
-import { Edit, Eye, Trash2 } from 'lucide-react';
-import { Card } from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Badge } from '@/src/components/ui/badge';
+import { Edit, Eye, Trash2 } from "lucide-react";
+import { Card } from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { Badge } from "@/src/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -9,9 +9,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/src/components/ui/table';
-import type { Donor } from '@/src/models/ngo';
-import { donorTypeLabel } from '@/src/utils/ngo/donorUtils';
+} from "@/src/components/ui/table";
+import type { Donor } from "@/src/models/ngo";
+import { donorTypeLabel } from "@/src/utils/ngo/donorUtils";
 
 type DonorsTableProps = {
   donors: Donor[];
@@ -58,13 +58,19 @@ export function DonorsTable({
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={7} className="py-12 text-center text-muted-foreground">
+                <TableCell
+                  colSpan={7}
+                  className="py-12 text-center text-muted-foreground"
+                >
                   Loading donors...
                 </TableCell>
               </TableRow>
             ) : donors.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="py-12 text-center text-muted-foreground">
+                <TableCell
+                  colSpan={7}
+                  className="py-12 text-center text-muted-foreground"
+                >
                   No donors found
                 </TableCell>
               </TableRow>
@@ -75,40 +81,64 @@ export function DonorsTable({
                   className="cursor-pointer hover:bg-emerald-50/50"
                   onClick={() => onView(d)}
                 >
-                  <TableCell className="font-medium text-emerald-600">{d.donor_code}</TableCell>
-                  <TableCell>
-                    <div className="font-medium">{d.full_name}</div>
-                    <div className="text-xs text-muted-foreground">{d.email}</div>
+                  <TableCell className="font-medium text-emerald-600">
+                    {d.donor_code}
                   </TableCell>
                   <TableCell>
-                    <div className="text-sm">{d.phone || '—'}</div>
+                    <div className="font-medium">{d.full_name}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {d.email}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm">{d.phone || "—"}</div>
                     {d.address && (
-                      <div className="text-xs text-muted-foreground line-clamp-1">{d.address}</div>
+                      <div className="text-xs text-muted-foreground line-clamp-1">
+                        {d.address}
+                      </div>
                     )}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="secondary" className="bg-purple-100 text-purple-700">
+                    <Badge
+                      variant="secondary"
+                      className="bg-purple-100 text-purple-700"
+                    >
                       {donorTypeLabel(d.donor_type)}
                     </Badge>
                   </TableCell>
                   <TableCell>
                     <Badge
                       className={
-                        d.status === 'active'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-gray-100 text-gray-600'
+                        d.status === "active"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-gray-100 text-gray-600"
                       }
                     >
-                      {d.status === 'active' ? 'Active' : 'Inactive'}
+                      {d.status === "active" ? "Active" : "Inactive"}
                     </Badge>
                   </TableCell>
-                  <TableCell className="font-semibold">{formatCurrency(d.total_donated)}</TableCell>
+                  <TableCell className="font-semibold">
+                    {formatCurrency(d.total_donated)}
+                  </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
-                      <Button variant="ghost" size="icon" onClick={() => onEdit(d)} aria-label="Edit">
+                    <div
+                      className="flex justify-end gap-1"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onEdit(d)}
+                        aria-label="Edit"
+                      >
                         <Edit className="h-4 w-4 text-blue-600" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => onView(d)} aria-label="View">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onView(d)}
+                        aria-label="View"
+                      >
                         <Eye className="h-4 w-4 text-emerald-600" />
                       </Button>
                       <Button

@@ -1,7 +1,7 @@
-import { Input } from '@/src/components/ui/input';
-import { Textarea } from '@/src/components/ui/textarea';
-import { Label } from '@/src/components/ui/label';
-import { ContactCreate } from '@/src/models/crm';
+import { Input } from "@/src/components/ui/input";
+import { Textarea } from "@/src/components/ui/textarea";
+import { Label } from "@/src/components/ui/label";
+import { ContactCreate } from "@/src/models/crm";
 
 type ContactFormNotesSectionProps = {
   formData: ContactCreate;
@@ -19,9 +19,7 @@ export function ContactFormNotesSection({
         <Textarea
           id="notes"
           value={formData.notes}
-          onChange={(e) =>
-            setFormData({ ...formData, notes: e.target.value })
-          }
+          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
           placeholder="Additional notes about the contact"
           rows={3}
         />
@@ -31,12 +29,12 @@ export function ContactFormNotesSection({
         <Label htmlFor="tags">Tags (comma-separated)</Label>
         <Input
           id="tags"
-          value={formData.tags?.join(', ') || ''}
+          value={formData.tags?.join(", ") || ""}
           onChange={(e) =>
             setFormData({
               ...formData,
               tags: e.target.value
-                ? e.target.value.split(',').map((tag) => tag.trim())
+                ? e.target.value.split(",").map((tag) => tag.trim())
                 : [],
             })
           }
@@ -48,7 +46,7 @@ export function ContactFormNotesSection({
         <Label htmlFor="contactDescription">Description</Label>
         <Textarea
           id="contactDescription"
-          value={formData.description || ''}
+          value={formData.description || ""}
           onChange={(e) =>
             setFormData({ ...formData, description: e.target.value })
           }

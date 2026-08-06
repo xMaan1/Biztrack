@@ -1,53 +1,56 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { ModuleGuard } from '../../../../components/guards/PermissionGuard';
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { ModuleGuard } from "../../../../components/guards/PermissionGuard";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
-import { Label } from '@/src/components/ui/label';
-import { Textarea } from '@/src/components/ui/textarea';
+} from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
+import { Label } from "@/src/components/ui/label";
+import { Textarea } from "@/src/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
+} from "@/src/components/ui/select";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/src/components/ui/dialog';
-import { ArrowLeft, Save, X } from 'lucide-react';
-import Link from 'next/link';
-import { DashboardLayout } from '@/src/components/layout';
-import HRMService from '@/src/services/HRMService';
-import FileUploadService from '@/src/services/FileUploadService';
+} from "@/src/components/ui/dialog";
+import { ArrowLeft, Save, X } from "lucide-react";
+import Link from "next/link";
+import { DashboardLayout } from "@/src/components/layout";
+import HRMService from "@/src/services/HRMService";
+import FileUploadService from "@/src/services/FileUploadService";
 import {
   EmployeeCreate,
   Department,
   EmploymentStatus,
   EmployeeType,
-} from '@/src/models/hrm';
-import { toast } from 'sonner';
-import { extractErrorMessage } from '@/src/utils/errorUtils';
-import { Alert, AlertDescription } from '@/src/components/ui/alert';
-import { useCustomDepartments } from '@/src/hooks/useCustomDepartments';
-import { CustomOptionDialog } from '@/src/components/common/CustomOptionDialog';
+} from "@/src/models/hrm";
+import { toast } from "sonner";
+import { extractErrorMessage } from "@/src/utils/errorUtils";
+import { Alert, AlertDescription } from "@/src/components/ui/alert";
+import { useCustomDepartments } from "@/src/hooks/useCustomDepartments";
+import { CustomOptionDialog } from "@/src/components/common/CustomOptionDialog";
 
 export default function NewEmployeePage() {
   return (
-    <ModuleGuard module="hrm" fallback={<div>You don't have access to HRM module</div>}>
+    <ModuleGuard
+      module="hrm"
+      fallback={<div>You don&apos;t have access to HRM module</div>}
+    >
       <NewEmployeeContent />
     </ModuleGuard>
   );
@@ -58,55 +61,59 @@ function NewEmployeeContent() {
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
-  const [showCustomDepartmentDialog, setShowCustomDepartmentDialog] = useState(false);
+  const [showCustomDepartmentDialog, setShowCustomDepartmentDialog] =
+    useState(false);
   const [creatingDepartment, setCreatingDepartment] = useState(false);
-  const {
-    customDepartments,
-    createCustomDepartment,
-  } = useCustomDepartments();
+  const { customDepartments, createCustomDepartment } = useCustomDepartments();
   const [formData, setFormData] = useState<EmployeeCreate>({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    dateOfBirth: '',
-    hireDate: new Date().toISOString().split('T')[0],
-    employeeId: '',
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    dateOfBirth: "",
+    hireDate: new Date().toISOString().split("T")[0],
+    employeeId: "",
     department: Department.OTHER,
-    position: '',
+    position: "",
     employeeType: EmployeeType.FULL_TIME,
     employmentStatus: EmploymentStatus.ACTIVE,
-    managerId: '',
+    managerId: "",
     salary: 0,
-    address: '',
-    emergencyContact: '',
-    emergencyPhone: '',
+    address: "",
+    emergencyContact: "",
+    emergencyPhone: "",
     skills: [],
     certifications: [],
-    notes: '',
+    notes: "",
   });
 
-  const [skillsInput, setSkillsInput] = useState('');
-  const [certificationsInput, setCertificationsInput] = useState('');
+  const [skillsInput, setSkillsInput] = useState("");
+  const [certificationsInput, setCertificationsInput] = useState("");
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [attachments, setAttachments] = useState<File[]>([]);
 
-  const handleInputChange = (field: keyof EmployeeCreate, value: string | number) => {
+  const handleInputChange = (
+    field: keyof EmployeeCreate,
+    value: string | number,
+  ) => {
     if (formError) setFormError(null);
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
   };
 
-  const handleCreateCustomDepartment = async (name: string, description: string) => {
+  const handleCreateCustomDepartment = async (
+    name: string,
+    description: string,
+  ) => {
     try {
       setCreatingDepartment(true);
       await createCustomDepartment(name, description);
-      handleInputChange('department', name);
-      toast.success('Department created');
+      handleInputChange("department", name);
+      toast.success("Department created");
     } catch (error) {
-      toast.error(extractErrorMessage(error) || 'Failed to create department');
+      toast.error(extractErrorMessage(error) || "Failed to create department");
     } finally {
       setCreatingDepartment(false);
     }
@@ -114,16 +121,16 @@ function NewEmployeeContent() {
 
   const handleSkillsAdd = () => {
     if (skillsInput.trim()) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         skills: [...(prev.skills || []), skillsInput.trim()],
       }));
-      setSkillsInput('');
+      setSkillsInput("");
     }
   };
 
   const handleSkillsRemove = (index: number) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       skills: prev.skills?.filter((_, i) => i !== index) || [],
     }));
@@ -131,16 +138,19 @@ function NewEmployeeContent() {
 
   const handleCertificationsAdd = () => {
     if (certificationsInput.trim()) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        certifications: [...(prev.certifications || []), certificationsInput.trim()],
+        certifications: [
+          ...(prev.certifications || []),
+          certificationsInput.trim(),
+        ],
       }));
-      setCertificationsInput('');
+      setCertificationsInput("");
     }
   };
 
   const handleCertificationsRemove = (index: number) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       certifications: prev.certifications?.filter((_, i) => i !== index) || [],
     }));
@@ -148,50 +158,65 @@ function NewEmployeeContent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.employeeId) {
-      toast.error('Please fill in all required fields');
+
+    if (
+      !formData.firstName ||
+      !formData.lastName ||
+      !formData.email ||
+      !formData.employeeId
+    ) {
+      toast.error("Please fill in all required fields");
       return;
     }
 
     try {
       setLoading(true);
       setFormError(null);
-      
-      let resumeUrl = '';
+
+      let resumeUrl = "";
       const attachmentUrls: string[] = [];
-      
+
       if (resumeFile) {
-        toast.info('Uploading resume...');
-        const resumeResponse = await FileUploadService.uploadEmployeeFile(resumeFile, 'resume');
+        toast.info("Uploading resume...");
+        const resumeResponse = await FileUploadService.uploadEmployeeFile(
+          resumeFile,
+          "resume",
+        );
         resumeUrl = resumeResponse.file_url;
-        toast.success('Resume uploaded successfully');
+        toast.success("Resume uploaded successfully");
       }
-      
+
       if (attachments.length > 0) {
         toast.info(`Uploading ${attachments.length} attachment(s)...`);
         for (const attachment of attachments) {
           try {
-            const attachmentResponse = await FileUploadService.uploadEmployeeFile(attachment, 'attachment');
+            const attachmentResponse =
+              await FileUploadService.uploadEmployeeFile(
+                attachment,
+                "attachment",
+              );
             attachmentUrls.push(attachmentResponse.file_url);
           } catch (error) {
             toast.error(`Failed to upload ${attachment.name}`);
           }
         }
-        toast.success('Attachments uploaded successfully');
+        toast.success("Attachments uploaded successfully");
       }
-      
+
       const employeeData = {
         ...formData,
         resume_url: resumeUrl || undefined,
         attachments: attachmentUrls,
       };
-      
+
       await HRMService.createEmployee(employeeData);
-      toast.success('Employee created successfully');
-      router.push('/hrm/employees');
+      toast.success("Employee created successfully");
+      router.push("/hrm/employees");
     } catch (error: unknown) {
-      const errorMessage = extractErrorMessage(error, 'Failed to create employee');
+      const errorMessage = extractErrorMessage(
+        error,
+        "Failed to create employee",
+      );
       setFormError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -203,7 +228,7 @@ function NewEmployeeContent() {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 10 * 1024 * 1024) {
-        toast.error('File size must be less than 10MB');
+        toast.error("File size must be less than 10MB");
         return;
       }
       setResumeFile(file);
@@ -214,16 +239,18 @@ function NewEmployeeContent() {
     const files = e.target.files;
     if (files) {
       const newAttachments = Array.from(files);
-      const validFiles = newAttachments.filter(file => file.size <= 10 * 1024 * 1024);
+      const validFiles = newAttachments.filter(
+        (file) => file.size <= 10 * 1024 * 1024,
+      );
       if (validFiles.length !== newAttachments.length) {
-        toast.error('Some files exceed 10MB limit');
+        toast.error("Some files exceed 10MB limit");
       }
-      setAttachments(prev => [...prev, ...validFiles]);
+      setAttachments((prev) => [...prev, ...validFiles]);
     }
   };
 
   const removeAttachment = (index: number) => {
-    setAttachments(prev => prev.filter((_, i) => i !== index));
+    setAttachments((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleCancel = () => {
@@ -231,7 +258,7 @@ function NewEmployeeContent() {
   };
 
   const confirmCancel = () => {
-    router.push('/hrm/employees');
+    router.push("/hrm/employees");
   };
 
   return (
@@ -246,7 +273,9 @@ function NewEmployeeContent() {
             </Link>
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Add New Employee</h1>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Add New Employee
+            </h1>
             <p className="text-gray-600">Create a new employee record</p>
           </div>
         </div>
@@ -262,7 +291,9 @@ function NewEmployeeContent() {
           <Card>
             <CardHeader>
               <CardTitle>Basic Information</CardTitle>
-              <CardDescription>Employee's personal and contact details</CardDescription>
+              <CardDescription>
+                Employee&apos;s personal and contact details
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -271,7 +302,9 @@ function NewEmployeeContent() {
                   <Input
                     id="firstName"
                     value={formData.firstName}
-                    onChange={(e) => handleInputChange('firstName', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("firstName", e.target.value)
+                    }
                     placeholder="Enter first name"
                     required
                   />
@@ -281,7 +314,9 @@ function NewEmployeeContent() {
                   <Input
                     id="lastName"
                     value={formData.lastName}
-                    onChange={(e) => handleInputChange('lastName', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("lastName", e.target.value)
+                    }
                     placeholder="Enter last name"
                     required
                   />
@@ -295,7 +330,7 @@ function NewEmployeeContent() {
                     id="email"
                     type="email"
                     value={formData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
                     placeholder="Enter email address"
                     required
                   />
@@ -304,8 +339,8 @@ function NewEmployeeContent() {
                   <Label htmlFor="phone">Phone</Label>
                   <Input
                     id="phone"
-                    value={formData.phone || ''}
-                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    value={formData.phone || ""}
+                    onChange={(e) => handleInputChange("phone", e.target.value)}
                     placeholder="Enter phone number"
                   />
                 </div>
@@ -317,8 +352,10 @@ function NewEmployeeContent() {
                   <Input
                     id="dateOfBirth"
                     type="date"
-                    value={formData.dateOfBirth || ''}
-                    onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
+                    value={formData.dateOfBirth || ""}
+                    onChange={(e) =>
+                      handleInputChange("dateOfBirth", e.target.value)
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -327,7 +364,9 @@ function NewEmployeeContent() {
                     id="hireDate"
                     type="date"
                     value={formData.hireDate}
-                    onChange={(e) => handleInputChange('hireDate', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("hireDate", e.target.value)
+                    }
                     required
                   />
                 </div>
@@ -337,8 +376,8 @@ function NewEmployeeContent() {
                 <Label htmlFor="address">Address</Label>
                 <Textarea
                   id="address"
-                  value={formData.address || ''}
-                  onChange={(e) => handleInputChange('address', e.target.value)}
+                  value={formData.address || ""}
+                  onChange={(e) => handleInputChange("address", e.target.value)}
                   placeholder="Enter address"
                   rows={3}
                 />
@@ -350,7 +389,9 @@ function NewEmployeeContent() {
           <Card>
             <CardHeader>
               <CardTitle>Employment Information</CardTitle>
-              <CardDescription>Job details and employment status</CardDescription>
+              <CardDescription>
+                Job details and employment status
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -359,7 +400,9 @@ function NewEmployeeContent() {
                   <Input
                     id="employeeId"
                     value={formData.employeeId}
-                    onChange={(e) => handleInputChange('employeeId', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("employeeId", e.target.value)
+                    }
                     placeholder="Enter employee ID"
                     required
                   />
@@ -369,7 +412,9 @@ function NewEmployeeContent() {
                   <Input
                     id="position"
                     value={formData.position}
-                    onChange={(e) => handleInputChange('position', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("position", e.target.value)
+                    }
                     placeholder="Enter job position"
                     required
                   />
@@ -382,10 +427,10 @@ function NewEmployeeContent() {
                   <Select
                     value={formData.department}
                     onValueChange={(value) => {
-                      if (value === 'create_new') {
+                      if (value === "create_new") {
                         setShowCustomDepartmentDialog(true);
                       } else {
-                        handleInputChange('department', value);
+                        handleInputChange("department", value);
                       }
                     }}
                   >
@@ -395,7 +440,8 @@ function NewEmployeeContent() {
                     <SelectContent>
                       {Object.values(Department).map((dept) => (
                         <SelectItem key={dept} value={dept}>
-                          {dept.charAt(0).toUpperCase() + dept.slice(1).replace('_', ' ')}
+                          {dept.charAt(0).toUpperCase() +
+                            dept.slice(1).replace("_", " ")}
                         </SelectItem>
                       ))}
                       {customDepartments.map((customDept) => (
@@ -416,7 +462,9 @@ function NewEmployeeContent() {
                   <Label htmlFor="employeeType">Employee Type</Label>
                   <Select
                     value={formData.employeeType}
-                    onValueChange={(value) => handleInputChange('employeeType', value as EmployeeType)}
+                    onValueChange={(value) =>
+                      handleInputChange("employeeType", value as EmployeeType)
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select type" />
@@ -424,7 +472,8 @@ function NewEmployeeContent() {
                     <SelectContent>
                       {Object.values(EmployeeType).map((type) => (
                         <SelectItem key={type} value={type}>
-                          {type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' ')}
+                          {type.charAt(0).toUpperCase() +
+                            type.slice(1).replace("_", " ")}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -434,7 +483,12 @@ function NewEmployeeContent() {
                   <Label htmlFor="employmentStatus">Employment Status</Label>
                   <Select
                     value={formData.employmentStatus}
-                    onValueChange={(value) => handleInputChange('employmentStatus', value as EmploymentStatus)}
+                    onValueChange={(value) =>
+                      handleInputChange(
+                        "employmentStatus",
+                        value as EmploymentStatus,
+                      )
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select status" />
@@ -455,8 +509,10 @@ function NewEmployeeContent() {
                 <Input
                   id="salary"
                   type="number"
-                  value={formData.salary || ''}
-                  onChange={(e) => handleInputChange('salary', parseFloat(e.target.value) || 0)}
+                  value={formData.salary || ""}
+                  onChange={(e) =>
+                    handleInputChange("salary", parseFloat(e.target.value) || 0)
+                  }
                   placeholder="Enter salary amount"
                 />
               </div>
@@ -467,7 +523,9 @@ function NewEmployeeContent() {
           <Card>
             <CardHeader>
               <CardTitle>Skills and Certifications</CardTitle>
-              <CardDescription>Employee's skills and professional certifications</CardDescription>
+              <CardDescription>
+                Employee&apos;s skills and professional certifications
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -477,15 +535,25 @@ function NewEmployeeContent() {
                     value={skillsInput}
                     onChange={(e) => setSkillsInput(e.target.value)}
                     placeholder="Enter a skill"
-                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleSkillsAdd())}
+                    onKeyPress={(e) =>
+                      e.key === "Enter" &&
+                      (e.preventDefault(), handleSkillsAdd())
+                    }
                   />
-                  <Button type="button" onClick={handleSkillsAdd} variant="outline">
+                  <Button
+                    type="button"
+                    onClick={handleSkillsAdd}
+                    variant="outline"
+                  >
                     Add
                   </Button>
                 </div>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {formData.skills?.map((skill, index) => (
-                    <div key={index} className="flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-sm">
+                    <div
+                      key={index}
+                      className="flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-sm"
+                    >
                       {skill}
                       <button
                         type="button"
@@ -506,15 +574,25 @@ function NewEmployeeContent() {
                     value={certificationsInput}
                     onChange={(e) => setCertificationsInput(e.target.value)}
                     placeholder="Enter a certification"
-                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleCertificationsAdd())}
+                    onKeyPress={(e) =>
+                      e.key === "Enter" &&
+                      (e.preventDefault(), handleCertificationsAdd())
+                    }
                   />
-                  <Button type="button" onClick={handleCertificationsAdd} variant="outline">
+                  <Button
+                    type="button"
+                    onClick={handleCertificationsAdd}
+                    variant="outline"
+                  >
                     Add
                   </Button>
                 </div>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {formData.certifications?.map((cert, index) => (
-                    <div key={index} className="flex items-center gap-1 bg-green-100 text-green-800 px-2 py-1 rounded-md text-sm">
+                    <div
+                      key={index}
+                      className="flex items-center gap-1 bg-green-100 text-green-800 px-2 py-1 rounded-md text-sm"
+                    >
                       {cert}
                       <button
                         type="button"
@@ -539,20 +617,28 @@ function NewEmployeeContent() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="emergencyContact">Emergency Contact Name</Label>
+                  <Label htmlFor="emergencyContact">
+                    Emergency Contact Name
+                  </Label>
                   <Input
                     id="emergencyContact"
-                    value={formData.emergencyContact || ''}
-                    onChange={(e) => handleInputChange('emergencyContact', e.target.value)}
+                    value={formData.emergencyContact || ""}
+                    onChange={(e) =>
+                      handleInputChange("emergencyContact", e.target.value)
+                    }
                     placeholder="Enter emergency contact name"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="emergencyPhone">Emergency Contact Phone</Label>
+                  <Label htmlFor="emergencyPhone">
+                    Emergency Contact Phone
+                  </Label>
                   <Input
                     id="emergencyPhone"
-                    value={formData.emergencyPhone || ''}
-                    onChange={(e) => handleInputChange('emergencyPhone', e.target.value)}
+                    value={formData.emergencyPhone || ""}
+                    onChange={(e) =>
+                      handleInputChange("emergencyPhone", e.target.value)
+                    }
                     placeholder="Enter emergency contact phone"
                   />
                 </div>
@@ -564,15 +650,17 @@ function NewEmployeeContent() {
           <Card>
             <CardHeader>
               <CardTitle>Additional Notes</CardTitle>
-              <CardDescription>Any additional information about the employee</CardDescription>
+              <CardDescription>
+                Any additional information about the employee
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
                 <Label htmlFor="notes">Notes</Label>
                 <Textarea
                   id="notes"
-                  value={formData.notes || ''}
-                  onChange={(e) => handleInputChange('notes', e.target.value)}
+                  value={formData.notes || ""}
+                  onChange={(e) => handleInputChange("notes", e.target.value)}
                   placeholder="Enter any additional notes"
                   rows={4}
                 />
@@ -584,7 +672,9 @@ function NewEmployeeContent() {
           <Card>
             <CardHeader>
               <CardTitle>Documents</CardTitle>
-              <CardDescription>Upload resume and additional attachments</CardDescription>
+              <CardDescription>
+                Upload resume and additional attachments
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -609,11 +699,15 @@ function NewEmployeeContent() {
                     </Button>
                   </div>
                 )}
-                <p className="text-xs text-gray-500">PDF, DOC, or DOCX files up to 10MB</p>
+                <p className="text-xs text-gray-500">
+                  PDF, DOC, or DOCX files up to 10MB
+                </p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="attachments">Additional Attachments (Optional)</Label>
+                <Label htmlFor="attachments">
+                  Additional Attachments (Optional)
+                </Label>
                 <Input
                   id="attachments"
                   type="file"
@@ -625,7 +719,10 @@ function NewEmployeeContent() {
                 {attachments.length > 0 && (
                   <div className="mt-2 space-y-2">
                     {attachments.map((file, index) => (
-                      <div key={index} className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 p-2 rounded">
+                      <div
+                        key={index}
+                        className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 p-2 rounded"
+                      >
                         <span>{file.name}</span>
                         <Button
                           type="button"
@@ -639,7 +736,9 @@ function NewEmployeeContent() {
                     ))}
                   </div>
                 )}
-                <p className="text-xs text-gray-500">PDF, DOC, or DOCX files up to 10MB each</p>
+                <p className="text-xs text-gray-500">
+                  PDF, DOC, or DOCX files up to 10MB each
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -670,7 +769,8 @@ function NewEmployeeContent() {
             <DialogHeader>
               <DialogTitle>Cancel Employee Creation</DialogTitle>
               <DialogDescription>
-                Are you sure you want to cancel? All unsaved changes will be lost.
+                Are you sure you want to cancel? All unsaved changes will be
+                lost.
               </DialogDescription>
             </DialogHeader>
             <div className="flex justify-end space-x-2 mt-4">
@@ -680,10 +780,7 @@ function NewEmployeeContent() {
               >
                 Continue Editing
               </Button>
-              <Button
-                variant="destructive"
-                onClick={confirmCancel}
-              >
+              <Button variant="destructive" onClick={confirmCancel}>
                 Cancel
               </Button>
             </div>

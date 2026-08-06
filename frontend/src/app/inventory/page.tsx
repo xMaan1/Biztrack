@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { ModuleGuard } from '@/src/components/guards/PermissionGuard';
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from "react";
+import { ModuleGuard } from "@/src/components/guards/PermissionGuard";
+import { useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
-import { Badge } from '../../components/ui/badge';
+} from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
+import { Badge } from "../../components/ui/badge";
 import {
   Warehouse,
   Package,
@@ -23,23 +23,26 @@ import {
   Loader2,
   Building2,
   ClipboardList,
-} from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
-import { inventoryService } from '../../services/InventoryService';
-import { InventoryDashboardStats } from '../../models/inventory';
-import { DashboardLayout } from '../../components/layout';
-import { useCurrency } from '../../contexts/CurrencyContext';
+} from "lucide-react";
+import { useAuth } from "../../contexts/AuthContext";
+import { inventoryService } from "../../services/InventoryService";
+import { InventoryDashboardStats } from "../../models/inventory";
+import { DashboardLayout } from "../../components/layout";
+import { useCurrency } from "../../contexts/CurrencyContext";
 
 export default function InventoryDashboardPage() {
   return (
-    <ModuleGuard module="inventory" fallback={<div>You don't have access to Inventory module</div>}>
+    <ModuleGuard
+      module="inventory"
+      fallback={<div>You don&apos;t have access to Inventory module</div>}
+    >
       <InventoryDashboardContent />
     </ModuleGuard>
   );
 }
 
 function InventoryDashboardContent() {
-  const { } = useAuth();
+  const {} = useAuth();
   const { formatCurrency } = useCurrency();
   const router = useRouter();
   const [stats, setStats] = useState<InventoryDashboardStats | null>(null);
@@ -55,31 +58,31 @@ function InventoryDashboardContent() {
       const dashboardData = await inventoryService.getInventoryDashboard();
       setStats(dashboardData);
     } catch (error) {
-      } finally {
+    } finally {
       setLoading(false);
     }
   };
 
   const getAlertColor = (alertType: string) => {
     switch (alertType) {
-      case 'out_of_stock':
-        return 'destructive';
-      case 'low_stock':
-        return 'secondary';
-      case 'expiry_warning':
-        return 'default';
+      case "out_of_stock":
+        return "destructive";
+      case "low_stock":
+        return "secondary";
+      case "expiry_warning":
+        return "default";
       default:
-        return 'default';
+        return "default";
     }
   };
 
   const getAlertIcon = (alertType: string) => {
     switch (alertType) {
-      case 'out_of_stock':
+      case "out_of_stock":
         return <AlertTriangle className="h-4 w-4" />;
-      case 'low_stock':
+      case "low_stock":
         return <Package className="h-4 w-4" />;
-      case 'expiry_warning':
+      case "expiry_warning":
         return <Truck className="h-4 w-4" />;
       default:
         return <AlertTriangle className="h-4 w-4" />;
@@ -111,11 +114,11 @@ function InventoryDashboardContent() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button onClick={() => router.push('/inventory/warehouses')}>
+            <Button onClick={() => router.push("/inventory/warehouses")}>
               <Warehouse className="mr-2 h-4 w-4" />
               Manage Warehouses
             </Button>
-            <Button onClick={() => router.push('/inventory/products')}>
+            <Button onClick={() => router.push("/inventory/products")}>
               <Package className="mr-2 h-4 w-4" />
               View Products
             </Button>
@@ -226,7 +229,7 @@ function InventoryDashboardContent() {
                     <Button
                       variant="outline"
                       className="w-full"
-                      onClick={() => router.push('/inventory/alerts')}
+                      onClick={() => router.push("/inventory/alerts")}
                     >
                       View All Alerts ({stats.lowStockAlerts.length})
                     </Button>
@@ -251,7 +254,7 @@ function InventoryDashboardContent() {
               <Button
                 variant="outline"
                 className="w-full justify-start"
-                onClick={() => router.push('/inventory/stock-movements')}
+                onClick={() => router.push("/inventory/stock-movements")}
               >
                 <Plus className="mr-2 h-4 w-4" />
                 Record Stock Movement
@@ -259,7 +262,7 @@ function InventoryDashboardContent() {
               <Button
                 variant="outline"
                 className="w-full justify-start"
-                onClick={() => router.push('/inventory/purchase-orders')}
+                onClick={() => router.push("/inventory/purchase-orders")}
               >
                 <ClipboardList className="mr-2 h-4 w-4" />
                 Create Purchase Order
@@ -267,7 +270,7 @@ function InventoryDashboardContent() {
               <Button
                 variant="outline"
                 className="w-full justify-start"
-                onClick={() => router.push('/inventory/receiving')}
+                onClick={() => router.push("/inventory/receiving")}
               >
                 <Truck className="mr-2 h-4 w-4" />
                 Process Receiving
@@ -275,7 +278,7 @@ function InventoryDashboardContent() {
               <Button
                 variant="outline"
                 className="w-full justify-start"
-                onClick={() => router.push('/inventory/products')}
+                onClick={() => router.push("/inventory/products")}
               >
                 <Package className="mr-2 h-4 w-4" />
                 Add New Product
@@ -339,7 +342,7 @@ function InventoryDashboardContent() {
         <div className="grid gap-4 md:grid-cols-3">
           <Card
             className="cursor-pointer hover:shadow-md transition-shadow"
-            onClick={() => router.push('/inventory/warehouses')}
+            onClick={() => router.push("/inventory/warehouses")}
           >
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -361,7 +364,7 @@ function InventoryDashboardContent() {
 
           <Card
             className="cursor-pointer hover:shadow-md transition-shadow"
-            onClick={() => router.push('/inventory/products')}
+            onClick={() => router.push("/inventory/products")}
           >
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -383,7 +386,7 @@ function InventoryDashboardContent() {
 
           <Card
             className="cursor-pointer hover:shadow-md transition-shadow"
-            onClick={() => router.push('/hrm/suppliers')}
+            onClick={() => router.push("/hrm/suppliers")}
           >
             <CardHeader>
               <CardTitle className="flex items-center gap-2">

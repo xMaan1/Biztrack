@@ -1,2 +1,2 @@
-export { CommerceInvoiceForm } from './CommerceInvoiceForm';
-export type { CommerceInvoiceFormProps, CommerceInvoiceTotals } from './types';
+export { CommerceInvoiceForm } from "./CommerceInvoiceForm";
+export type { CommerceInvoiceFormProps, CommerceInvoiceTotals } from "./types";

@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { DashboardLayout } from '@/src/components/layout';
-import { useCurrency } from '@/src/contexts/CurrencyContext';
-import { NGO_ANNUAL_TARGET, type NgoSnapshot } from '@/src/types/ngoDashboard';
-import { NgoDashboardHeader } from './NgoDashboardHeader';
-import { NgoDonationOverviewCard } from './NgoDonationOverviewCard';
-import { NgoInventoryStatusCard } from './NgoInventoryStatusCard';
-import { NgoQuickActionsCard } from './NgoQuickActionsCard';
-import { NgoQuickLinksCard } from './NgoQuickLinksCard';
-import { NgoStatsGrid } from './NgoStatsGrid';
+import { DashboardLayout } from "@/src/components/layout";
+import { useCurrency } from "@/src/contexts/CurrencyContext";
+import { NGO_ANNUAL_TARGET, type NgoSnapshot } from "@/src/types/ngoDashboard";
+import { NgoDashboardHeader } from "./NgoDashboardHeader";
+import { NgoDonationOverviewCard } from "./NgoDonationOverviewCard";
+import { NgoInventoryStatusCard } from "./NgoInventoryStatusCard";
+import { NgoQuickActionsCard } from "./NgoQuickActionsCard";
+import { NgoQuickLinksCard } from "./NgoQuickLinksCard";
+import { NgoStatsGrid } from "./NgoStatsGrid";
 
 type NgoDashboardContentProps = {
   snapshot: NgoSnapshot;

@@ -1,7 +1,7 @@
-import { Button } from '@/src/components/ui/button';
-import type { DonorLead } from '@/src/models/ngo';
-import { DonorLeadCard } from './DonorLeadCard';
-import { DonorLeadsSectionTitle } from './DonorLeadsPageHeader';
+import { Button } from "@/src/components/ui/button";
+import type { DonorLead } from "@/src/models/ngo";
+import { DonorLeadCard } from "./DonorLeadCard";
+import { DonorLeadsSectionTitle } from "./DonorLeadsPageHeader";
 
 type DonorLeadsGridProps = {
   leads: DonorLead[];
@@ -32,7 +32,9 @@ export function DonorLeadsGrid({
 
   if (loading) {
     return (
-      <div className="py-12 text-center text-muted-foreground">Loading donor leads...</div>
+      <div className="py-12 text-center text-muted-foreground">
+        Loading donor leads...
+      </div>
     );
   }
 

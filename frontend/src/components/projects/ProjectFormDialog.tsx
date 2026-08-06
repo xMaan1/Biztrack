@@ -1,25 +1,25 @@
-'use client';
+"use client";
 
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
-import { Label } from '@/src/components/ui/label';
-import { Textarea } from '@/src/components/ui/textarea';
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
+import { Label } from "@/src/components/ui/label";
+import { Textarea } from "@/src/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/src/components/ui/dialog';
-import { UserSearch } from '@/src/components/ui/user-search';
-import { UserMultiSearch } from '@/src/components/ui/user-multi-search';
-import { cn } from '@/src/lib/utils';
-import { projectDateKey } from '@/src/utils/projects';
-import type { ProjectFormDialogProps } from '@/src/types/projects';
+} from "@/src/components/ui/dialog";
+import { UserSearch } from "@/src/components/ui/user-search";
+import { UserMultiSearch } from "@/src/components/ui/user-multi-search";
+import { cn } from "@/src/lib/utils";
+import { projectDateKey } from "@/src/utils/projects";
+import type { ProjectFormDialogProps } from "@/src/types/projects";
 
 const selectClassName = cn(
-  'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm',
-  'ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+  "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm",
+  "ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
 );
 
 export function ProjectFormDialog({
@@ -39,7 +39,7 @@ export function ProjectFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className={cn(
-          'flex max-h-[85vh] min-h-0 w-[calc(100vw-1.5rem)] max-w-2xl flex-col gap-0 overflow-hidden p-0 sm:max-h-[90vh]',
+          "flex max-h-[85vh] min-h-0 w-[calc(100vw-1.5rem)] max-w-2xl flex-col gap-0 overflow-hidden p-0 sm:max-h-[90vh]",
         )}
         onInteractOutside={(e) => {
           if (formLoading) e.preventDefault();
@@ -50,7 +50,7 @@ export function ProjectFormDialog({
       >
         <DialogHeader className="shrink-0 space-y-3 border-b px-6 pb-4 pt-6 pr-14 text-left">
           <DialogTitle>
-            {mode === 'create' ? 'Create New Project' : 'Edit Project'}
+            {mode === "create" ? "Create New Project" : "Edit Project"}
           </DialogTitle>
           {formError ? (
             <div className="rounded-md border border-red-200 bg-red-50 p-3">
@@ -66,7 +66,9 @@ export function ProjectFormDialog({
                 <Input
                   id="project-form-name"
                   value={formData.name}
-                  onChange={(e) => onFormDataChange({ ...formData, name: e.target.value })}
+                  onChange={(e) =>
+                    onFormDataChange({ ...formData, name: e.target.value })
+                  }
                   required
                 />
               </div>
@@ -76,7 +78,9 @@ export function ProjectFormDialog({
                   id="project-form-status"
                   className={selectClassName}
                   value={formData.status}
-                  onChange={(e) => onFormDataChange({ ...formData, status: e.target.value })}
+                  onChange={(e) =>
+                    onFormDataChange({ ...formData, status: e.target.value })
+                  }
                 >
                   <option value="planning">Planning</option>
                   <option value="in_progress">In progress</option>
@@ -91,7 +95,9 @@ export function ProjectFormDialog({
                   id="project-form-priority"
                   className={selectClassName}
                   value={formData.priority}
-                  onChange={(e) => onFormDataChange({ ...formData, priority: e.target.value })}
+                  onChange={(e) =>
+                    onFormDataChange({ ...formData, priority: e.target.value })
+                  }
                 >
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
@@ -104,9 +110,15 @@ export function ProjectFormDialog({
                   id="project-form-start"
                   type="date"
                   required
-                  max={formData.endDate ? projectDateKey(formData.endDate) : undefined}
-                  value={formData.startDate || ''}
-                  onChange={(e) => onFormDataChange({ ...formData, startDate: e.target.value })}
+                  max={
+                    formData.endDate
+                      ? projectDateKey(formData.endDate)
+                      : undefined
+                  }
+                  value={formData.startDate || ""}
+                  onChange={(e) =>
+                    onFormDataChange({ ...formData, startDate: e.target.value })
+                  }
                 />
               </div>
               <div className="space-y-2">
@@ -115,9 +127,15 @@ export function ProjectFormDialog({
                   id="project-form-end"
                   type="date"
                   required
-                  value={formData.endDate || ''}
-                  min={formData.startDate ? projectDateKey(formData.startDate) : undefined}
-                  onChange={(e) => onFormDataChange({ ...formData, endDate: e.target.value })}
+                  value={formData.endDate || ""}
+                  min={
+                    formData.startDate
+                      ? projectDateKey(formData.startDate)
+                      : undefined
+                  }
+                  onChange={(e) =>
+                    onFormDataChange({ ...formData, endDate: e.target.value })
+                  }
                 />
               </div>
               <div className="space-y-2">
@@ -127,7 +145,10 @@ export function ProjectFormDialog({
                   type="number"
                   value={formData.budget}
                   onChange={(e) =>
-                    onFormDataChange({ ...formData, budget: Number(e.target.value) })
+                    onFormDataChange({
+                      ...formData,
+                      budget: Number(e.target.value),
+                    })
                   }
                 />
               </div>
@@ -137,7 +158,9 @@ export function ProjectFormDialog({
               <Textarea
                 id="project-form-description"
                 value={formData.description}
-                onChange={(e) => onFormDataChange({ ...formData, description: e.target.value })}
+                onChange={(e) =>
+                  onFormDataChange({ ...formData, description: e.target.value })
+                }
                 rows={3}
               />
             </div>
@@ -147,7 +170,9 @@ export function ProjectFormDialog({
                 id="project-form-client-email"
                 type="email"
                 value={formData.clientEmail}
-                onChange={(e) => onFormDataChange({ ...formData, clientEmail: e.target.value })}
+                onChange={(e) =>
+                  onFormDataChange({ ...formData, clientEmail: e.target.value })
+                }
               />
             </div>
             <div className="space-y-2">
@@ -155,7 +180,9 @@ export function ProjectFormDialog({
               <Textarea
                 id="project-form-notes"
                 value={formData.notes}
-                onChange={(e) => onFormDataChange({ ...formData, notes: e.target.value })}
+                onChange={(e) =>
+                  onFormDataChange({ ...formData, notes: e.target.value })
+                }
                 rows={2}
               />
             </div>
@@ -166,14 +193,16 @@ export function ProjectFormDialog({
                 onSelect={(user) =>
                   onFormDataChange({
                     ...formData,
-                    projectManagerId: user ? user.id || user.userId || '' : '',
+                    projectManagerId: user ? user.id || user.userId || "" : "",
                   })
                 }
                 placeholder="Search by name or email..."
                 label="Project manager *"
                 required
                 error={
-                  formError === 'Please select a project manager' ? formError : undefined
+                  formError === "Please select a project manager"
+                    ? formError
+                    : undefined
                 }
               />
             </div>
@@ -184,7 +213,7 @@ export function ProjectFormDialog({
                 onChange={(selected) =>
                   onFormDataChange({
                     ...formData,
-                    teamMemberIds: selected.map((u) => u.id || u.userId || ''),
+                    teamMemberIds: selected.map((u) => u.id || u.userId || ""),
                   })
                 }
                 placeholder="Search to add team members..."
@@ -201,12 +230,16 @@ export function ProjectFormDialog({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={formLoading} className="modern-button">
+            <Button
+              type="submit"
+              disabled={formLoading}
+              className="modern-button"
+            >
               {formLoading
-                ? 'Saving...'
-                : mode === 'create'
-                  ? 'Create project'
-                  : 'Update project'}
+                ? "Saving..."
+                : mode === "create"
+                  ? "Create project"
+                  : "Update project"}
             </Button>
           </DialogFooter>
         </form>

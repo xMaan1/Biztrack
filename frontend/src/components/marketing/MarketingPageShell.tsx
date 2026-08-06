@@ -1,11 +1,11 @@
-import Link from 'next/link';
-import { BizTrackLogo } from '@/src/components/brand/BizTrackLogo';
-import { LandingFooter } from '@/src/components/landing/LandingFooter';
+import Link from "next/link";
+import { BizTrackLogo } from "@/src/components/brand/BizTrackLogo";
+import { LandingFooter } from "@/src/components/landing/LandingFooter";
 
 const MARKETING_NAV = [
-  { href: '/', label: 'Home' },
-  { href: '/about', label: 'About Us' },
-  { href: '/contact', label: 'Contact' },
+  { href: "/", label: "Home" },
+  { href: "/about", label: "About Us" },
+  { href: "/contact", label: "Contact" },
 ] as const;
 
 type MarketingPageShellProps = {

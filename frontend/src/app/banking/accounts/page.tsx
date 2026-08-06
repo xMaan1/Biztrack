@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { ModuleGuard } from '../../../components/guards/PermissionGuard';
+import React, { useEffect, useState } from "react";
+import { ModuleGuard } from "../../../components/guards/PermissionGuard";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from '../../../components/ui/card';
-import { Button } from '../../../components/ui/button';
-import { Badge } from '../../../components/ui/badge';
-import { Input } from '../../../components/ui/input';
+} from "../../../components/ui/card";
+import { Button } from "../../../components/ui/button";
+import { Badge } from "../../../components/ui/badge";
+import { Input } from "../../../components/ui/input";
 import {
   Table,
   TableBody,
@@ -18,7 +18,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../../../components/ui/table';
+} from "../../../components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -26,14 +26,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '../../../components/ui/dialog';
+} from "../../../components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../../components/ui/select';
+} from "../../../components/ui/select";
 import {
   Banknote,
   Plus,
@@ -42,62 +42,69 @@ import {
   Trash2,
   Eye,
   RefreshCw,
-} from 'lucide-react';
-import { useAuth } from '../../../contexts/AuthContext';
-import { bankingService } from '../../../services/BankingService';
-import { useCurrency } from '../../../contexts/CurrencyContext';
-import { formatDate } from '../../../lib/utils';
+} from "lucide-react";
+import { useAuth } from "../../../contexts/AuthContext";
+import { bankingService } from "../../../services/BankingService";
+import { useCurrency } from "../../../contexts/CurrencyContext";
+import { formatDate } from "../../../lib/utils";
 import {
   BankAccount,
   BankAccountType,
   getAccountTypeLabel,
-} from '../../../models/banking';
-import { DashboardLayout } from '../../../components/layout';
-import { Label } from '../../../components/ui/label';
-import { Textarea } from '../../../components/ui/textarea';
-import { Switch } from '../../../components/ui/switch';
-import { toast } from 'sonner';
-import { extractErrorMessage } from '../../../utils/errorUtils';
+} from "../../../models/banking";
+import { DashboardLayout } from "../../../components/layout";
+import { Label } from "../../../components/ui/label";
+import { Textarea } from "../../../components/ui/textarea";
+import { Switch } from "../../../components/ui/switch";
+import { toast } from "sonner";
+import { extractErrorMessage } from "../../../utils/errorUtils";
 
 export default function BankAccountsPage() {
   return (
-    <ModuleGuard module="banking" fallback={<div>You don't have access to Banking module</div>}>
+    <ModuleGuard
+      module="banking"
+      fallback={<div>You don&apos;t have access to Banking module</div>}
+    >
       <BankAccountsContent />
     </ModuleGuard>
   );
 }
 
 function BankAccountsContent() {
-  const { } = useAuth();
+  const {} = useAuth();
   const { formatCurrency } = useCurrency();
-  
+
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [selectedAccount, setSelectedAccount] = useState<BankAccount | null>(null);
+  const [selectedAccount, setSelectedAccount] = useState<BankAccount | null>(
+    null,
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const [viewingAccount, setViewingAccount] = useState<BankAccount | null>(null);
+  const [viewingAccount, setViewingAccount] = useState<BankAccount | null>(
+    null,
+  );
 
   // Form state
   const [formData, setFormData] = useState({
-    accountName: '',
-    accountNumber: '',
-    routingNumber: '',
-    bankName: '',
-    bankCode: '',
+    accountName: "",
+    accountNumber: "",
+    routingNumber: "",
+    bankName: "",
+    bankCode: "",
     accountType: BankAccountType.CHECKING,
-    currency: 'USD',
+    currency: "USD",
     currentBalance: 0,
     availableBalance: 0,
     pendingBalance: 0,
     isActive: true,
     isPrimary: false,
     supportsOnlineBanking: false,
-    description: '',
+    description: "",
     tags: [] as string[],
   });
 
@@ -111,7 +118,7 @@ function BankAccountsContent() {
       const accounts = await bankingService.getBankAccounts(true);
       setBankAccounts(accounts);
     } catch (error) {
-      toast.error(extractErrorMessage(error, 'Failed to load bank accounts'));
+      toast.error(extractErrorMessage(error, "Failed to load bank accounts"));
     } finally {
       setLoading(false);
     }
@@ -121,12 +128,12 @@ function BankAccountsContent() {
     try {
       setIsSubmitting(true);
       await bankingService.createBankAccount(formData);
-      toast.success('Bank account created successfully');
+      toast.success("Bank account created successfully");
       setIsCreateModalOpen(false);
       resetForm();
       loadBankAccounts();
     } catch (error) {
-      toast.error(extractErrorMessage(error, 'Failed to create bank account'));
+      toast.error(extractErrorMessage(error, "Failed to create bank account"));
     } finally {
       setIsSubmitting(false);
     }
@@ -138,12 +145,12 @@ function BankAccountsContent() {
     try {
       setIsSubmitting(true);
       await bankingService.updateBankAccount(selectedAccount.id, formData);
-      toast.success('Bank account updated successfully');
+      toast.success("Bank account updated successfully");
       setIsEditModalOpen(false);
       resetForm();
       loadBankAccounts();
     } catch (error) {
-      toast.error(extractErrorMessage(error, 'Failed to update bank account'));
+      toast.error(extractErrorMessage(error, "Failed to update bank account"));
     } finally {
       setIsSubmitting(false);
     }
@@ -155,12 +162,12 @@ function BankAccountsContent() {
     try {
       setDeleteLoading(true);
       await bankingService.deleteBankAccount(selectedAccount.id);
-      toast.success('Bank account deleted successfully');
+      toast.success("Bank account deleted successfully");
       setIsDeleteModalOpen(false);
       setSelectedAccount(null);
       loadBankAccounts();
     } catch (error) {
-      toast.error(extractErrorMessage(error, 'Failed to delete bank account'));
+      toast.error(extractErrorMessage(error, "Failed to delete bank account"));
     } finally {
       setDeleteLoading(false);
     }
@@ -168,20 +175,20 @@ function BankAccountsContent() {
 
   const resetForm = () => {
     setFormData({
-      accountName: '',
-      accountNumber: '',
-      routingNumber: '',
-      bankName: '',
-      bankCode: '',
+      accountName: "",
+      accountNumber: "",
+      routingNumber: "",
+      bankName: "",
+      bankCode: "",
       accountType: BankAccountType.CHECKING,
-      currency: 'USD',
+      currency: "USD",
       currentBalance: 0,
       availableBalance: 0,
       pendingBalance: 0,
       isActive: true,
       isPrimary: false,
       supportsOnlineBanking: false,
-      description: '',
+      description: "",
       tags: [],
     });
   };
@@ -191,9 +198,9 @@ function BankAccountsContent() {
     setFormData({
       accountName: account.accountName,
       accountNumber: account.accountNumber,
-      routingNumber: account.routingNumber || '',
+      routingNumber: account.routingNumber || "",
       bankName: account.bankName,
-      bankCode: account.bankCode || '',
+      bankCode: account.bankCode || "",
       accountType: account.accountType,
       currency: account.currency,
       currentBalance: account.currentBalance,
@@ -202,7 +209,7 @@ function BankAccountsContent() {
       isActive: account.isActive,
       isPrimary: account.isPrimary,
       supportsOnlineBanking: account.supportsOnlineBanking,
-      description: account.description || '',
+      description: account.description || "",
       tags: account.tags,
     });
     setIsEditModalOpen(true);
@@ -213,10 +220,11 @@ function BankAccountsContent() {
     setIsDeleteModalOpen(true);
   };
 
-  const filteredAccounts = bankAccounts.filter(account =>
-    account.accountName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    account.bankName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    account.accountNumber.includes(searchTerm)
+  const filteredAccounts = bankAccounts.filter(
+    (account) =>
+      account.accountName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      account.bankName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      account.accountNumber.includes(searchTerm),
   );
 
   if (loading) {
@@ -286,7 +294,9 @@ function BankAccountsContent() {
                       <div className="flex items-center space-x-2">
                         <Banknote className="h-4 w-4 text-muted-foreground" />
                         <div>
-                          <div className="font-medium">{account.accountName}</div>
+                          <div className="font-medium">
+                            {account.accountName}
+                          </div>
                           {account.description && (
                             <div className="text-sm text-muted-foreground">
                               {account.description}
@@ -318,8 +328,10 @@ function BankAccountsContent() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2">
-                        <Badge variant={account.isActive ? 'default' : 'secondary'}>
-                          {account.isActive ? 'Active' : 'Inactive'}
+                        <Badge
+                          variant={account.isActive ? "default" : "secondary"}
+                        >
+                          {account.isActive ? "Active" : "Inactive"}
                         </Badge>
                         {account.isPrimary && (
                           <Badge variant="outline">Primary</Badge>
@@ -374,7 +386,12 @@ function BankAccountsContent() {
                   <Input
                     id="accountName"
                     value={formData.accountName}
-                    onChange={(e) => setFormData(prev => ({ ...prev, accountName: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        accountName: e.target.value,
+                      }))
+                    }
                     placeholder="e.g., Main Business Account"
                   />
                 </div>
@@ -383,7 +400,12 @@ function BankAccountsContent() {
                   <Input
                     id="accountNumber"
                     value={formData.accountNumber}
-                    onChange={(e) => setFormData(prev => ({ ...prev, accountNumber: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        accountNumber: e.target.value,
+                      }))
+                    }
                     placeholder="1234567890"
                   />
                 </div>
@@ -395,7 +417,12 @@ function BankAccountsContent() {
                   <Input
                     id="routingNumber"
                     value={formData.routingNumber}
-                    onChange={(e) => setFormData(prev => ({ ...prev, routingNumber: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        routingNumber: e.target.value,
+                      }))
+                    }
                     placeholder="123456789"
                   />
                 </div>
@@ -404,7 +431,12 @@ function BankAccountsContent() {
                   <Input
                     id="bankName"
                     value={formData.bankName}
-                    onChange={(e) => setFormData(prev => ({ ...prev, bankName: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        bankName: e.target.value,
+                      }))
+                    }
                     placeholder="e.g., Chase Bank"
                   />
                 </div>
@@ -415,7 +447,12 @@ function BankAccountsContent() {
                   <Label htmlFor="accountType">Account Type *</Label>
                   <Select
                     value={formData.accountType}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, accountType: value as BankAccountType }))}
+                    onValueChange={(value) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        accountType: value as BankAccountType,
+                      }))
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -433,7 +470,9 @@ function BankAccountsContent() {
                   <Label htmlFor="currency">Currency</Label>
                   <Select
                     value={formData.currency}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}
+                    onValueChange={(value) =>
+                      setFormData((prev) => ({ ...prev, currency: value }))
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -453,7 +492,12 @@ function BankAccountsContent() {
                 <Textarea
                   id="description"
                   value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
+                  }
                   placeholder="Optional description for this account"
                   rows={3}
                 />
@@ -464,7 +508,9 @@ function BankAccountsContent() {
                   <Switch
                     id="isActive"
                     checked={formData.isActive}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isActive: checked }))}
+                    onCheckedChange={(checked) =>
+                      setFormData((prev) => ({ ...prev, isActive: checked }))
+                    }
                   />
                   <Label htmlFor="isActive">Active Account</Label>
                 </div>
@@ -473,7 +519,9 @@ function BankAccountsContent() {
                   <Switch
                     id="isPrimary"
                     checked={formData.isPrimary}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isPrimary: checked }))}
+                    onCheckedChange={(checked) =>
+                      setFormData((prev) => ({ ...prev, isPrimary: checked }))
+                    }
                   />
                   <Label htmlFor="isPrimary">Primary Account</Label>
                 </div>
@@ -482,18 +530,28 @@ function BankAccountsContent() {
                   <Switch
                     id="supportsOnlineBanking"
                     checked={formData.supportsOnlineBanking}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, supportsOnlineBanking: checked }))}
+                    onCheckedChange={(checked) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        supportsOnlineBanking: checked,
+                      }))
+                    }
                   />
-                  <Label htmlFor="supportsOnlineBanking">Supports Online Banking</Label>
+                  <Label htmlFor="supportsOnlineBanking">
+                    Supports Online Banking
+                  </Label>
                 </div>
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setIsCreateModalOpen(false)}
+              >
                 Cancel
               </Button>
               <Button onClick={handleCreateAccount} disabled={isSubmitting}>
-                {isSubmitting ? 'Creating...' : 'Create Account'}
+                {isSubmitting ? "Creating..." : "Create Account"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -515,7 +573,12 @@ function BankAccountsContent() {
                   <Input
                     id="edit-accountName"
                     value={formData.accountName}
-                    onChange={(e) => setFormData(prev => ({ ...prev, accountName: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        accountName: e.target.value,
+                      }))
+                    }
                     placeholder="e.g., Main Business Account"
                   />
                 </div>
@@ -524,7 +587,12 @@ function BankAccountsContent() {
                   <Input
                     id="edit-accountNumber"
                     value={formData.accountNumber}
-                    onChange={(e) => setFormData(prev => ({ ...prev, accountNumber: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        accountNumber: e.target.value,
+                      }))
+                    }
                     placeholder="1234567890"
                   />
                 </div>
@@ -536,7 +604,12 @@ function BankAccountsContent() {
                   <Input
                     id="edit-routingNumber"
                     value={formData.routingNumber}
-                    onChange={(e) => setFormData(prev => ({ ...prev, routingNumber: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        routingNumber: e.target.value,
+                      }))
+                    }
                     placeholder="123456789"
                   />
                 </div>
@@ -545,7 +618,12 @@ function BankAccountsContent() {
                   <Input
                     id="edit-bankName"
                     value={formData.bankName}
-                    onChange={(e) => setFormData(prev => ({ ...prev, bankName: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        bankName: e.target.value,
+                      }))
+                    }
                     placeholder="e.g., Chase Bank"
                   />
                 </div>
@@ -556,7 +634,12 @@ function BankAccountsContent() {
                   <Label htmlFor="edit-accountType">Account Type *</Label>
                   <Select
                     value={formData.accountType}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, accountType: value as BankAccountType }))}
+                    onValueChange={(value) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        accountType: value as BankAccountType,
+                      }))
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -574,7 +657,9 @@ function BankAccountsContent() {
                   <Label htmlFor="edit-currency">Currency</Label>
                   <Select
                     value={formData.currency}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}
+                    onValueChange={(value) =>
+                      setFormData((prev) => ({ ...prev, currency: value }))
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -594,7 +679,12 @@ function BankAccountsContent() {
                 <Textarea
                   id="edit-description"
                   value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
+                  }
                   placeholder="Optional description for this account"
                   rows={3}
                 />
@@ -605,7 +695,9 @@ function BankAccountsContent() {
                   <Switch
                     id="edit-isActive"
                     checked={formData.isActive}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isActive: checked }))}
+                    onCheckedChange={(checked) =>
+                      setFormData((prev) => ({ ...prev, isActive: checked }))
+                    }
                   />
                   <Label htmlFor="edit-isActive">Active Account</Label>
                 </div>
@@ -614,7 +706,9 @@ function BankAccountsContent() {
                   <Switch
                     id="edit-isPrimary"
                     checked={formData.isPrimary}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isPrimary: checked }))}
+                    onCheckedChange={(checked) =>
+                      setFormData((prev) => ({ ...prev, isPrimary: checked }))
+                    }
                   />
                   <Label htmlFor="edit-isPrimary">Primary Account</Label>
                 </div>
@@ -623,18 +717,28 @@ function BankAccountsContent() {
                   <Switch
                     id="edit-supportsOnlineBanking"
                     checked={formData.supportsOnlineBanking}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, supportsOnlineBanking: checked }))}
+                    onCheckedChange={(checked) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        supportsOnlineBanking: checked,
+                      }))
+                    }
                   />
-                  <Label htmlFor="edit-supportsOnlineBanking">Supports Online Banking</Label>
+                  <Label htmlFor="edit-supportsOnlineBanking">
+                    Supports Online Banking
+                  </Label>
                 </div>
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setIsEditModalOpen(false)}
+              >
                 Cancel
               </Button>
               <Button onClick={handleEditAccount} disabled={isSubmitting}>
-                {isSubmitting ? 'Updating...' : 'Update Account'}
+                {isSubmitting ? "Updating..." : "Update Account"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -646,8 +750,9 @@ function BankAccountsContent() {
             <DialogHeader>
               <DialogTitle>Delete Bank Account</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete the bank account "{selectedAccount?.accountName}"? 
-                This action will deactivate the account and cannot be undone.
+                Are you sure you want to delete the bank account &quot;
+                {selectedAccount?.accountName}&quot;? This action will
+                deactivate the account and cannot be undone.
               </DialogDescription>
             </DialogHeader>
             <div className="flex justify-end space-x-2 mt-4">
@@ -663,14 +768,17 @@ function BankAccountsContent() {
                 disabled={deleteLoading}
                 className="bg-red-600 hover:bg-red-700"
               >
-                {deleteLoading ? 'Deleting...' : 'Delete'}
+                {deleteLoading ? "Deleting..." : "Delete"}
               </Button>
             </div>
           </DialogContent>
         </Dialog>
 
         {/* View Bank Account Modal */}
-        <Dialog open={!!viewingAccount} onOpenChange={() => setViewingAccount(null)}>
+        <Dialog
+          open={!!viewingAccount}
+          onOpenChange={() => setViewingAccount(null)}
+        >
           <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
             <DialogHeader className="flex-shrink-0">
               <DialogTitle className="flex items-center gap-2">
@@ -688,60 +796,92 @@ function BankAccountsContent() {
                   {/* Basic Information */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label className="text-sm font-medium text-gray-600">Account Name</Label>
-                      <p className="text-lg font-semibold">{viewingAccount.accountName || 'Unnamed Account'}</p>
+                      <Label className="text-sm font-medium text-gray-600">
+                        Account Name
+                      </Label>
+                      <p className="text-lg font-semibold">
+                        {viewingAccount.accountName || "Unnamed Account"}
+                      </p>
                     </div>
                     <div>
-                      <Label className="text-sm font-medium text-gray-600">Bank Name</Label>
-                      <p className="text-lg font-semibold">{viewingAccount.bankName || 'Unknown Bank'}</p>
+                      <Label className="text-sm font-medium text-gray-600">
+                        Bank Name
+                      </Label>
+                      <p className="text-lg font-semibold">
+                        {viewingAccount.bankName || "Unknown Bank"}
+                      </p>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label className="text-sm font-medium text-gray-600">Account Number</Label>
-                      <p className="text-lg font-mono">****{viewingAccount.accountNumber?.slice(-4) || 'N/A'}</p>
+                      <Label className="text-sm font-medium text-gray-600">
+                        Account Number
+                      </Label>
+                      <p className="text-lg font-mono">
+                        ****{viewingAccount.accountNumber?.slice(-4) || "N/A"}
+                      </p>
                     </div>
                     <div>
-                      <Label className="text-sm font-medium text-gray-600">Account Type</Label>
+                      <Label className="text-sm font-medium text-gray-600">
+                        Account Type
+                      </Label>
                       <div className="mt-1">
-                        <Badge variant="outline">{getAccountTypeLabel(viewingAccount.accountType)}</Badge>
+                        <Badge variant="outline">
+                          {getAccountTypeLabel(viewingAccount.accountType)}
+                        </Badge>
                       </div>
                     </div>
                   </div>
 
                   {viewingAccount.routingNumber && (
                     <div>
-                      <Label className="text-sm font-medium text-gray-600">Routing Number</Label>
-                      <p className="text-lg font-mono">{viewingAccount.routingNumber}</p>
+                      <Label className="text-sm font-medium text-gray-600">
+                        Routing Number
+                      </Label>
+                      <p className="text-lg font-mono">
+                        {viewingAccount.routingNumber}
+                      </p>
                     </div>
                   )}
 
                   {viewingAccount.bankCode && (
                     <div>
-                      <Label className="text-sm font-medium text-gray-600">Bank Code</Label>
-                      <p className="text-lg font-mono">{viewingAccount.bankCode}</p>
+                      <Label className="text-sm font-medium text-gray-600">
+                        Bank Code
+                      </Label>
+                      <p className="text-lg font-mono">
+                        {viewingAccount.bankCode}
+                      </p>
                     </div>
                   )}
 
                   {/* Balance Information */}
                   <div className="border-t pt-4">
-                    <h3 className="text-lg font-semibold mb-4">Balance Information</h3>
+                    <h3 className="text-lg font-semibold mb-4">
+                      Balance Information
+                    </h3>
                     <div className="grid grid-cols-3 gap-4">
                       <div>
-                        <Label className="text-sm font-medium text-gray-600">Current Balance</Label>
+                        <Label className="text-sm font-medium text-gray-600">
+                          Current Balance
+                        </Label>
                         <p className="text-xl font-bold text-green-600">
                           {formatCurrency(viewingAccount.currentBalance || 0)}
                         </p>
                       </div>
                       <div>
-                        <Label className="text-sm font-medium text-gray-600">Available Balance</Label>
+                        <Label className="text-sm font-medium text-gray-600">
+                          Available Balance
+                        </Label>
                         <p className="text-xl font-bold text-blue-600">
                           {formatCurrency(viewingAccount.availableBalance || 0)}
                         </p>
                       </div>
                       <div>
-                        <Label className="text-sm font-medium text-gray-600">Pending Balance</Label>
+                        <Label className="text-sm font-medium text-gray-600">
+                          Pending Balance
+                        </Label>
                         <p className="text-xl font-bold text-orange-600">
                           {formatCurrency(viewingAccount.pendingBalance || 0)}
                         </p>
@@ -751,17 +891,29 @@ function BankAccountsContent() {
 
                   {/* Account Settings */}
                   <div className="border-t pt-4">
-                    <h3 className="text-lg font-semibold mb-4">Account Settings</h3>
+                    <h3 className="text-lg font-semibold mb-4">
+                      Account Settings
+                    </h3>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label className="text-sm font-medium text-gray-600">Currency</Label>
-                        <p className="text-lg">{viewingAccount.currency || 'USD'}</p>
+                        <Label className="text-sm font-medium text-gray-600">
+                          Currency
+                        </Label>
+                        <p className="text-lg">
+                          {viewingAccount.currency || "USD"}
+                        </p>
                       </div>
                       <div>
-                        <Label className="text-sm font-medium text-gray-600">Status</Label>
+                        <Label className="text-sm font-medium text-gray-600">
+                          Status
+                        </Label>
                         <div className="mt-1">
-                          <Badge variant={viewingAccount.isActive ? "default" : "secondary"}>
-                            {viewingAccount.isActive ? 'Active' : 'Inactive'}
+                          <Badge
+                            variant={
+                              viewingAccount.isActive ? "default" : "secondary"
+                            }
+                          >
+                            {viewingAccount.isActive ? "Active" : "Inactive"}
                           </Badge>
                         </div>
                       </div>
@@ -769,18 +921,34 @@ function BankAccountsContent() {
 
                     <div className="grid grid-cols-2 gap-4 mt-4">
                       <div>
-                        <Label className="text-sm font-medium text-gray-600">Primary Account</Label>
+                        <Label className="text-sm font-medium text-gray-600">
+                          Primary Account
+                        </Label>
                         <div className="mt-1">
-                          <Badge variant={viewingAccount.isPrimary ? "default" : "outline"}>
-                            {viewingAccount.isPrimary ? 'Yes' : 'No'}
+                          <Badge
+                            variant={
+                              viewingAccount.isPrimary ? "default" : "outline"
+                            }
+                          >
+                            {viewingAccount.isPrimary ? "Yes" : "No"}
                           </Badge>
                         </div>
                       </div>
                       <div>
-                        <Label className="text-sm font-medium text-gray-600">Online Banking</Label>
+                        <Label className="text-sm font-medium text-gray-600">
+                          Online Banking
+                        </Label>
                         <div className="mt-1">
-                          <Badge variant={viewingAccount.supportsOnlineBanking ? "default" : "outline"}>
-                            {viewingAccount.supportsOnlineBanking ? 'Supported' : 'Not Supported'}
+                          <Badge
+                            variant={
+                              viewingAccount.supportsOnlineBanking
+                                ? "default"
+                                : "outline"
+                            }
+                          >
+                            {viewingAccount.supportsOnlineBanking
+                              ? "Supported"
+                              : "Not Supported"}
                           </Badge>
                         </div>
                       </div>
@@ -790,18 +958,26 @@ function BankAccountsContent() {
                   {/* Description */}
                   {viewingAccount.description && (
                     <div className="border-t pt-4">
-                      <Label className="text-sm font-medium text-gray-600">Description</Label>
-                      <p className="text-gray-900 mt-1">{viewingAccount.description}</p>
+                      <Label className="text-sm font-medium text-gray-600">
+                        Description
+                      </Label>
+                      <p className="text-gray-900 mt-1">
+                        {viewingAccount.description}
+                      </p>
                     </div>
                   )}
 
                   {/* Tags */}
                   {viewingAccount.tags && viewingAccount.tags.length > 0 && (
                     <div className="border-t pt-4">
-                      <Label className="text-sm font-medium text-gray-600">Tags</Label>
+                      <Label className="text-sm font-medium text-gray-600">
+                        Tags
+                      </Label>
                       <div className="flex flex-wrap gap-2 mt-2">
                         {viewingAccount.tags.map((tag, index) => (
-                          <Badge key={index} variant="outline">{tag}</Badge>
+                          <Badge key={index} variant="outline">
+                            {tag}
+                          </Badge>
                         ))}
                       </div>
                     </div>
@@ -809,21 +985,35 @@ function BankAccountsContent() {
 
                   {/* Metadata */}
                   <div className="border-t pt-4">
-                    <h3 className="text-lg font-semibold mb-4">Account Information</h3>
+                    <h3 className="text-lg font-semibold mb-4">
+                      Account Information
+                    </h3>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label className="text-sm font-medium text-gray-600">Account ID</Label>
-                        <p className="text-sm font-mono text-gray-500">{viewingAccount.id}</p>
+                        <Label className="text-sm font-medium text-gray-600">
+                          Account ID
+                        </Label>
+                        <p className="text-sm font-mono text-gray-500">
+                          {viewingAccount.id}
+                        </p>
                       </div>
                       <div>
-                        <Label className="text-sm font-medium text-gray-600">Created</Label>
-                        <p className="text-sm text-gray-500">{formatDate(viewingAccount.createdAt)}</p>
+                        <Label className="text-sm font-medium text-gray-600">
+                          Created
+                        </Label>
+                        <p className="text-sm text-gray-500">
+                          {formatDate(viewingAccount.createdAt)}
+                        </p>
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4 mt-4">
                       <div>
-                        <Label className="text-sm font-medium text-gray-600">Last Updated</Label>
-                        <p className="text-sm text-gray-500">{formatDate(viewingAccount.updatedAt)}</p>
+                        <Label className="text-sm font-medium text-gray-600">
+                          Last Updated
+                        </Label>
+                        <p className="text-sm text-gray-500">
+                          {formatDate(viewingAccount.updatedAt)}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -835,10 +1025,12 @@ function BankAccountsContent() {
               <Button variant="outline" onClick={() => setViewingAccount(null)}>
                 Close
               </Button>
-              <Button onClick={() => {
-                setViewingAccount(null);
-                openEditModal(viewingAccount!);
-              }}>
+              <Button
+                onClick={() => {
+                  setViewingAccount(null);
+                  openEditModal(viewingAccount!);
+                }}
+              >
                 Edit Account
               </Button>
             </DialogFooter>

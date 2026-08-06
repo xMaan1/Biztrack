@@ -1,5 +1,5 @@
-import { useCachedApi } from './useCachedApi';
-import { apiClient } from '../services/apiClient';
+import { useCachedApi } from "./useCachedApi";
+import { apiClient } from "../services/apiClient";
 
 export interface DashboardData {
   projects: {
@@ -67,17 +67,18 @@ interface UseDashboardReturn {
 }
 
 export const useDashboard = (): UseDashboardReturn => {
-  const { data, loading, error, refetch, clearCache } = useCachedApi<DashboardData>(
-    'dashboard_overview',
-    () => apiClient.get('/dashboard/overview'),
-    { ttl: 30000 }
-  );
+  const { data, loading, error, refetch, clearCache } =
+    useCachedApi<DashboardData>(
+      "dashboard_overview",
+      () => apiClient.get("/dashboard/overview"),
+      { ttl: 30000 },
+    );
 
   return {
     data,
     loading,
     error,
     refetch,
-    clearCache
+    clearCache,
   };
 };

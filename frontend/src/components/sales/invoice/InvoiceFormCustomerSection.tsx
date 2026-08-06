@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { CustomerSearch } from '@/src/components/ui/customer-search';
-import { AddCustomerButton } from '../commerce-invoice/AddCustomerButton';
-import type { Customer } from '@/src/services/CustomerService';
-import type { InvoiceFormMode } from '@/src/types/sales/invoiceForm';
+import { CustomerSearch } from "@/src/components/ui/customer-search";
+import { AddCustomerButton } from "../commerce-invoice/AddCustomerButton";
+import type { Customer } from "@/src/services/CustomerService";
+import type { InvoiceFormMode } from "@/src/types/sales/invoiceForm";
 
 type InvoiceFormCustomerSectionProps = {
   mode: InvoiceFormMode;
@@ -38,8 +38,11 @@ export function InvoiceFormCustomerSection({
                 error={customerError}
               />
             </div>
-            {mode !== 'view' && (
-              <AddCustomerButton onClick={onNewCustomer} className="w-full shrink-0 md:w-auto" />
+            {mode !== "view" && (
+              <AddCustomerButton
+                onClick={onNewCustomer}
+                className="w-full shrink-0 md:w-auto"
+              />
             )}
           </div>
         </div>

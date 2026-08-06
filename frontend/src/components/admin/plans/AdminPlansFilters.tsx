@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { Search } from 'lucide-react';
-import { Card, CardContent } from '@/src/components/ui/card';
-import { Input } from '@/src/components/ui/input';
+import { Search } from "lucide-react";
+import { Card, CardContent } from "@/src/components/ui/card";
+import { Input } from "@/src/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
+} from "@/src/components/ui/select";
 
 type AdminPlansFiltersProps = {
   searchQuery: string;

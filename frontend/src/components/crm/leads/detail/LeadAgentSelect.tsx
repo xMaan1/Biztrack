@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   Select,
@@ -6,8 +6,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
-import type { LeadUserOption } from '@/src/components/crm/leads/leadUtils';
+} from "@/src/components/ui/select";
+import type { LeadUserOption } from "@/src/components/crm/leads/leadUtils";
 
 type Props = {
   label: string;
@@ -21,8 +21,8 @@ export function LeadAgentSelect({ label, value, users, onChange }: Props) {
     <div>
       <div className="text-muted-foreground mb-0.5">{label}</div>
       <Select
-        value={value || '__none__'}
-        onValueChange={(v) => onChange(v === '__none__' ? '' : v)}
+        value={value || "__none__"}
+        onValueChange={(v) => onChange(v === "__none__" ? "" : v)}
       >
         <SelectTrigger className="h-8 text-xs">
           <SelectValue placeholder="Not selected" />

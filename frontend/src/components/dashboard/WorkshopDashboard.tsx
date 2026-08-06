@@ -1,10 +1,16 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
-import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
-import { Progress } from '../ui/progress';
+import React from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "../ui/card";
+import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
+import { Progress } from "../ui/progress";
 import {
   Factory,
   Users,
@@ -23,7 +29,7 @@ import {
   AlertCircle,
   Sparkles,
   ChevronRight,
-} from 'lucide-react';
+} from "lucide-react";
 
 interface WorkshopStats {
   totalProjects: number;
@@ -46,13 +52,14 @@ export default function WorkshopDashboard({
 }: WorkshopDashboardProps) {
   const productionEfficiency = stats.productionEfficiency || 85;
   const qualityIssues = stats.qualityIssues || 0;
-  
-  const completionRate = stats.totalProjects > 0 
-    ? Math.round((stats.completedProjects / stats.totalProjects) * 100)
-    : 0;
 
-  const handleCreateProject = () => onNavigate('/projects');
-  const handleAddInvestment = () => onNavigate('/ledger/investments');
+  const completionRate =
+    stats.totalProjects > 0
+      ? Math.round((stats.completedProjects / stats.totalProjects) * 100)
+      : 0;
+
+  const handleCreateProject = () => onNavigate("/projects");
+  const handleAddInvestment = () => onNavigate("/ledger/investments");
 
   return (
     <div className="space-y-6">
@@ -110,13 +117,17 @@ export default function WorkshopDashboard({
         <Card className="relative overflow-hidden border-l-4 border-l-blue-500 hover:shadow-lg transition-shadow">
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/10 to-transparent rounded-bl-full"></div>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Completed</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Completed
+            </CardTitle>
             <div className="p-2 bg-blue-100 rounded-lg">
               <CheckCircle2 className="h-4 w-4 text-blue-600" />
             </div>
           </CardHeader>
           <CardContent className="relative z-10">
-            <div className="text-3xl font-bold text-blue-600 mb-1">{stats.completedProjects}</div>
+            <div className="text-3xl font-bold text-blue-600 mb-1">
+              {stats.completedProjects}
+            </div>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <CheckCircle2 className="h-3 w-3" />
               <span>Finished projects</span>
@@ -148,7 +159,9 @@ export default function WorkshopDashboard({
         <Card className="relative overflow-hidden border-l-4 border-l-purple-500 hover:shadow-lg transition-shadow">
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-500/10 to-transparent rounded-bl-full"></div>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Team Size</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Team Size
+            </CardTitle>
             <div className="p-2 bg-purple-100 rounded-lg">
               <Users className="h-4 w-4 text-purple-600" />
             </div>
@@ -197,18 +210,22 @@ export default function WorkshopDashboard({
                   <div className="text-2xl font-bold text-indigo-600 mb-1">
                     {stats.completedProjects}
                   </div>
-                  <div className="text-xs font-medium text-indigo-700">Completed</div>
+                  <div className="text-xs font-medium text-indigo-700">
+                    Completed
+                  </div>
                   <div className="flex items-center justify-center gap-1 mt-1">
                     <TrendingUp className="h-3 w-3 text-emerald-500" />
                     <span className="text-xs text-emerald-600">+12%</span>
                   </div>
                 </div>
-                
+
                 <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-lg border border-blue-200">
                   <div className="text-2xl font-bold text-blue-600 mb-1">
                     {stats.activeProjects}
                   </div>
-                  <div className="text-xs font-medium text-blue-700">Active</div>
+                  <div className="text-xs font-medium text-blue-700">
+                    Active
+                  </div>
                   <div className="flex items-center justify-center gap-1 mt-1">
                     <Activity className="h-3 w-3 text-blue-500" />
                     <span className="text-xs text-blue-600">In progress</span>
@@ -219,7 +236,9 @@ export default function WorkshopDashboard({
                   <div className="text-2xl font-bold text-emerald-600 mb-1">
                     {productionEfficiency}%
                   </div>
-                  <div className="text-xs font-medium text-emerald-700">Efficiency</div>
+                  <div className="text-xs font-medium text-emerald-700">
+                    Efficiency
+                  </div>
                   <div className="flex items-center justify-center gap-1 mt-1">
                     <Gauge className="h-3 w-3 text-emerald-500" />
                     <span className="text-xs text-emerald-600">On track</span>
@@ -231,7 +250,9 @@ export default function WorkshopDashboard({
                 <div className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-2">
                     <Target className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">Completion Rate</span>
+                    <span className="text-muted-foreground">
+                      Completion Rate
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-24">
@@ -257,7 +278,9 @@ export default function WorkshopDashboard({
                   </CardDescription>
                 </div>
                 <Button
-                  onClick={() => onNavigate('/workshop-management/quality-control')}
+                  onClick={() =>
+                    onNavigate("/workshop-management/quality-control")
+                  }
                   variant="ghost"
                   size="sm"
                   className="text-amber-600"
@@ -271,7 +294,9 @@ export default function WorkshopDashboard({
               <div className="flex items-center justify-between p-3 bg-amber-50/50 rounded-lg hover:bg-amber-50 transition-colors">
                 <div className="flex items-center gap-2">
                   <AlertCircle className="h-4 w-4 text-amber-600" />
-                  <span className="text-sm font-medium">Open Quality Issues</span>
+                  <span className="text-sm font-medium">
+                    Open Quality Issues
+                  </span>
                 </div>
                 <Badge variant="destructive">{qualityIssues}</Badge>
               </div>
@@ -290,7 +315,7 @@ export default function WorkshopDashboard({
             </CardHeader>
             <CardContent className="space-y-2">
               <Button
-                onClick={() => onNavigate('/workshop-management/job-cards')}
+                onClick={() => onNavigate("/workshop-management/job-cards")}
                 variant="outline"
                 className="w-full justify-start h-auto py-3 hover:bg-indigo-50 hover:border-indigo-300"
               >
@@ -300,14 +325,18 @@ export default function WorkshopDashboard({
                   </div>
                   <div className="flex-1 text-left">
                     <div className="font-medium">Job Cards</div>
-                    <div className="text-xs text-muted-foreground">Workshop jobs</div>
+                    <div className="text-xs text-muted-foreground">
+                      Workshop jobs
+                    </div>
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </div>
               </Button>
 
               <Button
-                onClick={() => onNavigate('/workshop-management/quality-control')}
+                onClick={() =>
+                  onNavigate("/workshop-management/quality-control")
+                }
                 variant="outline"
                 className="w-full justify-start h-auto py-3 hover:bg-emerald-50 hover:border-emerald-300"
               >
@@ -317,14 +346,16 @@ export default function WorkshopDashboard({
                   </div>
                   <div className="flex-1 text-left">
                     <div className="font-medium">Quality Control</div>
-                    <div className="text-xs text-muted-foreground">Inspect products</div>
+                    <div className="text-xs text-muted-foreground">
+                      Inspect products
+                    </div>
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </div>
               </Button>
 
               <Button
-                onClick={() => onNavigate('/inventory')}
+                onClick={() => onNavigate("/inventory")}
                 variant="outline"
                 className="w-full justify-start h-auto py-3 hover:bg-blue-50 hover:border-blue-300"
               >
@@ -334,7 +365,9 @@ export default function WorkshopDashboard({
                   </div>
                   <div className="flex-1 text-left">
                     <div className="font-medium">Inventory</div>
-                    <div className="text-xs text-muted-foreground">Stock management</div>
+                    <div className="text-xs text-muted-foreground">
+                      Stock management
+                    </div>
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </div>
@@ -351,14 +384,16 @@ export default function WorkshopDashboard({
                   </div>
                   <div className="flex-1 text-left">
                     <div className="font-medium">Add Investment</div>
-                    <div className="text-xs text-muted-foreground">Track expenses</div>
+                    <div className="text-xs text-muted-foreground">
+                      Track expenses
+                    </div>
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </div>
               </Button>
 
               <Button
-                onClick={() => onNavigate('/reports')}
+                onClick={() => onNavigate("/reports")}
                 variant="outline"
                 className="w-full justify-start h-auto py-3 hover:bg-pink-50 hover:border-pink-300"
               >
@@ -368,7 +403,9 @@ export default function WorkshopDashboard({
                   </div>
                   <div className="flex-1 text-left">
                     <div className="font-medium">View Reports</div>
-                    <div className="text-xs text-muted-foreground">Analytics & insights</div>
+                    <div className="text-xs text-muted-foreground">
+                      Analytics & insights
+                    </div>
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </div>
@@ -386,17 +423,20 @@ export default function WorkshopDashboard({
             <CardContent className="space-y-4">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-indigo-100">Today's Target</span>
+                  <span className="text-indigo-100">Today&apos;s Target</span>
                   <span className="font-bold text-lg">92%</span>
                 </div>
                 <Progress value={92} className="h-2 bg-indigo-400/30" />
-                
+
                 <div className="flex items-center justify-between pt-2 border-t border-indigo-400/30">
                   <span className="text-indigo-100">This Week</span>
                   <span className="font-bold">{productionEfficiency}%</span>
                 </div>
-                <Progress value={productionEfficiency} className="h-2 bg-indigo-400/30" />
-                
+                <Progress
+                  value={productionEfficiency}
+                  className="h-2 bg-indigo-400/30"
+                />
+
                 <div className="flex items-center justify-between pt-2 border-t border-indigo-400/30">
                   <span className="text-indigo-100">Monthly Goal</span>
                   <span className="font-bold">87%</span>
@@ -423,8 +463,12 @@ export default function WorkshopDashboard({
                 <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                 <span className="text-sm font-medium">Projects Completed</span>
               </div>
-              <div className="text-2xl font-bold text-indigo-600">{stats.completedProjects}</div>
-              <div className="text-xs text-muted-foreground mt-1">Last 30 days</div>
+              <div className="text-2xl font-bold text-indigo-600">
+                {stats.completedProjects}
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Last 30 days
+              </div>
             </div>
 
             <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
@@ -432,8 +476,12 @@ export default function WorkshopDashboard({
                 <Activity className="h-4 w-4 text-blue-600" />
                 <span className="text-sm font-medium">Active Operations</span>
               </div>
-              <div className="text-2xl font-bold text-blue-600">{stats.activeProjects}</div>
-              <div className="text-xs text-muted-foreground mt-1">In progress now</div>
+              <div className="text-2xl font-bold text-blue-600">
+                {stats.activeProjects}
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">
+                In progress now
+              </div>
             </div>
 
             <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
@@ -442,7 +490,9 @@ export default function WorkshopDashboard({
                 <span className="text-sm font-medium">Growth Rate</span>
               </div>
               <div className="text-2xl font-bold text-purple-600">+15%</div>
-              <div className="text-xs text-muted-foreground mt-1">Compared to last month</div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Compared to last month
+              </div>
             </div>
           </div>
         </CardContent>

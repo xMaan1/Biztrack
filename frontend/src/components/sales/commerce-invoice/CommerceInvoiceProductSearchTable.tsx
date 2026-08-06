@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import type { Product } from '@/src/models/pos';
+import type { Product } from "@/src/models/pos";
 import {
   formatSalePrice,
   PRODUCT_TABLE_COLUMNS,
   productToTableRow,
-} from '@/src/utils/sales/commerceProductTableUtils';
+} from "@/src/utils/sales/commerceProductTableUtils";
 
 type CommerceInvoiceProductSearchTableProps = {
   searchResults: Product[];
@@ -14,25 +14,43 @@ type CommerceInvoiceProductSearchTableProps = {
 
 function CatalogTableCells({
   row,
-  className = '',
+  className = "",
 }: {
   row: ReturnType<typeof productToTableRow>;
   className?: string;
 }) {
   return (
     <>
-      <td className={`border border-border px-2 py-1 ${className}`}>{row.code}</td>
-      <td className={`border border-border px-2 py-1 ${className}`}>{row.name}</td>
-      <td className={`border border-border px-2 py-1 ${className}`}>{row.type}</td>
-      <td className={`border border-border px-2 py-1 ${className}`}>{row.pack}</td>
-      <td className={`border border-border px-2 py-1 ${className}`}>{row.company}</td>
-      <td className={`border border-border px-2 py-1 ${className}`}>{row.vendor}</td>
-      <td className={`border border-border px-2 py-1 ${className}`}>{row.category}</td>
+      <td className={`border border-border px-2 py-1 ${className}`}>
+        {row.code}
+      </td>
+      <td className={`border border-border px-2 py-1 ${className}`}>
+        {row.name}
+      </td>
+      <td className={`border border-border px-2 py-1 ${className}`}>
+        {row.type}
+      </td>
+      <td className={`border border-border px-2 py-1 ${className}`}>
+        {row.pack}
+      </td>
+      <td className={`border border-border px-2 py-1 ${className}`}>
+        {row.company}
+      </td>
+      <td className={`border border-border px-2 py-1 ${className}`}>
+        {row.vendor}
+      </td>
+      <td className={`border border-border px-2 py-1 ${className}`}>
+        {row.category}
+      </td>
       <td className={`border border-border px-2 py-1 text-right ${className}`}>
         {formatSalePrice(row.salePrice)}
       </td>
-      <td className={`border border-border px-2 py-1 text-right ${className}`}>{row.totalQty}</td>
-      <td className={`border border-border px-2 py-1 ${className}`}>{row.totalUnits}</td>
+      <td className={`border border-border px-2 py-1 text-right ${className}`}>
+        {row.totalQty}
+      </td>
+      <td className={`border border-border px-2 py-1 ${className}`}>
+        {row.totalUnits}
+      </td>
     </>
   );
 }
@@ -51,7 +69,9 @@ export function CommerceInvoiceProductSearchTable({
                 <th
                   key={column}
                   className={`border border-primary/80 px-2 py-1.5 font-semibold ${
-                    column === 'Sale Price' || column === 'Total Qty' ? 'text-right' : 'text-left'
+                    column === "Sale Price" || column === "Total Qty"
+                      ? "text-right"
+                      : "text-left"
                   }`}
                 >
                   {column}
@@ -76,7 +96,7 @@ export function CommerceInvoiceProductSearchTable({
                   <tr
                     key={`search-${product.id}`}
                     className={`cursor-pointer hover:bg-accent ${
-                      index % 2 === 0 ? 'bg-card' : 'bg-muted/20'
+                      index % 2 === 0 ? "bg-card" : "bg-muted/20"
                     }`}
                     onClick={() => onPickProduct(product)}
                   >

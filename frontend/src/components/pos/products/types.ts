@@ -1,4 +1,4 @@
-import type { UnitOfMeasure } from '@/src/models/pos';
+import type { UnitOfMeasure } from "@/src/models/pos";
 
 export type ProductFormData = {
   name: string;

@@ -1,15 +1,21 @@
-'use client';
+"use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { useAuth } from './AuthContext';
-import NotificationService from '../services/NotificationService';
-import { extractErrorMessage } from '../utils/errorUtils';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
+import { useAuth } from "./AuthContext";
+import NotificationService from "../services/NotificationService";
+import { extractErrorMessage } from "../utils/errorUtils";
 import {
   Notification,
   NotificationFilters,
   NotificationPreference,
-  NotificationPreferenceUpdate
-} from '../models/notifications';
+  NotificationPreferenceUpdate,
+} from "../models/notifications";
 
 interface NotificationContextType {
   // State
@@ -18,7 +24,7 @@ interface NotificationContextType {
   loading: boolean;
   error: string | null;
   preferences: NotificationPreference[];
-  
+
   // Actions
   loadNotifications: (filters?: NotificationFilters) => Promise<void>;
   loadUnreadCount: () => Promise<void>;
@@ -29,16 +35,25 @@ interface NotificationContextType {
   deleteNotification: (notificationId: string) => Promise<void>;
   updatePreference: (preference: NotificationPreferenceUpdate) => Promise<void>;
   refreshNotifications: () => Promise<void>;
-  
+
   // Real-time updates
   addNotification: (notification: Notification) => void;
-  updateNotification: (notificationId: string, updates: Partial<Notification>) => void;
+  updateNotification: (
+    notificationId: string,
+    updates: Partial<Notification>,
+  ) => void;
   removeNotification: (notificationId: string) => void;
 }
 
-const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
+const NotificationContext = createContext<NotificationContextType | undefined>(
+  undefined,
+);
 
-export function NotificationProvider({ children }: { children: React.ReactNode }) {
+export function NotificationProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const { user, currentTenant } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -47,61 +62,66 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const [preferences, setPreferences] = useState<NotificationPreference[]>([]);
 
   // Load notifications with filters
-  const loadNotifications = useCallback(async (filters: NotificationFilters = {}) => {
-    if (!user || !currentTenant) return;
-    
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await NotificationService.getNotifications(filters);
-      setNotifications(response.notifications);
-    } catch (err: any) {
-      setError(extractErrorMessage(err, 'Failed to load notifications'));
-    } finally {
-      setLoading(false);
-    }
-  }, [user, currentTenant]);
+  const loadNotifications = useCallback(
+    async (filters: NotificationFilters = {}) => {
+      if (!user || !currentTenant) return;
+
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await NotificationService.getNotifications(filters);
+        setNotifications(response.notifications);
+      } catch (err: any) {
+        setError(extractErrorMessage(err, "Failed to load notifications"));
+      } finally {
+        setLoading(false);
+      }
+    },
+    [user, currentTenant],
+  );
 
   // Load unread count
   const loadUnreadCount = useCallback(async () => {
     if (!user || !currentTenant) return;
-    
+
     try {
       const response = await NotificationService.getUnreadCount();
       setUnreadCount(response.unread_count);
-    } catch (err: any) {
-    }
+    } catch (err: any) {}
   }, [user, currentTenant]);
 
   // Load preferences
   const loadPreferences = useCallback(async () => {
     if (!user || !currentTenant) return;
-    
+
     try {
       const response = await NotificationService.getNotificationPreferences();
       setPreferences(response.preferences);
-    } catch (err: any) {
-    }
+    } catch (err: any) {}
   }, [user, currentTenant]);
 
   // Mark notification as read
   const markAsRead = useCallback(async (notificationId: string) => {
     try {
       await NotificationService.markAsRead(notificationId);
-      
+
       // Update local state
-      setNotifications(prev => 
-        prev.map(notification => 
-          notification.id === notificationId 
-            ? { ...notification, is_read: true, read_at: new Date().toISOString() }
-            : notification
-        )
+      setNotifications((prev) =>
+        prev.map((notification) =>
+          notification.id === notificationId
+            ? {
+                ...notification,
+                is_read: true,
+                read_at: new Date().toISOString(),
+              }
+            : notification,
+        ),
       );
-      
+
       // Update unread count
-      setUnreadCount(prev => Math.max(0, prev - 1));
+      setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (err: any) {
-      setError(extractErrorMessage(err, 'Failed to mark notification as read'));
+      setError(extractErrorMessage(err, "Failed to mark notification as read"));
       throw err;
     }
   }, []);
@@ -110,20 +130,22 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const markAsUnread = useCallback(async (notificationId: string) => {
     try {
       await NotificationService.markAsUnread(notificationId);
-      
+
       // Update local state
-      setNotifications(prev => 
-        prev.map(notification => 
-          notification.id === notificationId 
+      setNotifications((prev) =>
+        prev.map((notification) =>
+          notification.id === notificationId
             ? { ...notification, is_read: false, read_at: undefined }
-            : notification
-        )
+            : notification,
+        ),
       );
-      
+
       // Update unread count
-      setUnreadCount(prev => prev + 1);
+      setUnreadCount((prev) => prev + 1);
     } catch (err: any) {
-      setError(extractErrorMessage(err, 'Failed to mark notification as unread'));
+      setError(
+        extractErrorMessage(err, "Failed to mark notification as unread"),
+      );
       throw err;
     }
   }, []);
@@ -132,96 +154,115 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const markAllAsRead = useCallback(async () => {
     try {
       await NotificationService.markAllAsRead();
-      
+
       // Update local state
-      setNotifications(prev => 
-        prev.map(notification => ({
+      setNotifications((prev) =>
+        prev.map((notification) => ({
           ...notification,
           is_read: true,
-          read_at: new Date().toISOString()
-        }))
+          read_at: new Date().toISOString(),
+        })),
       );
-      
+
       // Reset unread count
       setUnreadCount(0);
     } catch (err: any) {
-      setError(extractErrorMessage(err, 'Failed to mark all notifications as read'));
+      setError(
+        extractErrorMessage(err, "Failed to mark all notifications as read"),
+      );
       throw err;
     }
   }, []);
 
   // Delete notification
-  const deleteNotification = useCallback(async (notificationId: string) => {
-    try {
-      await NotificationService.deleteNotification(notificationId);
-      
-      // Update local state
-      const deletedNotification = notifications.find(n => n.id === notificationId);
-      setNotifications(prev => prev.filter(notification => notification.id !== notificationId));
-      
-      // Update unread count if deleted notification was unread
-      if (deletedNotification && !deletedNotification.is_read) {
-        setUnreadCount(prev => Math.max(0, prev - 1));
+  const deleteNotification = useCallback(
+    async (notificationId: string) => {
+      try {
+        await NotificationService.deleteNotification(notificationId);
+
+        // Update local state
+        const deletedNotification = notifications.find(
+          (n) => n.id === notificationId,
+        );
+        setNotifications((prev) =>
+          prev.filter((notification) => notification.id !== notificationId),
+        );
+
+        // Update unread count if deleted notification was unread
+        if (deletedNotification && !deletedNotification.is_read) {
+          setUnreadCount((prev) => Math.max(0, prev - 1));
+        }
+      } catch (err: any) {
+        setError(extractErrorMessage(err, "Failed to delete notification"));
+        throw err;
       }
-    } catch (err: any) {
-      setError(extractErrorMessage(err, 'Failed to delete notification'));
-      throw err;
-    }
-  }, [notifications]);
+    },
+    [notifications],
+  );
 
   // Update preference
-  const updatePreference = useCallback(async (preference: NotificationPreferenceUpdate) => {
-    try {
-      await NotificationService.updateNotificationPreference(preference);
-      
-      // Update local state
-      setPreferences(prev => 
-        prev.map(pref => 
-          pref.category === preference.category
-            ? { ...pref, ...preference }
-            : pref
-        )
-      );
-    } catch (err: any) {
-      setError(extractErrorMessage(err, 'Failed to update preference'));
-      throw err;
-    }
-  }, []);
+  const updatePreference = useCallback(
+    async (preference: NotificationPreferenceUpdate) => {
+      try {
+        await NotificationService.updateNotificationPreference(preference);
+
+        // Update local state
+        setPreferences((prev) =>
+          prev.map((pref) =>
+            pref.category === preference.category
+              ? { ...pref, ...preference }
+              : pref,
+          ),
+        );
+      } catch (err: any) {
+        setError(extractErrorMessage(err, "Failed to update preference"));
+        throw err;
+      }
+    },
+    [],
+  );
 
   // Refresh notifications
   const refreshNotifications = useCallback(async () => {
-    await Promise.all([
-      loadNotifications(),
-      loadUnreadCount()
-    ]);
+    await Promise.all([loadNotifications(), loadUnreadCount()]);
   }, [loadNotifications, loadUnreadCount]);
 
   // Real-time update methods
   const addNotification = useCallback((notification: Notification) => {
-    setNotifications(prev => [notification, ...prev]);
+    setNotifications((prev) => [notification, ...prev]);
     if (!notification.is_read) {
-      setUnreadCount(prev => prev + 1);
+      setUnreadCount((prev) => prev + 1);
     }
   }, []);
 
-  const updateNotification = useCallback((notificationId: string, updates: Partial<Notification>) => {
-    setNotifications(prev => 
-      prev.map(notification => 
-        notification.id === notificationId 
-          ? { ...notification, ...updates }
-          : notification
-      )
-    );
-  }, []);
+  const updateNotification = useCallback(
+    (notificationId: string, updates: Partial<Notification>) => {
+      setNotifications((prev) =>
+        prev.map((notification) =>
+          notification.id === notificationId
+            ? { ...notification, ...updates }
+            : notification,
+        ),
+      );
+    },
+    [],
+  );
 
-  const removeNotification = useCallback((notificationId: string) => {
-    const deletedNotification = notifications.find(n => n.id === notificationId);
-    setNotifications(prev => prev.filter(notification => notification.id !== notificationId));
-    
-    if (deletedNotification && !deletedNotification.is_read) {
-      setUnreadCount(prev => Math.max(0, prev - 1));
-    }
-  }, [notifications]);
+  const removeNotification = useCallback(
+    (notificationId: string) => {
+      const deletedNotification = notifications.find(
+        (n) => n.id === notificationId,
+      );
+      setNotifications((prev) =>
+        prev.filter((notification) => notification.id !== notificationId),
+      );
+
+      if (deletedNotification && !deletedNotification.is_read) {
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      }
+    },
+    [notifications],
+  );
 
   // Initial load
   useEffect(() => {
@@ -230,7 +271,13 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       loadUnreadCount();
       loadPreferences();
     }
-  }, [user, currentTenant, loadNotifications, loadUnreadCount, loadPreferences]);
+  }, [
+    user,
+    currentTenant,
+    loadNotifications,
+    loadUnreadCount,
+    loadPreferences,
+  ]);
 
   // Auto-refresh every 30 seconds
   useEffect(() => {
@@ -250,7 +297,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     loading,
     error,
     preferences,
-    
+
     // Actions
     loadNotifications,
     loadUnreadCount,
@@ -261,11 +308,11 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     deleteNotification,
     updatePreference,
     refreshNotifications,
-    
+
     // Real-time updates
     addNotification,
     updateNotification,
-    removeNotification
+    removeNotification,
   };
 
   return (
@@ -278,7 +325,9 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 export function useNotifications() {
   const context = useContext(NotificationContext);
   if (context === undefined) {
-    throw new Error('useNotifications must be used within a NotificationProvider');
+    throw new Error(
+      "useNotifications must be used within a NotificationProvider",
+    );
   }
   return context;
 }

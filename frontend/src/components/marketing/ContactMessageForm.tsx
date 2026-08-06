@@ -1,33 +1,33 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { toast } from 'sonner';
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
-import { Textarea } from '@/src/components/ui/textarea';
+import { useState } from "react";
+import { toast } from "sonner";
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
+import { Textarea } from "@/src/components/ui/textarea";
 
 export function ContactMessageForm() {
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [message, setMessage] = useState('');
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName.trim() || !email.trim() || !message.trim()) {
-      toast.error('Please fill in your name, email, and message.');
+      toast.error("Please fill in your name, email, and message.");
       return;
     }
 
     setSubmitting(true);
     await new Promise((resolve) => setTimeout(resolve, 400));
     setSubmitting(false);
-    toast.success('Thank you. We will get back to you shortly.');
-    setFullName('');
-    setEmail('');
-    setPhone('');
-    setMessage('');
+    toast.success("Thank you. We will get back to you shortly.");
+    setFullName("");
+    setEmail("");
+    setPhone("");
+    setMessage("");
   };
 
   return (
@@ -63,7 +63,7 @@ export function ContactMessageForm() {
         disabled={submitting}
         className="w-full bg-emerald-600 hover:bg-emerald-700"
       >
-        {submitting ? 'Sending…' : 'Send Message'}
+        {submitting ? "Sending…" : "Send Message"}
       </Button>
     </form>
   );

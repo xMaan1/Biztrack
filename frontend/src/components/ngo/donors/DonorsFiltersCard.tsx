@@ -1,15 +1,15 @@
-import { Filter, Search } from 'lucide-react';
-import { Card, CardContent } from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
+import { Filter, Search } from "lucide-react";
+import { Card, CardContent } from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
-import { DONOR_TYPE_OPTIONS } from '@/src/utils/ngo/donorUtils';
+} from "@/src/components/ui/select";
+import { DONOR_TYPE_OPTIONS } from "@/src/utils/ngo/donorUtils";
 
 type DonorsFiltersCardProps = {
   search: string;
@@ -37,13 +37,13 @@ export function DonorsFiltersCard({
             placeholder="Search by name, email, phone, donor ID..."
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && onApply()}
+            onKeyDown={(e) => e.key === "Enter" && onApply()}
             className="pl-10"
           />
         </div>
         <Select
-          value={typeFilter || 'all'}
-          onValueChange={(v) => onTypeFilterChange(v === 'all' ? '' : v)}
+          value={typeFilter || "all"}
+          onValueChange={(v) => onTypeFilterChange(v === "all" ? "" : v)}
         >
           <SelectTrigger className="w-full md:w-[200px]">
             <SelectValue placeholder="All Donor Types" />
@@ -58,7 +58,10 @@ export function DonorsFiltersCard({
           </SelectContent>
         </Select>
         <div className="flex gap-2">
-          <Button onClick={onApply} className="bg-emerald-600 hover:bg-emerald-700">
+          <Button
+            onClick={onApply}
+            className="bg-emerald-600 hover:bg-emerald-700"
+          >
             <Filter className="mr-2 h-4 w-4" />
             Apply Filters
           </Button>

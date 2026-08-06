@@ -1,5 +1,5 @@
-export type DonorType = 'individual' | 'corporate' | 'anonymous';
-export type DonorStatus = 'active' | 'inactive';
+export type DonorType = "individual" | "corporate" | "anonymous";
+export type DonorStatus = "active" | "inactive";
 
 export interface Donor {
   id: string;

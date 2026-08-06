@@ -1,32 +1,31 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { Textarea } from '../ui/textarea';
-import { Switch } from '../ui/switch';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import React, { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { Textarea } from "../ui/textarea";
+import { Switch } from "../ui/switch";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import {
-  Building2,
-  Palette,
-  Settings,
-  FileText,
-  Save,
-  X,
-} from 'lucide-react';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import { Building2, Palette, Settings, FileText, Save, X } from "lucide-react";
 import {
   InvoiceCustomization,
   InvoiceCustomizationCreate,
   InvoiceCustomizationUpdate,
-} from '../../models/sales/InvoiceCustomization';
-import InvoiceCustomizationService from '../../services/InvoiceCustomizationService';
-import FileUploadService from '../../services/FileUploadService';
-import { FileUpload } from '../ui/file-upload';
-import { toast } from 'sonner';
+} from "../../models/sales/InvoiceCustomization";
+import InvoiceCustomizationService from "../../services/InvoiceCustomizationService";
+import FileUploadService from "../../services/FileUploadService";
+import { FileUpload } from "../ui/file-upload";
+import { toast } from "sonner";
 
 interface InvoiceCustomizationDialogProps {
   open: boolean;
@@ -40,37 +39,38 @@ export function InvoiceCustomizationDialog({
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [customization, setCustomization] = useState<InvoiceCustomization | null>(null);
+  const [customization, setCustomization] =
+    useState<InvoiceCustomization | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null);
 
   // Form state
   const [formData, setFormData] = useState<InvoiceCustomizationCreate>({
-    company_name: '',
-    company_logo_url: '',
-    company_address: '',
-    company_phone: '',
-    company_email: '',
-    company_website: '',
-    bank_sort_code: '',
-    bank_account_number: '',
-    payment_instructions: 'Make all payments to your company name',
-    primary_color: '#1e40af',
-    secondary_color: '#6b7280',
-    accent_color: '#f3f4f6',
+    company_name: "",
+    company_logo_url: "",
+    company_address: "",
+    company_phone: "",
+    company_email: "",
+    company_website: "",
+    bank_sort_code: "",
+    bank_account_number: "",
+    payment_instructions: "Make all payments to your company name",
+    primary_color: "#1e40af",
+    secondary_color: "#6b7280",
+    accent_color: "#f3f4f6",
     show_vehicle_info: true,
     show_parts_section: true,
     show_labour_section: true,
     show_comments_section: true,
-    footer_text: '',
+    footer_text: "",
     show_contact_info_in_footer: true,
-    footer_background_color: '#1e3a8a',
-    grid_color: '#cccccc',
-    thank_you_message: 'Thank you for your business!',
-    enquiry_message: 'Should you have any enquiries concerning this invoice,',
-    contact_message: 'please contact us at your convenience.',
-    default_payment_instructions: 'Make all payments to your company name',
-    default_currency: 'USD',
+    footer_background_color: "#1e3a8a",
+    grid_color: "#cccccc",
+    thank_you_message: "Thank you for your business!",
+    enquiry_message: "Should you have any enquiries concerning this invoice,",
+    contact_message: "please contact us at your convenience.",
+    default_payment_instructions: "Make all payments to your company name",
+    default_currency: "USD",
     custom_fields: {},
   });
 
@@ -87,14 +87,15 @@ export function InvoiceCustomizationDialog({
       setCustomization(data);
       setFormData({
         company_name: data.company_name,
-        company_logo_url: data.company_logo_url || '',
-        company_address: data.company_address || '',
-        company_phone: data.company_phone || '',
-        company_email: data.company_email || '',
-        company_website: data.company_website || '',
-        bank_sort_code: data.bank_sort_code || '',
-        bank_account_number: data.bank_account_number || '',
-        payment_instructions: data.payment_instructions || 'Make all payments to your company name',
+        company_logo_url: data.company_logo_url || "",
+        company_address: data.company_address || "",
+        company_phone: data.company_phone || "",
+        company_email: data.company_email || "",
+        company_website: data.company_website || "",
+        bank_sort_code: data.bank_sort_code || "",
+        bank_account_number: data.bank_account_number || "",
+        payment_instructions:
+          data.payment_instructions || "Make all payments to your company name",
         primary_color: data.primary_color,
         secondary_color: data.secondary_color,
         accent_color: data.accent_color,
@@ -102,9 +103,9 @@ export function InvoiceCustomizationDialog({
         show_parts_section: data.show_parts_section,
         show_labour_section: data.show_labour_section,
         show_comments_section: data.show_comments_section,
-        footer_text: data.footer_text || '',
+        footer_text: data.footer_text || "",
         show_contact_info_in_footer: data.show_contact_info_in_footer,
-        default_currency: data.default_currency || 'USD',
+        default_currency: data.default_currency || "USD",
         custom_fields: data.custom_fields || {},
       });
 
@@ -113,7 +114,7 @@ export function InvoiceCustomizationDialog({
         setLogoPreviewUrl(data.company_logo_url);
       }
     } catch (error) {
-      toast.error('Failed to load invoice customization');
+      toast.error("Failed to load invoice customization");
     } finally {
       setLoading(false);
     }
@@ -124,22 +125,27 @@ export function InvoiceCustomizationDialog({
       setSaving(true);
 
       if (customization) {
-        await InvoiceCustomizationService.updateCustomization(formData as InvoiceCustomizationUpdate);
+        await InvoiceCustomizationService.updateCustomization(
+          formData as InvoiceCustomizationUpdate,
+        );
       } else {
         await InvoiceCustomizationService.createCustomization(formData);
       }
 
-      toast.success('Invoice customization saved successfully!');
+      toast.success("Invoice customization saved successfully!");
       onOpenChange(false);
     } catch (error) {
-      toast.error('Failed to save invoice customization');
+      toast.error("Failed to save invoice customization");
     } finally {
       setSaving(false);
     }
   };
 
-  const handleInputChange = (field: keyof InvoiceCustomizationCreate, value: any) => {
-    setFormData(prev => ({
+  const handleInputChange = (
+    field: keyof InvoiceCustomizationCreate,
+    value: any,
+  ) => {
+    setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
@@ -152,19 +158,19 @@ export function InvoiceCustomizationDialog({
       const currentLogoUrl = formData.company_logo_url;
       if (currentLogoUrl) {
         const s3Key = FileUploadService.extractS3KeyFromUrl(currentLogoUrl);
-        
+
         if (s3Key) {
           try {
             await FileUploadService.deleteFile(s3Key);
           } catch (deleteError) {
-            console.error('Failed to delete old logo from S3:', deleteError);
+            console.error("Failed to delete old logo from S3:", deleteError);
           }
         }
       }
 
       const response = await FileUploadService.uploadLogo(file);
 
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         company_logo_url: response.file_url,
       }));
@@ -172,9 +178,9 @@ export function InvoiceCustomizationDialog({
       setLogoFile(file);
       setLogoPreviewUrl(response.file_url);
 
-      toast.success('Logo uploaded successfully!');
+      toast.success("Logo uploaded successfully!");
     } catch (error) {
-      toast.error('Failed to upload logo');
+      toast.error("Failed to upload logo");
     } finally {
       setUploading(false);
     }
@@ -187,27 +193,27 @@ export function InvoiceCustomizationDialog({
       const currentLogoUrl = formData.company_logo_url;
       if (currentLogoUrl) {
         const s3Key = FileUploadService.extractS3KeyFromUrl(currentLogoUrl);
-        
+
         if (s3Key) {
           try {
             await FileUploadService.deleteFile(s3Key);
           } catch (deleteError) {
-            console.error('Failed to delete logo from S3:', deleteError);
+            console.error("Failed to delete logo from S3:", deleteError);
           }
         }
       }
 
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        company_logo_url: '',
+        company_logo_url: "",
       }));
 
       setLogoFile(null);
       setLogoPreviewUrl(null);
 
-      toast.success('Logo removed successfully!');
+      toast.success("Logo removed successfully!");
     } catch (error) {
-      toast.error('Failed to remove logo');
+      toast.error("Failed to remove logo");
     } finally {
       setUploading(false);
     }
@@ -272,7 +278,9 @@ export function InvoiceCustomizationDialog({
                     <Input
                       id="company_name"
                       value={formData.company_name}
-                      onChange={(e) => handleInputChange('company_name', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("company_name", e.target.value)
+                      }
                       placeholder="Your Company Name"
                     />
                   </div>
@@ -295,7 +303,9 @@ export function InvoiceCustomizationDialog({
                       <Input
                         id="company_logo_url"
                         value={formData.company_logo_url}
-                        onChange={(e) => handleInputChange('company_logo_url', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("company_logo_url", e.target.value)
+                        }
                         placeholder="https://example.com/logo.png"
                         disabled={uploading}
                       />
@@ -308,7 +318,9 @@ export function InvoiceCustomizationDialog({
                   <Textarea
                     id="company_address"
                     value={formData.company_address}
-                    onChange={(e) => handleInputChange('company_address', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("company_address", e.target.value)
+                    }
                     placeholder="Unit 7 Pristine Business Park Newport Road, Milton Keynes, MK17 8UD"
                     rows={3}
                   />
@@ -320,7 +332,9 @@ export function InvoiceCustomizationDialog({
                     <Input
                       id="company_phone"
                       value={formData.company_phone}
-                      onChange={(e) => handleInputChange('company_phone', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("company_phone", e.target.value)
+                      }
                       placeholder="01908 991 123"
                     />
                   </div>
@@ -329,7 +343,9 @@ export function InvoiceCustomizationDialog({
                     <Input
                       id="company_email"
                       value={formData.company_email}
-                      onChange={(e) => handleInputChange('company_email', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("company_email", e.target.value)
+                      }
                       placeholder="contact@yourcompany.co.uk"
                     />
                   </div>
@@ -338,7 +354,9 @@ export function InvoiceCustomizationDialog({
                     <Input
                       id="company_website"
                       value={formData.company_website}
-                      onChange={(e) => handleInputChange('company_website', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("company_website", e.target.value)
+                      }
                       placeholder="www.yourcompany.co.uk"
                     />
                   </div>
@@ -355,11 +373,15 @@ export function InvoiceCustomizationDialog({
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="payment_instructions">Payment Instructions</Label>
+                  <Label htmlFor="payment_instructions">
+                    Payment Instructions
+                  </Label>
                   <Textarea
                     id="payment_instructions"
                     value={formData.payment_instructions}
-                    onChange={(e) => handleInputChange('payment_instructions', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("payment_instructions", e.target.value)
+                    }
                     placeholder="Make all payments to your company name"
                     rows={3}
                   />
@@ -369,7 +391,9 @@ export function InvoiceCustomizationDialog({
                   <Label htmlFor="default_currency">Default Currency</Label>
                   <Select
                     value={formData.default_currency}
-                    onValueChange={(value) => handleInputChange('default_currency', value)}
+                    onValueChange={(value) =>
+                      handleInputChange("default_currency", value)
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select currency" />
@@ -391,7 +415,9 @@ export function InvoiceCustomizationDialog({
                     <Input
                       id="bank_sort_code"
                       value={formData.bank_sort_code}
-                      onChange={(e) => handleInputChange('bank_sort_code', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("bank_sort_code", e.target.value)
+                      }
                       placeholder="23-18-84"
                     />
                   </div>
@@ -400,7 +426,9 @@ export function InvoiceCustomizationDialog({
                     <Input
                       id="bank_account_number"
                       value={formData.bank_account_number}
-                      onChange={(e) => handleInputChange('bank_account_number', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("bank_account_number", e.target.value)
+                      }
                       placeholder="42798297"
                     />
                   </div>
@@ -424,12 +452,16 @@ export function InvoiceCustomizationDialog({
                         id="primary_color"
                         type="color"
                         value={formData.primary_color}
-                        onChange={(e) => handleInputChange('primary_color', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("primary_color", e.target.value)
+                        }
                         className="w-16 h-10"
                       />
                       <Input
                         value={formData.primary_color}
-                        onChange={(e) => handleInputChange('primary_color', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("primary_color", e.target.value)
+                        }
                         placeholder="#1e40af"
                         className="flex-1"
                       />
@@ -442,12 +474,16 @@ export function InvoiceCustomizationDialog({
                         id="secondary_color"
                         type="color"
                         value={formData.secondary_color}
-                        onChange={(e) => handleInputChange('secondary_color', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("secondary_color", e.target.value)
+                        }
                         className="w-16 h-10"
                       />
                       <Input
                         value={formData.secondary_color}
-                        onChange={(e) => handleInputChange('secondary_color', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("secondary_color", e.target.value)
+                        }
                         placeholder="#6b7280"
                         className="flex-1"
                       />
@@ -460,12 +496,16 @@ export function InvoiceCustomizationDialog({
                         id="accent_color"
                         type="color"
                         value={formData.accent_color}
-                        onChange={(e) => handleInputChange('accent_color', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("accent_color", e.target.value)
+                        }
                         className="w-16 h-10"
                       />
                       <Input
                         value={formData.accent_color}
-                        onChange={(e) => handleInputChange('accent_color', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("accent_color", e.target.value)
+                        }
                         placeholder="#f3f4f6"
                         className="flex-1"
                       />
@@ -482,18 +522,30 @@ export function InvoiceCustomizationDialog({
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="footer_background_color">Footer Background Color</Label>
+                    <Label htmlFor="footer_background_color">
+                      Footer Background Color
+                    </Label>
                     <div className="flex gap-2">
                       <Input
                         id="footer_background_color"
                         type="color"
                         value={formData.footer_background_color}
-                        onChange={(e) => handleInputChange('footer_background_color', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange(
+                            "footer_background_color",
+                            e.target.value,
+                          )
+                        }
                         className="w-16 h-10"
                       />
                       <Input
                         value={formData.footer_background_color}
-                        onChange={(e) => handleInputChange('footer_background_color', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange(
+                            "footer_background_color",
+                            e.target.value,
+                          )
+                        }
                         placeholder="#1e3a8a"
                         className="flex-1"
                       />
@@ -506,12 +558,16 @@ export function InvoiceCustomizationDialog({
                         id="grid_color"
                         type="color"
                         value={formData.grid_color}
-                        onChange={(e) => handleInputChange('grid_color', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("grid_color", e.target.value)
+                        }
                         className="w-16 h-10"
                       />
                       <Input
                         value={formData.grid_color}
-                        onChange={(e) => handleInputChange('grid_color', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("grid_color", e.target.value)
+                        }
                         placeholder="#cccccc"
                         className="flex-1"
                       />
@@ -537,7 +593,9 @@ export function InvoiceCustomizationDialog({
                   <Input
                     id="thank_you_message"
                     value={formData.thank_you_message}
-                    onChange={(e) => handleInputChange('thank_you_message', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("thank_you_message", e.target.value)
+                    }
                     placeholder="Thank you for your business!"
                   />
                 </div>
@@ -547,7 +605,9 @@ export function InvoiceCustomizationDialog({
                   <Input
                     id="enquiry_message"
                     value={formData.enquiry_message}
-                    onChange={(e) => handleInputChange('enquiry_message', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("enquiry_message", e.target.value)
+                    }
                     placeholder="Should you have any enquiries concerning this invoice,"
                   />
                 </div>
@@ -557,17 +617,26 @@ export function InvoiceCustomizationDialog({
                   <Input
                     id="contact_message"
                     value={formData.contact_message}
-                    onChange={(e) => handleInputChange('contact_message', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("contact_message", e.target.value)
+                    }
                     placeholder="please contact us at your convenience."
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="default_payment_instructions">Default Payment Instructions</Label>
+                  <Label htmlFor="default_payment_instructions">
+                    Default Payment Instructions
+                  </Label>
                   <Textarea
                     id="default_payment_instructions"
                     value={formData.default_payment_instructions}
-                    onChange={(e) => handleInputChange('default_payment_instructions', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "default_payment_instructions",
+                        e.target.value,
+                      )
+                    }
                     placeholder="Make all payments to your company name"
                     rows={3}
                   />
@@ -586,61 +655,94 @@ export function InvoiceCustomizationDialog({
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <Label htmlFor="show_vehicle_info">Show Vehicle Information</Label>
-                      <p className="text-sm text-gray-600">Display vehicle details section</p>
+                      <Label htmlFor="show_vehicle_info">
+                        Show Vehicle Information
+                      </Label>
+                      <p className="text-sm text-gray-600">
+                        Display vehicle details section
+                      </p>
                     </div>
                     <Switch
                       id="show_vehicle_info"
                       checked={formData.show_vehicle_info}
-                      onCheckedChange={(checked) => handleInputChange('show_vehicle_info', checked)}
+                      onCheckedChange={(checked) =>
+                        handleInputChange("show_vehicle_info", checked)
+                      }
                     />
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <Label htmlFor="show_parts_section">Show Parts Section</Label>
-                      <p className="text-sm text-gray-600">Display parts and components</p>
+                      <Label htmlFor="show_parts_section">
+                        Show Parts Section
+                      </Label>
+                      <p className="text-sm text-gray-600">
+                        Display parts and components
+                      </p>
                     </div>
                     <Switch
                       id="show_parts_section"
                       checked={formData.show_parts_section}
-                      onCheckedChange={(checked) => handleInputChange('show_parts_section', checked)}
+                      onCheckedChange={(checked) =>
+                        handleInputChange("show_parts_section", checked)
+                      }
                     />
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <Label htmlFor="show_labour_section">Show Labour Section</Label>
-                      <p className="text-sm text-gray-600">Display labour and services</p>
+                      <Label htmlFor="show_labour_section">
+                        Show Labour Section
+                      </Label>
+                      <p className="text-sm text-gray-600">
+                        Display labour and services
+                      </p>
                     </div>
                     <Switch
                       id="show_labour_section"
                       checked={formData.show_labour_section}
-                      onCheckedChange={(checked) => handleInputChange('show_labour_section', checked)}
+                      onCheckedChange={(checked) =>
+                        handleInputChange("show_labour_section", checked)
+                      }
                     />
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <Label htmlFor="show_comments_section">Show Comments Section</Label>
-                      <p className="text-sm text-gray-600">Display additional notes and comments</p>
+                      <Label htmlFor="show_comments_section">
+                        Show Comments Section
+                      </Label>
+                      <p className="text-sm text-gray-600">
+                        Display additional notes and comments
+                      </p>
                     </div>
                     <Switch
                       id="show_comments_section"
                       checked={formData.show_comments_section}
-                      onCheckedChange={(checked) => handleInputChange('show_comments_section', checked)}
+                      onCheckedChange={(checked) =>
+                        handleInputChange("show_comments_section", checked)
+                      }
                     />
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <Label htmlFor="show_contact_info_in_footer">Show Contact Info in Footer</Label>
-                      <p className="text-sm text-gray-600">Display contact information in footer</p>
+                      <Label htmlFor="show_contact_info_in_footer">
+                        Show Contact Info in Footer
+                      </Label>
+                      <p className="text-sm text-gray-600">
+                        Display contact information in footer
+                      </p>
                     </div>
                     <Switch
                       id="show_contact_info_in_footer"
                       checked={formData.show_contact_info_in_footer}
-                      onCheckedChange={(checked) => handleInputChange('show_contact_info_in_footer', checked)}
+                      onCheckedChange={(checked) =>
+                        handleInputChange(
+                          "show_contact_info_in_footer",
+                          checked,
+                        )
+                      }
                     />
                   </div>
                 </div>
@@ -650,7 +752,9 @@ export function InvoiceCustomizationDialog({
                   <Textarea
                     id="footer_text"
                     value={formData.footer_text}
-                    onChange={(e) => handleInputChange('footer_text', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("footer_text", e.target.value)
+                    }
                     placeholder="Custom footer text (optional)"
                     rows={2}
                   />
@@ -675,7 +779,11 @@ export function InvoiceCustomizationDialog({
             className="modern-button"
           >
             <Save className="h-4 w-4 mr-2" />
-            {saving ? 'Saving...' : uploading ? 'Uploading...' : 'Save Customization'}
+            {saving
+              ? "Saving..."
+              : uploading
+                ? "Uploading..."
+                : "Save Customization"}
           </Button>
         </div>
       </DialogContent>

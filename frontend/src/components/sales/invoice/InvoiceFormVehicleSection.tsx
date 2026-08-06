@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { VehicleSearch } from '@/src/components/ui/vehicle-search';
-import type { InvoiceCreate } from '@/src/models/sales';
-import type { Vehicle } from '@/src/models/workshop';
+import { VehicleSearch } from "@/src/components/ui/vehicle-search";
+import type { InvoiceCreate } from "@/src/models/sales";
+import type { Vehicle } from "@/src/models/workshop";
 
 type InvoiceFormVehicleSectionProps = {
   selectedVehicle: Vehicle | null;
@@ -24,7 +24,7 @@ export function InvoiceFormVehicleSection({
           value={selectedVehicle}
           onSelect={(v) => {
             onVehicleSelect(v);
-            onInputChange('vehicleReg', v?.registration_number ?? '');
+            onInputChange("vehicleReg", v?.registration_number ?? "");
           }}
           placeholder="Search by reg, VIN, make, model..."
         />

@@ -1,22 +1,20 @@
-import type {
-  MotDeliveryOption,
-  MotWizardData,
-  MotWizardVehicle,
-} from './wizardTypes';
 import {
   MOT_DELIVERY_OPTIONS,
   MOT_INSPECTION_PRICE,
   MOT_INSPECTION_SERVICE,
   MOT_SERVICE_OPTIONS,
+  type MotDeliveryOption,
   type MotServiceOption,
+  type MotWizardData,
   type MotWizardServices,
-} from './wizardTypes';
+  type MotWizardVehicle,
+} from "./wizardTypes";
 
 export function getMotServiceById(
   id: string,
   inspectionPrice: number = MOT_INSPECTION_PRICE,
 ): MotServiceOption | undefined {
-  if (id === 'mot-inspection') {
+  if (id === "mot-inspection") {
     return { ...MOT_INSPECTION_SERVICE, price: inspectionPrice };
   }
   return MOT_SERVICE_OPTIONS.find((item) => item.id === id);
@@ -28,11 +26,11 @@ export function getSelectedMotServices(
 ): MotServiceOption[] {
   const selected: MotServiceOption[] = [];
   if (services.motInspection) {
-    const mot = getMotServiceById('mot-inspection', inspectionPrice);
+    const mot = getMotServiceById("mot-inspection", inspectionPrice);
     if (mot) selected.push(mot);
   }
   services.selectedServiceIds
-    .filter((id) => id !== 'mot-inspection')
+    .filter((id) => id !== "mot-inspection")
     .forEach((id) => {
       const service = getMotServiceById(id, inspectionPrice);
       if (service) selected.push(service);
@@ -54,7 +52,7 @@ export function saveWizardDraft(
   step: number,
   vehicleSubStep: string,
 ) {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
   localStorage.setItem(
     getWizardStorageKey(tenantDomain),
     JSON.stringify({ data, step, vehicleSubStep, savedAt: Date.now() }),
@@ -67,23 +65,23 @@ export function normalizeWizardServices(
   const selectedServiceIds = Array.isArray(services?.selectedServiceIds)
     ? services.selectedServiceIds
     : [];
-  const hadMotInIds = selectedServiceIds.includes('mot-inspection');
+  const hadMotInIds = selectedServiceIds.includes("mot-inspection");
   return {
     motInspection:
-      typeof services?.motInspection === 'boolean'
+      typeof services?.motInspection === "boolean"
         ? services.motInspection
         : hadMotInIds || selectedServiceIds.length === 0,
-    selectedServiceIds: selectedServiceIds.filter((id) => id !== 'mot-inspection'),
-    otherServices: services?.otherServices || '',
+    selectedServiceIds: selectedServiceIds.filter(
+      (id) => id !== "mot-inspection",
+    ),
+    otherServices: services?.otherServices || "",
   };
 }
 
 export function loadWizardDraft(
   tenantDomain: string,
-):
-  | { data: MotWizardData; step: number; vehicleSubStep: string }
-  | null {
-  if (typeof window === 'undefined') return null;
+): { data: MotWizardData; step: number; vehicleSubStep: string } | null {
+  if (typeof window === "undefined") return null;
   try {
     const raw = localStorage.getItem(getWizardStorageKey(tenantDomain));
     if (!raw) return null;
@@ -97,36 +95,38 @@ export function loadWizardDraft(
 }
 
 export function clearWizardDraft(tenantDomain: string) {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
   localStorage.removeItem(getWizardStorageKey(tenantDomain));
 }
 
 export function formatVehicleSummary(data: MotWizardData): string {
   const { vehicle } = data;
   const parts = [vehicle.make, vehicle.model, vehicle.year].filter(Boolean);
-  if (parts.length) return parts.join(' ').toUpperCase();
+  if (parts.length) return parts.join(" ").toUpperCase();
   if (vehicle.registration) return vehicle.registration.toUpperCase();
-  return '';
+  return "";
 }
 
-export function getDeliveryOptionLabel(option: MotDeliveryOption | ''): string {
-  if (!option) return '';
-  if (option === 'wait_on_site') {
-    return 'I would like to wait for my vehicle whilst it is in the workshop';
+export function getDeliveryOptionLabel(option: MotDeliveryOption | ""): string {
+  if (!option) return "";
+  if (option === "wait_on_site") {
+    return "I would like to wait for my vehicle whilst it is in the workshop";
   }
-  return MOT_DELIVERY_OPTIONS.find((o) => o.value === option)?.label ?? '';
+  return MOT_DELIVERY_OPTIONS.find((o) => o.value === option)?.label ?? "";
 }
 
 export function formatBookingDateTime(date: string, time: string): string {
-  if (!date) return '';
-  const d = new Date(`${date}T${time || '00:00'}:00`);
-  if (Number.isNaN(d.getTime())) return `${date}${time ? ` ${time}` : ''}`;
-  return d.toLocaleDateString('en-GB', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  }) + (time ? ` ${time}` : '');
+  if (!date) return "";
+  const d = new Date(`${date}T${time || "00:00"}:00`);
+  if (Number.isNaN(d.getTime())) return `${date}${time ? ` ${time}` : ""}`;
+  return (
+    d.toLocaleDateString("en-GB", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }) + (time ? ` ${time}` : "")
+  );
 }
 
 export function calculateTotalCost(
@@ -164,9 +164,7 @@ export function isServicesComplete(data: MotWizardData): boolean {
 export function isDateTimeComplete(data: MotWizardData): boolean {
   const { dateTime } = data;
   return Boolean(
-    dateTime.deliveryOption &&
-      dateTime.bookingDate &&
-      dateTime.bookingTime,
+    dateTime.deliveryOption && dateTime.bookingDate && dateTime.bookingTime,
   );
 }
 
@@ -189,13 +187,16 @@ export function isCustomerDetailsComplete(data: MotWizardData): boolean {
 
 export function formatCustomerName(data: MotWizardData): string {
   const { customer } = data;
-  return [customer.title, customer.firstName, customer.lastName].filter(Boolean).join(' ').trim();
+  return [customer.title, customer.firstName, customer.lastName]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
 }
 
 export function formatCustomerAddress(data: MotWizardData): string[] {
   const { customer } = data;
   return [
-    [customer.houseNumber, customer.street].filter(Boolean).join(' '),
+    [customer.houseNumber, customer.street].filter(Boolean).join(" "),
     customer.town,
     customer.county,
     customer.postcode,
@@ -203,11 +204,11 @@ export function formatCustomerAddress(data: MotWizardData): string[] {
 }
 
 export function addOneHour(time: string): string {
-  const [h, m] = time.split(':').map(Number);
+  const [h, m] = time.split(":").map(Number);
   const next = (h + 1) * 60 + (m || 0);
   const hours = Math.floor(next / 60) % 24;
   const mins = next % 60;
-  return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+  return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
 }
 
 export function wizardDataToBookingPayload(
@@ -232,16 +233,16 @@ export function wizardDataToBookingPayload(
     booking_date: data.dateTime.bookingDate,
     start_time: data.dateTime.bookingTime,
     end_time: endTime,
-    test_type: 'standard' as const,
-    status: 'confirmed' as const,
+    test_type: "standard" as const,
+    status: "confirmed" as const,
     price: calculateTotalCost(data, inspectionPrice),
     mileage: data.vehicle.mileage,
-    notes: notesParts.join('\n\n') || undefined,
+    notes: notesParts.join("\n\n") || undefined,
     booking_meta: {
       services: {
         motInspection: data.services.motInspection,
         selectedServiceIds: data.services.selectedServiceIds.filter(
-          (id) => id !== 'mot-inspection',
+          (id) => id !== "mot-inspection",
         ),
         otherServices: data.services.otherServices,
         motPrice: inspectionPrice,
@@ -253,65 +254,74 @@ export function wizardDataToBookingPayload(
   };
 }
 
-export function bookingToWizardData(booking: import('@/src/models/mot/MotBooking').MotBooking): MotWizardData {
+export function bookingToWizardData(
+  booking: import("@/src/models/mot/MotBooking").MotBooking,
+): MotWizardData {
   const meta = (booking.booking_meta || {}) as Record<string, unknown>;
-  const customerMeta = (meta.customer || {}) as Partial<MotWizardData['customer']>;
-  const servicesMeta = (meta.services || {}) as Partial<MotWizardData['services']>;
+  const customerMeta = (meta.customer || {}) as Partial<
+    MotWizardData["customer"]
+  >;
+  const servicesMeta = (meta.services || {}) as Partial<
+    MotWizardData["services"]
+  >;
   const vehicleMeta = (meta.vehicle || {}) as Partial<MotWizardVehicle>;
 
   return {
     vehicle: {
-      registration: booking.vehicle_registration || vehicleMeta.registration || '',
-      mileage: booking.mileage || vehicleMeta.mileage || '',
-      make: booking.vehicle_make || vehicleMeta.make || '',
-      year: booking.vehicle_year || vehicleMeta.year || '',
-      model: booking.vehicle_model || vehicleMeta.model || '',
+      registration:
+        booking.vehicle_registration || vehicleMeta.registration || "",
+      mileage: booking.mileage || vehicleMeta.mileage || "",
+      make: booking.vehicle_make || vehicleMeta.make || "",
+      year: booking.vehicle_year || vehicleMeta.year || "",
+      model: booking.vehicle_model || vehicleMeta.model || "",
     },
     services: {
       motInspection:
-        typeof servicesMeta.motInspection === 'boolean'
+        typeof servicesMeta.motInspection === "boolean"
           ? servicesMeta.motInspection
           : Array.isArray(servicesMeta.selectedServiceIds)
-            ? servicesMeta.selectedServiceIds.includes('mot-inspection')
+            ? servicesMeta.selectedServiceIds.includes("mot-inspection")
             : true,
       selectedServiceIds: Array.isArray(servicesMeta.selectedServiceIds)
-        ? servicesMeta.selectedServiceIds.filter((id) => id !== 'mot-inspection')
+        ? servicesMeta.selectedServiceIds.filter(
+            (id) => id !== "mot-inspection",
+          )
         : [],
-      otherServices: servicesMeta.otherServices || booking.notes || '',
+      otherServices: servicesMeta.otherServices || booking.notes || "",
     },
     dateTime: {
       deliveryOption:
-        booking.delivery_option === 'wait_on_site'
-          ? 'wait_security'
-          : (booking.delivery_option as MotDeliveryOption) || '',
-      bookingDate: booking.booking_date?.slice(0, 10) || '',
-      bookingTime: booking.start_time || '',
+        booking.delivery_option === "wait_on_site"
+          ? "wait_security"
+          : (booking.delivery_option as MotDeliveryOption) || "",
+      bookingDate: booking.booking_date?.slice(0, 10) || "",
+      bookingTime: booking.start_time || "",
     },
     customer: {
-      title: customerMeta.title || '',
+      title: customerMeta.title || "",
       firstName:
         customerMeta.firstName ||
-        (booking.customer_name || '').split(' ').slice(1, -1).join(' ') ||
-        (booking.customer_name || '').split(' ')[0] ||
-        '',
+        (booking.customer_name || "").split(" ").slice(1, -1).join(" ") ||
+        (booking.customer_name || "").split(" ")[0] ||
+        "",
       lastName:
         customerMeta.lastName ||
-        (booking.customer_name || '').split(' ').slice(-1)[0] ||
-        '',
-      email: booking.customer_email || customerMeta.email || '',
-      county: customerMeta.county || '',
-      telephone: booking.customer_phone || customerMeta.telephone || '',
-      houseNumber: customerMeta.houseNumber || '',
-      street: customerMeta.street || '',
-      town: customerMeta.town || '',
-      postcode: customerMeta.postcode || '',
+        (booking.customer_name || "").split(" ").slice(-1)[0] ||
+        "",
+      email: booking.customer_email || customerMeta.email || "",
+      county: customerMeta.county || "",
+      telephone: booking.customer_phone || customerMeta.telephone || "",
+      houseNumber: customerMeta.houseNumber || "",
+      street: customerMeta.street || "",
+      town: customerMeta.town || "",
+      postcode: customerMeta.postcode || "",
       contactConsent: customerMeta.contactConsent || {
         email: false,
         post: false,
         telephone: false,
         sms: false,
       },
-      additionalComments: customerMeta.additionalComments || '',
+      additionalComments: customerMeta.additionalComments || "",
       privacyAccepted: customerMeta.privacyAccepted ?? false,
       termsAccepted: customerMeta.termsAccepted ?? false,
     },

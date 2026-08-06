@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { DashboardLayout } from '@/src/components/layout';
+import React, { useState, useEffect, useCallback } from "react";
+import { DashboardLayout } from "@/src/components/layout";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
-import { Label } from '@/src/components/ui/label';
-import { Textarea } from '@/src/components/ui/textarea';
+} from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
+import { Label } from "@/src/components/ui/label";
+import { Textarea } from "@/src/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +20,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/src/components/ui/dialog';
+} from "@/src/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -28,20 +28,35 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/src/components/ui/table';
+} from "@/src/components/ui/table";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
-import { Edit, Trash2, ChevronRight, ChevronLeft, UserPlus, Receipt, Plus, X } from 'lucide-react';
-import healthcareService from '@/src/services/HealthcareService';
-import type { Admission, AdmissionCreate, AdmissionUpdate, Doctor, Patient } from '@/src/models/healthcare';
-import { ADMISSION_STATUSES } from '@/src/models/healthcare';
-import { toast } from 'sonner';
-import Link from 'next/link';
+} from "@/src/components/ui/select";
+import {
+  Edit,
+  Trash2,
+  ChevronRight,
+  ChevronLeft,
+  UserPlus,
+  Receipt,
+  Plus,
+  X,
+} from "lucide-react";
+import healthcareService from "@/src/services/HealthcareService";
+import {
+  ADMISSION_STATUSES,
+  type Admission,
+  type AdmissionCreate,
+  type AdmissionUpdate,
+  type Doctor,
+  type Patient,
+} from "@/src/models/healthcare";
+import { toast } from "sonner";
+import Link from "next/link";
 
 export default function AdmittedPatientsPage() {
   return (
@@ -55,39 +70,43 @@ function AdmittedPatientsContent() {
   const [admissions, setAdmissions] = useState<Admission[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [statusFilter, setStatusFilter] = useState<string>('__all__');
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
-  const [doctorFilter, setDoctorFilter] = useState<string>('__all__');
-  const [patientFilter, setPatientFilter] = useState<string>('__all__');
+  const [statusFilter, setStatusFilter] = useState<string>("__all__");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [doctorFilter, setDoctorFilter] = useState<string>("__all__");
+  const [patientFilter, setPatientFilter] = useState<string>("__all__");
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
   const limit = 20;
   const totalPages = Math.ceil(total / limit) || 1;
   const [formOpen, setFormOpen] = useState(false);
-  const [editingAdmission, setEditingAdmission] = useState<Admission | null>(null);
+  const [editingAdmission, setEditingAdmission] = useState<Admission | null>(
+    null,
+  );
   const [submitLoading, setSubmitLoading] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [admissionToDelete, setAdmissionToDelete] = useState<Admission | null>(null);
+  const [admissionToDelete, setAdmissionToDelete] = useState<Admission | null>(
+    null,
+  );
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [billDialogOpen, setBillDialogOpen] = useState(false);
   const [billAdmission, setBillAdmission] = useState<Admission | null>(null);
-  const [billLineItems, setBillLineItems] = useState<Array<{ description: string; amount: number }>>([
-    { description: '', amount: 0 },
-  ]);
+  const [billLineItems, setBillLineItems] = useState<
+    Array<{ description: string; amount: number }>
+  >([{ description: "", amount: 0 }]);
   const [billLoading, setBillLoading] = useState(false);
 
   const [formData, setFormData] = useState<AdmissionCreate>({
-    patient_id: '',
-    doctor_id: '',
-    admit_date: '',
-    ward: '',
-    room_or_bed: '',
-    diagnosis: '',
-    notes: '',
-    status: 'admitted',
+    patient_id: "",
+    doctor_id: "",
+    admit_date: "",
+    ward: "",
+    room_or_bed: "",
+    diagnosis: "",
+    notes: "",
+    status: "admitted",
   });
 
   const loadDoctors = useCallback(async () => {
@@ -95,7 +114,7 @@ function AdmittedPatientsContent() {
       const res = await healthcareService.getDoctors({ limit: 500 });
       setDoctors(res.doctors);
     } catch {
-      toast.error('Failed to load doctors');
+      toast.error("Failed to load doctors");
     }
   }, []);
 
@@ -104,7 +123,7 @@ function AdmittedPatientsContent() {
       const res = await healthcareService.getPatients({ limit: 500 });
       setPatients(res.patients);
     } catch {
-      toast.error('Failed to load patients');
+      toast.error("Failed to load patients");
     }
   }, []);
 
@@ -115,20 +134,33 @@ function AdmittedPatientsContent() {
         search: search || undefined,
         page,
         limit,
-        status: statusFilter && statusFilter !== '__all__' ? statusFilter : undefined,
+        status:
+          statusFilter && statusFilter !== "__all__" ? statusFilter : undefined,
         date_from: dateFrom || undefined,
         date_to: dateTo || undefined,
-        doctor_id: doctorFilter && doctorFilter !== '__all__' ? doctorFilter : undefined,
-        patient_id: patientFilter && patientFilter !== '__all__' ? patientFilter : undefined,
+        doctor_id:
+          doctorFilter && doctorFilter !== "__all__" ? doctorFilter : undefined,
+        patient_id:
+          patientFilter && patientFilter !== "__all__"
+            ? patientFilter
+            : undefined,
       });
       setAdmissions(res.admissions);
       setTotal(res.total);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Failed to load admissions');
+      toast.error(e instanceof Error ? e.message : "Failed to load admissions");
     } finally {
       setLoading(false);
     }
-  }, [search, page, statusFilter, dateFrom, dateTo, doctorFilter, patientFilter]);
+  }, [
+    search,
+    page,
+    statusFilter,
+    dateFrom,
+    dateTo,
+    doctorFilter,
+    patientFilter,
+  ]);
 
   useEffect(() => {
     loadDoctors();
@@ -142,14 +174,14 @@ function AdmittedPatientsContent() {
   const openAdd = () => {
     setEditingAdmission(null);
     setFormData({
-      patient_id: '',
-      doctor_id: '',
+      patient_id: "",
+      doctor_id: "",
       admit_date: new Date().toISOString().slice(0, 10),
-      ward: '',
-      room_or_bed: '',
-      diagnosis: '',
-      notes: '',
-      status: 'admitted',
+      ward: "",
+      room_or_bed: "",
+      diagnosis: "",
+      notes: "",
+      status: "admitted",
     });
     setFormOpen(true);
   };
@@ -160,11 +192,11 @@ function AdmittedPatientsContent() {
       patient_id: a.patient_id,
       doctor_id: a.doctor_id,
       admit_date: a.admit_date,
-      discharge_date: a.discharge_date ?? '',
+      discharge_date: a.discharge_date ?? "",
       ward: a.ward,
-      room_or_bed: a.room_or_bed ?? '',
-      diagnosis: a.diagnosis ?? '',
-      notes: a.notes ?? '',
+      room_or_bed: a.room_or_bed ?? "",
+      diagnosis: a.diagnosis ?? "",
+      notes: a.notes ?? "",
       status: a.status,
     });
     setFormOpen(true);
@@ -177,7 +209,7 @@ function AdmittedPatientsContent() {
 
   const openBill = (a: Admission) => {
     setBillAdmission(a);
-    setBillLineItems([{ description: '', amount: 0 }]);
+    setBillLineItems([{ description: "", amount: 0 }]);
     setBillDialogOpen(true);
   };
 
@@ -186,8 +218,13 @@ function AdmittedPatientsContent() {
   };
 
   const handleSubmit = async () => {
-    if (!formData.patient_id || !formData.doctor_id || !formData.admit_date || !formData.ward.trim()) {
-      toast.error('Patient, doctor, admit date and ward are required');
+    if (
+      !formData.patient_id ||
+      !formData.doctor_id ||
+      !formData.admit_date ||
+      !formData.ward.trim()
+    ) {
+      toast.error("Patient, doctor, admit date and ward are required");
       return;
     }
     try {
@@ -200,35 +237,47 @@ function AdmittedPatientsContent() {
         room_or_bed: formData.room_or_bed?.trim() || undefined,
         diagnosis: formData.diagnosis?.trim() || undefined,
         notes: formData.notes?.trim() || undefined,
-        status: formData.status || 'admitted',
-        discharge_date: formData.discharge_date ? formData.discharge_date : undefined,
+        status: formData.status || "admitted",
+        discharge_date: formData.discharge_date
+          ? formData.discharge_date
+          : undefined,
       };
       if (editingAdmission) {
         const updatePayload: AdmissionUpdate = {
           doctor_id: payload.doctor_id,
-          discharge_date: payload.discharge_date ? payload.discharge_date : undefined,
+          discharge_date: payload.discharge_date
+            ? payload.discharge_date
+            : undefined,
           status: payload.status,
           ward: payload.ward,
           room_or_bed: payload.room_or_bed,
           diagnosis: payload.diagnosis,
           notes: payload.notes,
         };
-        await healthcareService.updateAdmission(editingAdmission.id, updatePayload);
-        toast.success('Admission updated');
+        await healthcareService.updateAdmission(
+          editingAdmission.id,
+          updatePayload,
+        );
+        toast.success("Admission updated");
       } else {
         await healthcareService.createAdmission(payload);
-        toast.success('Admission added');
+        toast.success("Admission added");
       }
       setFormOpen(false);
       loadAdmissions();
     } catch (e: unknown) {
       const msg =
-        e && typeof e === 'object' && 'response' in e && e.response && typeof e.response === 'object' && 'data' in e.response
+        e &&
+        typeof e === "object" &&
+        "response" in e &&
+        e.response &&
+        typeof e.response === "object" &&
+        "data" in e.response
           ? (e.response as { data?: { detail?: string } }).data?.detail
           : e instanceof Error
             ? e.message
-            : 'Request failed';
-      toast.error(typeof msg === 'string' ? msg : JSON.stringify(msg));
+            : "Request failed";
+      toast.error(typeof msg === "string" ? msg : JSON.stringify(msg));
     } finally {
       setSubmitLoading(false);
     }
@@ -239,31 +288,43 @@ function AdmittedPatientsContent() {
     try {
       setDeleteLoading(true);
       await healthcareService.deleteAdmission(admissionToDelete.id);
-      toast.success('Admission deleted');
+      toast.success("Admission deleted");
       setDeleteDialogOpen(false);
       setAdmissionToDelete(null);
       loadAdmissions();
     } catch (e: unknown) {
       const msg =
-        e && typeof e === 'object' && 'response' in e && e.response && typeof e.response === 'object' && 'data' in e.response
+        e &&
+        typeof e === "object" &&
+        "response" in e &&
+        e.response &&
+        typeof e.response === "object" &&
+        "data" in e.response
           ? (e.response as { data?: { detail?: string } }).data?.detail
           : e instanceof Error
             ? e.message
-            : 'Delete failed';
-      toast.error(typeof msg === 'string' ? msg : JSON.stringify(msg));
+            : "Delete failed";
+      toast.error(typeof msg === "string" ? msg : JSON.stringify(msg));
     } finally {
       setDeleteLoading(false);
     }
   };
 
   const addBillLine = () => {
-    setBillLineItems((prev) => [...prev, { description: '', amount: 0 }]);
+    setBillLineItems((prev) => [...prev, { description: "", amount: 0 }]);
   };
 
-  const updateBillLine = (index: number, field: 'description' | 'amount', value: string | number) => {
+  const updateBillLine = (
+    index: number,
+    field: "description" | "amount",
+    value: string | number,
+  ) => {
     setBillLineItems((prev) => {
       const next = [...prev];
-      next[index] = { ...next[index], [field]: field === 'amount' ? Number(value) || 0 : value };
+      next[index] = {
+        ...next[index],
+        [field]: field === "amount" ? Number(value) || 0 : value,
+      };
       return next;
     });
   };
@@ -274,27 +335,37 @@ function AdmittedPatientsContent() {
 
   const handleCreateBill = async () => {
     if (!billAdmission) return;
-    const valid = billLineItems.filter((r) => (r.description || '').trim() && r.amount > 0);
+    const valid = billLineItems.filter(
+      (r) => (r.description || "").trim() && r.amount > 0,
+    );
     if (valid.length === 0) {
-      toast.error('Add at least one line with description and amount');
+      toast.error("Add at least one line with description and amount");
       return;
     }
     try {
       setBillLoading(true);
       await healthcareService.createAdmissionInvoice(billAdmission.id, {
-        line_items: valid.map((r) => ({ description: r.description.trim(), amount: r.amount })),
+        line_items: valid.map((r) => ({
+          description: r.description.trim(),
+          amount: r.amount,
+        })),
       });
-      toast.success('Bill created');
+      toast.success("Bill created");
       setBillDialogOpen(false);
       setBillAdmission(null);
     } catch (e: unknown) {
       const msg =
-        e && typeof e === 'object' && 'response' in e && e.response && typeof e.response === 'object' && 'data' in e.response
+        e &&
+        typeof e === "object" &&
+        "response" in e &&
+        e.response &&
+        typeof e.response === "object" &&
+        "data" in e.response
           ? (e.response as { data?: { detail?: string } }).data?.detail
           : e instanceof Error
             ? e.message
-            : 'Failed to create bill';
-      toast.error(typeof msg === 'string' ? msg : JSON.stringify(msg));
+            : "Failed to create bill";
+      toast.error(typeof msg === "string" ? msg : JSON.stringify(msg));
     } finally {
       setBillLoading(false);
     }
@@ -304,7 +375,9 @@ function AdmittedPatientsContent() {
     <div className="container mx-auto px-6 py-8">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Hospital Admitted Patients</h1>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Hospital Admitted Patients
+          </h1>
           <p className="text-gray-600">Manage admissions and generate bills</p>
         </div>
         <div className="flex gap-2">
@@ -321,7 +394,9 @@ function AdmittedPatientsContent() {
       <Card className="mb-6">
         <CardHeader>
           <CardTitle>Filters</CardTitle>
-          <CardDescription>Filter by status, dates, patient or doctor</CardDescription>
+          <CardDescription>
+            Filter by status, dates, patient or doctor
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
@@ -343,8 +418,18 @@ function AdmittedPatientsContent() {
                 ))}
               </SelectContent>
             </Select>
-            <Input type="date" placeholder="From" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
-            <Input type="date" placeholder="To" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+            <Input
+              type="date"
+              placeholder="From"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+            />
+            <Input
+              type="date"
+              placeholder="To"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+            />
             <Select value={doctorFilter} onValueChange={setDoctorFilter}>
               <SelectTrigger>
                 <SelectValue placeholder="Doctor" />
@@ -379,7 +464,7 @@ function AdmittedPatientsContent() {
         <CardHeader>
           <CardTitle>Admissions</CardTitle>
           <CardDescription>
-            {total} admission{total !== 1 ? 's' : ''} total
+            {total} admission{total !== 1 ? "s" : ""} total
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -389,10 +474,20 @@ function AdmittedPatientsContent() {
                 Page {page} of {totalPages}
               </span>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page <= 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                >
                   <ChevronLeft className="w-4 h-4" />
                 </Button>
-                <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page >= totalPages}
+                  onClick={() => setPage((p) => p + 1)}
+                >
                   <ChevronRight className="w-4 h-4" />
                 </Button>
               </div>
@@ -401,7 +496,9 @@ function AdmittedPatientsContent() {
           {loading ? (
             <div className="py-12 text-center text-gray-500">Loading...</div>
           ) : admissions.length === 0 ? (
-            <div className="py-12 text-center text-gray-500">No admissions yet. Add one to track in-patient stays.</div>
+            <div className="py-12 text-center text-gray-500">
+              No admissions yet. Add one to track in-patient stays.
+            </div>
           ) : (
             <Table>
               <TableHeader>
@@ -418,22 +515,35 @@ function AdmittedPatientsContent() {
               <TableBody>
                 {admissions.map((a) => (
                   <TableRow key={a.id}>
-                    <TableCell className="font-medium">{a.patient_name ?? a.patient_id}</TableCell>
+                    <TableCell className="font-medium">
+                      {a.patient_name ?? a.patient_id}
+                    </TableCell>
                     <TableCell>
                       {a.doctor_first_name || a.doctor_last_name
-                        ? `${a.doctor_first_name ?? ''} ${a.doctor_last_name ?? ''}`.trim()
+                        ? `${a.doctor_first_name ?? ""} ${a.doctor_last_name ?? ""}`.trim()
                         : a.doctor_id}
                     </TableCell>
                     <TableCell>{a.admit_date}</TableCell>
-                    <TableCell>{a.discharge_date ?? '—'}</TableCell>
+                    <TableCell>{a.discharge_date ?? "—"}</TableCell>
                     <TableCell>{a.status}</TableCell>
-                    <TableCell>{a.ward}{a.room_or_bed ? ` / ${a.room_or_bed}` : ''}</TableCell>
+                    <TableCell>
+                      {a.ward}
+                      {a.room_or_bed ? ` / ${a.room_or_bed}` : ""}
+                    </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" onClick={() => openBill(a)}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openBill(a)}
+                      >
                         <Receipt className="w-4 h-4 mr-1" />
                         Generate bill
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => openEdit(a)}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openEdit(a)}
+                      >
                         <Edit className="w-4 h-4 mr-1" />
                         Edit
                       </Button>
@@ -458,7 +568,9 @@ function AdmittedPatientsContent() {
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
         <DialogContent className="sm:max-w-[520px]">
           <DialogHeader>
-            <DialogTitle>{editingAdmission ? 'Edit Admission' : 'Add Admission'}</DialogTitle>
+            <DialogTitle>
+              {editingAdmission ? "Edit Admission" : "Add Admission"}
+            </DialogTitle>
             <DialogDescription>In-patient stay details</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -466,7 +578,10 @@ function AdmittedPatientsContent() {
               <>
                 <div className="space-y-2">
                   <Label>Patient</Label>
-                  <Select value={formData.patient_id} onValueChange={(v) => handleFormChange('patient_id', v)}>
+                  <Select
+                    value={formData.patient_id}
+                    onValueChange={(v) => handleFormChange("patient_id", v)}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select patient" />
                     </SelectTrigger>
@@ -483,7 +598,10 @@ function AdmittedPatientsContent() {
             )}
             <div className="space-y-2">
               <Label>Doctor</Label>
-              <Select value={formData.doctor_id} onValueChange={(v) => handleFormChange('doctor_id', v)}>
+              <Select
+                value={formData.doctor_id}
+                onValueChange={(v) => handleFormChange("doctor_id", v)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select doctor" />
                 </SelectTrigger>
@@ -502,7 +620,9 @@ function AdmittedPatientsContent() {
                 <Input
                   type="date"
                   value={formData.admit_date}
-                  onChange={(e) => handleFormChange('admit_date', e.target.value)}
+                  onChange={(e) =>
+                    handleFormChange("admit_date", e.target.value)
+                  }
                   disabled={!!editingAdmission}
                 />
               </div>
@@ -511,8 +631,10 @@ function AdmittedPatientsContent() {
                   <Label>Discharge date</Label>
                   <Input
                     type="date"
-                    value={formData.discharge_date ?? ''}
-                    onChange={(e) => handleFormChange('discharge_date', e.target.value)}
+                    value={formData.discharge_date ?? ""}
+                    onChange={(e) =>
+                      handleFormChange("discharge_date", e.target.value)
+                    }
                   />
                 </div>
               )}
@@ -520,7 +642,10 @@ function AdmittedPatientsContent() {
             {editingAdmission && (
               <div className="space-y-2">
                 <Label>Status</Label>
-                <Select value={formData.status} onValueChange={(v) => handleFormChange('status', v)}>
+                <Select
+                  value={formData.status}
+                  onValueChange={(v) => handleFormChange("status", v)}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -537,13 +662,19 @@ function AdmittedPatientsContent() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Ward</Label>
-                <Input value={formData.ward} onChange={(e) => handleFormChange('ward', e.target.value)} placeholder="Ward" />
+                <Input
+                  value={formData.ward}
+                  onChange={(e) => handleFormChange("ward", e.target.value)}
+                  placeholder="Ward"
+                />
               </div>
               <div className="space-y-2">
                 <Label>Room / Bed</Label>
                 <Input
-                  value={formData.room_or_bed ?? ''}
-                  onChange={(e) => handleFormChange('room_or_bed', e.target.value)}
+                  value={formData.room_or_bed ?? ""}
+                  onChange={(e) =>
+                    handleFormChange("room_or_bed", e.target.value)
+                  }
                   placeholder="Optional"
                 />
               </div>
@@ -551,16 +682,16 @@ function AdmittedPatientsContent() {
             <div className="space-y-2">
               <Label>Diagnosis</Label>
               <Input
-                value={formData.diagnosis ?? ''}
-                onChange={(e) => handleFormChange('diagnosis', e.target.value)}
+                value={formData.diagnosis ?? ""}
+                onChange={(e) => handleFormChange("diagnosis", e.target.value)}
                 placeholder="Optional"
               />
             </div>
             <div className="space-y-2">
               <Label>Notes</Label>
               <Textarea
-                value={formData.notes ?? ''}
-                onChange={(e) => handleFormChange('notes', e.target.value)}
+                value={formData.notes ?? ""}
+                onChange={(e) => handleFormChange("notes", e.target.value)}
                 placeholder="Optional"
                 rows={2}
               />
@@ -571,7 +702,11 @@ function AdmittedPatientsContent() {
               Cancel
             </Button>
             <Button onClick={handleSubmit} disabled={submitLoading}>
-              {submitLoading ? 'Saving...' : editingAdmission ? 'Update' : 'Create'}
+              {submitLoading
+                ? "Saving..."
+                : editingAdmission
+                  ? "Update"
+                  : "Create"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -582,16 +717,24 @@ function AdmittedPatientsContent() {
           <DialogHeader>
             <DialogTitle>Delete Admission</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this admission for {admissionToDelete?.patient_name ?? 'this patient'}? This
-              cannot be undone.
+              Are you sure you want to delete this admission for{" "}
+              {admissionToDelete?.patient_name ?? "this patient"}? This cannot
+              be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+            >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDelete} disabled={deleteLoading}>
-              {deleteLoading ? 'Deleting...' : 'Delete'}
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={deleteLoading}
+            >
+              {deleteLoading ? "Deleting..." : "Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -602,8 +745,9 @@ function AdmittedPatientsContent() {
           <DialogHeader>
             <DialogTitle>Generate Bill</DialogTitle>
             <DialogDescription>
-              Add line items for {billAdmission?.patient_name ?? 'this admission'}. Invoice will be created and visible under
-              Hospital Payments.
+              Add line items for{" "}
+              {billAdmission?.patient_name ?? "this admission"}. Invoice will be
+              created and visible under Hospital Payments.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -612,7 +756,9 @@ function AdmittedPatientsContent() {
                 <Input
                   placeholder="Description"
                   value={line.description}
-                  onChange={(e) => updateBillLine(idx, 'description', e.target.value)}
+                  onChange={(e) =>
+                    updateBillLine(idx, "description", e.target.value)
+                  }
                   className="flex-1"
                 />
                 <Input
@@ -620,16 +766,28 @@ function AdmittedPatientsContent() {
                   min={0}
                   step={0.01}
                   placeholder="Amount"
-                  value={line.amount || ''}
-                  onChange={(e) => updateBillLine(idx, 'amount', e.target.value)}
+                  value={line.amount || ""}
+                  onChange={(e) =>
+                    updateBillLine(idx, "amount", e.target.value)
+                  }
                   className="w-28"
                 />
-                <Button variant="ghost" size="icon" onClick={() => removeBillLine(idx)} disabled={billLineItems.length <= 1}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => removeBillLine(idx)}
+                  disabled={billLineItems.length <= 1}
+                >
                   <X className="w-4 h-4" />
                 </Button>
               </div>
             ))}
-            <Button type="button" variant="outline" size="sm" onClick={addBillLine}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={addBillLine}
+            >
               <Plus className="w-4 h-4 mr-1" />
               Add line
             </Button>
@@ -639,7 +797,7 @@ function AdmittedPatientsContent() {
               Cancel
             </Button>
             <Button onClick={handleCreateBill} disabled={billLoading}>
-              {billLoading ? 'Creating...' : 'Create invoice'}
+              {billLoading ? "Creating..." : "Create invoice"}
             </Button>
           </DialogFooter>
         </DialogContent>

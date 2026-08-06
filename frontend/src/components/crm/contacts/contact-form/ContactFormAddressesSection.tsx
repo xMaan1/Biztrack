@@ -1,10 +1,10 @@
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
-import { Label } from '@/src/components/ui/label';
-import { Plus, Minus } from 'lucide-react';
-import { ContactCreate } from '@/src/models/crm';
-import { CollapsibleFormSection } from '../CollapsibleFormSection';
-import { emptyAddressRow } from '../contactUtils';
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
+import { Label } from "@/src/components/ui/label";
+import { Plus, Minus } from "lucide-react";
+import { ContactCreate } from "@/src/models/crm";
+import { CollapsibleFormSection } from "../CollapsibleFormSection";
+import { emptyAddressRow } from "../contactUtils";
 
 type ContactFormAddressesSectionProps = {
   formData: ContactCreate;
@@ -20,11 +20,7 @@ export function ContactFormAddressesSection({
   onToggle,
 }: ContactFormAddressesSectionProps) {
   return (
-    <CollapsibleFormSection
-      title="Addresses"
-      open={open}
-      onToggle={onToggle}
-    >
+    <CollapsibleFormSection title="Addresses" open={open} onToggle={onToggle}>
       <div className="space-y-4 border rounded-md p-4">
         {(formData.addresses || []).map((addr, idx) => (
           <div
@@ -50,7 +46,7 @@ export function ContactFormAddressesSection({
               <div>
                 <Label>Label</Label>
                 <Input
-                  value={addr.label || ''}
+                  value={addr.label || ""}
                   onChange={(e) => {
                     const v = e.target.value;
                     setFormData((prev) => {
@@ -65,7 +61,7 @@ export function ContactFormAddressesSection({
               <div className="md:col-span-2">
                 <Label>Line 1</Label>
                 <Input
-                  value={addr.line1 || ''}
+                  value={addr.line1 || ""}
                   onChange={(e) => {
                     const v = e.target.value;
                     setFormData((prev) => {
@@ -79,7 +75,7 @@ export function ContactFormAddressesSection({
               <div className="md:col-span-2">
                 <Label>Line 2</Label>
                 <Input
-                  value={addr.line2 || ''}
+                  value={addr.line2 || ""}
                   onChange={(e) => {
                     const v = e.target.value;
                     setFormData((prev) => {
@@ -93,7 +89,7 @@ export function ContactFormAddressesSection({
               <div>
                 <Label>City</Label>
                 <Input
-                  value={addr.city || ''}
+                  value={addr.city || ""}
                   onChange={(e) => {
                     const v = e.target.value;
                     setFormData((prev) => {
@@ -107,7 +103,7 @@ export function ContactFormAddressesSection({
               <div>
                 <Label>State / region</Label>
                 <Input
-                  value={addr.state || ''}
+                  value={addr.state || ""}
                   onChange={(e) => {
                     const v = e.target.value;
                     setFormData((prev) => {
@@ -121,7 +117,7 @@ export function ContactFormAddressesSection({
               <div>
                 <Label>Postal code</Label>
                 <Input
-                  value={addr.postalCode || ''}
+                  value={addr.postalCode || ""}
                   onChange={(e) => {
                     const v = e.target.value;
                     setFormData((prev) => {
@@ -135,7 +131,7 @@ export function ContactFormAddressesSection({
               <div>
                 <Label>Country</Label>
                 <Input
-                  value={addr.country || ''}
+                  value={addr.country || ""}
                   onChange={(e) => {
                     const v = e.target.value;
                     setFormData((prev) => {

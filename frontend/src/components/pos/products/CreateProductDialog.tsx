@@ -1,27 +1,31 @@
-'use client';
+"use client";
 
-import { useCallback, useEffect, useState } from 'react';
-import { toast } from 'sonner';
-import { apiService } from '@/src/services/ApiService';
-import HRMService from '@/src/services/HRMService';
-import type { Product, POSCategoriesResponse } from '@/src/models/pos';
-import type { Supplier } from '@/src/models/hrm/supplier';
-import type { ProductFormData } from './types';
-import type { SupplierFormData } from '../../hrm/suppliers/types';
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
+import { apiService } from "@/src/services/ApiService";
+import HRMService from "@/src/services/HRMService";
+import type { Product, POSCategoriesResponse } from "@/src/models/pos";
+import type { Supplier } from "@/src/models/hrm/supplier";
+import type { ProductFormData } from "./types";
+import type { SupplierFormData } from "../../hrm/suppliers/types";
 import {
   emptySupplierForm,
   getSupplierApiError,
   validateSupplierForm,
-} from '../../hrm/suppliers/supplierUtils';
-import { emptyProductFormData, formDataToPayload, productToFormData } from './productUtils';
+} from "../../hrm/suppliers/supplierUtils";
+import {
+  emptyProductFormData,
+  formDataToPayload,
+  productToFormData,
+} from "./productUtils";
 import {
   mergeLookupIntoFormData,
   type ProductCodeLookupResult,
   type ProductEntryMode,
-} from './productCodeUtils';
-import { ProductFormDialog } from './ProductFormDialog';
-import { AddCategoryDialog } from './AddCategoryDialog';
-import { SupplierFormDialog } from '../../hrm/suppliers/SupplierFormDialog';
+} from "./productCodeUtils";
+import { ProductFormDialog } from "./ProductFormDialog";
+import { AddCategoryDialog } from "./AddCategoryDialog";
+import { SupplierFormDialog } from "../../hrm/suppliers/SupplierFormDialog";
 
 type CreateProductDialogProps = {
   open: boolean;
@@ -36,26 +40,35 @@ export function CreateProductDialog({
   onSaved,
   editingProduct = null,
 }: CreateProductDialogProps) {
-  const [formData, setFormData] = useState<ProductFormData>(emptyProductFormData());
-  const [entryMode, setEntryMode] = useState<ProductEntryMode>('manual');
+  const [formData, setFormData] = useState<ProductFormData>(
+    emptyProductFormData(),
+  );
+  const [entryMode, setEntryMode] = useState<ProductEntryMode>("manual");
   const [codeLookupLoading, setCodeLookupLoading] = useState(false);
   const [categories, setCategories] = useState<string[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
-  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryName, setNewCategoryName] = useState("");
   const [addCategoryLoading, setAddCategoryLoading] = useState(false);
   const [isAddSupplierOpen, setIsAddSupplierOpen] = useState(false);
-  const [supplierFormData, setSupplierFormData] = useState<SupplierFormData>(emptySupplierForm());
+  const [supplierFormData, setSupplierFormData] =
+    useState<SupplierFormData>(emptySupplierForm());
   const [addSupplierLoading, setAddSupplierLoading] = useState(false);
 
   useEffect(() => {
     if (!open) return;
-    setFormData(editingProduct ? productToFormData(editingProduct) : emptyProductFormData());
-    setEntryMode('manual');
+    setFormData(
+      editingProduct
+        ? productToFormData(editingProduct)
+        : emptyProductFormData(),
+    );
+    setEntryMode("manual");
     setCodeLookupLoading(false);
     apiService
-      .get('/pos/categories')
-      .then((data: POSCategoriesResponse) => setCategories(data.categories || []))
+      .get("/pos/categories")
+      .then((data: POSCategoriesResponse) =>
+        setCategories(data.categories || []),
+      )
       .catch(() => setCategories([]));
     HRMService.getSuppliers(0, 500)
       .then((res) => setSuppliers(res.suppliers || []))
@@ -68,7 +81,7 @@ export function CreateProductDialog({
     (nextOpen: boolean) => {
       if (!nextOpen) {
         setFormData(emptyProductFormData());
-        setEntryMode('manual');
+        setEntryMode("manual");
         setCodeLookupLoading(false);
       }
       onOpenChange(nextOpen);
@@ -81,13 +94,22 @@ export function CreateProductDialog({
     const payload = formDataToPayload(formData);
     try {
       const response = await (isEditing && editingProduct
-        ? apiService.put<{ product: Product }>(`/pos/products/${editingProduct.id}`, payload)
-        : apiService.post<{ product: Product }>('/pos/products', payload));
-      toast.success(isEditing ? 'Product updated successfully' : 'Product created successfully');
+        ? apiService.put<{ product: Product }>(
+            `/pos/products/${editingProduct.id}`,
+            payload,
+          )
+        : apiService.post<{ product: Product }>("/pos/products", payload));
+      toast.success(
+        isEditing
+          ? "Product updated successfully"
+          : "Product created successfully",
+      );
       handleClose(false);
       onSaved(response.product);
     } catch {
-      toast.error(isEditing ? 'Failed to update product' : 'Failed to create product');
+      toast.error(
+        isEditing ? "Failed to update product" : "Failed to create product",
+      );
     }
   };
 
@@ -100,10 +122,10 @@ export function CreateProductDialog({
         `/pos/products/lookup?code=${encodeURIComponent(trimmed)}`,
       )) as ProductCodeLookupResult;
       setFormData((prev) => mergeLookupIntoFormData(prev, response.suggested));
-      setEntryMode('manual');
-      toast[response.existsInCatalog ? 'warning' : 'success'](response.message);
+      setEntryMode("manual");
+      toast[response.existsInCatalog ? "warning" : "success"](response.message);
     } catch {
-      toast.error('Could not load product details from scanned code.');
+      toast.error("Could not load product details from scanned code.");
     } finally {
       setCodeLookupLoading(false);
     }
@@ -114,11 +136,12 @@ export function CreateProductDialog({
     if (!name) return;
     setAddCategoryLoading(true);
     try {
-      await apiService.post('/pos/categories', { name });
-      const data: POSCategoriesResponse = await apiService.get('/pos/categories');
+      await apiService.post("/pos/categories", { name });
+      const data: POSCategoriesResponse =
+        await apiService.get("/pos/categories");
       setCategories(data.categories || []);
       setFormData((prev) => ({ ...prev, category: name }));
-      setNewCategoryName('');
+      setNewCategoryName("");
       setIsAddCategoryOpen(false);
     } catch {
     } finally {
@@ -156,9 +179,11 @@ export function CreateProductDialog({
       setSuppliers(suppliersResponse.suppliers || []);
       setFormData((prev) => ({ ...prev, supplierId: response.supplier.id }));
       closeAddSupplier();
-      toast.success('Supplier created successfully');
+      toast.success("Supplier created successfully");
     } catch (error) {
-      toast.error(`Save Error: ${getSupplierApiError(error, 'Failed to create supplier')}`);
+      toast.error(
+        `Save Error: ${getSupplierApiError(error, "Failed to create supplier")}`,
+      );
     } finally {
       setAddSupplierLoading(false);
     }
@@ -189,7 +214,7 @@ export function CreateProductDialog({
         loading={addCategoryLoading}
         onOpenChange={(next) => {
           setIsAddCategoryOpen(next);
-          if (!next) setNewCategoryName('');
+          if (!next) setNewCategoryName("");
         }}
         onCategoryNameChange={setNewCategoryName}
         onSubmit={() => void handleAddCategory()}

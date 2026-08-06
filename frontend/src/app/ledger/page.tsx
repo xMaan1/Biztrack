@@ -1,23 +1,23 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import Link from 'next/link';
-import { ModuleGuard } from '@/src/components/guards/PermissionGuard';
+import React, { useState } from "react";
+import Link from "next/link";
+import { ModuleGuard } from "@/src/components/guards/PermissionGuard";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Badge } from '@/src/components/ui/badge';
+} from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { Badge } from "@/src/components/ui/badge";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '@/src/components/ui/tabs';
+} from "@/src/components/ui/tabs";
 import {
   TrendingUp,
   TrendingDown,
@@ -29,10 +29,10 @@ import {
   Eye,
   X,
   BarChart3,
-} from 'lucide-react';
-import { LedgerService } from '@/src/services/ledgerService';
-import DashboardLayout from '@/src/components/layout/DashboardLayout';
-import { toast } from 'sonner';
+} from "lucide-react";
+import { LedgerService } from "@/src/services/ledgerService";
+import DashboardLayout from "@/src/components/layout/DashboardLayout";
+import { toast } from "sonner";
 import {
   LedgerTransactionResponse,
   BudgetResponse,
@@ -44,14 +44,21 @@ import {
   getAccountTypeLabel,
   getTransactionTypeLabel,
   getAccountTypeColor,
-} from '@/src/models/ledger';
-import { useCurrency } from '@/src/contexts/CurrencyContext';
-import { useCachedApi, useCacheManager } from '../../hooks/useCachedApi';
-import { DEFAULT_CHART_OF_ACCOUNTS, getAccountTypeCount as getAccountTypeCountFromConstants, getTotalBalanceByType } from '../../constants/chartOfAccounts';
+} from "@/src/models/ledger";
+import { useCurrency } from "@/src/contexts/CurrencyContext";
+import { useCachedApi, useCacheManager } from "../../hooks/useCachedApi";
+import {
+  DEFAULT_CHART_OF_ACCOUNTS,
+  getAccountTypeCount as getAccountTypeCountFromConstants,
+  getTotalBalanceByType,
+} from "../../constants/chartOfAccounts";
 
 export default function LedgerDashboard() {
   return (
-    <ModuleGuard module="ledger" fallback={<div>You don't have access to Ledger module</div>}>
+    <ModuleGuard
+      module="ledger"
+      fallback={<div>You don&apos;t have access to Ledger module</div>}
+    >
       <LedgerDashboardContent />
     </ModuleGuard>
   );
@@ -60,32 +67,48 @@ export default function LedgerDashboard() {
 function LedgerDashboardContent() {
   const { formatCurrency } = useCurrency();
   const { clearCache: clearAllCache } = useCacheManager();
-  
+
   const chartOfAccounts = DEFAULT_CHART_OF_ACCOUNTS;
   const accountsLoading = false;
-  
-  const { data: recentTransactions, loading: transactionsLoading, refetch: refetchTransactions } = useCachedApi<LedgerTransactionResponse[]>(
-    'ledger_recent_transactions',
+
+  const {
+    data: recentTransactions,
+    loading: transactionsLoading,
+    refetch: refetchTransactions,
+  } = useCachedApi<LedgerTransactionResponse[]>(
+    "ledger_recent_transactions",
     () => LedgerService.getLedgerTransactions(10),
-    { ttl: 60000 }
+    { ttl: 60000 },
   );
-  
-  const { data: activeBudgets, loading: budgetsLoading, refetch: refetchBudgets } = useCachedApi<BudgetResponse[]>(
-    'ledger_active_budgets',
+
+  const {
+    data: activeBudgets,
+    loading: budgetsLoading,
+    refetch: refetchBudgets,
+  } = useCachedApi<BudgetResponse[]>(
+    "ledger_active_budgets",
     () => LedgerService.getActiveBudgets(),
-    { ttl: 300000 }
+    { ttl: 300000 },
   );
-  
-  const { data: trialBalance, loading: trialBalanceLoading, refetch: refetchTrialBalance } = useCachedApi<TrialBalanceResponse>(
-    'ledger_trial_balance',
+
+  const {
+    data: trialBalance,
+    loading: trialBalanceLoading,
+    refetch: refetchTrialBalance,
+  } = useCachedApi<TrialBalanceResponse>(
+    "ledger_trial_balance",
     () => LedgerService.getTrialBalance(),
-    { ttl: 300000 }
+    { ttl: 300000 },
   );
-  
-  const { data: incomeStatement, loading: incomeStatementLoading, refetch: refetchIncomeStatement } = useCachedApi<IncomeStatementResponse>(
-    'ledger_income_statement',
+
+  const {
+    data: incomeStatement,
+    loading: incomeStatementLoading,
+    refetch: refetchIncomeStatement,
+  } = useCachedApi<IncomeStatementResponse>(
+    "ledger_income_statement",
     () => LedgerService.getIncomeStatement(),
-    { ttl: 300000 }
+    { ttl: 300000 },
   );
 
   const [totalAssets, setTotalAssets] = useState(0);
@@ -100,32 +123,31 @@ function LedgerDashboardContent() {
   const [showAccountBalanceModal, setShowAccountBalanceModal] = useState(false);
 
   const [journalEntryForm, setJournalEntryForm] = useState({
-    entryNumber: '',
-    description: '',
-    entryDate: new Date().toISOString().split('T')[0],
+    entryNumber: "",
+    description: "",
+    entryDate: new Date().toISOString().split("T")[0],
   });
 
   const [accountBalanceForm, setAccountBalanceForm] = useState({
-    accountId: '',
-    asOfDate: new Date().toISOString().split('T')[0],
+    accountId: "",
+    asOfDate: new Date().toISOString().split("T")[0],
   });
 
-
   React.useEffect(() => {
-    const assets = getTotalBalanceByType('asset');
-    const liabilities = getTotalBalanceByType('liability');
-    const equity = getTotalBalanceByType('equity');
-    
+    const assets = getTotalBalanceByType("asset");
+    const liabilities = getTotalBalanceByType("liability");
+    const equity = getTotalBalanceByType("equity");
+
     setTotalAssets(assets);
     setTotalLiabilities(liabilities);
     setTotalEquity(equity);
   }, []);
 
   React.useEffect(() => {
-    const revenue = getTotalBalanceByType('revenue');
-    const expenses = getTotalBalanceByType('expense');
+    const revenue = getTotalBalanceByType("revenue");
+    const expenses = getTotalBalanceByType("expense");
     const netIncome = revenue - expenses;
-    
+
     setTotalRevenue(revenue);
     setTotalExpenses(expenses);
     setNetIncome(netIncome);
@@ -141,7 +163,7 @@ function LedgerDashboardContent() {
 
   const handleReset = () => {
     setError(null);
-    clearAllCache('ledger');
+    clearAllCache("ledger");
     refetchTransactions();
     refetchBudgets();
     refetchTrialBalance();
@@ -158,26 +180,25 @@ function LedgerDashboardContent() {
   const closeJournalEntryModal = () => {
     setShowJournalEntryModal(false);
     setJournalEntryForm({
-      entryNumber: '',
-      description: '',
-      entryDate: new Date().toISOString().split('T')[0],
+      entryNumber: "",
+      description: "",
+      entryDate: new Date().toISOString().split("T")[0],
     });
   };
 
   const closeAccountBalanceModal = () => {
     setShowAccountBalanceModal(false);
     setAccountBalanceForm({
-      accountId: '',
-      asOfDate: new Date().toISOString().split('T')[0],
+      accountId: "",
+      asOfDate: new Date().toISOString().split("T")[0],
     });
   };
-
 
   const handleJournalEntrySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       if (!journalEntryForm.description) {
-        toast.error('Please fill in the description');
+        toast.error("Please fill in the description");
         return;
       }
 
@@ -188,11 +209,11 @@ function LedgerDashboardContent() {
       };
 
       await LedgerService.createJournalEntry(journalData);
-      toast.success('Journal entry created successfully!');
+      toast.success("Journal entry created successfully!");
       closeJournalEntryModal();
       handleRefresh();
     } catch (error) {
-      toast.error('Failed to create journal entry. Please try again.');
+      toast.error("Failed to create journal entry. Please try again.");
     }
   };
 
@@ -200,7 +221,7 @@ function LedgerDashboardContent() {
     e.preventDefault();
     try {
       if (!accountBalanceForm.accountId) {
-        toast.error('Please select an account');
+        toast.error("Please select an account");
         return;
       }
 
@@ -212,23 +233,26 @@ function LedgerDashboardContent() {
       const account = chartOfAccounts?.find(
         (acc) => acc.id === accountBalanceForm.accountId,
       );
-      toast.success('Account balance', {
-        description: `${account?.account_name ?? 'Account'} · As of ${accountBalanceForm.asOfDate} · Balance ${formatCurrency(balance.balance)}`,
+      toast.success("Account balance", {
+        description: `${account?.account_name ?? "Account"} · As of ${accountBalanceForm.asOfDate} · Balance ${formatCurrency(balance.balance)}`,
       });
       closeAccountBalanceModal();
     } catch (error) {
-      toast.error('Failed to get account balance. Please try again.');
+      toast.error("Failed to get account balance. Please try again.");
     }
   };
-
-
-
 
   const getAccountTypeCount = (type: AccountType) => {
     return getAccountTypeCountFromConstants(type.toLowerCase());
   };
 
-  if (accountsLoading || transactionsLoading || budgetsLoading || trialBalanceLoading || incomeStatementLoading) {
+  if (
+    accountsLoading ||
+    transactionsLoading ||
+    budgetsLoading ||
+    trialBalanceLoading ||
+    incomeStatementLoading
+  ) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -330,12 +354,12 @@ function LedgerDashboardContent() {
             </CardHeader>
             <CardContent>
               <div
-                className={`text-2xl font-bold ${netIncome >= 0 ? 'text-green-600' : 'text-red-600'}`}
+                className={`text-2xl font-bold ${netIncome >= 0 ? "text-green-600" : "text-red-600"}`}
               >
                 {formatCurrency(netIncome)}
               </div>
               <p className="text-xs text-muted-foreground">
-                Revenue: {formatCurrency(totalRevenue)} | Expenses:{' '}
+                Revenue: {formatCurrency(totalRevenue)} | Expenses:{" "}
                 {formatCurrency(totalExpenses)}
               </p>
             </CardContent>
@@ -397,7 +421,7 @@ function LedgerDashboardContent() {
                               {transaction.description}
                             </div>
                             <div className="text-sm text-gray-500">
-                              {transaction.transaction_number} •{' '}
+                              {transaction.transaction_number} •{" "}
                               {new Date(
                                 transaction.transaction_date,
                               ).toLocaleDateString()}
@@ -440,7 +464,7 @@ function LedgerDashboardContent() {
                       const count = getAccountTypeCount(type);
                       const total = chartOfAccounts?.length || 0;
                       const percentage =
-                        total > 0 ? ((count / total) * 100).toFixed(1) : '0';
+                        total > 0 ? ((count / total) * 100).toFixed(1) : "0";
 
                       return (
                         <div
@@ -449,7 +473,7 @@ function LedgerDashboardContent() {
                         >
                           <div className="flex items-center">
                             <div
-                              className={`w-3 h-3 rounded-full mr-3 ${getAccountTypeColor(type).replace('text-', 'bg-')}`}
+                              className={`w-3 h-3 rounded-full mr-3 ${getAccountTypeColor(type).replace("text-", "bg-")}`}
                             ></div>
                             <span className="font-medium">
                               {getAccountTypeLabel(type)}
@@ -509,8 +533,9 @@ function LedgerDashboardContent() {
                         Chart of Accounts Ready
                       </h3>
                       <p className="text-blue-700 mb-4">
-                        Your chart of accounts is set up with {chartOfAccounts.length} default accounts.
-                        All standard accounting categories are available for transactions.
+                        Your chart of accounts is set up with{" "}
+                        {chartOfAccounts.length} default accounts. All standard
+                        accounting categories are available for transactions.
                       </p>
                     </div>
                   </div>
@@ -575,10 +600,10 @@ function LedgerDashboardContent() {
                             <td className="p-2 text-center">
                               <Badge
                                 variant={
-                                  account.is_active ? 'default' : 'secondary'
+                                  account.is_active ? "default" : "secondary"
                                 }
                               >
-                                {account.is_active ? 'Active' : 'Inactive'}
+                                {account.is_active ? "Active" : "Inactive"}
                               </Badge>
                             </td>
                           </tr>
@@ -619,21 +644,21 @@ function LedgerDashboardContent() {
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
                           <div>
-                            <span className="font-medium">Amount:</span>{' '}
+                            <span className="font-medium">Amount:</span>{" "}
                             {formatCurrency(transaction.amount)}
                           </div>
                           <div>
-                            <span className="font-medium">Date:</span>{' '}
+                            <span className="font-medium">Date:</span>{" "}
                             {new Date(
                               transaction.transaction_date,
                             ).toLocaleDateString()}
                           </div>
                           <div>
-                            <span className="font-medium">Reference:</span>{' '}
-                            {transaction.reference_number || 'N/A'}
+                            <span className="font-medium">Reference:</span>{" "}
+                            {transaction.reference_number || "N/A"}
                           </div>
                           <div>
-                            <span className="font-medium">Status:</span>{' '}
+                            <span className="font-medium">Status:</span>{" "}
                             {transaction.status}
                           </div>
                         </div>
@@ -648,12 +673,15 @@ function LedgerDashboardContent() {
           <TabsContent value="profit-loss" className="space-y-6">
             <div className="text-center py-8">
               <BarChart3 className="h-16 w-16 mx-auto text-blue-600 mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Profit & Loss Dashboard</h3>
+              <h3 className="text-xl font-semibold mb-2">
+                Profit & Loss Dashboard
+              </h3>
               <p className="text-muted-foreground mb-4">
-                Comprehensive financial overview with sales, purchases, and inventory data
+                Comprehensive financial overview with sales, purchases, and
+                inventory data
               </p>
-              <Button 
-                onClick={() => window.open('/ledger/profit-loss', '_blank')}
+              <Button
+                onClick={() => window.open("/ledger/profit-loss", "_blank")}
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 Open Profit & Loss Dashboard
@@ -676,26 +704,28 @@ function LedgerDashboardContent() {
                   {trialBalance ? (
                     <div className="space-y-2">
                       <div className="text-sm text-gray-600">
-                        As of:{' '}
+                        As of:{" "}
                         {new Date(trialBalance.as_of_date).toLocaleDateString()}
                       </div>
                       <div className="text-lg font-bold">
-                        Total Debits:{' '}
+                        Total Debits:{" "}
                         {formatCurrency(
                           Array.isArray(trialBalance.accounts)
                             ? trialBalance.accounts.reduce(
-                                (sum: number, acc: TrialBalanceAccount) => sum + (acc.debit_balance || 0),
+                                (sum: number, acc: TrialBalanceAccount) =>
+                                  sum + (acc.debit_balance || 0),
                                 0,
                               )
                             : 0,
                         )}
                       </div>
                       <div className="text-lg font-bold">
-                        Total Credits:{' '}
+                        Total Credits:{" "}
                         {formatCurrency(
                           Array.isArray(trialBalance.accounts)
                             ? trialBalance.accounts.reduce(
-                                (sum: number, acc: TrialBalanceAccount) => sum + (acc.credit_balance || 0),
+                                (sum: number, acc: TrialBalanceAccount) =>
+                                  sum + (acc.credit_balance || 0),
                                 0,
                               )
                             : 0,
@@ -739,8 +769,8 @@ function LedgerDashboardContent() {
                         <span
                           className={
                             incomeStatement.net_income >= 0
-                              ? 'text-green-600'
-                              : 'text-red-600'
+                              ? "text-green-600"
+                              : "text-red-600"
                           }
                         >
                           {formatCurrency(incomeStatement.net_income)}
@@ -779,19 +809,19 @@ function LedgerDashboardContent() {
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                           <div>
-                            <span className="font-medium">Total Budget:</span>{' '}
+                            <span className="font-medium">Total Budget:</span>{" "}
                             {formatCurrency(budget.total_budget)}
                           </div>
                           <div>
-                            <span className="font-medium">Spent:</span>{' '}
+                            <span className="font-medium">Spent:</span>{" "}
                             {formatCurrency(budget.spent_amount)}
                           </div>
                           <div>
-                            <span className="font-medium">Remaining:</span>{' '}
+                            <span className="font-medium">Remaining:</span>{" "}
                             {formatCurrency(budget.remaining_amount)}
                           </div>
                           <div>
-                            <span className="font-medium">Utilization:</span>{' '}
+                            <span className="font-medium">Utilization:</span>{" "}
                             {(
                               (budget.spent_amount / budget.total_budget) *
                               100
@@ -981,7 +1011,6 @@ function LedgerDashboardContent() {
             </div>
           </div>
         )}
-
       </div>
     </DashboardLayout>
   );

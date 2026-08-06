@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   Dialog,
@@ -7,8 +7,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/src/components/ui/dialog';
-import { Button } from '@/src/components/ui/button';
+} from "@/src/components/ui/dialog";
+import { Button } from "@/src/components/ui/button";
 
 type ProductDeleteDialogProps = {
   open: boolean;
@@ -31,7 +31,8 @@ export function ProductDeleteDialog({
         <DialogHeader>
           <DialogTitle>Delete Product</DialogTitle>
           <DialogDescription>
-            Are you sure you want to delete "{productName}"? This action cannot be undone.
+            Are you sure you want to delete &quot;{productName}&quot;? This
+            action cannot be undone.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

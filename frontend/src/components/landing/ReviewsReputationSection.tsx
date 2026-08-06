@@ -1,52 +1,55 @@
-'use client';
+"use client";
 
-import { Star, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useRef, useState } from 'react';
-import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
-import { Card, CardContent } from '../ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
-import { cn } from '@/src/lib/utils';
-import type { ReviewItem } from '@/src/constants/reviewsReputation';
+import { Star, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
+import { useRef, useState } from "react";
+import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
+import { Card, CardContent } from "../ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
+import { cn } from "@/src/lib/utils";
 import {
   GOOGLE_DUMMY_REVIEWS,
   TRUSTPILOT_DUMMY_REVIEWS,
-} from '@/src/constants/reviewsReputation';
+  type ReviewItem,
+} from "@/src/constants/reviewsReputation";
 
 const TRUSTPILOT_SUMMARY = {
   rating: 4.8,
   reviewCount: 128,
-  profileUrl: 'https://www.trustpilot.com/',
+  profileUrl: "https://www.trustpilot.com/",
 };
 
 const GOOGLE_SUMMARY = {
   rating: 4.9,
   reviewCount: 89,
-  profileUrl: 'https://www.google.com/maps',
+  profileUrl: "https://www.google.com/maps",
 };
 
 function StarRating({
   rating,
-  size = 'md',
+  size = "md",
 }: {
   rating: number;
-  size?: 'sm' | 'md' | 'lg';
+  size?: "sm" | "md" | "lg";
 }) {
   const sizeClass =
-    size === 'lg' ? 'h-6 w-6' : size === 'sm' ? 'h-3.5 w-3.5' : 'h-5 w-5';
+    size === "lg" ? "h-6 w-6" : size === "sm" ? "h-3.5 w-3.5" : "h-5 w-5";
 
   return (
-    <div className="flex items-center gap-0.5" aria-label={`${rating} out of 5 stars`}>
+    <div
+      className="flex items-center gap-0.5"
+      aria-label={`${rating} out of 5 stars`}
+    >
       {Array.from({ length: 5 }).map((_, i) => (
         <Star
           key={i}
           className={cn(
             sizeClass,
             i < Math.floor(rating)
-              ? 'fill-amber-400 text-amber-400'
+              ? "fill-amber-400 text-amber-400"
               : i < rating
-                ? 'fill-amber-200 text-amber-400'
-                : 'fill-muted text-muted-foreground/30',
+                ? "fill-amber-200 text-amber-400"
+                : "fill-muted text-muted-foreground/30",
           )}
           aria-hidden
         />
@@ -77,11 +80,11 @@ function ReviewCard({ review }: { review: ReviewItem }) {
 function ReviewCarousel({ reviews }: { reviews: ReviewItem[] }) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const scroll = (direction: 'left' | 'right') => {
+  const scroll = (direction: "left" | "right") => {
     const el = scrollRef.current;
     if (!el) return;
-    const amount = direction === 'left' ? -300 : 300;
-    el.scrollBy({ left: amount, behavior: 'smooth' });
+    const amount = direction === "left" ? -300 : 300;
+    el.scrollBy({ left: amount, behavior: "smooth" });
   };
 
   return (
@@ -92,7 +95,7 @@ function ReviewCarousel({ reviews }: { reviews: ReviewItem[] }) {
           variant="outline"
           size="icon"
           className="h-8 w-8 rounded-full"
-          onClick={() => scroll('left')}
+          onClick={() => scroll("left")}
           aria-label="Previous reviews"
         >
           <ChevronLeft className="h-4 w-4" />
@@ -102,7 +105,7 @@ function ReviewCarousel({ reviews }: { reviews: ReviewItem[] }) {
           variant="outline"
           size="icon"
           className="h-8 w-8 rounded-full"
-          onClick={() => scroll('right')}
+          onClick={() => scroll("right")}
           aria-label="Next reviews"
         >
           <ChevronRight className="h-4 w-4" />
@@ -125,13 +128,13 @@ function WidgetPlaceholder({
   platform,
   accentClass,
 }: {
-  platform: 'Trustpilot' | 'Google';
+  platform: "Trustpilot" | "Google";
   accentClass: string;
 }) {
   return (
     <div
       className={cn(
-        'rounded-xl border-2 border-dashed p-6 sm:p-8 text-center min-h-[140px] flex flex-col items-center justify-center gap-2',
+        "rounded-xl border-2 border-dashed p-6 sm:p-8 text-center min-h-[140px] flex flex-col items-center justify-center gap-2",
         accentClass,
       )}
     >
@@ -158,7 +161,7 @@ function PlatformPanel({
   widgetAccent,
   tabAccent,
 }: {
-  platform: 'Trustpilot' | 'Google';
+  platform: "Trustpilot" | "Google";
   rating: number;
   reviewCount: number;
   profileUrl: string;
@@ -170,7 +173,7 @@ function PlatformPanel({
   return (
     <div className="space-y-8 animate-in fade-in-0 slide-in-from-bottom-2 duration-300">
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
-        <Card className={cn('border-0 shadow-md', tabAccent)}>
+        <Card className={cn("border-0 shadow-md", tabAccent)}>
           <CardContent className="p-6 sm:p-8 flex flex-col items-center text-center sm:items-start sm:text-left">
             <p className="text-sm font-medium text-muted-foreground mb-2">
               Overall rating on {platform}
@@ -183,10 +186,10 @@ function PlatformPanel({
             </div>
             <StarRating rating={rating} size="lg" />
             <p className="mt-3 text-sm text-muted-foreground">
-              Based on{' '}
+              Based on{" "}
               <span className="font-semibold text-foreground">
                 {reviewCount.toLocaleString()}
-              </span>{' '}
+              </span>{" "}
               reviews
             </p>
             <Button className="mt-6 w-full sm:w-auto" variant="default" asChild>
@@ -212,7 +215,7 @@ function PlatformPanel({
 }
 
 export function ReviewsReputationSection() {
-  const [activeTab, setActiveTab] = useState('trustpilot');
+  const [activeTab, setActiveTab] = useState("trustpilot");
 
   return (
     <section
@@ -233,11 +236,7 @@ export function ReviewsReputationSection() {
           </p>
         </div>
 
-        <Tabs
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="w-full"
-        >
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <div className="flex justify-center mb-10">
             <TabsList className="h-12 p-1.5 bg-muted/80 rounded-full w-full max-w-md grid grid-cols-2 gap-1">
               <TabsTrigger

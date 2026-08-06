@@ -1,18 +1,18 @@
-import type { AxiosInstance } from 'axios';
-import { runTenantFullSync } from './tenantOfflineSync';
+import type { AxiosInstance } from "axios";
+import { runTenantFullSync } from "./tenantOfflineSync";
 
 function isTauri(): boolean {
-  return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
+  return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 }
 
 export function startOfflineOutboxFlush(getClient: () => AxiosInstance) {
-  if (typeof window === 'undefined' || !isTauri()) {
+  if (typeof window === "undefined" || !isTauri()) {
     return () => {};
   }
   const flush = async () => {
     if (!navigator.onLine) return;
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invoke } = await import("@tauri-apps/api/core");
       const pending = await invoke<
         Array<{
           id: string;
@@ -22,7 +22,7 @@ export function startOfflineOutboxFlush(getClient: () => AxiosInstance) {
           body_json: string | null;
           headers_json: string;
         }>
-      >('offline_list_pending');
+      >("offline_list_pending");
       const client = getClient();
       let progressed = false;
       for (const row of pending) {
@@ -35,25 +35,25 @@ export function startOfflineOutboxFlush(getClient: () => AxiosInstance) {
             data: row.body_json ? JSON.parse(row.body_json) : undefined,
             headers,
           });
-          await invoke('offline_mark_done', { id: row.id });
+          await invoke("offline_mark_done", { id: row.id });
           progressed = true;
         } catch {
           break;
         }
       }
-      if (progressed && typeof localStorage !== 'undefined') {
-        const tid = localStorage.getItem('currentTenantId');
+      if (progressed && typeof localStorage !== "undefined") {
+        const tid = localStorage.getItem("currentTenantId");
         if (tid) {
           await runTenantFullSync(client, tid);
         }
       }
     } catch {}
   };
-  window.addEventListener('online', flush);
+  window.addEventListener("online", flush);
   const t = window.setInterval(flush, 30_000);
   void flush();
   return () => {
-    window.removeEventListener('online', flush);
+    window.removeEventListener("online", flush);
     window.clearInterval(t);
   };
 }

@@ -1,12 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
-import {
-  Task,
-  TaskCreate,
-  TaskUpdate,
-  TaskStatus,
-} from '../models/task';
-import { apiService } from '../services/ApiService';
-import { extractErrorMessage } from '../utils/errorUtils';
+import { useState, useEffect, useCallback } from "react";
+import { Task, TaskCreate, TaskUpdate, TaskStatus } from "../models/task";
+import { apiService } from "../services/ApiService";
+import { extractErrorMessage } from "../utils/errorUtils";
 
 interface UseTasksOptions {
   projectId?: string;
@@ -49,7 +44,7 @@ export const useTasks = (options: UseTasksOptions = {}) => {
         const response = await apiService.getTasks(requestParams);
         setTasks(response.tasks || []);
       } catch (err: any) {
-        setError(extractErrorMessage(err, 'Failed to load tasks'));
+        setError(extractErrorMessage(err, "Failed to load tasks"));
       } finally {
         setLoading(false);
       }
@@ -64,7 +59,7 @@ export const useTasks = (options: UseTasksOptions = {}) => {
         await apiService.createTask(data);
         await loadTasks();
       } catch (err: any) {
-        setError(extractErrorMessage(err, 'Failed to create task'));
+        setError(extractErrorMessage(err, "Failed to create task"));
         throw err;
       }
     },
@@ -78,7 +73,7 @@ export const useTasks = (options: UseTasksOptions = {}) => {
         await apiService.updateTask(taskId, data);
         await loadTasks();
       } catch (err: any) {
-        setError(extractErrorMessage(err, 'Failed to update task'));
+        setError(extractErrorMessage(err, "Failed to update task"));
         throw err;
       }
     },
@@ -92,7 +87,7 @@ export const useTasks = (options: UseTasksOptions = {}) => {
         await apiService.deleteTask(taskId);
         await loadTasks();
       } catch (err: any) {
-        setError(extractErrorMessage(err, 'Failed to delete task'));
+        setError(extractErrorMessage(err, "Failed to delete task"));
         throw err;
       }
     },
@@ -106,7 +101,7 @@ export const useTasks = (options: UseTasksOptions = {}) => {
         await apiService.createSubtask(parentTaskId, data);
         await loadTasks();
       } catch (err: any) {
-        setError(extractErrorMessage(err, 'Failed to create subtask'));
+        setError(extractErrorMessage(err, "Failed to create subtask"));
         throw err;
       }
     },
@@ -120,7 +115,7 @@ export const useTasks = (options: UseTasksOptions = {}) => {
         await apiService.updateTask(taskId, { status });
         await loadTasks();
       } catch (err: any) {
-        setError(extractErrorMessage(err, 'Failed to update task status'));
+        setError(extractErrorMessage(err, "Failed to update task status"));
         throw err;
       }
     },

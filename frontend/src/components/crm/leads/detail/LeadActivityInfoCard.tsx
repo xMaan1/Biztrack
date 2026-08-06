@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { Lead } from '@/src/models/crm';
+import { Lead } from "@/src/models/crm";
 
 type Props = {
   lead: Lead;
@@ -14,11 +14,11 @@ export function LeadActivityInfoCard({ lead }: Props) {
       </div>
       <div className="p-3 text-xs flex justify-between border-t">
         <span>
-          Lead activity:{' '}
-          <strong>{lead.hasOpenTask ? 'Active' : 'Not active'}</strong>
+          Lead activity:{" "}
+          <strong>{lead.hasOpenTask ? "Active" : "Not active"}</strong>
         </span>
         <span>
-          Registered:{' '}
+          Registered:{" "}
           {new Date(lead.registeredAt || lead.createdAt).toLocaleDateString()}
         </span>
       </div>

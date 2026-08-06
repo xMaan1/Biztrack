@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { Loader2 } from 'lucide-react';
-import { DashboardLayout } from '@/src/components/layout';
+import { Loader2 } from "lucide-react";
+import { DashboardLayout } from "@/src/components/layout";
 
 export function MotBookingsLoadingState() {
   return (

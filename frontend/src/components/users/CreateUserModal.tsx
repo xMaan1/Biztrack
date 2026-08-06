@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { useRBAC, CreateUserData } from '@/src/contexts/RBACContext';
-import { extractErrorMessage } from '@/src/utils/errorUtils';
-import { Button } from '@/src/components/ui/button';
+import React, { useState, useEffect } from "react";
+import { useRBAC, CreateUserData } from "@/src/contexts/RBACContext";
+import { extractErrorMessage } from "@/src/utils/errorUtils";
+import { Button } from "@/src/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -11,18 +11,18 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/src/components/ui/dialog';
-import { Input } from '@/src/components/ui/input';
-import { Label } from '@/src/components/ui/label';
+} from "@/src/components/ui/dialog";
+import { Input } from "@/src/components/ui/input";
+import { Label } from "@/src/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
-import { Alert, AlertDescription } from '@/src/components/ui/alert';
-import { Loader2 } from 'lucide-react';
+} from "@/src/components/ui/select";
+import { Alert, AlertDescription } from "@/src/components/ui/alert";
+import { Loader2 } from "lucide-react";
 
 interface CreateUserModalProps {
   open: boolean;
@@ -30,56 +30,60 @@ interface CreateUserModalProps {
   onSuccess: () => void;
 }
 
-export function CreateUserModal({ open, onOpenChange, onSuccess }: CreateUserModalProps) {
+export function CreateUserModal({
+  open,
+  onOpenChange,
+  onSuccess,
+}: CreateUserModalProps) {
   const { createUser, roles } = useRBAC();
   const [formData, setFormData] = useState<CreateUserData>({
-    userName: '',
-    email: '',
-    firstName: '',
-    lastName: '',
-    password: '',
+    userName: "",
+    email: "",
+    firstName: "",
+    lastName: "",
+    password: "",
   });
-  const [selectedRoleId, setSelectedRoleId] = useState('');
+  const [selectedRoleId, setSelectedRoleId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (open) {
       setFormData({
-        userName: '',
-        email: '',
-        firstName: '',
-        lastName: '',
-        password: '',
+        userName: "",
+        email: "",
+        firstName: "",
+        lastName: "",
+        password: "",
       });
-      setSelectedRoleId('');
-      setError('');
+      setSelectedRoleId("");
+      setError("");
     }
   }, [open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!selectedRoleId) {
-      setError('Please select a role');
+      setError("Please select a role");
       return;
     }
 
     setIsSubmitting(true);
-    setError('');
+    setError("");
 
     try {
       await createUser(formData, selectedRoleId);
       onSuccess();
     } catch (error: any) {
-      setError(extractErrorMessage(error, 'Failed to create user'));
+      setError(extractErrorMessage(error, "Failed to create user"));
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleInputChange = (field: keyof CreateUserData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   return (
@@ -91,7 +95,7 @@ export function CreateUserModal({ open, onOpenChange, onSuccess }: CreateUserMod
             Add a new user to your organization and assign them a role.
           </DialogDescription>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <Alert variant="destructive">
@@ -105,7 +109,7 @@ export function CreateUserModal({ open, onOpenChange, onSuccess }: CreateUserMod
               <Input
                 id="firstName"
                 value={formData.firstName}
-                onChange={(e) => handleInputChange('firstName', e.target.value)}
+                onChange={(e) => handleInputChange("firstName", e.target.value)}
                 placeholder="John"
               />
             </div>
@@ -114,7 +118,7 @@ export function CreateUserModal({ open, onOpenChange, onSuccess }: CreateUserMod
               <Input
                 id="lastName"
                 value={formData.lastName}
-                onChange={(e) => handleInputChange('lastName', e.target.value)}
+                onChange={(e) => handleInputChange("lastName", e.target.value)}
                 placeholder="Doe"
               />
             </div>
@@ -125,7 +129,7 @@ export function CreateUserModal({ open, onOpenChange, onSuccess }: CreateUserMod
             <Input
               id="userName"
               value={formData.userName}
-              onChange={(e) => handleInputChange('userName', e.target.value)}
+              onChange={(e) => handleInputChange("userName", e.target.value)}
               placeholder="johndoe"
               required
             />
@@ -137,7 +141,7 @@ export function CreateUserModal({ open, onOpenChange, onSuccess }: CreateUserMod
               id="email"
               type="email"
               value={formData.email}
-              onChange={(e) => handleInputChange('email', e.target.value)}
+              onChange={(e) => handleInputChange("email", e.target.value)}
               placeholder="john@example.com"
               required
             />
@@ -149,7 +153,7 @@ export function CreateUserModal({ open, onOpenChange, onSuccess }: CreateUserMod
               id="password"
               type="password"
               value={formData.password}
-              onChange={(e) => handleInputChange('password', e.target.value)}
+              onChange={(e) => handleInputChange("password", e.target.value)}
               placeholder="Enter password"
               required
             />
@@ -181,7 +185,9 @@ export function CreateUserModal({ open, onOpenChange, onSuccess }: CreateUserMod
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isSubmitting && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               Create User
             </Button>
           </DialogFooter>

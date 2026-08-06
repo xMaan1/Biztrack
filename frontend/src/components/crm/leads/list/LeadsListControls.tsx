@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
-import { Search } from 'lucide-react';
-import { CRMLeadFilters, PIPELINE_LABELS } from '@/src/models/crm';
+} from "@/src/components/ui/select";
+import { Search } from "lucide-react";
+import { CRMLeadFilters, PIPELINE_LABELS } from "@/src/models/crm";
 
 type Props = {
   filters: CRMLeadFilters;
@@ -35,8 +35,10 @@ export function LeadsListControls({
     <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-3">
       <div className="flex flex-wrap items-center gap-2">
         <Select
-          value={filters.sort || 'newest'}
-          onValueChange={(v) => onFiltersChange((prev) => ({ ...prev, sort: v }))}
+          value={filters.sort || "newest"}
+          onValueChange={(v) =>
+            onFiltersChange((prev) => ({ ...prev, sort: v }))
+          }
         >
           <SelectTrigger className="w-[180px] h-9">
             <SelectValue />
@@ -60,11 +62,11 @@ export function LeadsListControls({
           </SelectContent>
         </Select>
         <Select
-          value={filters.pipeline || '__all__'}
+          value={filters.pipeline || "__all__"}
           onValueChange={(v) =>
             onFiltersChange((prev) => ({
               ...prev,
-              pipeline: v === '__all__' ? undefined : v,
+              pipeline: v === "__all__" ? undefined : v,
             }))
           }
         >
@@ -89,7 +91,7 @@ export function LeadsListControls({
             placeholder="Enter search criteria..."
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && onSearch()}
+            onKeyDown={(e) => e.key === "Enter" && onSearch()}
           />
         </div>
         <Button size="sm" className="rounded-full" onClick={onSearch}>

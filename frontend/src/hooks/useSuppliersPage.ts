@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { toast } from 'sonner';
-import HRMService from '@/src/services/HRMService';
-import type { Supplier } from '@/src/models/hrm';
-import type { SupplierFormData } from '@/src/components/hrm/suppliers/types';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "sonner";
+import HRMService from "@/src/services/HRMService";
+import type { Supplier } from "@/src/models/hrm";
+import type { SupplierFormData } from "@/src/components/hrm/suppliers/types";
 import {
   emptySupplierForm,
   filterSuppliers,
@@ -13,7 +13,7 @@ import {
   getSupplierStats,
   supplierToFormData,
   validateSupplierForm,
-} from '@/src/components/hrm/suppliers/supplierUtils';
+} from "@/src/components/hrm/suppliers/supplierUtils";
 
 export function useSuppliersPage() {
   const router = useRouter();
@@ -21,12 +21,15 @@ export function useSuppliersPage() {
 
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [supplierToDelete, setSupplierToDelete] = useState<Supplier | null>(null);
+  const [supplierToDelete, setSupplierToDelete] = useState<Supplier | null>(
+    null,
+  );
   const [showFormDialog, setShowFormDialog] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
-  const [formData, setFormData] = useState<SupplierFormData>(emptySupplierForm());
+  const [formData, setFormData] =
+    useState<SupplierFormData>(emptySupplierForm());
   const [submitting, setSubmitting] = useState(false);
 
   const fetchSuppliers = useCallback(async () => {
@@ -35,7 +38,9 @@ export function useSuppliersPage() {
       const response = await HRMService.getSuppliers();
       setSuppliers(response.suppliers);
     } catch (error) {
-      toast.error(`Load Error: ${getSupplierApiError(error, 'Failed to load suppliers')}`);
+      toast.error(
+        `Load Error: ${getSupplierApiError(error, "Failed to load suppliers")}`,
+      );
     } finally {
       setLoading(false);
     }
@@ -59,12 +64,14 @@ export function useSuppliersPage() {
   }, []);
 
   useEffect(() => {
-    if (searchParams.get('openAdd') !== 'true') return;
+    if (searchParams.get("openAdd") !== "true") return;
     openCreateDialog();
     const params = new URLSearchParams(searchParams.toString());
-    params.delete('openAdd');
+    params.delete("openAdd");
     const nextQuery = params.toString();
-    router.replace(nextQuery ? `/hrm/suppliers?${nextQuery}` : '/hrm/suppliers');
+    router.replace(
+      nextQuery ? `/hrm/suppliers?${nextQuery}` : "/hrm/suppliers",
+    );
   }, [searchParams, router, openCreateDialog]);
 
   const openEditDialog = useCallback((supplier: Supplier) => {
@@ -80,7 +87,10 @@ export function useSuppliersPage() {
   }, []);
 
   const handleFormInputChange = useCallback(
-    (field: keyof SupplierFormData, value: string | number | boolean | undefined) => {
+    (
+      field: keyof SupplierFormData,
+      value: string | number | boolean | undefined,
+    ) => {
       setFormData((prev) => ({
         ...prev,
         [field]: value,
@@ -100,15 +110,17 @@ export function useSuppliersPage() {
       setSubmitting(true);
       if (editingSupplier) {
         await HRMService.updateSupplier(editingSupplier.id, formData);
-        toast.success('Supplier updated successfully');
+        toast.success("Supplier updated successfully");
       } else {
         await HRMService.createSupplier(formData);
-        toast.success('Supplier created successfully');
+        toast.success("Supplier created successfully");
       }
       await fetchSuppliers();
       closeFormDialog();
     } catch (error) {
-      toast.error(`Save Error: ${getSupplierApiError(error, 'Failed to save supplier')}`);
+      toast.error(
+        `Save Error: ${getSupplierApiError(error, "Failed to save supplier")}`,
+      );
     } finally {
       setSubmitting(false);
     }
@@ -131,9 +143,11 @@ export function useSuppliersPage() {
       await HRMService.deleteSupplier(supplierToDelete.id);
       await fetchSuppliers();
       closeDeleteDialog();
-      toast.success('Supplier deleted successfully');
+      toast.success("Supplier deleted successfully");
     } catch (error) {
-      toast.error(`Delete Error: ${getSupplierApiError(error, 'Failed to delete supplier')}`);
+      toast.error(
+        `Delete Error: ${getSupplierApiError(error, "Failed to delete supplier")}`,
+      );
     }
   }, [supplierToDelete, fetchSuppliers, closeDeleteDialog]);
 

@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import { Button } from '@/src/components/ui/button';
+import { Button } from "@/src/components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
+} from "@/src/components/ui/select";
 import {
   Lead,
   LeadCampaignItem,
   LeadCampaignAssignment,
-} from '@/src/models/crm';
-import CRMService from '@/src/services/CRMService';
+} from "@/src/models/crm";
+import CRMService from "@/src/services/CRMService";
 
 type Props = {
   lead: Lead;
@@ -54,18 +54,18 @@ export function LeadCampaignsTab({
             variant="outline"
             size="sm"
             onClick={async () => {
-              const name = window.prompt('Campaign name');
+              const name = window.prompt("Campaign name");
               if (!name) return;
               await CRMService.createLeadCampaign({
                 name,
                 steps: [
                   {
-                    type: 'email',
+                    type: "email",
                     subject: `Hello from ${name}`,
                     body: `Hi ${lead.firstName}, following up from ${name}.`,
                   },
                   {
-                    type: 'email',
+                    type: "email",
                     subject: `${name} check-in`,
                     body: `Hi ${lead.firstName}, just checking in.`,
                   },
@@ -112,7 +112,7 @@ export function LeadCampaignsTab({
                 <button
                   className="text-primary"
                   onClick={() =>
-                    CRMService.leadCampaignAction(leadId, a.id, 'stop').then(
+                    CRMService.leadCampaignAction(leadId, a.id, "stop").then(
                       loadTabData,
                     )
                   }
@@ -122,7 +122,7 @@ export function LeadCampaignsTab({
                 <button
                   className="text-primary"
                   onClick={() =>
-                    CRMService.leadCampaignAction(leadId, a.id, 'start').then(
+                    CRMService.leadCampaignAction(leadId, a.id, "start").then(
                       loadTabData,
                     )
                   }
@@ -132,7 +132,7 @@ export function LeadCampaignsTab({
                 <button
                   className="text-primary"
                   onClick={() =>
-                    CRMService.leadCampaignAction(leadId, a.id, 'force').then(
+                    CRMService.leadCampaignAction(leadId, a.id, "force").then(
                       loadTabData,
                     )
                   }

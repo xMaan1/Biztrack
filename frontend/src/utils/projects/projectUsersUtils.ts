@@ -1,7 +1,7 @@
-import type { User } from '@/src/models';
+import type { User } from "@/src/models";
 
 export function getTenantIdFromStorage(): string | null {
-  const selectedTenant = localStorage.getItem('selectedTenant');
+  const selectedTenant = localStorage.getItem("selectedTenant");
   if (selectedTenant) {
     try {
       const parsed = JSON.parse(selectedTenant);
@@ -10,7 +10,7 @@ export function getTenantIdFromStorage(): string | null {
       return null;
     }
   }
-  return localStorage.getItem('currentTenantId');
+  return localStorage.getItem("currentTenantId");
 }
 
 export function dedupeTenantUsers(users: User[]): User[] {

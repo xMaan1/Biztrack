@@ -52,10 +52,10 @@ export interface DoctorsResponse {
 }
 
 export const HEALTHCARE_PERMISSIONS = [
-  'healthcare:view',
-  'healthcare:create',
-  'healthcare:update',
-  'healthcare:delete',
+  "healthcare:view",
+  "healthcare:create",
+  "healthcare:update",
+  "healthcare:delete",
 ] as const;
 
 export type HealthcarePermission = (typeof HEALTHCARE_PERMISSIONS)[number];
@@ -105,16 +105,21 @@ export interface HealthcareStaffResponse {
 }
 
 export const DAYS_OF_WEEK = [
-  'Monday',
-  'Tuesday',
-  'Wednesday',
-  'Thursday',
-  'Friday',
-  'Saturday',
-  'Sunday',
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
 ] as const;
 
-export const APPOINTMENT_STATUSES = ['scheduled', 'completed', 'cancelled', 'no_show'] as const;
+export const APPOINTMENT_STATUSES = [
+  "scheduled",
+  "completed",
+  "cancelled",
+  "no_show",
+] as const;
 export type AppointmentStatus = (typeof APPOINTMENT_STATUSES)[number];
 
 export interface Appointment {
@@ -210,7 +215,7 @@ export interface PatientHistoryResponse {
   prescriptions: Prescription[];
 }
 
-export type PrescriptionItemType = 'medicine' | 'vitals' | 'test';
+export type PrescriptionItemType = "medicine" | "vitals" | "test";
 
 export interface PrescriptionItem {
   type?: PrescriptionItemType;
@@ -325,7 +330,7 @@ export interface DailyExpensesResponse {
   total: number;
 }
 
-export const ADMISSION_STATUSES = ['admitted', 'discharged'] as const;
+export const ADMISSION_STATUSES = ["admitted", "discharged"] as const;
 export type AdmissionStatus = (typeof ADMISSION_STATUSES)[number];
 
 export interface Admission {

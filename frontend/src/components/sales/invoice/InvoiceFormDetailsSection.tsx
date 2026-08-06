@@ -1,16 +1,18 @@
-'use client';
+"use client";
 
-import { Input } from '@/src/components/ui/input';
-import type { InvoiceCreate } from '@/src/models/sales';
-import type { InvoiceFormErrors } from '@/src/types/sales/invoiceForm';
-import { COMMERCE_INPUT_CLS } from '../commerce-invoice/constants';
-import { InlineField } from '../commerce-invoice/InlineField';
-import { InvoiceFormCustomerSection } from './InvoiceFormCustomerSection';
-import { InvoiceFormVehicleSection } from './InvoiceFormVehicleSection';
-import { InvoiceJobCardLink } from './InvoiceJobCardLink';
-import type { Customer } from '@/src/services/CustomerService';
-import type { Vehicle } from '@/src/models/workshop';
-import type { InvoiceFormMode } from '@/src/types/sales/invoiceForm';
+import { Input } from "@/src/components/ui/input";
+import type { InvoiceCreate } from "@/src/models/sales";
+import type {
+  InvoiceFormErrors,
+  InvoiceFormMode,
+} from "@/src/types/sales/invoiceForm";
+import { COMMERCE_INPUT_CLS } from "../commerce-invoice/constants";
+import { InlineField } from "../commerce-invoice/InlineField";
+import { InvoiceFormCustomerSection } from "./InvoiceFormCustomerSection";
+import { InvoiceFormVehicleSection } from "./InvoiceFormVehicleSection";
+import { InvoiceJobCardLink } from "./InvoiceJobCardLink";
+import type { Customer } from "@/src/services/CustomerService";
+import type { Vehicle } from "@/src/models/workshop";
 
 type InvoiceFormDetailsSectionProps = {
   mode: InvoiceFormMode;
@@ -50,30 +52,38 @@ export function InvoiceFormDetailsSection({
               id="issueDate"
               type="date"
               value={formData.issueDate}
-              onChange={(e) => onInputChange('issueDate', e.target.value)}
-              className={`${COMMERCE_INPUT_CLS} ${errors.issueDate ? 'border-destructive' : ''}`}
+              onChange={(e) => onInputChange("issueDate", e.target.value)}
+              className={`${COMMERCE_INPUT_CLS} ${errors.issueDate ? "border-destructive" : ""}`}
             />
           </InlineField>
           {errors.issueDate && (
-            <p className="pl-[116px] text-xs text-destructive">{errors.issueDate}</p>
+            <p className="pl-[116px] text-xs text-destructive">
+              {errors.issueDate}
+            </p>
           )}
-          <InlineField label="Due Date:" labelClassName="text-destructive" required>
+          <InlineField
+            label="Due Date:"
+            labelClassName="text-destructive"
+            required
+          >
             <Input
               id="dueDate"
               type="date"
               value={formData.dueDate}
-              onChange={(e) => onInputChange('dueDate', e.target.value)}
-              className={`${COMMERCE_INPUT_CLS} ${errors.dueDate ? 'border-destructive' : ''}`}
+              onChange={(e) => onInputChange("dueDate", e.target.value)}
+              className={`${COMMERCE_INPUT_CLS} ${errors.dueDate ? "border-destructive" : ""}`}
             />
           </InlineField>
           {errors.dueDate && (
-            <p className="pl-[116px] text-xs text-destructive">{errors.dueDate}</p>
+            <p className="pl-[116px] text-xs text-destructive">
+              {errors.dueDate}
+            </p>
           )}
           <InlineField label="Order Number:">
             <Input
               id="orderNumber"
               value={formData.orderNumber}
-              onChange={(e) => onInputChange('orderNumber', e.target.value)}
+              onChange={(e) => onInputChange("orderNumber", e.target.value)}
               placeholder="Enter order number"
               className={COMMERCE_INPUT_CLS}
             />
@@ -83,7 +93,7 @@ export function InvoiceFormDetailsSection({
               id="orderTime"
               type="datetime-local"
               value={formData.orderTime}
-              onChange={(e) => onInputChange('orderTime', e.target.value)}
+              onChange={(e) => onInputChange("orderTime", e.target.value)}
               className={COMMERCE_INPUT_CLS}
             />
           </InlineField>
@@ -96,7 +106,11 @@ export function InvoiceFormDetailsSection({
               onVehicleSelect={onVehicleSelect}
               onInputChange={onInputChange}
             />
-            <InvoiceJobCardLink value={jobCardId} onChange={onJobCardSelect} dense />
+            <InvoiceJobCardLink
+              value={jobCardId}
+              onChange={onJobCardSelect}
+              dense
+            />
           </div>
         )}
       </div>

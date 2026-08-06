@@ -1,21 +1,21 @@
-'use client';
+"use client";
 
-import React, { useEffect, useRef, useState } from 'react';
-import { Input } from './input';
-import { Label } from './label';
-import { Button } from './button';
-import { Badge } from './badge';
-import { Search, User, Users, X, Briefcase } from 'lucide-react';
-import { apiService } from '../../services/ApiService';
-import HRMService from '../../services/HRMService';
-import { EmploymentStatus } from '../../models/hrm';
+import React, { useEffect, useRef, useState } from "react";
+import { Input } from "./input";
+import { Label } from "./label";
+import { Button } from "./button";
+import { Badge } from "./badge";
+import { Search, User, Users, X, Briefcase } from "lucide-react";
+import { apiService } from "../../services/ApiService";
+import HRMService from "../../services/HRMService";
+import { EmploymentStatus } from "../../models/hrm";
 
 export type AssigneeOption = {
   id: string;
   name: string;
   email?: string;
   detail?: string;
-  sources: Array<'user' | 'employee'>;
+  sources: Array<"user" | "employee">;
 };
 
 interface AssigneeSearchProps {
@@ -29,40 +29,46 @@ interface AssigneeSearchProps {
 }
 
 function normalizeName(first?: string, last?: string, fallback?: string) {
-  const full = `${first || ''} ${last || ''}`.trim();
-  return full || fallback || '';
+  const full = `${first || ""} ${last || ""}`.trim();
+  return full || fallback || "";
 }
 
 function matchesQuery(option: AssigneeOption, q: string) {
-  const hay = `${option.name} ${option.email || ''} ${option.detail || ''}`.toLowerCase();
+  const hay =
+    `${option.name} ${option.email || ""} ${option.detail || ""}`.toLowerCase();
   return hay.includes(q);
 }
 
 export function AssigneeSearch({
   value,
   onSelect,
-  placeholder = 'Search users or employees...',
-  label = 'Assigned to',
+  placeholder = "Search users or employees...",
+  label = "Assigned to",
   required = false,
   error,
-  className = '',
+  className = "",
 }: AssigneeSearchProps) {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [results, setResults] = useState<AssigneeOption[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [selected, setSelected] = useState<AssigneeOption | null>(value || null);
+  const [selected, setSelected] = useState<AssigneeOption | null>(
+    value || null,
+  );
   const [options, setOptions] = useState<AssigneeOption[]>([]);
   const searchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   useEffect(() => {
@@ -88,25 +94,41 @@ export function AssigneeSearch({
             if (!id) return null;
             return {
               id: String(id),
-              name: normalizeName(u.firstName, u.lastName, u.userName || u.email || String(id)),
+              name: normalizeName(
+                u.firstName,
+                u.lastName,
+                u.userName || u.email || String(id),
+              ),
               email: u.email,
               detail: u.userName ? `@${u.userName}` : undefined,
-              sources: ['user'] as Array<'user' | 'employee'>,
+              sources: ["user"] as Array<"user" | "employee">,
             };
           })
           .filter(Boolean) as AssigneeOption[];
 
-        const employeeOptions: AssigneeOption[] = ((employeesRes as any).employees || [])
-          .filter((emp: any) => !emp.employmentStatus || emp.employmentStatus === EmploymentStatus.ACTIVE)
+        const employeeOptions: AssigneeOption[] = (
+          (employeesRes as any).employees || []
+        )
+          .filter(
+            (emp: any) =>
+              !emp.employmentStatus ||
+              emp.employmentStatus === EmploymentStatus.ACTIVE,
+          )
           .map((emp: any) => {
             const userId = emp.createdBy;
             if (!userId) return null;
             return {
               id: String(userId),
-              name: normalizeName(emp.firstName, emp.lastName, emp.email || emp.employeeId),
+              name: normalizeName(
+                emp.firstName,
+                emp.lastName,
+                emp.email || emp.employeeId,
+              ),
               email: emp.email,
-              detail: [emp.position, emp.employeeId].filter(Boolean).join(' · '),
-              sources: ['employee'] as Array<'user' | 'employee'>,
+              detail: [emp.position, emp.employeeId]
+                .filter(Boolean)
+                .join(" · "),
+              sources: ["employee"] as Array<"user" | "employee">,
             };
           })
           .filter(Boolean) as AssigneeOption[];
@@ -118,12 +140,14 @@ export function AssigneeSearch({
             byId.set(option.id, { ...option, sources: [...option.sources] });
             continue;
           }
-          const sources = Array.from(new Set([...existing.sources, ...option.sources])) as Array<
-            'user' | 'employee'
-          >;
+          const sources = Array.from(
+            new Set([...existing.sources, ...option.sources]),
+          ) as Array<"user" | "employee">;
           byId.set(option.id, {
             ...existing,
-            name: option.sources.includes('employee') ? option.name : existing.name,
+            name: option.sources.includes("employee")
+              ? option.name
+              : existing.name,
             email: existing.email || option.email,
             detail: option.detail || existing.detail,
             sources,
@@ -151,25 +175,31 @@ export function AssigneeSearch({
       setResults([]);
       return;
     }
-    setResults(options.filter((option) => matchesQuery(option, q)).slice(0, 20));
+    setResults(
+      options.filter((option) => matchesQuery(option, q)).slice(0, 20),
+    );
   }, [searchQuery, options]);
 
   const handleSelect = (option: AssigneeOption) => {
     setSelected(option);
-    setSearchQuery('');
+    setSearchQuery("");
     setIsOpen(false);
     onSelect(option);
   };
 
   const handleClear = () => {
     setSelected(null);
-    setSearchQuery('');
+    setSearchQuery("");
     onSelect(null);
   };
 
   return (
     <div className={`relative ${className}`} ref={searchRef}>
-      <Label className={required ? "after:content-['*'] after:ml-1 after:text-red-500" : ''}>
+      <Label
+        className={
+          required ? "after:content-['*'] after:ml-1 after:text-red-500" : ""
+        }
+      >
         {label}
       </Label>
 
@@ -184,8 +214,8 @@ export function AssigneeSearch({
               setIsOpen(true);
             }}
             onFocus={() => setIsOpen(true)}
-            placeholder={selected ? '' : placeholder}
-            className={`pl-10 pr-10 ${error ? 'border-red-500' : ''}`}
+            placeholder={selected ? "" : placeholder}
+            className={`pl-10 pr-10 ${error ? "border-red-500" : ""}`}
             disabled={!!selected}
           />
           {selected && (
@@ -220,29 +250,35 @@ export function AssigneeSearch({
                   >
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex min-w-0 items-center gap-3">
-                        {option.sources.includes('employee') ? (
+                        {option.sources.includes("employee") ? (
                           <Briefcase className="h-4 w-4 shrink-0 text-gray-500" />
                         ) : (
                           <User className="h-4 w-4 shrink-0 text-gray-500" />
                         )}
                         <div className="min-w-0">
-                          <div className="truncate font-medium text-gray-900">{option.name}</div>
+                          <div className="truncate font-medium text-gray-900">
+                            {option.name}
+                          </div>
                           {option.email && (
-                            <div className="truncate text-sm text-gray-500">{option.email}</div>
+                            <div className="truncate text-sm text-gray-500">
+                              {option.email}
+                            </div>
                           )}
                           {option.detail && (
-                            <div className="truncate text-sm text-gray-500">{option.detail}</div>
+                            <div className="truncate text-sm text-gray-500">
+                              {option.detail}
+                            </div>
                           )}
                         </div>
                       </div>
                       <div className="flex shrink-0 items-center gap-1">
-                        {option.sources.includes('user') && (
+                        {option.sources.includes("user") && (
                           <Badge variant="outline" className="gap-1">
                             <Users className="h-3 w-3" />
                             User
                           </Badge>
                         )}
-                        {option.sources.includes('employee') && (
+                        {option.sources.includes("employee") && (
                           <Badge variant="outline" className="gap-1">
                             <Briefcase className="h-3 w-3" />
                             Employee

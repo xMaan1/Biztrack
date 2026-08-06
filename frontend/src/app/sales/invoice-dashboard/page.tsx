@@ -1,24 +1,31 @@
-'use client';
+"use client";
 
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { LayoutDashboard, Clock, FileText } from 'lucide-react';
-import { DashboardLayout } from '@/src/components/layout';
-import { Button } from '@/src/components/ui/button';
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { LayoutDashboard, Clock, FileText } from "lucide-react";
+import { DashboardLayout } from "@/src/components/layout";
+import { Button } from "@/src/components/ui/button";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '@/src/components/ui/tabs';
-import { InvoiceDashboard as InvoiceDashboardComponent } from '@/src/components/sales/InvoiceDashboard';
-import { InvoiceManagementPanel } from '@/src/components/sales/InvoiceManagementPanel';
-import InvoiceService from '@/src/services/InvoiceService';
-import type { InvoiceDashboard } from '@/src/models/sales';
-import { extractErrorMessage } from '@/src/utils/errorUtils';
-import { usePermissions } from '@/src/hooks/usePermissions';
+} from "@/src/components/ui/tabs";
+import { InvoiceDashboard as InvoiceDashboardComponent } from "@/src/components/sales/InvoiceDashboard";
+import { InvoiceManagementPanel } from "@/src/components/sales/InvoiceManagementPanel";
+import InvoiceService from "@/src/services/InvoiceService";
+import type { InvoiceDashboard } from "@/src/models/sales";
+import { extractErrorMessage } from "@/src/utils/errorUtils";
+import { usePermissions } from "@/src/hooks/usePermissions";
 
-const VALID_TABS = ['dashboard', 'outstanding', 'invoices'] as const;
+const VALID_TABS = ["dashboard", "outstanding", "invoices"] as const;
 type InvoiceTab = (typeof VALID_TABS)[number];
 
 function isInvoiceTab(value: string | null): value is InvoiceTab {
@@ -31,18 +38,17 @@ function InvoiceDashboardPageContent() {
   const { canViewInvoices, canViewInvoiceDashboard } = usePermissions();
   const showDashboard = canViewInvoiceDashboard();
   const showInvoices = canViewInvoices();
-  const tabParam = searchParams.get('tab');
+  const tabParam = searchParams.get("tab");
   const activeTab = useMemo<InvoiceTab>(() => {
-    const normalizedTab =
-      tabParam === 'overdue' ? 'outstanding' : tabParam;
+    const normalizedTab = tabParam === "overdue" ? "outstanding" : tabParam;
     if (isInvoiceTab(normalizedTab)) {
-      if (normalizedTab === 'invoices' && showInvoices) return 'invoices';
-      if (normalizedTab === 'outstanding' && showInvoices) return 'outstanding';
-      if (normalizedTab === 'dashboard' && showDashboard) return 'dashboard';
+      if (normalizedTab === "invoices" && showInvoices) return "invoices";
+      if (normalizedTab === "outstanding" && showInvoices) return "outstanding";
+      if (normalizedTab === "dashboard" && showDashboard) return "dashboard";
     }
-    if (showDashboard) return 'dashboard';
-    if (showInvoices) return 'invoices';
-    return 'dashboard';
+    if (showDashboard) return "dashboard";
+    if (showInvoices) return "invoices";
+    return "dashboard";
   }, [tabParam, showDashboard, showInvoices]);
 
   const [dashboard, setDashboard] = useState<InvoiceDashboard | null>(null);
@@ -60,7 +66,7 @@ function InvoiceDashboardPageContent() {
       const dashboardData = await InvoiceService.getDashboard();
       setDashboard(dashboardData);
     } catch (err) {
-      setError(extractErrorMessage(err, 'Failed to load invoice dashboard'));
+      setError(extractErrorMessage(err, "Failed to load invoice dashboard"));
     } finally {
       setLoading(false);
       loadingRef.current = false;
@@ -74,9 +80,11 @@ function InvoiceDashboardPageContent() {
   const handleTabChange = (value: string) => {
     if (!isInvoiceTab(value)) return;
     const params = new URLSearchParams(searchParams.toString());
-    params.set('tab', value);
+    params.set("tab", value);
     const query = params.toString();
-    router.replace(query ? `/sales/invoice-dashboard?${query}` : '/sales/invoice-dashboard');
+    router.replace(
+      query ? `/sales/invoice-dashboard?${query}` : "/sales/invoice-dashboard",
+    );
   };
 
   if (!showDashboard && !showInvoices) {
@@ -113,10 +121,10 @@ function InvoiceDashboardPageContent() {
   const visibleTabCount = (showDashboard ? 1 : 0) + (showInvoices ? 2 : 0);
   const tabsListClass =
     visibleTabCount === 3
-      ? 'grid-cols-3'
+      ? "grid-cols-3"
       : visibleTabCount === 2
-        ? 'grid-cols-2'
-        : 'grid-cols-1';
+        ? "grid-cols-2"
+        : "grid-cols-1";
 
   return (
     <DashboardLayout>
@@ -131,7 +139,10 @@ function InvoiceDashboardPageContent() {
         <Tabs value={activeTab} onValueChange={handleTabChange}>
           <TabsList className={`grid w-full ${tabsListClass}`}>
             {showDashboard && (
-              <TabsTrigger value="dashboard" className="flex items-center gap-2">
+              <TabsTrigger
+                value="dashboard"
+                className="flex items-center gap-2"
+              >
                 <LayoutDashboard className="h-4 w-4" />
                 Dashboard
               </TabsTrigger>
@@ -143,7 +154,10 @@ function InvoiceDashboardPageContent() {
               </TabsTrigger>
             )}
             {showInvoices && (
-              <TabsTrigger value="outstanding" className="flex items-center gap-2">
+              <TabsTrigger
+                value="outstanding"
+                className="flex items-center gap-2"
+              >
                 <Clock className="h-4 w-4" />
                 Outstanding
               </TabsTrigger>

@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { DashboardLayout } from '@/src/components/layout';
-import { useCurrency } from '@/src/contexts/CurrencyContext';
-import { useAdminPlans } from '@/src/hooks/useAdminPlans';
-import { AdminPlanCard } from './AdminPlanCard';
-import { AdminPlanEditDialog } from './AdminPlanEditDialog';
-import { AdminPlansEmptyState } from './AdminPlansEmptyState';
-import { AdminPlansFilters } from './AdminPlansFilters';
-import { AdminPlansHeader } from './AdminPlansHeader';
-import { AdminPlansLoading } from './AdminPlansLoading';
-import { AdminPlansStats } from './AdminPlansStats';
+import { DashboardLayout } from "@/src/components/layout";
+import { useCurrency } from "@/src/contexts/CurrencyContext";
+import { useAdminPlans } from "@/src/hooks/useAdminPlans";
+import { AdminPlanCard } from "./AdminPlanCard";
+import { AdminPlanEditDialog } from "./AdminPlanEditDialog";
+import { AdminPlansEmptyState } from "./AdminPlansEmptyState";
+import { AdminPlansFilters } from "./AdminPlansFilters";
+import { AdminPlansHeader } from "./AdminPlansHeader";
+import { AdminPlansLoading } from "./AdminPlansLoading";
+import { AdminPlansStats } from "./AdminPlansStats";
 
 export function AdminPlansContent() {
   const { getCurrencySymbol } = useCurrency();

@@ -1,9 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
-import { parallelApiService, ParallelApiCall, ParallelApiResult } from '../services/parallelApiService';
-import { extractErrorMessage } from '../utils/errorUtils';
+import { useState, useEffect, useCallback } from "react";
+import {
+  parallelApiService,
+  ParallelApiCall,
+  ParallelApiResult,
+} from "../services/parallelApiService";
+import { extractErrorMessage } from "../utils/errorUtils";
 
 // Re-export createApiCall for convenience
-export { createApiCall } from '../services/parallelApiService';
+export { createApiCall } from "../services/parallelApiService";
 
 interface UseParallelApiReturn<T = any> {
   data: ParallelApiResult<T> | null;
@@ -16,7 +20,7 @@ interface UseParallelApiReturn<T = any> {
 
 export const useParallelApi = <T = any>(
   calls: ParallelApiCall<T>[],
-  dependencies: any[] = []
+  dependencies: any[] = [],
 ): UseParallelApiReturn<T> => {
   const [data, setData] = useState<ParallelApiResult<T> | null>(null);
   const [loading, setLoading] = useState(true);
@@ -35,14 +39,14 @@ export const useParallelApi = <T = any>(
       setError(null);
       setErrors({});
       setHasErrors(false);
-      
+
       const result = await parallelApiService.executeParallelWithErrors(calls);
-      
+
       setData(result.results);
       setErrors(result.errors);
       setHasErrors(result.hasErrors);
     } catch (err) {
-      const errorMessage = extractErrorMessage(err, 'Failed to fetch data');
+      const errorMessage = extractErrorMessage(err, "Failed to fetch data");
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -59,7 +63,7 @@ export const useParallelApi = <T = any>(
     error,
     errors,
     hasErrors,
-    refetch: fetchData
+    refetch: fetchData,
   };
 };
 
@@ -67,17 +71,21 @@ export const useParallelApi = <T = any>(
 export const useDashboardParallel = () => {
   const calls: ParallelApiCall[] = [
     {
-      key: 'projects',
-      promise: fetch('/api/projects').then(res => res.json())
+      key: "projects",
+      promise: fetch("/api/projects").then((res) => res.json()),
     },
     {
-      key: 'invoicesOverview',
-      promise: fetch('/api/invoices/dashboard/overview').then(res => res.json())
+      key: "invoicesOverview",
+      promise: fetch("/api/invoices/dashboard/overview").then((res) =>
+        res.json(),
+      ),
     },
     {
-      key: 'subscription',
-      promise: fetch('/api/tenants/current/subscription').then(res => res.json())
-    }
+      key: "subscription",
+      promise: fetch("/api/tenants/current/subscription").then((res) =>
+        res.json(),
+      ),
+    },
   ];
 
   return useParallelApi(calls);

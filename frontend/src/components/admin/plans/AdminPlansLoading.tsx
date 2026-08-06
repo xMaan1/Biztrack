@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { DashboardLayout } from '@/src/components/layout';
+import { DashboardLayout } from "@/src/components/layout";
 
 export function AdminPlansLoading() {
   return (

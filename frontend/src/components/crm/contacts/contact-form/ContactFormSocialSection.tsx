@@ -1,8 +1,8 @@
-import { Input } from '@/src/components/ui/input';
-import { Label } from '@/src/components/ui/label';
-import { ContactCreate } from '@/src/models/crm';
-import { CollapsibleFormSection } from '../CollapsibleFormSection';
-import { CONTACT_SOCIAL_LABELS, mergeSocialFromApi } from '../contactUtils';
+import { Input } from "@/src/components/ui/input";
+import { Label } from "@/src/components/ui/label";
+import { ContactCreate } from "@/src/models/crm";
+import { CollapsibleFormSection } from "../CollapsibleFormSection";
+import { CONTACT_SOCIAL_LABELS, mergeSocialFromApi } from "../contactUtils";
 
 type ContactFormSocialSectionProps = {
   formData: ContactCreate;
@@ -29,7 +29,7 @@ export function ContactFormSocialSection({
             <Label htmlFor={`social-${key}`}>{label}</Label>
             <Input
               id={`social-${key}`}
-              value={mergeSocialFromApi(formData.socialLinks)[key] || ''}
+              value={mergeSocialFromApi(formData.socialLinks)[key] || ""}
               onChange={(e) =>
                 setFormData({
                   ...formData,

@@ -1,18 +1,22 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { DashboardLayout } from '../../components/layout';
-import { TimeTracker } from '../../components/timeTracking/TimeTracker';
-import { TimeStats } from '../../components/timeTracking/TimeStats';
-import { TimeEntryList } from '../../components/timeTracking/TimeEntryList';
-import { TimeEntry } from '../../models/timeTracking';
-import { useAuth } from '../../contexts/AuthContext';
-import { apiService } from '../../services/ApiService';
+import React, { useState, useEffect } from "react";
+import { DashboardLayout } from "../../components/layout";
+import { TimeTracker } from "../../components/timeTracking/TimeTracker";
+import { TimeStats } from "../../components/timeTracking/TimeStats";
+import { TimeEntryList } from "../../components/timeTracking/TimeEntryList";
+import { TimeEntry } from "../../models/timeTracking";
+import { useAuth } from "../../contexts/AuthContext";
+import { apiService } from "../../services/ApiService";
 
 export default function TimeTrackingPage() {
   const { user } = useAuth();
-  const [projects, setProjects] = useState<Array<{ id: string; name: string }>>([]);
-  const [tasks, setTasks] = useState<Array<{ id: string; name: string; projectId: string }>>([]);
+  const [projects, setProjects] = useState<Array<{ id: string; name: string }>>(
+    [],
+  );
+  const [tasks, setTasks] = useState<
+    Array<{ id: string; name: string; projectId: string }>
+  >([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -22,21 +26,21 @@ export default function TimeTrackingPage() {
   const fetchProjectsAndTasks = async () => {
     try {
       setLoading(true);
-      
+
       const [projectsResponse, tasksResponse] = await Promise.all([
-        apiService.get('/projects').catch(() => ({ projects: [] })),
-        apiService.get('/tasks').catch(() => ({ tasks: [] }))
+        apiService.get("/projects").catch(() => ({ projects: [] })),
+        apiService.get("/tasks").catch(() => ({ tasks: [] })),
       ]);
 
       setProjects(projectsResponse.projects || []);
-      
+
       // Transform tasks to match the expected structure
       const transformedTasks = (tasksResponse.tasks || []).map((task: any) => ({
         id: task.id,
         name: task.title, // Map title to name
-        projectId: task.projectId
+        projectId: task.projectId,
       }));
-      
+
       setTasks(transformedTasks);
     } catch (error) {
     } finally {
@@ -44,11 +48,9 @@ export default function TimeTrackingPage() {
     }
   };
 
-  const handleTimeEntryCreated = (_timeEntry: TimeEntry) => {
-  };
+  const handleTimeEntryCreated = (_timeEntry: TimeEntry) => {};
 
-  const handleDeleteTimeEntry = (_timeEntry: TimeEntry) => {
-  };
+  const handleDeleteTimeEntry = (_timeEntry: TimeEntry) => {};
 
   if (loading) {
     return (

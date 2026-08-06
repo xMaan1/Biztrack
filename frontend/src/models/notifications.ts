@@ -1,21 +1,21 @@
 export enum NotificationType {
-  INFO = 'info',
-  WARNING = 'warning',
-  ERROR = 'error',
-  SUCCESS = 'success',
-  SYSTEM = 'system'
+  INFO = "info",
+  WARNING = "warning",
+  ERROR = "error",
+  SUCCESS = "success",
+  SYSTEM = "system",
 }
 
 export enum NotificationCategory {
-  HRM = 'hrm',
-  INVENTORY = 'inventory',
-  CRM = 'crm',
-  PRODUCTION = 'production',
-  QUALITY = 'quality',
-  MAINTENANCE = 'maintenance',
-  LEDGER = 'ledger',
-  PROJECTS = 'projects',
-  SYSTEM = 'system'
+  HRM = "hrm",
+  INVENTORY = "inventory",
+  CRM = "crm",
+  PRODUCTION = "production",
+  QUALITY = "quality",
+  MAINTENANCE = "maintenance",
+  LEDGER = "ledger",
+  PROJECTS = "projects",
+  SYSTEM = "system",
 }
 
 export interface Notification {
@@ -35,7 +35,7 @@ export interface Notification {
 }
 
 export function resolveNotificationActionPath(actionUrl: string): string {
-  if (!actionUrl || typeof actionUrl !== 'string') {
+  if (!actionUrl || typeof actionUrl !== "string") {
     return actionUrl;
   }
   const trimmed = actionUrl.trim();
@@ -46,10 +46,12 @@ export function resolveNotificationActionPath(actionUrl: string): string {
   try {
     parsed = new URL(
       trimmed,
-      typeof window !== 'undefined' ? window.location.origin : 'http://localhost',
+      typeof window !== "undefined"
+        ? window.location.origin
+        : "http://localhost",
     );
   } catch {
-    return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+    return trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
   }
   const path = parsed.pathname;
   const contactDetailMatch = path.match(/^\/crm\/contacts\/([^/]+)\/?$/);
@@ -57,11 +59,11 @@ export function resolveNotificationActionPath(actionUrl: string): string {
     return `/crm/contacts?contactId=${encodeURIComponent(contactDetailMatch[1])}${parsed.search}${parsed.hash}`;
   }
   const routeMap: Array<[RegExp, string]> = [
-    [/^\/crm\/customers\/[^/]+\/?$/, '/crm/customers'],
-    [/^\/crm\/leads\/[^/]+\/?$/, '/crm/leads'],
-    [/^\/crm\/opportunities\/[^/]+\/?$/, '/crm/opportunities'],
-    [/^\/job-cards\/[^/]+\/?$/, '/workshop-management/job-cards'],
-    [/^\/hrm\/applications\/[^/]+\/?$/, '/hrm/job-postings'],
+    [/^\/crm\/customers\/[^/]+\/?$/, "/crm/customers"],
+    [/^\/crm\/leads\/[^/]+\/?$/, "/crm/leads"],
+    [/^\/crm\/opportunities\/[^/]+\/?$/, "/crm/opportunities"],
+    [/^\/job-cards\/[^/]+\/?$/, "/workshop-management/job-cards"],
+    [/^\/hrm\/applications\/[^/]+\/?$/, "/hrm/job-postings"],
   ];
   for (const [pattern, target] of routeMap) {
     if (pattern.test(path)) {
@@ -77,28 +79,33 @@ export function getNotificationTargetHref(
     metadata?: Record<string, unknown>;
   },
 ): string | null {
-  const direct = (notification.action_url || notification.actionUrl || '').trim();
+  const direct = (
+    notification.action_url ||
+    notification.actionUrl ||
+    ""
+  ).trim();
   if (direct) {
     return direct;
   }
   const data =
     notification.notification_data ||
     (notification as { metadata?: Record<string, unknown> }).metadata;
-  if (!data || typeof data !== 'object') {
+  if (!data || typeof data !== "object") {
     return null;
   }
   const d = data as Record<string, unknown>;
   const str = (k: string) =>
-    typeof d[k] === 'string' ? (d[k] as string).trim() : '';
-  if (str('resource_url')) return str('resource_url');
-  if (str('target_url')) return str('target_url');
-  if (str('action_url')) return str('action_url');
-  if (d.contact_id) return `/crm/contacts?contactId=${encodeURIComponent(String(d.contact_id))}`;
-  if (d.customer_id) return '/crm/customers';
-  if (d.lead_id) return '/crm/leads';
-  if (d.opportunity_id) return '/crm/opportunities';
-  if (d.event_id) return '/events';
-  if (d.task_id) return '/tasks';
+    typeof d[k] === "string" ? (d[k] as string).trim() : "";
+  if (str("resource_url")) return str("resource_url");
+  if (str("target_url")) return str("target_url");
+  if (str("action_url")) return str("action_url");
+  if (d.contact_id)
+    return `/crm/contacts?contactId=${encodeURIComponent(String(d.contact_id))}`;
+  if (d.customer_id) return "/crm/customers";
+  if (d.lead_id) return "/crm/leads";
+  if (d.opportunity_id) return "/crm/opportunities";
+  if (d.event_id) return "/events";
+  if (d.task_id) return "/tasks";
   return null;
 }
 
@@ -166,83 +173,85 @@ export interface NotificationFilters {
 export const getNotificationTypeColor = (type: NotificationType): string => {
   switch (type) {
     case NotificationType.SUCCESS:
-      return 'text-green-600 bg-green-50 border-green-200';
+      return "text-green-600 bg-green-50 border-green-200";
     case NotificationType.WARNING:
-      return 'text-yellow-600 bg-yellow-50 border-yellow-200';
+      return "text-yellow-600 bg-yellow-50 border-yellow-200";
     case NotificationType.ERROR:
-      return 'text-red-600 bg-red-50 border-red-200';
+      return "text-red-600 bg-red-50 border-red-200";
     case NotificationType.INFO:
-      return 'text-blue-600 bg-blue-50 border-blue-200';
+      return "text-blue-600 bg-blue-50 border-blue-200";
     case NotificationType.SYSTEM:
-      return 'text-gray-600 bg-gray-50 border-gray-200';
+      return "text-gray-600 bg-gray-50 border-gray-200";
     default:
-      return 'text-gray-600 bg-gray-50 border-gray-200';
+      return "text-gray-600 bg-gray-50 border-gray-200";
   }
 };
 
 export const getNotificationTypeIcon = (type: NotificationType): string => {
   switch (type) {
     case NotificationType.SUCCESS:
-      return 'CheckCircle';
+      return "CheckCircle";
     case NotificationType.WARNING:
-      return 'AlertTriangle';
+      return "AlertTriangle";
     case NotificationType.ERROR:
-      return 'XCircle';
+      return "XCircle";
     case NotificationType.INFO:
-      return 'Info';
+      return "Info";
     case NotificationType.SYSTEM:
-      return 'Settings';
+      return "Settings";
     default:
-      return 'Bell';
+      return "Bell";
   }
 };
 
-export const getCategoryDisplayName = (category: NotificationCategory): string => {
+export const getCategoryDisplayName = (
+  category: NotificationCategory,
+): string => {
   switch (category) {
     case NotificationCategory.HRM:
-      return 'Human Resources';
+      return "Human Resources";
     case NotificationCategory.INVENTORY:
-      return 'Inventory';
+      return "Inventory";
     case NotificationCategory.CRM:
-      return 'Customer Relations';
+      return "Customer Relations";
     case NotificationCategory.PRODUCTION:
-      return 'Production';
+      return "Production";
     case NotificationCategory.QUALITY:
-      return 'Quality Control';
+      return "Quality Control";
     case NotificationCategory.MAINTENANCE:
-      return 'Maintenance';
+      return "Maintenance";
     case NotificationCategory.LEDGER:
-      return 'Finance';
+      return "Finance";
     case NotificationCategory.PROJECTS:
-      return 'Projects';
+      return "Projects";
     case NotificationCategory.SYSTEM:
-      return 'System';
+      return "System";
     default:
-      return 'General';
+      return "General";
   }
 };
 
 export const getCategoryIcon = (category: NotificationCategory): string => {
   switch (category) {
     case NotificationCategory.HRM:
-      return 'Users';
+      return "Users";
     case NotificationCategory.INVENTORY:
-      return 'Package';
+      return "Package";
     case NotificationCategory.CRM:
-      return 'UserCheck';
+      return "UserCheck";
     case NotificationCategory.PRODUCTION:
-      return 'Factory';
+      return "Factory";
     case NotificationCategory.QUALITY:
-      return 'Shield';
+      return "Shield";
     case NotificationCategory.MAINTENANCE:
-      return 'Wrench';
+      return "Wrench";
     case NotificationCategory.LEDGER:
-      return 'Calculator';
+      return "Calculator";
     case NotificationCategory.PROJECTS:
-      return 'FolderOpen';
+      return "FolderOpen";
     case NotificationCategory.SYSTEM:
-      return 'Settings';
+      return "Settings";
     default:
-      return 'Bell';
+      return "Bell";
   }
 };

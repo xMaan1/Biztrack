@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { Button } from '@/src/components/ui/button';
-import type { ProjectDeleteDialogProps } from '@/src/types/projects';
+import { Button } from "@/src/components/ui/button";
+import type { ProjectDeleteDialogProps } from "@/src/types/projects";
 
 export function ProjectDeleteDialog({
   open,
@@ -16,8 +16,8 @@ export function ProjectDeleteDialog({
       <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
         <h2 className="text-lg font-semibold mb-4">Delete Project</h2>
         <p className="text-gray-600 mb-4">
-          Are you sure you want to delete &quot;{project?.name}&quot;? This action cannot be
-          undone.
+          Are you sure you want to delete &quot;{project?.name}&quot;? This
+          action cannot be undone.
         </p>
         <div className="flex gap-2 justify-end">
           <Button variant="outline" onClick={onClose}>

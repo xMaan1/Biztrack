@@ -1,22 +1,22 @@
-import type { Metadata } from 'next';
-import Link from 'next/link';
-import { MarketingPageShell } from '@/src/components/marketing/MarketingPageShell';
-import { COMPANY_REGISTRATION } from '@/src/constants/companyRegistration';
-import { Button } from '@/src/components/ui/button';
+import type { Metadata } from "next";
+import Link from "next/link";
+import { MarketingPageShell } from "@/src/components/marketing/MarketingPageShell";
+import { COMPANY_REGISTRATION } from "@/src/constants/companyRegistration";
+import { Button } from "@/src/components/ui/button";
 
 export const metadata: Metadata = {
-  title: 'About - BizTrack UK LTD',
+  title: "About - BizTrack UK LTD",
   description:
-    'Learn about BizTrack UK LTD — our mission, vision, and business management solutions.',
+    "Learn about BizTrack UK LTD — our mission, vision, and business management solutions.",
 };
 
 const OFFERINGS = [
-  'Project Management System',
-  'HR & Employee Management',
-  'Business Analytics',
-  'Workflow Automation',
-  'SaaS Infrastructure',
-  'Enterprise Solutions',
+  "Project Management System",
+  "HR & Employee Management",
+  "Business Analytics",
+  "Workflow Automation",
+  "SaaS Infrastructure",
+  "Enterprise Solutions",
 ] as const;
 
 export default function AboutPage() {
@@ -34,15 +34,15 @@ export default function AboutPage() {
           {COMPANY_REGISTRATION.registeredCompany}
         </p>
         <p className="mt-2 text-sm text-slate-600">
-          <span className="font-medium text-slate-800">Company Number:</span>{' '}
+          <span className="font-medium text-slate-800">Company Number:</span>{" "}
           {COMPANY_REGISTRATION.companyNumber}
         </p>
         <p className="mt-1 text-sm text-slate-600">
-          <span className="font-medium text-slate-800">Authority:</span>{' '}
+          <span className="font-medium text-slate-800">Authority:</span>{" "}
           {COMPANY_REGISTRATION.authority}
         </p>
         <p className="mt-1 text-sm text-slate-600">
-          <span className="font-medium text-slate-800">Registered Office:</span>{' '}
+          <span className="font-medium text-slate-800">Registered Office:</span>{" "}
           {COMPANY_REGISTRATION.registeredOfficeAddress}
         </p>
       </div>
@@ -50,17 +50,18 @@ export default function AboutPage() {
       <section className="mt-10">
         <h2 className="text-2xl font-semibold text-slate-900">Who We Are</h2>
         <p className="mt-3 text-slate-600 leading-relaxed">
-          BizTrack UK LTD is a modern SaaS technology company focused on building
-          intelligent business management systems that help organizations
-          streamline operations, improve productivity, and scale efficiently.
+          BizTrack UK LTD is a modern SaaS technology company focused on
+          building intelligent business management systems that help
+          organizations streamline operations, improve productivity, and scale
+          efficiently.
         </p>
       </section>
 
       <section className="mt-8">
         <h2 className="text-2xl font-semibold text-slate-900">Our Mission</h2>
         <p className="mt-3 text-slate-600 leading-relaxed">
-          To simplify business operations by unifying projects, HR, analytics, and
-          automation into one powerful platform.
+          To simplify business operations by unifying projects, HR, analytics,
+          and automation into one powerful platform.
         </p>
       </section>
 
@@ -86,10 +87,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <Button
-        asChild
-        className="mt-8 bg-emerald-600 hover:bg-emerald-700"
-      >
+      <Button asChild className="mt-8 bg-emerald-600 hover:bg-emerald-700">
         <Link href="/signup">Get Started</Link>
       </Button>
     </MarketingPageShell>

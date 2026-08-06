@@ -1,21 +1,21 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
+import React from "react";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../ui/select';
+} from "../ui/select";
 
 interface CustomerTypeNameFieldsProps {
-  customerType: 'individual' | 'business';
+  customerType: "individual" | "business";
   firstName: string;
   lastName: string;
-  onCustomerTypeChange: (type: 'individual' | 'business') => void;
+  onCustomerTypeChange: (type: "individual" | "business") => void;
   onFirstNameChange: (value: string) => void;
   onLastNameChange: (value: string) => void;
   typeFieldId?: string;
@@ -31,10 +31,10 @@ export function CustomerTypeNameFields({
   onCustomerTypeChange,
   onFirstNameChange,
   onLastNameChange,
-  typeFieldId = 'customerType',
-  firstNameFieldId = 'firstName',
-  lastNameFieldId = 'lastName',
-  businessNameFieldId = 'businessName',
+  typeFieldId = "customerType",
+  firstNameFieldId = "firstName",
+  lastNameFieldId = "lastName",
+  businessNameFieldId = "businessName",
 }: CustomerTypeNameFieldsProps) {
   return (
     <>
@@ -43,7 +43,7 @@ export function CustomerTypeNameFields({
         <Select
           value={customerType}
           onValueChange={(value) =>
-            onCustomerTypeChange(value as 'individual' | 'business')
+            onCustomerTypeChange(value as "individual" | "business")
           }
         >
           <SelectTrigger id={typeFieldId}>
@@ -55,7 +55,7 @@ export function CustomerTypeNameFields({
           </SelectContent>
         </Select>
       </div>
-      {customerType === 'individual' ? (
+      {customerType === "individual" ? (
         <>
           <div>
             <Label htmlFor={firstNameFieldId}>First Name *</Label>

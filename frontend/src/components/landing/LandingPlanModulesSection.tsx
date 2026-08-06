@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   Building2,
@@ -7,84 +7,83 @@ import {
   HeartPulse,
   HeartHandshake,
   type LucideIcon,
-} from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { cn } from '@/src/lib/utils';
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { cn } from "@/src/lib/utils";
 
 const PLAN_MODULES: {
   icon: LucideIcon;
   title: string;
   planType: string;
   description: string;
-  accent: 'indigo' | 'emerald' | 'orange' | 'rose' | 'violet';
+  accent: "indigo" | "emerald" | "orange" | "rose" | "violet";
 }[] = [
   {
     icon: Building2,
-    title: 'Agency Module',
-    planType: 'agency',
+    title: "Agency Module",
+    planType: "agency",
     description:
-      'CRM, sales, POS, and inventory for agencies managing clients and campaigns.',
-    accent: 'indigo',
+      "CRM, sales, POS, and inventory for agencies managing clients and campaigns.",
+    accent: "indigo",
   },
   {
     icon: ShoppingCart,
-    title: 'Commerce Module',
-    planType: 'commerce',
+    title: "Commerce Module",
+    planType: "commerce",
     description:
-      'Retail and distribution ERP with POS, invoicing, warehouses, and analytics.',
-    accent: 'emerald',
+      "Retail and distribution ERP with POS, invoicing, warehouses, and analytics.",
+    accent: "emerald",
   },
   {
     icon: Wrench,
-    title: 'Workshop Module',
-    planType: 'workshop',
-    description:
-      'Job cards, vehicles, quality control, and MOT booking.',
-    accent: 'orange',
+    title: "Workshop Module",
+    planType: "workshop",
+    description: "Job cards, vehicles, quality control, and MOT booking.",
+    accent: "orange",
   },
   {
     icon: HeartPulse,
-    title: 'Healthcare Module',
-    planType: 'healthcare',
+    title: "Healthcare Module",
+    planType: "healthcare",
     description:
-      'Patients, appointments, prescriptions, admissions, and clinic billing.',
-    accent: 'rose',
+      "Patients, appointments, prescriptions, admissions, and clinic billing.",
+    accent: "rose",
   },
   {
     icon: HeartHandshake,
-    title: 'NGO Module',
-    planType: 'ngo',
+    title: "NGO Module",
+    planType: "ngo",
     description:
-      'Programs, donors, grants, volunteers, beneficiaries, and impact reporting for nonprofits.',
-    accent: 'violet',
+      "Programs, donors, grants, volunteers, beneficiaries, and impact reporting for nonprofits.",
+    accent: "violet",
   },
 ];
 
 const accentStyles = {
   indigo: {
-    card: 'border-indigo-200/80 bg-gradient-to-br from-indigo-50/90 to-white hover:border-indigo-300',
-    icon: 'bg-indigo-600 text-white',
-    badge: 'bg-indigo-100 text-indigo-800',
+    card: "border-indigo-200/80 bg-gradient-to-br from-indigo-50/90 to-white hover:border-indigo-300",
+    icon: "bg-indigo-600 text-white",
+    badge: "bg-indigo-100 text-indigo-800",
   },
   emerald: {
-    card: 'border-emerald-200/80 bg-gradient-to-br from-emerald-50/90 to-white hover:border-emerald-300',
-    icon: 'bg-emerald-600 text-white',
-    badge: 'bg-emerald-100 text-emerald-800',
+    card: "border-emerald-200/80 bg-gradient-to-br from-emerald-50/90 to-white hover:border-emerald-300",
+    icon: "bg-emerald-600 text-white",
+    badge: "bg-emerald-100 text-emerald-800",
   },
   orange: {
-    card: 'border-orange-200/80 bg-gradient-to-br from-orange-50/90 to-white hover:border-orange-300',
-    icon: 'bg-orange-600 text-white',
-    badge: 'bg-orange-100 text-orange-800',
+    card: "border-orange-200/80 bg-gradient-to-br from-orange-50/90 to-white hover:border-orange-300",
+    icon: "bg-orange-600 text-white",
+    badge: "bg-orange-100 text-orange-800",
   },
   rose: {
-    card: 'border-rose-200/80 bg-gradient-to-br from-rose-50/90 to-white hover:border-rose-300',
-    icon: 'bg-rose-600 text-white',
-    badge: 'bg-rose-100 text-rose-800',
+    card: "border-rose-200/80 bg-gradient-to-br from-rose-50/90 to-white hover:border-rose-300",
+    icon: "bg-rose-600 text-white",
+    badge: "bg-rose-100 text-rose-800",
   },
   violet: {
-    card: 'border-violet-200/80 bg-gradient-to-br from-violet-50/90 to-white hover:border-violet-300',
-    icon: 'bg-violet-600 text-white',
-    badge: 'bg-violet-100 text-violet-800',
+    card: "border-violet-200/80 bg-gradient-to-br from-violet-50/90 to-white hover:border-violet-300",
+    icon: "bg-violet-600 text-white",
+    badge: "bg-violet-100 text-violet-800",
   },
 };
 
@@ -103,9 +102,9 @@ export function LandingPlanModulesSection() {
             Pick the workspace that fits your organization
           </h2>
           <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-            Each module is a dedicated tenant with its own navigation, dashboard,
-            and workflows — including nonprofits and NGOs. Start a free trial on
-            the plan below.
+            Each module is a dedicated tenant with its own navigation,
+            dashboard, and workflows — including nonprofits and NGOs. Start a
+            free trial on the plan below.
           </p>
         </div>
 
@@ -117,14 +116,14 @@ export function LandingPlanModulesSection() {
                 <Card
                   key={mod.planType}
                   className={cn(
-                    'h-full border shadow-sm transition-all duration-300 hover:shadow-md',
+                    "h-full border shadow-sm transition-all duration-300 hover:shadow-md",
                     styles.card,
                   )}
                 >
                   <CardHeader className="pb-2">
                     <div
                       className={cn(
-                        'mb-3 flex h-11 w-11 items-center justify-center rounded-xl',
+                        "mb-3 flex h-11 w-11 items-center justify-center rounded-xl",
                         styles.icon,
                       )}
                     >
@@ -132,7 +131,7 @@ export function LandingPlanModulesSection() {
                     </div>
                     <span
                       className={cn(
-                        'mb-2 inline-block rounded-full px-2 py-0.5 text-xs font-medium',
+                        "mb-2 inline-block rounded-full px-2 py-0.5 text-xs font-medium",
                         styles.badge,
                       )}
                     >
@@ -159,14 +158,14 @@ export function LandingPlanModulesSection() {
                 <Card
                   key={mod.planType}
                   className={cn(
-                    'h-full border shadow-sm transition-all duration-300 hover:shadow-md',
+                    "h-full border shadow-sm transition-all duration-300 hover:shadow-md",
                     styles.card,
                   )}
                 >
                   <CardHeader className="pb-2">
                     <div
                       className={cn(
-                        'mb-3 flex h-11 w-11 items-center justify-center rounded-xl',
+                        "mb-3 flex h-11 w-11 items-center justify-center rounded-xl",
                         styles.icon,
                       )}
                     >
@@ -174,7 +173,7 @@ export function LandingPlanModulesSection() {
                     </div>
                     <span
                       className={cn(
-                        'mb-2 inline-block rounded-full px-2 py-0.5 text-xs font-medium',
+                        "mb-2 inline-block rounded-full px-2 py-0.5 text-xs font-medium",
                         styles.badge,
                       )}
                     >

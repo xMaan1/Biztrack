@@ -1,38 +1,38 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { ModuleGuard } from '../../components/guards/PermissionGuard';
+import React, { useState } from "react";
+import { ModuleGuard } from "../../components/guards/PermissionGuard";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
-import { Badge } from '../../components/ui/badge';
+} from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
+import { Badge } from "../../components/ui/badge";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '../../components/ui/tabs';
+} from "../../components/ui/tabs";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '../../components/ui/dialog';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
+} from "../../components/ui/dialog";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../components/ui/select';
-import { Textarea } from '../../components/ui/textarea';
+} from "../../components/ui/select";
+import { Textarea } from "../../components/ui/textarea";
 import {
   Plus,
   Users,
@@ -43,9 +43,9 @@ import {
   Phone,
   Mail,
   FileText,
-} from 'lucide-react';
-import { useApiService } from '../../hooks/useApiService';
-import { DashboardLayout } from '../../components/layout';
+} from "lucide-react";
+import { useApiService } from "../../hooks/useApiService";
+import { DashboardLayout } from "../../components/layout";
 import {
   Lead,
   Opportunity,
@@ -53,16 +53,19 @@ import {
   LeadStatus,
   OpportunityStage,
   LeadSource,
-} from '../../models/sales';
-import { useCustomOptions } from '../../hooks/useCustomOptions';
-import { CustomOptionDialog } from '../../components/common/CustomOptionDialog';
-import { useCachedApi } from '../../hooks/useCachedApi';
-import { useCurrency } from '../../contexts/CurrencyContext';
-import { toast } from 'sonner';
+} from "../../models/sales";
+import { useCustomOptions } from "../../hooks/useCustomOptions";
+import { CustomOptionDialog } from "../../components/common/CustomOptionDialog";
+import { useCachedApi } from "../../hooks/useCachedApi";
+import { useCurrency } from "../../contexts/CurrencyContext";
+import { toast } from "sonner";
 
 export default function SalesPage() {
   return (
-    <ModuleGuard module="sales" fallback={<div>You don't have access to Sales module</div>}>
+    <ModuleGuard
+      module="sales"
+      fallback={<div>You don&apos;t have access to Sales module</div>}
+    >
       <SalesContent />
     </ModuleGuard>
   );
@@ -71,29 +74,42 @@ export default function SalesPage() {
 function SalesContent() {
   const apiService = useApiService();
   const { formatCurrency } = useCurrency();
-  const { data: dashboard, loading: dashboardLoading, error: dashboardError, refetch: refetchDashboard } = useCachedApi<SalesDashboard>(
-    'sales_dashboard',
-    () => apiService.get('/sales/dashboard'),
-    { ttl: 30000 }
+  const {
+    data: dashboard,
+    loading: dashboardLoading,
+    error: dashboardError,
+    refetch: refetchDashboard,
+  } = useCachedApi<SalesDashboard>(
+    "sales_dashboard",
+    () => apiService.get("/sales/dashboard"),
+    { ttl: 30000 },
   );
-  
-  const { data: leadsData, loading: leadsLoading, refetch: refetchLeads } = useCachedApi<Lead[]>(
-    'sales_leads',
+
+  const {
+    data: leadsData,
+    loading: leadsLoading,
+    refetch: refetchLeads,
+  } = useCachedApi<Lead[]>(
+    "sales_leads",
     async () => {
-      const resp = await apiService.get('/sales/leads');
+      const resp = await apiService.get("/sales/leads");
       return resp.leads || [];
     },
-    { ttl: 60000 }
+    { ttl: 60000 },
   );
   const leads = leadsData || [];
-  
-  const { data: opportunitiesData, loading: opportunitiesLoading, refetch: refetchOpportunities } = useCachedApi<Opportunity[]>(
-    'sales_opportunities',
+
+  const {
+    data: opportunitiesData,
+    loading: opportunitiesLoading,
+    refetch: refetchOpportunities,
+  } = useCachedApi<Opportunity[]>(
+    "sales_opportunities",
     async () => {
-      const resp = await apiService.get('/sales/opportunities');
+      const resp = await apiService.get("/sales/opportunities");
       return resp.opportunities || [];
     },
-    { ttl: 60000 }
+    { ttl: 60000 },
   );
   const opportunities = opportunitiesData || [];
 
@@ -104,31 +120,33 @@ function SalesContent() {
     loading: customOptionsLoading,
   } = useCustomOptions();
   const [leadFormData, setLeadFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    company: '',
-    jobTitle: '',
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    company: "",
+    jobTitle: "",
     leadSource: LeadSource.WEBSITE,
     status: LeadStatus.NEW,
-    notes: '',
-    estimatedValue: '',
-    expectedCloseDate: '',
+    notes: "",
+    estimatedValue: "",
+    expectedCloseDate: "",
   });
   const [opportunityFormData, setOpportunityFormData] = useState({
-    title: '',
-    description: '',
-    amount: '',
+    title: "",
+    description: "",
+    amount: "",
     stage: OpportunityStage.PROSPECTING,
-    probability: '',
-    expectedCloseDate: '',
-    notes: '',
+    probability: "",
+    expectedCloseDate: "",
+    notes: "",
   });
 
   const [showCreateLeadDialog, setShowCreateLeadDialog] = useState(false);
-  const [showCreateOpportunityDialog, setShowCreateOpportunityDialog] = useState(false);
-  const [showCustomLeadSourceDialog, setShowCustomLeadSourceDialog] = useState(false);
+  const [showCreateOpportunityDialog, setShowCreateOpportunityDialog] =
+    useState(false);
+  const [showCustomLeadSourceDialog, setShowCustomLeadSourceDialog] =
+    useState(false);
 
   const handleCreateCustomLeadSource = async (
     name: string,
@@ -137,9 +155,12 @@ function SalesContent() {
     try {
       await createCustomLeadSource(name, description);
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to create custom lead source';
+      const errorMessage =
+        error?.response?.data?.detail ||
+        error?.message ||
+        "Failed to create custom lead source";
       toast.error(`Create Error: ${errorMessage}`);
-      }
+    }
   };
 
   const handleCreateLead = async (e: React.FormEvent) => {
@@ -155,24 +176,27 @@ function SalesContent() {
       });
       setShowCreateLeadDialog(false);
       setLeadFormData({
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
-        company: '',
-        jobTitle: '',
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        company: "",
+        jobTitle: "",
         leadSource: LeadSource.WEBSITE,
         status: LeadStatus.NEW,
-        notes: '',
-        estimatedValue: '',
-        expectedCloseDate: '',
+        notes: "",
+        estimatedValue: "",
+        expectedCloseDate: "",
       });
       refetchLeads();
       refetchDashboard();
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to create lead';
+      const errorMessage =
+        error?.response?.data?.detail ||
+        error?.message ||
+        "Failed to create lead";
       toast.error(`Create Error: ${errorMessage}`);
-      }
+    }
   };
 
   const handleCreateOpportunity = async (e: React.FormEvent) => {
@@ -190,47 +214,49 @@ function SalesContent() {
       });
       setShowCreateOpportunityDialog(false);
       setOpportunityFormData({
-        title: '',
-        description: '',
-        amount: '',
+        title: "",
+        description: "",
+        amount: "",
         stage: OpportunityStage.PROSPECTING,
-        probability: '',
-        expectedCloseDate: '',
-        notes: '',
+        probability: "",
+        expectedCloseDate: "",
+        notes: "",
       });
       refetchOpportunities();
       refetchDashboard();
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to create opportunity';
+      const errorMessage =
+        error?.response?.data?.detail ||
+        error?.message ||
+        "Failed to create opportunity";
       toast.error(`Create Error: ${errorMessage}`);
-      }
+    }
   };
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
-      new: 'bg-blue-100 text-blue-800',
-      contacted: 'bg-yellow-100 text-yellow-800',
-      qualified: 'bg-green-100 text-green-800',
-      proposal: 'bg-purple-100 text-purple-800',
-      negotiation: 'bg-orange-100 text-orange-800',
-      won: 'bg-green-100 text-green-800',
-      lost: 'bg-red-100 text-red-800',
+      new: "bg-blue-100 text-blue-800",
+      contacted: "bg-yellow-100 text-yellow-800",
+      qualified: "bg-green-100 text-green-800",
+      proposal: "bg-purple-100 text-purple-800",
+      negotiation: "bg-orange-100 text-orange-800",
+      won: "bg-green-100 text-green-800",
+      lost: "bg-red-100 text-red-800",
     };
-    return colors[status] || 'bg-gray-100 text-gray-800';
+    return colors[status] || "bg-gray-100 text-gray-800";
   };
 
   const getStageColor = (stage: string) => {
     const colors: Record<string, string> = {
-      prospecting: 'bg-blue-100 text-blue-800',
-      qualification: 'bg-yellow-100 text-yellow-800',
-      proposal: 'bg-purple-100 text-purple-800',
-      negotiation: 'bg-orange-100 text-orange-800',
-      closed_won: 'bg-green-100 text-green-800',
-      closed_lost: 'bg-red-100 text-red-800',
+      prospecting: "bg-blue-100 text-blue-800",
+      qualification: "bg-yellow-100 text-yellow-800",
+      proposal: "bg-purple-100 text-purple-800",
+      negotiation: "bg-orange-100 text-orange-800",
+      closed_won: "bg-green-100 text-green-800",
+      closed_lost: "bg-red-100 text-red-800",
     };
-    return colors[stage] || 'bg-gray-100 text-gray-800';
+    return colors[stage] || "bg-gray-100 text-gray-800";
   };
-
 
   if (dashboardLoading || leadsLoading || opportunitiesLoading) {
     return (
@@ -248,9 +274,15 @@ function SalesContent() {
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <p className="text-red-500 text-lg mb-4">
-              {dashboardError || 'Failed to load sales data'}
+              {dashboardError || "Failed to load sales data"}
             </p>
-            <Button onClick={() => { refetchDashboard(); refetchLeads(); refetchOpportunities(); }}>
+            <Button
+              onClick={() => {
+                refetchDashboard();
+                refetchLeads();
+                refetchOpportunities();
+              }}
+            >
               Retry
             </Button>
           </div>
@@ -377,7 +409,7 @@ function SalesContent() {
                   <Card key={stage.stage}>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm font-medium capitalize">
-                        {stage.stage.replace('_', ' ')}
+                        {stage.stage.replace("_", " ")}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -481,7 +513,7 @@ function SalesContent() {
                               {opportunity.description}
                             </div>
                             <div className="text-sm text-gray-500">
-                              Expected close:{' '}
+                              Expected close:{" "}
                               {new Date(
                                 opportunity.expectedCloseDate,
                               ).toLocaleDateString()}
@@ -490,7 +522,7 @@ function SalesContent() {
                         </div>
                         <div className="flex items-center space-x-2">
                           <Badge className={getStageColor(opportunity.stage)}>
-                            {opportunity.stage.replace('_', ' ')}
+                            {opportunity.stage.replace("_", " ")}
                           </Badge>
                           <div className="text-sm font-medium text-green-600">
                             {formatCurrency(opportunity.amount)}
@@ -638,7 +670,7 @@ function SalesContent() {
                 <Select
                   value={leadFormData.leadSource}
                   onValueChange={(value) => {
-                    if (value === 'create_new') {
+                    if (value === "create_new") {
                       setShowCustomLeadSourceDialog(true);
                     } else {
                       setLeadFormData({
@@ -654,7 +686,7 @@ function SalesContent() {
                   <SelectContent>
                     {Object.values(LeadSource).map((source) => (
                       <SelectItem key={source} value={source}>
-                        {source.replace('_', ' ')}
+                        {source.replace("_", " ")}
                       </SelectItem>
                     ))}
 
@@ -839,7 +871,7 @@ function SalesContent() {
                   <SelectContent>
                     {Object.values(OpportunityStage).map((stage) => (
                       <SelectItem key={stage} value={stage}>
-                        {stage.replace('_', ' ')}
+                        {stage.replace("_", " ")}
                       </SelectItem>
                     ))}
                   </SelectContent>

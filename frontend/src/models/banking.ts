@@ -1,42 +1,42 @@
 export enum BankAccountType {
-  CHECKING = 'checking',
-  SAVINGS = 'savings',
-  BUSINESS = 'business',
-  CREDIT_LINE = 'credit_line',
-  MONEY_MARKET = 'money_market',
+  CHECKING = "checking",
+  SAVINGS = "savings",
+  BUSINESS = "business",
+  CREDIT_LINE = "credit_line",
+  MONEY_MARKET = "money_market",
 }
 
 export enum TransactionType {
-  DEPOSIT = 'deposit',
-  WITHDRAWAL = 'withdrawal',
-  TRANSFER_IN = 'transfer_in',
-  TRANSFER_OUT = 'transfer_out',
-  PAYMENT = 'payment',
-  REFUND = 'refund',
-  FEE = 'fee',
-  INTEREST = 'interest',
-  ADJUSTMENT = 'adjustment',
+  DEPOSIT = "deposit",
+  WITHDRAWAL = "withdrawal",
+  TRANSFER_IN = "transfer_in",
+  TRANSFER_OUT = "transfer_out",
+  PAYMENT = "payment",
+  REFUND = "refund",
+  FEE = "fee",
+  INTEREST = "interest",
+  ADJUSTMENT = "adjustment",
 }
 
 export enum TransactionStatus {
-  PENDING = 'pending',
-  PROCESSING = 'processing',
-  COMPLETED = 'completed',
-  FAILED = 'failed',
-  CANCELLED = 'cancelled',
-  REVERSED = 'reversed',
+  PENDING = "pending",
+  PROCESSING = "processing",
+  COMPLETED = "completed",
+  FAILED = "failed",
+  CANCELLED = "cancelled",
+  REVERSED = "reversed",
 }
 
 export enum PaymentMethod {
-  ONLINE_TRANSFER = 'online_transfer',
-  DIRECT_DEBIT = 'direct_debit',
-  WIRE_TRANSFER = 'wire_transfer',
-  ACH = 'ach',
-  CHECK = 'check',
-  CASH = 'cash',
-  CARD_PAYMENT = 'card_payment',
-  MOBILE_PAYMENT = 'mobile_payment',
-  CRYPTOCURRENCY = 'cryptocurrency',
+  ONLINE_TRANSFER = "online_transfer",
+  DIRECT_DEBIT = "direct_debit",
+  WIRE_TRANSFER = "wire_transfer",
+  ACH = "ach",
+  CHECK = "check",
+  CASH = "cash",
+  CARD_PAYMENT = "card_payment",
+  MOBILE_PAYMENT = "mobile_payment",
+  CRYPTOCURRENCY = "cryptocurrency",
 }
 
 // Bank Account Models
@@ -323,62 +323,64 @@ export interface AccountBalance {
 // Utility functions
 export const getAccountTypeLabel = (type: BankAccountType): string => {
   const labels = {
-    [BankAccountType.CHECKING]: 'Checking',
-    [BankAccountType.SAVINGS]: 'Savings',
-    [BankAccountType.BUSINESS]: 'Business',
-    [BankAccountType.CREDIT_LINE]: 'Credit Line',
-    [BankAccountType.MONEY_MARKET]: 'Money Market',
+    [BankAccountType.CHECKING]: "Checking",
+    [BankAccountType.SAVINGS]: "Savings",
+    [BankAccountType.BUSINESS]: "Business",
+    [BankAccountType.CREDIT_LINE]: "Credit Line",
+    [BankAccountType.MONEY_MARKET]: "Money Market",
   };
   return labels[type] || type;
 };
 
 export const getTransactionTypeLabel = (type: TransactionType): string => {
   const labels = {
-    [TransactionType.DEPOSIT]: 'Deposit',
-    [TransactionType.WITHDRAWAL]: 'Withdrawal',
-    [TransactionType.TRANSFER_IN]: 'Transfer In',
-    [TransactionType.TRANSFER_OUT]: 'Transfer Out',
-    [TransactionType.PAYMENT]: 'Payment',
-    [TransactionType.REFUND]: 'Refund',
-    [TransactionType.FEE]: 'Fee',
-    [TransactionType.INTEREST]: 'Interest',
-    [TransactionType.ADJUSTMENT]: 'Adjustment',
+    [TransactionType.DEPOSIT]: "Deposit",
+    [TransactionType.WITHDRAWAL]: "Withdrawal",
+    [TransactionType.TRANSFER_IN]: "Transfer In",
+    [TransactionType.TRANSFER_OUT]: "Transfer Out",
+    [TransactionType.PAYMENT]: "Payment",
+    [TransactionType.REFUND]: "Refund",
+    [TransactionType.FEE]: "Fee",
+    [TransactionType.INTEREST]: "Interest",
+    [TransactionType.ADJUSTMENT]: "Adjustment",
   };
   return labels[type] || type;
 };
 
-export const getTransactionStatusLabel = (status: TransactionStatus): string => {
+export const getTransactionStatusLabel = (
+  status: TransactionStatus,
+): string => {
   const labels = {
-    [TransactionStatus.PENDING]: 'Pending',
-    [TransactionStatus.PROCESSING]: 'Processing',
-    [TransactionStatus.COMPLETED]: 'Completed',
-    [TransactionStatus.FAILED]: 'Failed',
-    [TransactionStatus.CANCELLED]: 'Cancelled',
-    [TransactionStatus.REVERSED]: 'Reversed',
+    [TransactionStatus.PENDING]: "Pending",
+    [TransactionStatus.PROCESSING]: "Processing",
+    [TransactionStatus.COMPLETED]: "Completed",
+    [TransactionStatus.FAILED]: "Failed",
+    [TransactionStatus.CANCELLED]: "Cancelled",
+    [TransactionStatus.REVERSED]: "Reversed",
   };
   return labels[status] || status;
 };
 
 export const getPaymentMethodLabel = (method: PaymentMethod): string => {
   const labels = {
-    [PaymentMethod.ONLINE_TRANSFER]: 'Online Transfer',
-    [PaymentMethod.DIRECT_DEBIT]: 'Direct Debit',
-    [PaymentMethod.WIRE_TRANSFER]: 'Wire Transfer',
-    [PaymentMethod.ACH]: 'ACH',
-    [PaymentMethod.CHECK]: 'Check',
-    [PaymentMethod.CASH]: 'Cash',
-    [PaymentMethod.CARD_PAYMENT]: 'Card Payment',
-    [PaymentMethod.MOBILE_PAYMENT]: 'Mobile Payment',
-    [PaymentMethod.CRYPTOCURRENCY]: 'Cryptocurrency',
+    [PaymentMethod.ONLINE_TRANSFER]: "Online Transfer",
+    [PaymentMethod.DIRECT_DEBIT]: "Direct Debit",
+    [PaymentMethod.WIRE_TRANSFER]: "Wire Transfer",
+    [PaymentMethod.ACH]: "ACH",
+    [PaymentMethod.CHECK]: "Check",
+    [PaymentMethod.CASH]: "Cash",
+    [PaymentMethod.CARD_PAYMENT]: "Card Payment",
+    [PaymentMethod.MOBILE_PAYMENT]: "Mobile Payment",
+    [PaymentMethod.CRYPTOCURRENCY]: "Cryptocurrency",
   };
   return labels[method] || method;
 };
 
 // Till Models
 export enum TillTransactionType {
-  DEPOSIT = 'deposit',
-  WITHDRAWAL = 'withdrawal',
-  ADJUSTMENT = 'adjustment',
+  DEPOSIT = "deposit",
+  WITHDRAWAL = "withdrawal",
+  ADJUSTMENT = "adjustment",
 }
 
 export interface Till {
@@ -475,20 +477,24 @@ export interface TillTransactionsResponse {
   total: number;
 }
 
-export const getTillTransactionTypeLabel = (type: TillTransactionType): string => {
+export const getTillTransactionTypeLabel = (
+  type: TillTransactionType,
+): string => {
   const labels = {
-    [TillTransactionType.DEPOSIT]: 'Deposit',
-    [TillTransactionType.WITHDRAWAL]: 'Withdrawal',
-    [TillTransactionType.ADJUSTMENT]: 'Adjustment',
+    [TillTransactionType.DEPOSIT]: "Deposit",
+    [TillTransactionType.WITHDRAWAL]: "Withdrawal",
+    [TillTransactionType.ADJUSTMENT]: "Adjustment",
   };
   return labels[type] || type;
 };
 
-export const getTillTransactionTypeColor = (type: TillTransactionType): string => {
+export const getTillTransactionTypeColor = (
+  type: TillTransactionType,
+): string => {
   const colors = {
-    [TillTransactionType.DEPOSIT]: 'text-green-600',
-    [TillTransactionType.WITHDRAWAL]: 'text-red-600',
-    [TillTransactionType.ADJUSTMENT]: 'text-blue-600',
+    [TillTransactionType.DEPOSIT]: "text-green-600",
+    [TillTransactionType.WITHDRAWAL]: "text-red-600",
+    [TillTransactionType.ADJUSTMENT]: "text-blue-600",
   };
-  return colors[type] || '';
+  return colors[type] || "";
 };

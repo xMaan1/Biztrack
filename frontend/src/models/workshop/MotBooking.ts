@@ -1,1 +1,1 @@
-export * from '../mot/MotBooking';
+export * from "../mot/MotBooking";

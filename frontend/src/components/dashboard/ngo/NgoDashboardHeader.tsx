@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { HeartHandshake, LineChart, Plus } from 'lucide-react';
-import { Button } from '@/src/components/ui/button';
+import Link from "next/link";
+import { HeartHandshake, LineChart, Plus } from "lucide-react";
+import { Button } from "@/src/components/ui/button";
 
 export function NgoDashboardHeader() {
   return (
@@ -22,13 +22,21 @@ export function NgoDashboardHeader() {
             New Campaign
           </Link>
         </Button>
-        <Button variant="outline" className="border-emerald-600 text-emerald-700" asChild>
+        <Button
+          variant="outline"
+          className="border-emerald-600 text-emerald-700"
+          asChild
+        >
           <Link href="/sales/invoices">
             <HeartHandshake className="mr-2 h-4 w-4" />
             New Donation
           </Link>
         </Button>
-        <Button variant="outline" className="border-blue-600 text-blue-700" asChild>
+        <Button
+          variant="outline"
+          className="border-blue-600 text-blue-700"
+          asChild
+        >
           <Link href="/reports">
             <LineChart className="mr-2 h-4 w-4" />
             Generate Report

@@ -1,4 +1,4 @@
-import type { Employee } from './hrm';
+import type { Employee } from "./hrm";
 
 export interface EmployeeProfileUpdate {
   phone?: string;

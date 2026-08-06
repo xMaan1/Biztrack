@@ -1,42 +1,45 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import { ModuleGuard } from '../../../../../components/guards/PermissionGuard';
+import React, { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
+import { ModuleGuard } from "../../../../../components/guards/PermissionGuard";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from '../../../../../components/ui/card';
-import { Button } from '../../../../../components/ui/button';
-import { Input } from '../../../../../components/ui/input';
-import { Label } from '../../../../../components/ui/label';
-import { Textarea } from '../../../../../components/ui/textarea';
-import { Switch } from '../../../../../components/ui/switch';
+} from "../../../../../components/ui/card";
+import { Button } from "../../../../../components/ui/button";
+import { Input } from "../../../../../components/ui/input";
+import { Label } from "../../../../../components/ui/label";
+import { Textarea } from "../../../../../components/ui/textarea";
+import { Switch } from "../../../../../components/ui/switch";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../../../../components/ui/select';
-import { ArrowLeft, Save, Loader2 } from 'lucide-react';
-import { useAuth } from '../../../../../contexts/AuthContext';
-import { inventoryService } from '../../../../../services/InventoryService';
-import { DashboardLayout } from '../../../../../components/layout';
-import { toast } from 'sonner';
+} from "../../../../../components/ui/select";
+import { ArrowLeft, Save, Loader2 } from "lucide-react";
+import { useAuth } from "../../../../../contexts/AuthContext";
+import { inventoryService } from "../../../../../services/InventoryService";
+import { DashboardLayout } from "../../../../../components/layout";
+import { toast } from "sonner";
 
 export default function EditWarehousePage() {
   return (
-    <ModuleGuard module="inventory" fallback={<div>You don't have access to Inventory module</div>}>
+    <ModuleGuard
+      module="inventory"
+      fallback={<div>You don&apos;t have access to Inventory module</div>}
+    >
       <EditWarehouseContent />
     </ModuleGuard>
   );
 }
 
 function EditWarehouseContent() {
-  const { } = useAuth();
+  const {} = useAuth();
   const router = useRouter();
   const params = useParams();
   const warehouseId = params.id as string;
@@ -44,19 +47,19 @@ function EditWarehouseContent() {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [formData, setFormData] = useState({
-    name: '',
-    code: '',
-    description: '',
-    address: '',
-    city: '',
-    state: '',
-    country: '',
-    postalCode: '',
-    phone: '',
-    email: '',
-    capacity: '',
-    temperatureZone: '',
-    securityLevel: '',
+    name: "",
+    code: "",
+    description: "",
+    address: "",
+    city: "",
+    state: "",
+    country: "",
+    postalCode: "",
+    phone: "",
+    email: "",
+    capacity: "",
+    temperatureZone: "",
+    securityLevel: "",
     isActive: true,
   });
 
@@ -73,22 +76,22 @@ function EditWarehouseContent() {
       setFormData({
         name: warehouse.name,
         code: warehouse.code,
-        description: warehouse.description || '',
+        description: warehouse.description || "",
         address: warehouse.address,
         city: warehouse.city,
         state: warehouse.state,
         country: warehouse.country,
         postalCode: warehouse.postalCode,
-        phone: warehouse.phone || '',
-        email: warehouse.email || '',
-        capacity: warehouse.capacity?.toString() || '',
-        temperatureZone: warehouse.temperatureZone || '',
-        securityLevel: warehouse.securityLevel || '',
+        phone: warehouse.phone || "",
+        email: warehouse.email || "",
+        capacity: warehouse.capacity?.toString() || "",
+        temperatureZone: warehouse.temperatureZone || "",
+        securityLevel: warehouse.securityLevel || "",
         isActive: warehouse.isActive,
       });
     } catch (error) {
-      toast.error('Failed to load warehouse data. Please try again.');
-      router.push('/inventory/warehouses');
+      toast.error("Failed to load warehouse data. Please try again.");
+      router.push("/inventory/warehouses");
     } finally {
       setInitialLoading(false);
     }
@@ -115,9 +118,9 @@ function EditWarehouseContent() {
       };
 
       await inventoryService.updateWarehouse(warehouseId, warehouseData);
-      router.push('/inventory/warehouses');
+      router.push("/inventory/warehouses");
     } catch (error) {
-      toast.error('Failed to update warehouse. Please try again.');
+      toast.error("Failed to update warehouse. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -165,7 +168,7 @@ function EditWarehouseContent() {
                   <Input
                     id="name"
                     value={formData.name}
-                    onChange={(e) => handleInputChange('name', e.target.value)}
+                    onChange={(e) => handleInputChange("name", e.target.value)}
                     placeholder="Main Warehouse"
                     required
                   />
@@ -176,7 +179,7 @@ function EditWarehouseContent() {
                   <Input
                     id="code"
                     value={formData.code}
-                    onChange={(e) => handleInputChange('code', e.target.value)}
+                    onChange={(e) => handleInputChange("code", e.target.value)}
                     placeholder="WH-001"
                     required
                   />
@@ -188,7 +191,7 @@ function EditWarehouseContent() {
                     id="description"
                     value={formData.description}
                     onChange={(e) =>
-                      handleInputChange('description', e.target.value)
+                      handleInputChange("description", e.target.value)
                     }
                     placeholder="Brief description of the warehouse"
                     rows={3}
@@ -203,7 +206,7 @@ function EditWarehouseContent() {
                     step="0.1"
                     value={formData.capacity}
                     onChange={(e) =>
-                      handleInputChange('capacity', e.target.value)
+                      handleInputChange("capacity", e.target.value)
                     }
                     placeholder="1000.0"
                   />
@@ -223,7 +226,7 @@ function EditWarehouseContent() {
                     id="address"
                     value={formData.address}
                     onChange={(e) =>
-                      handleInputChange('address', e.target.value)
+                      handleInputChange("address", e.target.value)
                     }
                     placeholder="123 Warehouse St"
                     required
@@ -235,7 +238,7 @@ function EditWarehouseContent() {
                   <Input
                     id="city"
                     value={formData.city}
-                    onChange={(e) => handleInputChange('city', e.target.value)}
+                    onChange={(e) => handleInputChange("city", e.target.value)}
                     placeholder="New York"
                     required
                   />
@@ -246,7 +249,7 @@ function EditWarehouseContent() {
                   <Input
                     id="state"
                     value={formData.state}
-                    onChange={(e) => handleInputChange('state', e.target.value)}
+                    onChange={(e) => handleInputChange("state", e.target.value)}
                     placeholder="NY"
                     required
                   />
@@ -258,7 +261,7 @@ function EditWarehouseContent() {
                     id="country"
                     value={formData.country}
                     onChange={(e) =>
-                      handleInputChange('country', e.target.value)
+                      handleInputChange("country", e.target.value)
                     }
                     placeholder="United States"
                     required
@@ -271,7 +274,7 @@ function EditWarehouseContent() {
                     id="postalCode"
                     value={formData.postalCode}
                     onChange={(e) =>
-                      handleInputChange('postalCode', e.target.value)
+                      handleInputChange("postalCode", e.target.value)
                     }
                     placeholder="10001"
                     required
@@ -291,7 +294,7 @@ function EditWarehouseContent() {
                   <Input
                     id="phone"
                     value={formData.phone}
-                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    onChange={(e) => handleInputChange("phone", e.target.value)}
                     placeholder="+1 (555) 123-4567"
                   />
                 </div>
@@ -302,7 +305,7 @@ function EditWarehouseContent() {
                     id="email"
                     type="email"
                     value={formData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
                     placeholder="warehouse@company.com"
                   />
                 </div>
@@ -312,7 +315,7 @@ function EditWarehouseContent() {
                   <Select
                     value={formData.temperatureZone}
                     onValueChange={(value) =>
-                      handleInputChange('temperatureZone', value)
+                      handleInputChange("temperatureZone", value)
                     }
                   >
                     <SelectTrigger>
@@ -336,7 +339,7 @@ function EditWarehouseContent() {
                   <Select
                     value={formData.securityLevel}
                     onValueChange={(value) =>
-                      handleInputChange('securityLevel', value)
+                      handleInputChange("securityLevel", value)
                     }
                   >
                     <SelectTrigger>
@@ -355,7 +358,7 @@ function EditWarehouseContent() {
                     id="isActive"
                     checked={formData.isActive}
                     onCheckedChange={(checked) =>
-                      handleInputChange('isActive', checked)
+                      handleInputChange("isActive", checked)
                     }
                   />
                   <Label htmlFor="isActive">Active Warehouse</Label>

@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Input } from '@/src/components/ui/input';
-import { Label } from '@/src/components/ui/label';
-import { Button } from '@/src/components/ui/button';
+import React from "react";
+import { Input } from "@/src/components/ui/input";
+import { Label } from "@/src/components/ui/label";
+import { Button } from "@/src/components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
-import { Plus, Trash2 } from 'lucide-react';
+} from "@/src/components/ui/select";
+import { Plus, Trash2 } from "lucide-react";
 
-export type ContactLabel = 'work' | 'personal' | 'other';
+export type ContactLabel = "work" | "personal" | "other";
 
 export interface LabeledEmailItem {
   value: string;
@@ -26,15 +26,15 @@ export interface LabeledPhoneItem {
 }
 
 function normalizeEmailLabel(l: string | undefined): ContactLabel {
-  const x = (l || 'personal').toLowerCase();
-  if (x === 'work' || x === 'personal' || x === 'other') return x;
-  return 'personal';
+  const x = (l || "personal").toLowerCase();
+  if (x === "work" || x === "personal" || x === "other") return x;
+  return "personal";
 }
 
 function normalizePhoneLabel(l: string | undefined): ContactLabel {
-  const x = (l || 'work').toLowerCase();
-  if (x === 'work' || x === 'personal' || x === 'other') return x;
-  return 'work';
+  const x = (l || "work").toLowerCase();
+  if (x === "work" || x === "personal" || x === "other") return x;
+  return "work";
 }
 
 export function defaultEmailRowsFromEntity(entity: {
@@ -48,9 +48,9 @@ export function defaultEmailRowsFromEntity(entity: {
     }));
   }
   if (entity.email?.trim()) {
-    return [{ value: entity.email.trim(), label: 'personal' }];
+    return [{ value: entity.email.trim(), label: "personal" }];
   }
-  return [{ value: '', label: 'personal' }];
+  return [{ value: "", label: "personal" }];
 }
 
 export function defaultPhoneRowsFromEntity(entity: {
@@ -66,13 +66,13 @@ export function defaultPhoneRowsFromEntity(entity: {
   }
   const out: LabeledPhoneItem[] = [];
   if (entity.phone?.trim()) {
-    out.push({ value: entity.phone.trim(), label: 'work' });
+    out.push({ value: entity.phone.trim(), label: "work" });
   }
   if (entity.mobile?.trim()) {
-    out.push({ value: entity.mobile.trim(), label: 'personal' });
+    out.push({ value: entity.mobile.trim(), label: "personal" });
   }
   if (out.length === 0) {
-    out.push({ value: '', label: 'work' });
+    out.push({ value: "", label: "work" });
   }
   return out;
 }
@@ -85,9 +85,9 @@ type Props = {
 };
 
 const LABEL_OPTIONS: { value: ContactLabel; label: string }[] = [
-  { value: 'work', label: 'Work' },
-  { value: 'personal', label: 'Personal' },
-  { value: 'other', label: 'Other' },
+  { value: "work", label: "Work" },
+  { value: "personal", label: "Personal" },
+  { value: "other", label: "Other" },
 ];
 
 export function LabeledContactFields({
@@ -110,9 +110,7 @@ export function LabeledContactFields({
                 onChange={(e) => {
                   const v = e.target.value;
                   onEmailsChange(
-                    emails.map((r, i) =>
-                      i === idx ? { ...r, value: v } : r,
-                    ),
+                    emails.map((r, i) => (i === idx ? { ...r, value: v } : r)),
                   );
                 }}
                 placeholder="Email"
@@ -122,9 +120,7 @@ export function LabeledContactFields({
                 onValueChange={(value) => {
                   onEmailsChange(
                     emails.map((r, i) =>
-                      i === idx
-                        ? { ...r, label: value as ContactLabel }
-                        : r,
+                      i === idx ? { ...r, label: value as ContactLabel } : r,
                     ),
                   );
                 }}
@@ -160,10 +156,7 @@ export function LabeledContactFields({
             variant="outline"
             size="sm"
             onClick={() =>
-              onEmailsChange([
-                ...emails,
-                { value: '', label: 'personal' },
-              ])
+              onEmailsChange([...emails, { value: "", label: "personal" }])
             }
           >
             <Plus className="h-4 w-4 mr-1" />
@@ -183,9 +176,7 @@ export function LabeledContactFields({
                 onChange={(e) => {
                   const v = e.target.value;
                   onPhonesChange(
-                    phones.map((r, i) =>
-                      i === idx ? { ...r, value: v } : r,
-                    ),
+                    phones.map((r, i) => (i === idx ? { ...r, value: v } : r)),
                   );
                 }}
                 placeholder="Phone number"
@@ -195,9 +186,7 @@ export function LabeledContactFields({
                 onValueChange={(value) => {
                   onPhonesChange(
                     phones.map((r, i) =>
-                      i === idx
-                        ? { ...r, label: value as ContactLabel }
-                        : r,
+                      i === idx ? { ...r, label: value as ContactLabel } : r,
                     ),
                   );
                 }}
@@ -233,10 +222,7 @@ export function LabeledContactFields({
             variant="outline"
             size="sm"
             onClick={() =>
-              onPhonesChange([
-                ...phones,
-                { value: '', label: 'work' },
-              ])
+              onPhonesChange([...phones, { value: "", label: "work" }])
             }
           >
             <Plus className="h-4 w-4 mr-1" />

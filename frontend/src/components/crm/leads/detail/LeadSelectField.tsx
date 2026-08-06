@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   Select,
@@ -6,7 +6,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
+} from "@/src/components/ui/select";
 
 type Props = {
   label: string;
@@ -20,8 +20,8 @@ export function LeadSelectField({ label, value, options, onSave }: Props) {
     <div>
       <div className="text-muted-foreground mb-0.5">{label}</div>
       <Select
-        value={value || '__none__'}
-        onValueChange={(v) => onSave(v === '__none__' ? '' : v)}
+        value={value || "__none__"}
+        onValueChange={(v) => onSave(v === "__none__" ? "" : v)}
       >
         <SelectTrigger className="h-8 text-xs">
           <SelectValue placeholder="Not selected" />
@@ -29,12 +29,12 @@ export function LeadSelectField({ label, value, options, onSave }: Props) {
         <SelectContent>
           <SelectItem value="__none__">Not selected</SelectItem>
           {options
-            .filter((o) => Boolean(String(o || '').trim()))
+            .filter((o) => Boolean(String(o || "").trim()))
             .map((o) => (
-            <SelectItem key={o} value={o} className="capitalize">
-              {o}
-            </SelectItem>
-          ))}
+              <SelectItem key={o} value={o} className="capitalize">
+                {o}
+              </SelectItem>
+            ))}
         </SelectContent>
       </Select>
     </div>

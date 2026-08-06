@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { SectionSkeleton } from './SectionSkeleton';
-import { cn } from '@/src/lib/utils';
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { SectionSkeleton } from "./SectionSkeleton";
+import { cn } from "@/src/lib/utils";
 
 type LazyLandingSectionProps = {
   children: ReactNode;
@@ -15,7 +15,7 @@ export function LazyLandingSection({
   children,
   className,
   skeletonClassName,
-  minHeight = 'min-h-[280px]',
+  minHeight = "min-h-[280px]",
 }: LazyLandingSectionProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
@@ -31,7 +31,7 @@ export function LazyLandingSection({
           observer.disconnect();
         }
       },
-      { rootMargin: '120px 0px', threshold: 0.01 },
+      { rootMargin: "120px 0px", threshold: 0.01 },
     );
 
     observer.observe(el);

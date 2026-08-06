@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { Zap } from 'lucide-react';
+import Link from "next/link";
+import { Zap } from "lucide-react";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/src/components/ui/card';
-import { cn } from '@/src/lib/utils';
-import { NGO_QUICK_ACTIONS } from './ngoDashboardConfig';
+} from "@/src/components/ui/card";
+import { cn } from "@/src/lib/utils";
+import { NGO_QUICK_ACTIONS } from "./ngoDashboardConfig";
 
 export function NgoQuickActionsCard() {
   return (
@@ -32,7 +32,7 @@ export function NgoQuickActionsCard() {
             >
               <div
                 className={cn(
-                  'flex h-12 w-12 items-center justify-center rounded-xl transition-colors',
+                  "flex h-12 w-12 items-center justify-center rounded-xl transition-colors",
                   action.iconClass,
                 )}
               >

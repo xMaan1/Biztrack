@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
-import { useAuth } from '@/src/contexts/AuthContext';
-import { usePermissions } from '@/src/hooks/usePermissions';
-import { apiService } from '@/src/services/ApiService';
-import type { Project, User } from '@/src/models';
-import type { ProjectDialogMode, ProjectFormData } from '@/src/types/projects';
-import type { UserSearchItem } from '@/src/components/ui/user-search';
-import type { UserMultiSearchItem } from '@/src/components/ui/user-multi-search';
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { useAuth } from "@/src/contexts/AuthContext";
+import { usePermissions } from "@/src/hooks/usePermissions";
+import { apiService } from "@/src/services/ApiService";
+import type { Project, User } from "@/src/models";
+import type { ProjectDialogMode, ProjectFormData } from "@/src/types/projects";
+import type { UserSearchItem } from "@/src/components/ui/user-search";
+import type { UserMultiSearchItem } from "@/src/components/ui/user-multi-search";
 import {
   DEFAULT_PROJECT_FORM_DATA,
   dedupeTenantUsers,
@@ -18,11 +18,12 @@ import {
   hasActiveFilters,
   projectToFormData,
   validateProjectForm,
-} from '@/src/utils/projects';
+} from "@/src/utils/projects";
 
 export function useProjectsPage() {
   const { user } = useAuth();
-  const { canManageProjects, canUpdateProjects, canDeleteProjects, isOwner } = usePermissions();
+  const { canManageProjects, canUpdateProjects, canDeleteProjects, isOwner } =
+    usePermissions();
   const router = useRouter();
 
   const [mounted, setMounted] = useState(false);
@@ -30,14 +31,16 @@ export function useProjectsPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [priorityFilter, setPriorityFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [priorityFilter, setPriorityFilter] = useState("all");
   const [starredProjects, setStarredProjects] = useState<string[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogMode, setDialogMode] = useState<ProjectDialogMode>('create');
+  const [dialogMode, setDialogMode] = useState<ProjectDialogMode>("create");
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [formData, setFormData] = useState<ProjectFormData>(DEFAULT_PROJECT_FORM_DATA);
+  const [formData, setFormData] = useState<ProjectFormData>(
+    DEFAULT_PROJECT_FORM_DATA,
+  );
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -48,11 +51,11 @@ export function useProjectsPage() {
       if (!options?.silent) {
         setLoading(true);
       }
-      const response = await apiService.get('/projects');
+      const response = await apiService.get("/projects");
       setProjects(response.projects || []);
     } catch {
       if (!options?.silent) {
-        setError('Failed to load projects');
+        setError("Failed to load projects");
       }
     } finally {
       if (!options?.silent) {
@@ -92,12 +95,12 @@ export function useProjectsPage() {
   );
 
   const canCreateProject = useCallback(() => {
-    return canManageProjects() || user?.userRole === 'super_admin';
+    return canManageProjects() || user?.userRole === "super_admin";
   }, [canManageProjects, user]);
 
   const canEditProject = useCallback(
     (project?: Project) => {
-      if (user?.userRole === 'super_admin' || isOwner()) return true;
+      if (user?.userRole === "super_admin" || isOwner()) return true;
       if (!canUpdateProjects() || !project) return false;
       const uid = user?.id;
       return project.projectManager?.id === uid || project.createdById === uid;
@@ -106,15 +109,17 @@ export function useProjectsPage() {
   );
 
   const getDeleteMode = useCallback(
-    (project: Project): 'direct' | 'approved' | 'pending' | 'request' | 'none' => {
-      if (user?.userRole === 'super_admin' || isOwner()) return 'direct';
+    (
+      project: Project,
+    ): "direct" | "approved" | "pending" | "request" | "none" => {
+      if (user?.userRole === "super_admin" || isOwner()) return "direct";
       const uid = user?.id;
       const isRequester =
         project.projectManager?.id === uid || project.createdById === uid;
-      if (!canDeleteProjects() || !isRequester) return 'none';
-      if (project.deletionStatus === 'approved') return 'approved';
-      if (project.deletionStatus === 'pending') return 'pending';
-      return 'request';
+      if (!canDeleteProjects() || !isRequester) return "none";
+      if (project.deletionStatus === "approved") return "approved";
+      if (project.deletionStatus === "pending") return "pending";
+      return "request";
     },
     [canDeleteProjects, isOwner, user],
   );
@@ -123,12 +128,17 @@ export function useProjectsPage() {
     async (project: Project) => {
       try {
         await apiService.requestProjectDeletion(project.id);
-        toast.success('Deletion request sent to the owner for approval');
+        toast.success("Deletion request sent to the owner for approval");
         void fetchProjects({ silent: true });
       } catch (err: unknown) {
-        const error = err as { response?: { data?: { detail?: string } }; message?: string };
+        const error = err as {
+          response?: { data?: { detail?: string } };
+          message?: string;
+        };
         toast.error(
-          error?.response?.data?.detail || error?.message || 'Failed to request deletion',
+          error?.response?.data?.detail ||
+            error?.message ||
+            "Failed to request deletion",
         );
       }
     },
@@ -136,7 +146,7 @@ export function useProjectsPage() {
   );
 
   const handleCreateProject = useCallback(() => {
-    setDialogMode('create');
+    setDialogMode("create");
     setSelectedProject(null);
     setFormData(DEFAULT_PROJECT_FORM_DATA);
     setFormError(null);
@@ -144,7 +154,7 @@ export function useProjectsPage() {
   }, []);
 
   const handleEditProject = useCallback((project: Project) => {
-    setDialogMode('edit');
+    setDialogMode("edit");
     setSelectedProject(project);
     setFormData(projectToFormData(project));
     setFormError(null);
@@ -164,9 +174,14 @@ export function useProjectsPage() {
       setDeleteDialogOpen(false);
       setProjectToDelete(null);
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { detail?: string } }; message?: string };
+      const error = err as {
+        response?: { data?: { detail?: string } };
+        message?: string;
+      };
       const errorMessage =
-        error?.response?.data?.detail || error?.message || 'Failed to delete project';
+        error?.response?.data?.detail ||
+        error?.message ||
+        "Failed to delete project";
       toast.error(`Delete Error: ${errorMessage}`);
     }
   }, [projectToDelete, fetchProjects]);
@@ -183,24 +198,39 @@ export function useProjectsPage() {
         setFormError(null);
         setFormLoading(true);
         let savedProject: Project | null = null;
-        if (dialogMode === 'create') {
+        if (dialogMode === "create") {
           savedProject = await apiService.createProject(formData);
         } else if (selectedProject) {
-          savedProject = await apiService.updateProject(selectedProject.id, formData);
+          savedProject = await apiService.updateProject(
+            selectedProject.id,
+            formData,
+          );
         }
         if (savedProject) {
           setProjects((prev) =>
-            dialogMode === 'create'
-              ? [savedProject!, ...prev.filter((p) => p.id !== savedProject!.id)]
-              : prev.map((p) => (p.id === savedProject!.id ? savedProject! : p)),
+            dialogMode === "create"
+              ? [
+                  savedProject!,
+                  ...prev.filter((p) => p.id !== savedProject!.id),
+                ]
+              : prev.map((p) =>
+                  p.id === savedProject!.id ? savedProject! : p,
+                ),
           );
         }
         setFormLoading(false);
         setDialogOpen(false);
         void fetchProjects({ silent: true });
       } catch (err: unknown) {
-        const error = err as { response?: { data?: { detail?: string } }; message?: string };
-        setFormError(error?.response?.data?.detail || error?.message || 'Failed to save project');
+        const error = err as {
+          response?: { data?: { detail?: string } };
+          message?: string;
+        };
+        setFormError(
+          error?.response?.data?.detail ||
+            error?.message ||
+            "Failed to save project",
+        );
         setFormLoading(false);
       }
     },
@@ -209,16 +239,23 @@ export function useProjectsPage() {
 
   const selectedProjectManager = useMemo((): UserSearchItem | null => {
     if (!formData.projectManagerId) return null;
-    return users.find((u) => (u.id || u.userId) === formData.projectManagerId) ?? null;
+    return (
+      users.find((u) => (u.id || u.userId) === formData.projectManagerId) ??
+      null
+    );
   }, [users, formData.projectManagerId]);
 
   const selectedTeamMembers = useMemo((): UserMultiSearchItem[] => {
-    return users.filter((u) => formData.teamMemberIds.includes(u.id || u.userId || ''));
+    return users.filter((u) =>
+      formData.teamMemberIds.includes(u.id || u.userId || ""),
+    );
   }, [users, formData.teamMemberIds]);
 
   const toggleStarred = useCallback((projectId: string) => {
     setStarredProjects((prev) =>
-      prev.includes(projectId) ? prev.filter((id) => id !== projectId) : [...prev, projectId],
+      prev.includes(projectId)
+        ? prev.filter((id) => id !== projectId)
+        : [...prev, projectId],
     );
   }, []);
 
@@ -237,9 +274,9 @@ export function useProjectsPage() {
   );
 
   const clearFilters = useCallback(() => {
-    setSearchTerm('');
-    setStatusFilter('all');
-    setPriorityFilter('all');
+    setSearchTerm("");
+    setStatusFilter("all");
+    setPriorityFilter("all");
   }, []);
 
   return {

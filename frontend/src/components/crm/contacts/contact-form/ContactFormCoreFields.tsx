@@ -1,23 +1,20 @@
-import { Input } from '@/src/components/ui/input';
-import { Label } from '@/src/components/ui/label';
+import { Input } from "@/src/components/ui/input";
+import { Label } from "@/src/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
-import {
-  ContactCreate,
-  ContactType,
-} from '@/src/models/crm';
-import { LabeledContactFields } from '@/src/components/crm/LabeledContactFields';
-import { CustomOption } from '@/src/services/CustomOptionsService';
-import { User } from '@/src/models';
+} from "@/src/components/ui/select";
+import { ContactCreate, ContactType } from "@/src/models/crm";
+import { LabeledContactFields } from "@/src/components/crm/LabeledContactFields";
+import { CustomOption } from "@/src/services/CustomOptionsService";
+import { User } from "@/src/models";
 import {
   UserSearch,
   type UserSearchItem,
-} from '@/src/components/ui/user-search';
+} from "@/src/components/ui/user-search";
 
 type CompanyOption = { id: string; name: string };
 
@@ -69,8 +66,8 @@ export function ContactFormCoreFields({
       </div>
 
       <LabeledContactFields
-        emails={formData.emails || [{ value: '', label: 'personal' }]}
-        phones={formData.phones || [{ value: '', label: 'work' }]}
+        emails={formData.emails || [{ value: "", label: "personal" }]}
+        phones={formData.phones || [{ value: "", label: "work" }]}
         onEmailsChange={(emails) => setFormData({ ...formData, emails })}
         onPhonesChange={(phones) => setFormData({ ...formData, phones })}
       />
@@ -106,7 +103,7 @@ export function ContactFormCoreFields({
           type="text"
           inputMode="url"
           autoComplete="url"
-          value={formData.website || ''}
+          value={formData.website || ""}
           onChange={(e) =>
             setFormData({ ...formData, website: e.target.value || undefined })
           }
@@ -117,11 +114,11 @@ export function ContactFormCoreFields({
       <div>
         <Label htmlFor="companyId">Company</Label>
         <Select
-          value={formData.companyId || 'none'}
+          value={formData.companyId || "none"}
           onValueChange={(value) =>
             setFormData({
               ...formData,
-              companyId: value === 'none' ? '' : value,
+              companyId: value === "none" ? "" : value,
             })
           }
         >
@@ -146,7 +143,7 @@ export function ContactFormCoreFields({
           onSelect={(user) =>
             setFormData({
               ...formData,
-              assignedTo: user ? user.id || user.userId || '' : '',
+              assignedTo: user ? user.id || user.userId || "" : "",
             })
           }
           placeholder="Search by name or email..."
@@ -159,7 +156,7 @@ export function ContactFormCoreFields({
         <Select
           value={formData.contactType}
           onValueChange={(value) => {
-            if (value === 'create_new') {
+            if (value === "create_new") {
               onRequestCustomContactType();
             } else {
               setFormData({
@@ -200,9 +197,9 @@ export function ContactFormCoreFields({
       <div>
         <Label htmlFor="isActive">Status</Label>
         <Select
-          value={formData.isActive ? 'active' : 'inactive'}
+          value={formData.isActive ? "active" : "inactive"}
           onValueChange={(value) =>
-            setFormData({ ...formData, isActive: value === 'active' })
+            setFormData({ ...formData, isActive: value === "active" })
           }
         >
           <SelectTrigger>

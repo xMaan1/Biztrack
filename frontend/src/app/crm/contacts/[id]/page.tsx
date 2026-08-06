@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
 
 export default function CRMContactDetailRedirectPage() {
   const params = useParams();
@@ -9,11 +9,13 @@ export default function CRMContactDetailRedirectPage() {
 
   useEffect(() => {
     const id = params?.id;
-    if (typeof id === 'string' && id.trim()) {
-      router.replace(`/crm/contacts?contactId=${encodeURIComponent(id.trim())}`);
+    if (typeof id === "string" && id.trim()) {
+      router.replace(
+        `/crm/contacts?contactId=${encodeURIComponent(id.trim())}`,
+      );
       return;
     }
-    router.replace('/crm/contacts');
+    router.replace("/crm/contacts");
   }, [params, router]);
 
   return null;

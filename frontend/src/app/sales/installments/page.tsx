@@ -1,54 +1,59 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../../../components/ui/card';
-import { Button } from '../../../components/ui/button';
-import { Input } from '../../../components/ui/input';
-import { Label } from '../../../components/ui/label';
+} from "../../../components/ui/card";
+import { Button } from "../../../components/ui/button";
+import { Input } from "../../../components/ui/input";
+import { Label } from "../../../components/ui/label";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '../../../components/ui/dialog';
+} from "../../../components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../../components/ui/select';
-import { DashboardLayout } from '../../../components/layout';
-import InvoiceService from '../../../services/InvoiceService';
+} from "../../../components/ui/select";
+import { DashboardLayout } from "../../../components/layout";
+import InvoiceService from "../../../services/InvoiceService";
 import {
   InstallmentPlan,
   Installment,
   PaymentMethod,
-} from '../../../models/sales';
-import { useCurrency } from '../../../contexts/CurrencyContext';
-import { Calendar, Eye, DollarSign, FileDown } from 'lucide-react';
-import { extractErrorMessage } from '../../../utils/errorUtils';
-import Link from 'next/link';
-import { toast } from 'sonner';
+} from "../../../models/sales";
+import { useCurrency } from "../../../contexts/CurrencyContext";
+import { Calendar, Eye, DollarSign, FileDown } from "lucide-react";
+import { extractErrorMessage } from "../../../utils/errorUtils";
+import Link from "next/link";
+import { toast } from "sonner";
 
 export default function InstallmentsPage() {
   const { formatCurrency } = useCurrency();
   const [plans, setPlans] = useState<InstallmentPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedPlan, setSelectedPlan] = useState<InstallmentPlan | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<InstallmentPlan | null>(
+    null,
+  );
   const [detailOpen, setDetailOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
-  const [paymentInstallment, setPaymentInstallment] = useState<Installment | null>(null);
-  const [paymentAmount, setPaymentAmount] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<string>('cash');
-  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
+  const [paymentInstallment, setPaymentInstallment] =
+    useState<Installment | null>(null);
+  const [paymentAmount, setPaymentAmount] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<string>("cash");
+  const [paymentDate, setPaymentDate] = useState(
+    new Date().toISOString().split("T")[0],
+  );
   const [paymentSubmitting, setPaymentSubmitting] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [pdfDownloading, setPdfDownloading] = useState(false);
@@ -59,16 +64,16 @@ export default function InstallmentsPage() {
     try {
       const blob = await InvoiceService.getCustomerInfoPdf(selectedPlan.id);
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `customer-info-${selectedPlan.invoice_id}-${selectedPlan.id}.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      toast.success('PDF downloaded');
+      toast.success("PDF downloaded");
     } catch (err) {
-      toast.error(extractErrorMessage(err, 'Failed to download PDF'));
+      toast.error(extractErrorMessage(err, "Failed to download PDF"));
     } finally {
       setPdfDownloading(false);
     }
@@ -81,7 +86,7 @@ export default function InstallmentsPage() {
       const data = await InvoiceService.getAllInstallmentPlans(0, 200);
       setPlans(data || []);
     } catch (err) {
-      setError(extractErrorMessage(err, 'Failed to load installment plans'));
+      setError(extractErrorMessage(err, "Failed to load installment plans"));
     } finally {
       setLoading(false);
     }
@@ -98,9 +103,11 @@ export default function InstallmentsPage() {
 
   const openRecordPayment = (installment: Installment) => {
     setPaymentInstallment(installment);
-    setPaymentAmount((installment.amount - (installment.paid_amount || 0)).toString());
-    setPaymentMethod('cash');
-    setPaymentDate(new Date().toISOString().split('T')[0]);
+    setPaymentAmount(
+      (installment.amount - (installment.paid_amount || 0)).toString(),
+    );
+    setPaymentMethod("cash");
+    setPaymentDate(new Date().toISOString().split("T")[0]);
     setPaymentError(null);
     setPaymentDialogOpen(true);
   };
@@ -109,22 +116,25 @@ export default function InstallmentsPage() {
     if (!selectedPlan || !paymentInstallment) return;
     const amount = parseFloat(paymentAmount);
     if (isNaN(amount) || amount <= 0) {
-      setPaymentError('Enter a valid amount');
+      setPaymentError("Enter a valid amount");
       return;
     }
     setPaymentSubmitting(true);
     setPaymentError(null);
     try {
-      const payment = await InvoiceService.createPayment(selectedPlan.invoice_id, {
-        invoiceId: selectedPlan.invoice_id,
-        amount,
-        paymentMethod: paymentMethod as PaymentMethod,
-        paymentDate: paymentDate + 'T12:00:00Z',
-      });
+      const payment = await InvoiceService.createPayment(
+        selectedPlan.invoice_id,
+        {
+          invoiceId: selectedPlan.invoice_id,
+          amount,
+          paymentMethod: paymentMethod as PaymentMethod,
+          paymentDate: paymentDate + "T12:00:00Z",
+        },
+      );
       await InvoiceService.applyPaymentToInstallment(
         selectedPlan.id,
         paymentInstallment.id,
-        { amount, payment_id: payment.id }
+        { amount, payment_id: payment.id },
       );
       setPaymentDialogOpen(false);
       setPaymentInstallment(null);
@@ -132,29 +142,29 @@ export default function InstallmentsPage() {
       setSelectedPlan(updated);
       loadPlans();
     } catch (err) {
-      setPaymentError(extractErrorMessage(err, 'Failed to record payment'));
+      setPaymentError(extractErrorMessage(err, "Failed to record payment"));
     } finally {
       setPaymentSubmitting(false);
     }
   };
 
   const formatDate = (d: string) =>
-    new Date(d).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+    new Date(d).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'paid':
-        return 'bg-green-100 text-green-800';
-      case 'overdue':
-        return 'bg-red-100 text-red-800';
-      case 'partial':
-        return 'bg-orange-100 text-orange-800';
+      case "paid":
+        return "bg-green-100 text-green-800";
+      case "overdue":
+        return "bg-red-100 text-red-800";
+      case "partial":
+        return "bg-orange-100 text-orange-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -162,7 +172,9 @@ export default function InstallmentsPage() {
     return (
       <DashboardLayout>
         <div className="container mx-auto p-6">
-          <div className="flex items-center justify-center h-64">Loading...</div>
+          <div className="flex items-center justify-center h-64">
+            Loading...
+          </div>
         </div>
       </DashboardLayout>
     );
@@ -195,12 +207,15 @@ export default function InstallmentsPage() {
         <Card>
           <CardHeader>
             <CardTitle>Installment Plans</CardTitle>
-            <CardDescription>All active and completed installment plans.</CardDescription>
+            <CardDescription>
+              All active and completed installment plans.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {plans.length === 0 ? (
               <p className="text-gray-500 py-8 text-center">
-                No installment plans yet. Create one from an invoice (Invoices → Create Invoice → Installments section).
+                No installment plans yet. Create one from an invoice (Invoices →
+                Create Invoice → Installments section).
               </p>
             ) : (
               <div className="overflow-x-auto">
@@ -239,7 +254,9 @@ export default function InstallmentsPage() {
                             {plan.status}
                           </span>
                         </td>
-                        <td className="py-2">{formatDate(plan.first_due_date)}</td>
+                        <td className="py-2">
+                          {formatDate(plan.first_due_date)}
+                        </td>
                         <td className="py-2 text-right">
                           <Button
                             variant="ghost"
@@ -268,16 +285,20 @@ export default function InstallmentsPage() {
               <div className="space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p>
-                    Invoice:{' '}
+                    Invoice:{" "}
                     <Link
                       href={`/sales/invoice-dashboard?tab=invoices&invoice=${selectedPlan.invoice_id}`}
                       className="text-blue-600 hover:underline"
                     >
                       {selectedPlan.invoice_id}
                     </Link>
-                    {' · '}
-                    {formatCurrency(selectedPlan.total_amount, selectedPlan.currency)} ·{' '}
-                    {selectedPlan.number_of_installments} installments ({selectedPlan.frequency})
+                    {" · "}
+                    {formatCurrency(
+                      selectedPlan.total_amount,
+                      selectedPlan.currency,
+                    )}{" "}
+                    · {selectedPlan.number_of_installments} installments (
+                    {selectedPlan.frequency})
                   </p>
                   <Button
                     variant="outline"
@@ -286,7 +307,7 @@ export default function InstallmentsPage() {
                     disabled={pdfDownloading}
                   >
                     <FileDown className="h-4 w-4 mr-1" />
-                    {pdfDownloading ? 'Downloading...' : 'Download PDF'}
+                    {pdfDownloading ? "Downloading..." : "Download PDF"}
                   </Button>
                 </div>
                 <div className="border rounded overflow-hidden">
@@ -305,12 +326,17 @@ export default function InstallmentsPage() {
                       {selectedPlan.installments.map((inst) => (
                         <tr key={inst.id} className="border-b">
                           <td className="py-2 px-2">{inst.sequence_number}</td>
-                          <td className="py-2 px-2">{formatDate(inst.due_date)}</td>
+                          <td className="py-2 px-2">
+                            {formatDate(inst.due_date)}
+                          </td>
                           <td className="py-2 px-2 text-right">
                             {formatCurrency(inst.amount, selectedPlan.currency)}
                           </td>
                           <td className="py-2 px-2 text-right">
-                            {formatCurrency(inst.paid_amount || 0, selectedPlan.currency)}
+                            {formatCurrency(
+                              inst.paid_amount || 0,
+                              selectedPlan.currency,
+                            )}
                           </td>
                           <td className="py-2 px-2">
                             <span
@@ -320,7 +346,7 @@ export default function InstallmentsPage() {
                             </span>
                           </td>
                           <td className="py-2 px-2 text-right">
-                            {inst.status !== 'paid' && (
+                            {inst.status !== "paid" && (
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -349,11 +375,12 @@ export default function InstallmentsPage() {
             {paymentInstallment && (
               <div className="space-y-4">
                 <p>
-                  Installment #{paymentInstallment.sequence_number} · Due{' '}
-                  {formatDate(paymentInstallment.due_date)} · Remaining:{' '}
+                  Installment #{paymentInstallment.sequence_number} · Due{" "}
+                  {formatDate(paymentInstallment.due_date)} · Remaining:{" "}
                   {formatCurrency(
-                    paymentInstallment.amount - (paymentInstallment.paid_amount || 0),
-                    selectedPlan?.currency || 'USD'
+                    paymentInstallment.amount -
+                      (paymentInstallment.paid_amount || 0),
+                    selectedPlan?.currency || "USD",
                   )}
                 </p>
                 <div>
@@ -368,7 +395,10 @@ export default function InstallmentsPage() {
                 </div>
                 <div>
                   <Label>Payment method</Label>
-                  <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                  <Select
+                    value={paymentMethod}
+                    onValueChange={setPaymentMethod}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -376,7 +406,9 @@ export default function InstallmentsPage() {
                       <SelectItem value="cash">Cash</SelectItem>
                       <SelectItem value="check">Check</SelectItem>
                       <SelectItem value="credit_card">Credit Card</SelectItem>
-                      <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                      <SelectItem value="bank_transfer">
+                        Bank Transfer
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -402,7 +434,7 @@ export default function InstallmentsPage() {
                     onClick={handleRecordPayment}
                     disabled={paymentSubmitting}
                   >
-                    {paymentSubmitting ? 'Saving...' : 'Record payment'}
+                    {paymentSubmitting ? "Saving..." : "Record payment"}
                   </Button>
                 </div>
               </div>

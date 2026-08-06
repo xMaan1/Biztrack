@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { DashboardLayout } from '@/src/components/layout';
+import { DashboardLayout } from "@/src/components/layout";
 import {
   ProjectsPageHeader,
   ProjectsToolbar,
@@ -10,8 +10,8 @@ import {
   ProjectsGrid,
   ProjectFormDialog,
   ProjectDeleteDialog,
-} from '@/src/components/projects';
-import { useProjectsPage } from '@/src/hooks/useProjectsPage';
+} from "@/src/components/projects";
+import { useProjectsPage } from "@/src/hooks/useProjectsPage";
 
 export default function ProjectsPage() {
   const {
@@ -80,7 +80,10 @@ export default function ProjectsPage() {
         {loading ? (
           <ProjectsLoadingState />
         ) : error ? (
-          <ProjectsErrorState error={error} onRetry={() => void fetchProjects()} />
+          <ProjectsErrorState
+            error={error}
+            onRetry={() => void fetchProjects()}
+          />
         ) : (
           <ProjectsGrid
             projects={filteredProjects}

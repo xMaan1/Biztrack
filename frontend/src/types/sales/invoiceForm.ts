@@ -1,11 +1,19 @@
-import type { InstallmentPlanCreate, Invoice, InvoiceCreate, InvoiceItemCreate } from '@/src/models/sales';
-import type { Customer } from '@/src/services/CustomerService';
-import type { Product } from '@/src/models/pos';
-import type { Vehicle } from '@/src/models/workshop';
+import type {
+  InstallmentPlanCreate,
+  Invoice,
+  InvoiceCreate,
+  InvoiceItemCreate,
+} from "@/src/models/sales";
+import type { Customer } from "@/src/services/CustomerService";
+import type { Product } from "@/src/models/pos";
+import type { Vehicle } from "@/src/models/workshop";
 
-export type InstallmentPlanCreateOption = Omit<InstallmentPlanCreate, 'invoice_id'>;
+export type InstallmentPlanCreateOption = Omit<
+  InstallmentPlanCreate,
+  "invoice_id"
+>;
 
-export type InvoiceFormMode = 'create' | 'edit' | 'view';
+export type InvoiceFormMode = "create" | "edit" | "view";
 
 export type InvoiceFormErrors = Record<string, string>;
 

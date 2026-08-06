@@ -1,7 +1,7 @@
-import { Input } from '@/src/components/ui/input';
-import { Label } from '@/src/components/ui/label';
-import { ContactCreate } from '@/src/models/crm';
-import { CollapsibleFormSection } from '../CollapsibleFormSection';
+import { Input } from "@/src/components/ui/input";
+import { Label } from "@/src/components/ui/label";
+import { ContactCreate } from "@/src/models/crm";
+import { CollapsibleFormSection } from "../CollapsibleFormSection";
 
 type ContactFormAdditionalSectionProps = {
   formData: ContactCreate;
@@ -17,17 +17,13 @@ export function ContactFormAdditionalSection({
   onToggle,
 }: ContactFormAdditionalSectionProps) {
   return (
-    <CollapsibleFormSection
-      title="Additional"
-      open={open}
-      onToggle={onToggle}
-    >
+    <CollapsibleFormSection title="Additional" open={open} onToggle={onToggle}>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border rounded-md p-4">
         <div>
           <Label htmlFor="initials">Initials</Label>
           <Input
             id="initials"
-            value={formData.initials || ''}
+            value={formData.initials || ""}
             onChange={(e) =>
               setFormData({
                 ...formData,
@@ -41,7 +37,7 @@ export function ContactFormAdditionalSection({
           <Label htmlFor="fullName">Full name</Label>
           <Input
             id="fullName"
-            value={formData.fullName || ''}
+            value={formData.fullName || ""}
             onChange={(e) =>
               setFormData({
                 ...formData,
@@ -56,7 +52,7 @@ export function ContactFormAdditionalSection({
           <Input
             id="birthday"
             type="date"
-            value={formData.birthday || ''}
+            value={formData.birthday || ""}
             onChange={(e) =>
               setFormData({
                 ...formData,
@@ -72,11 +68,13 @@ export function ContactFormAdditionalSection({
             type="number"
             min={0}
             step="0.01"
-            value={formData.clientValue ?? ''}
+            value={formData.clientValue ?? ""}
             onChange={(e) =>
               setFormData({
                 ...formData,
-                clientValue: e.target.value ? parseFloat(e.target.value) : undefined,
+                clientValue: e.target.value
+                  ? parseFloat(e.target.value)
+                  : undefined,
               })
             }
             placeholder="Expected starting business value"
@@ -86,7 +84,7 @@ export function ContactFormAdditionalSection({
           <Label htmlFor="businessTaxId">Business tax ID</Label>
           <Input
             id="businessTaxId"
-            value={formData.businessTaxId || ''}
+            value={formData.businessTaxId || ""}
             onChange={(e) =>
               setFormData({
                 ...formData,

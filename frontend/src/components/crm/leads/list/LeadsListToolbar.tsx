@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { Button } from '@/src/components/ui/button';
+import { Button } from "@/src/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/src/components/ui/dropdown-menu';
-import { Plus, Filter, ChevronDown } from 'lucide-react';
-import { LeadSavedFilter } from '@/src/models/crm';
+} from "@/src/components/ui/dropdown-menu";
+import { Plus, Filter, ChevronDown } from "lucide-react";
+import { LeadSavedFilter } from "@/src/models/crm";
 
 type Props = {
   savedFilters: LeadSavedFilter[];
@@ -39,27 +39,27 @@ export function LeadsListToolbar({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => onBulkAction('delete')}>
+            <DropdownMenuItem onClick={() => onBulkAction("delete")}>
               Delete selected
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => onBulkAction('rating', { leadRating: 'hot' })}
+              onClick={() => onBulkAction("rating", { leadRating: "hot" })}
             >
               Mark Hot
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => onBulkAction('rating', { leadRating: 'warm' })}
+              onClick={() => onBulkAction("rating", { leadRating: "warm" })}
             >
               Mark Warm
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => onBulkAction('rating', { leadRating: 'cold' })}
+              onClick={() => onBulkAction("rating", { leadRating: "cold" })}
             >
               Mark Cold
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() =>
-                onBulkAction('pipeline', { pipelineStage: 'tried_to_contact' })
+                onBulkAction("pipeline", { pipelineStage: "tried_to_contact" })
               }
             >
               Set Tried to contact
@@ -70,7 +70,7 @@ export function LeadsListToolbar({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm">
-              <Filter className="mr-1 h-3 w-3" /> Saved Filter{' '}
+              <Filter className="mr-1 h-3 w-3" /> Saved Filter{" "}
               <ChevronDown className="ml-1 h-3 w-3" />
             </Button>
           </DropdownMenuTrigger>
@@ -91,7 +91,7 @@ export function LeadsListToolbar({
         </Button>
         <Button
           size="sm"
-          variant={showPartialOnly ? 'default' : 'outline'}
+          variant={showPartialOnly ? "default" : "outline"}
           onClick={onTogglePartial}
         >
           Partial Leads

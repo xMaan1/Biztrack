@@ -1,10 +1,16 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
-import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
-import { Progress } from '../ui/progress';
+import React from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "../ui/card";
+import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
+import { Progress } from "../ui/progress";
 import {
   Briefcase,
   Users,
@@ -17,7 +23,7 @@ import {
   ListTodo,
   Activity,
   ChevronRight,
-} from 'lucide-react';
+} from "lucide-react";
 
 export interface AgencyProjectSummary {
   id: string;
@@ -54,18 +60,20 @@ interface AgencyDashboardProps {
 }
 
 function statusLabel(status: string): string {
-  return status.replace(/_/g, ' ');
+  return status.replace(/_/g, " ");
 }
 
-function statusVariant(status: string): 'default' | 'secondary' | 'outline' | 'destructive' {
-  if (status === 'completed') return 'default';
-  if (status === 'on_hold') return 'secondary';
-  if (status === 'in_progress' || status === 'planning') return 'outline';
-  return 'secondary';
+function statusVariant(
+  status: string,
+): "default" | "secondary" | "outline" | "destructive" {
+  if (status === "completed") return "default";
+  if (status === "on_hold") return "secondary";
+  if (status === "in_progress" || status === "planning") return "outline";
+  return "secondary";
 }
 
 function isRunningProject(status: string): boolean {
-  return status === 'in_progress' || status === 'planning';
+  return status === "in_progress" || status === "planning";
 }
 
 export default function AgencyDashboard({
@@ -82,7 +90,9 @@ export default function AgencyDashboard({
   );
 
   const displayedProjects =
-    runningProjects.length > 0 ? runningProjects : stats.recentProjects.slice(0, 6);
+    runningProjects.length > 0
+      ? runningProjects
+      : stats.recentProjects.slice(0, 6);
 
   const activeMembers = stats.teamMembers.filter((m) => m.isActive !== false);
 
@@ -99,14 +109,14 @@ export default function AgencyDashboard({
         </div>
         <div className="flex flex-wrap gap-3">
           <Button
-            onClick={() => onNavigate('/projects')}
+            onClick={() => onNavigate("/projects")}
             className="bg-indigo-600 hover:bg-indigo-700"
           >
             <Plus className="mr-2 h-4 w-4" />
             New Project
           </Button>
           <Button
-            onClick={() => onNavigate('/users')}
+            onClick={() => onNavigate("/users")}
             variant="outline"
             className="border-indigo-600 text-indigo-600 hover:bg-indigo-50"
           >
@@ -119,27 +129,35 @@ export default function AgencyDashboard({
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="border-l-4 border-l-indigo-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Projects</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Total Projects
+            </CardTitle>
             <FolderKanban className="h-4 w-4 text-indigo-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-indigo-600">
               {stats.totalProjects}
             </div>
-            <p className="text-xs text-muted-foreground">All client engagements</p>
+            <p className="text-xs text-muted-foreground">
+              All client engagements
+            </p>
           </CardContent>
         </Card>
 
         <Card className="border-l-4 border-l-violet-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Running Projects</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Running Projects
+            </CardTitle>
             <Activity className="h-4 w-4 text-violet-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-violet-600">
               {stats.activeProjects}
             </div>
-            <p className="text-xs text-muted-foreground">In planning or progress</p>
+            <p className="text-xs text-muted-foreground">
+              In planning or progress
+            </p>
           </CardContent>
         </Card>
 
@@ -152,7 +170,9 @@ export default function AgencyDashboard({
             <div className="text-2xl font-bold text-emerald-600">
               {stats.completedProjects}
             </div>
-            <p className="text-xs text-muted-foreground">{completionRate}% completion rate</p>
+            <p className="text-xs text-muted-foreground">
+              {completionRate}% completion rate
+            </p>
           </CardContent>
         </Card>
 
@@ -186,7 +206,7 @@ export default function AgencyDashboard({
                 </CardDescription>
               </div>
               <Button
-                onClick={() => onNavigate('/projects')}
+                onClick={() => onNavigate("/projects")}
                 variant="ghost"
                 size="sm"
                 className="text-indigo-600"
@@ -207,7 +227,7 @@ export default function AgencyDashboard({
                   Create a project to start tracking client delivery.
                 </p>
                 <Button
-                  onClick={() => onNavigate('/projects')}
+                  onClick={() => onNavigate("/projects")}
                   className="mt-4 bg-indigo-600 hover:bg-indigo-700"
                 >
                   <Plus className="mr-2 h-4 w-4" />
@@ -284,7 +304,7 @@ export default function AgencyDashboard({
                 </CardDescription>
               </div>
               <Button
-                onClick={() => onNavigate('/users')}
+                onClick={() => onNavigate("/users")}
                 variant="ghost"
                 size="sm"
                 className="text-violet-600"
@@ -321,7 +341,7 @@ export default function AgencyDashboard({
             )}
 
             <Button
-              onClick={() => onNavigate('/hrm/employees')}
+              onClick={() => onNavigate("/hrm/employees")}
               variant="outline"
               className="w-full border-violet-600 text-violet-600 hover:bg-violet-50"
             >
@@ -342,7 +362,7 @@ export default function AgencyDashboard({
         <CardContent>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             <Button
-              onClick={() => onNavigate('/projects')}
+              onClick={() => onNavigate("/projects")}
               variant="outline"
               className="h-20 flex-col gap-2"
             >
@@ -351,7 +371,7 @@ export default function AgencyDashboard({
             </Button>
 
             <Button
-              onClick={() => onNavigate('/tasks')}
+              onClick={() => onNavigate("/tasks")}
               variant="outline"
               className="h-20 flex-col gap-2"
             >
@@ -360,7 +380,7 @@ export default function AgencyDashboard({
             </Button>
 
             <Button
-              onClick={() => onNavigate('/team')}
+              onClick={() => onNavigate("/team")}
               variant="outline"
               className="h-20 flex-col gap-2"
             >
@@ -369,7 +389,7 @@ export default function AgencyDashboard({
             </Button>
 
             <Button
-              onClick={() => onNavigate('/hrm/employees')}
+              onClick={() => onNavigate("/hrm/employees")}
               variant="outline"
               className="h-20 flex-col gap-2"
             >

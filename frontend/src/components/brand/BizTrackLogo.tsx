@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import Image from 'next/image';
-import Link from 'next/link';
-import { cn } from '@/src/lib/utils';
+import Image from "next/image";
+import Link from "next/link";
+import { cn } from "@/src/lib/utils";
 
 const LOGO_ASPECT = 671 / 503;
 
@@ -17,24 +17,22 @@ type BizTrackLogoSize = keyof typeof HEIGHTS;
 
 interface BizTrackLogoProps {
   size?: BizTrackLogoSize;
-  variant?: 'full' | 'icon';
+  variant?: "full" | "icon";
   showText?: boolean;
   className?: string;
   href?: string;
 }
 
 export function BizTrackLogo({
-  size = 'md',
-  variant = 'full',
+  size = "md",
+  variant = "full",
   showText = false,
   className,
   href,
 }: BizTrackLogoProps) {
   const height = HEIGHTS[size];
-  const src =
-    variant === 'icon' ? '/biztrack-icon.png' : '/biztrack-logo.png';
-  const width =
-    variant === 'icon' ? height : Math.round(height * LOGO_ASPECT);
+  const src = variant === "icon" ? "/biztrack-icon.png" : "/biztrack-logo.png";
+  const width = variant === "icon" ? height : Math.round(height * LOGO_ASPECT);
 
   const image = (
     <Image
@@ -43,12 +41,12 @@ export function BizTrackLogo({
       height={height}
       width={width}
       className="object-contain"
-      priority={size === 'hero'}
+      priority={size === "hero"}
     />
   );
 
   const content = (
-    <div className={cn('flex items-center gap-2.5', className)}>
+    <div className={cn("flex items-center gap-2.5", className)}>
       {image}
       {showText ? (
         <span className="text-xl font-bold tracking-tight">BizTrack</span>

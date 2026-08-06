@@ -1,35 +1,35 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
-import { Label } from '@/src/components/ui/label';
+} from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
+import { Label } from "@/src/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
-import { Badge } from '@/src/components/ui/badge';
-import { useAuth } from '@/src/hooks/useAuth';
-import { useCurrency } from '@/src/contexts/CurrencyContext';
-import { apiService } from '@/src/services/ApiService';
+} from "@/src/components/ui/select";
+import { Badge } from "@/src/components/ui/badge";
+import { useAuth } from "@/src/hooks/useAuth";
+import { useCurrency } from "@/src/contexts/CurrencyContext";
+import { apiService } from "@/src/services/ApiService";
 import {
   Product,
   POSTransactionCreate,
   POSPaymentMethod,
   POSShift,
   POSShiftStatus,
-} from '@/src/models/pos';
+} from "@/src/models/pos";
 import {
   ShoppingCart,
   Plus,
@@ -37,9 +37,9 @@ import {
   Search,
   Receipt,
   Package,
-} from 'lucide-react';
-import { DashboardLayout } from '../../../components/layout';
-import { toast } from 'sonner';
+} from "lucide-react";
+import { DashboardLayout } from "../../../components/layout";
+import { toast } from "sonner";
 
 interface CartItem {
   product: Product;
@@ -48,16 +48,16 @@ interface CartItem {
 }
 
 const POSSale = () => {
-  const { } = useAuth();
+  const {} = useAuth();
   const { formatCurrency } = useCurrency();
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<POSPaymentMethod>(POSPaymentMethod.CASH);
-  const [customerName, setCustomerName] = useState('');
-  const [notes, setNotes] = useState('');
+  const [customerName, setCustomerName] = useState("");
+  const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -66,7 +66,7 @@ const POSSale = () => {
 
   const hasOpenShift = async () => {
     try {
-      const response = await apiService.get('/pos/shifts');
+      const response = await apiService.get("/pos/shifts");
       const shifts: POSShift[] = response.shifts || [];
       return shifts.some((shift) => shift.status === POSShiftStatus.OPEN);
     } catch {
@@ -76,12 +76,15 @@ const POSSale = () => {
 
   const fetchProducts = async () => {
     try {
-      const response = await apiService.get('/pos/products');
+      const response = await apiService.get("/pos/products");
       setProducts(response.products || []);
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to load products';
+      const errorMessage =
+        error?.response?.data?.detail ||
+        error?.message ||
+        "Failed to load products";
       toast.error(`Load Error: ${errorMessage}`);
-      }
+    }
   };
 
   const searchProducts = async (query: string) => {
@@ -91,9 +94,12 @@ const POSSale = () => {
       const response = await apiService.get(`/pos/products/search?q=${query}`);
       setProducts(response.products || []);
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to search products';
+      const errorMessage =
+        error?.response?.data?.detail ||
+        error?.message ||
+        "Failed to search products";
       toast.error(`Search Error: ${errorMessage}`);
-      }
+    }
   };
 
   const addToCart = (product: Product) => {
@@ -122,7 +128,7 @@ const POSSale = () => {
       ]);
     }
 
-    setSearchTerm('');
+    setSearchTerm("");
   };
 
   const updateQuantity = (productId: string, newQuantity: number) => {
@@ -150,8 +156,8 @@ const POSSale = () => {
 
   const clearCart = () => {
     setCart([]);
-    setCustomerName('');
-    setNotes('');
+    setCustomerName("");
+    setNotes("");
   };
 
   const getSubtotal = () => {
@@ -169,8 +175,8 @@ const POSSale = () => {
     try {
       const openShift = await hasOpenShift();
       if (!openShift) {
-        toast.warning('No open shift found. Please open a shift first.');
-        router.push('/pos/shifts');
+        toast.warning("No open shift found. Please open a shift first.");
+        router.push("/pos/shifts");
         return;
       }
 
@@ -193,16 +199,19 @@ const POSSale = () => {
         notes: notes || undefined,
       };
 
-      await apiService.post('/pos/transactions', transactionData);
+      await apiService.post("/pos/transactions", transactionData);
 
       // Clear cart and show success
       clearCart();
-      toast.success('Transaction completed successfully!');
+      toast.success("Transaction completed successfully!");
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to create transaction';
-      if (String(errorMessage).toLowerCase().includes('no open shift')) {
-        toast.warning('No open shift found. Please open a shift first.');
-        router.push('/pos/shifts');
+      const errorMessage =
+        error?.response?.data?.detail ||
+        error?.message ||
+        "Failed to create transaction";
+      if (String(errorMessage).toLowerCase().includes("no open shift")) {
+        toast.warning("No open shift found. Please open a shift first.");
+        router.push("/pos/shifts");
         return;
       }
       toast.error(`Transaction Error: ${errorMessage}`);
@@ -225,7 +234,7 @@ const POSSale = () => {
 
           <Button
             className="bg-blue-600 hover:bg-blue-700"
-            onClick={() => router.push('/pos/products?openAdd=true')}
+            onClick={() => router.push("/pos/products?openAdd=true")}
           >
             <Plus className="mr-2 h-4 w-4" />
             Add Product
@@ -272,7 +281,7 @@ const POSSale = () => {
                           <div>
                             <p className="font-medium">{product.name}</p>
                             <p className="text-sm text-muted-foreground">
-                              SKU: {product.sku} | Stock:{' '}
+                              SKU: {product.sku} | Stock:{" "}
                               {product.stockQuantity}
                             </p>
                           </div>
@@ -415,7 +424,7 @@ const POSSale = () => {
                             ) : (
                               <Package className="h-4 w-4" />
                             )}
-                            <span>{method.replace('_', ' ')}</span>
+                            <span>{method.replace("_", " ")}</span>
                           </div>
                         </SelectItem>
                       ))}
@@ -454,7 +463,7 @@ const POSSale = () => {
                     disabled={cart.length === 0 || loading}
                     className="w-full bg-green-600 hover:bg-green-700"
                   >
-                    {loading ? 'Processing...' : 'Complete Sale'}
+                    {loading ? "Processing..." : "Complete Sale"}
                   </Button>
 
                   <Button

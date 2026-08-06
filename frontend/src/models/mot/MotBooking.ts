@@ -1,13 +1,13 @@
 export type MotBookingStatus =
-  | 'scheduled'
-  | 'confirmed'
-  | 'in_progress'
-  | 'passed'
-  | 'failed'
-  | 'cancelled'
-  | 'no_show';
+  | "scheduled"
+  | "confirmed"
+  | "in_progress"
+  | "passed"
+  | "failed"
+  | "cancelled"
+  | "no_show";
 
-export type MotTestType = 'standard' | 'retest' | 'pre_mot';
+export type MotTestType = "standard" | "retest" | "pre_mot";
 
 export interface MotBooking {
   id: string;
@@ -83,56 +83,58 @@ export interface MotBookingStats {
   cancelled_count: number;
 }
 
-
-export const MOT_BOOKING_STATUSES: { value: MotBookingStatus; label: string }[] = [
-  { value: 'scheduled', label: 'Scheduled' },
-  { value: 'confirmed', label: 'Confirmed' },
-  { value: 'in_progress', label: 'In Progress' },
-  { value: 'passed', label: 'Passed' },
-  { value: 'failed', label: 'Failed' },
-  { value: 'cancelled', label: 'Cancelled' },
-  { value: 'no_show', label: 'No Show' },
+export const MOT_BOOKING_STATUSES: {
+  value: MotBookingStatus;
+  label: string;
+}[] = [
+  { value: "scheduled", label: "Scheduled" },
+  { value: "confirmed", label: "Confirmed" },
+  { value: "in_progress", label: "In Progress" },
+  { value: "passed", label: "Passed" },
+  { value: "failed", label: "Failed" },
+  { value: "cancelled", label: "Cancelled" },
+  { value: "no_show", label: "No Show" },
 ];
 
 export const MOT_TEST_TYPES: { value: MotTestType; label: string }[] = [
-  { value: 'standard', label: 'Standard MOT' },
-  { value: 'retest', label: 'Retest' },
-  { value: 'pre_mot', label: 'Pre-MOT Check' },
+  { value: "standard", label: "Standard MOT" },
+  { value: "retest", label: "Retest" },
+  { value: "pre_mot", label: "Pre-MOT Check" },
 ];
 
 export const MOT_TIME_SLOTS = [
-  { start: '08:00', end: '08:45' },
-  { start: '08:45', end: '09:30' },
-  { start: '09:30', end: '10:15' },
-  { start: '10:15', end: '11:00' },
-  { start: '11:00', end: '11:45' },
-  { start: '11:45', end: '12:30' },
-  { start: '13:00', end: '13:45' },
-  { start: '13:45', end: '14:30' },
-  { start: '14:30', end: '15:15' },
-  { start: '15:15', end: '16:00' },
-  { start: '16:00', end: '16:45' },
-  { start: '16:45', end: '17:30' },
+  { start: "08:00", end: "08:45" },
+  { start: "08:45", end: "09:30" },
+  { start: "09:30", end: "10:15" },
+  { start: "10:15", end: "11:00" },
+  { start: "11:00", end: "11:45" },
+  { start: "11:45", end: "12:30" },
+  { start: "13:00", end: "13:45" },
+  { start: "13:45", end: "14:30" },
+  { start: "14:30", end: "15:15" },
+  { start: "15:15", end: "16:00" },
+  { start: "16:00", end: "16:45" },
+  { start: "16:45", end: "17:30" },
 ];
 
 export function getMotStatusColor(status: MotBookingStatus): string {
   switch (status) {
-    case 'scheduled':
-      return 'bg-blue-100 text-blue-800';
-    case 'confirmed':
-      return 'bg-indigo-100 text-indigo-800';
-    case 'in_progress':
-      return 'bg-amber-100 text-amber-800';
-    case 'passed':
-      return 'bg-green-100 text-green-800';
-    case 'failed':
-      return 'bg-red-100 text-red-800';
-    case 'cancelled':
-      return 'bg-gray-100 text-gray-800';
-    case 'no_show':
-      return 'bg-orange-100 text-orange-800';
+    case "scheduled":
+      return "bg-blue-100 text-blue-800";
+    case "confirmed":
+      return "bg-indigo-100 text-indigo-800";
+    case "in_progress":
+      return "bg-amber-100 text-amber-800";
+    case "passed":
+      return "bg-green-100 text-green-800";
+    case "failed":
+      return "bg-red-100 text-red-800";
+    case "cancelled":
+      return "bg-gray-100 text-gray-800";
+    case "no_show":
+      return "bg-orange-100 text-orange-800";
     default:
-      return 'bg-gray-100 text-gray-800';
+      return "bg-gray-100 text-gray-800";
   }
 }
 
@@ -150,5 +152,5 @@ export function formatMotVehicleLine(booking: MotBooking): string {
     booking.vehicle_make,
     booking.vehicle_model,
   ].filter(Boolean);
-  return parts.length ? parts.join(' · ') : '—';
+  return parts.length ? parts.join(" · ") : "—";
 }

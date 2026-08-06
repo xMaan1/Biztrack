@@ -1,4 +1,7 @@
-import type { DonorLeadSource, DonorLeadStatus } from '@/src/constants/ngo/donorLead';
+import type {
+  DonorLeadSource,
+  DonorLeadStatus,
+} from "@/src/constants/ngo/donorLead";
 
 export type { DonorLeadSource, DonorLeadStatus };
 

@@ -1,19 +1,22 @@
-'use client';
+"use client";
 
-import { ModuleGuard } from '@/src/components/guards/PermissionGuard';
-import { DashboardLayout } from '@/src/components/layout';
-import { SuppliersLoadingState } from '@/src/components/hrm/suppliers/SuppliersLoadingState';
-import { SuppliersPageHeader } from '@/src/components/hrm/suppliers/SuppliersPageHeader';
-import { SuppliersSearchCard } from '@/src/components/hrm/suppliers/SuppliersSearchCard';
-import { SuppliersListCard } from '@/src/components/hrm/suppliers/SuppliersListCard';
-import { SuppliersStatsCards } from '@/src/components/hrm/suppliers/SuppliersStatsCards';
-import { SupplierFormDialog } from '@/src/components/hrm/suppliers/SupplierFormDialog';
-import { SupplierDeleteDialog } from '@/src/components/hrm/suppliers/SupplierDeleteDialog';
-import { useSuppliersPage } from '@/src/hooks/useSuppliersPage';
+import { ModuleGuard } from "@/src/components/guards/PermissionGuard";
+import { DashboardLayout } from "@/src/components/layout";
+import { SuppliersLoadingState } from "@/src/components/hrm/suppliers/SuppliersLoadingState";
+import { SuppliersPageHeader } from "@/src/components/hrm/suppliers/SuppliersPageHeader";
+import { SuppliersSearchCard } from "@/src/components/hrm/suppliers/SuppliersSearchCard";
+import { SuppliersListCard } from "@/src/components/hrm/suppliers/SuppliersListCard";
+import { SuppliersStatsCards } from "@/src/components/hrm/suppliers/SuppliersStatsCards";
+import { SupplierFormDialog } from "@/src/components/hrm/suppliers/SupplierFormDialog";
+import { SupplierDeleteDialog } from "@/src/components/hrm/suppliers/SupplierDeleteDialog";
+import { useSuppliersPage } from "@/src/hooks/useSuppliersPage";
 
 export default function SuppliersPage() {
   return (
-    <ModuleGuard module="hrm" fallback={<div>You don't have access to HRM module</div>}>
+    <ModuleGuard
+      module="hrm"
+      fallback={<div>You don&apos;t have access to HRM module</div>}
+    >
       <SuppliersContent />
     </ModuleGuard>
   );
@@ -52,7 +55,10 @@ function SuppliersContent() {
     <DashboardLayout>
       <div className="container mx-auto space-y-6 p-6">
         <SuppliersPageHeader onAddSupplier={openCreateDialog} />
-        <SuppliersSearchCard searchTerm={searchTerm} onSearchTermChange={setSearchTerm} />
+        <SuppliersSearchCard
+          searchTerm={searchTerm}
+          onSearchTermChange={setSearchTerm}
+        />
         <SuppliersListCard
           suppliers={filteredSuppliers}
           searchTerm={searchTerm}

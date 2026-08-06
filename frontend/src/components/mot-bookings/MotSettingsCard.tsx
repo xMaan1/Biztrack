@@ -1,17 +1,29 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { ClipboardCheck, Copy, ExternalLink, Globe, PoundSterling, Save } from 'lucide-react';
-import { toast } from 'sonner';
-import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
-import { Label } from '@/src/components/ui/label';
-import { Switch } from '@/src/components/ui/switch';
-import motBookingService from '@/src/services/MotBookingService';
-import { getTenantMotBookingUrl } from '@/src/models/mot/MotSettings';
-import { MOT_INSPECTION_PRICE } from '@/src/components/mot-bookings/wizard/wizardTypes';
+import { useEffect, useState } from "react";
+import {
+  ClipboardCheck,
+  Copy,
+  ExternalLink,
+  Globe,
+  PoundSterling,
+  Save,
+} from "lucide-react";
+import { toast } from "sonner";
+import Link from "next/link";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
+import { Label } from "@/src/components/ui/label";
+import { Switch } from "@/src/components/ui/switch";
+import motBookingService from "@/src/services/MotBookingService";
+import { getTenantMotBookingUrl } from "@/src/models/mot/MotSettings";
+import { MOT_INSPECTION_PRICE } from "@/src/components/mot-bookings/wizard/wizardTypes";
 
 type MotSettingsCardProps = {
   onSaved?: (settings: { price: number; enabled: boolean }) => void;
@@ -20,8 +32,8 @@ type MotSettingsCardProps = {
 export function MotSettingsCard({ onSaved }: MotSettingsCardProps) {
   const [price, setPrice] = useState(String(MOT_INSPECTION_PRICE));
   const [enabled, setEnabled] = useState(false);
-  const [tenantDomain, setTenantDomain] = useState('');
-  const [tenantName, setTenantName] = useState('');
+  const [tenantDomain, setTenantDomain] = useState("");
+  const [tenantName, setTenantName] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -41,25 +53,25 @@ export function MotSettingsCard({ onSaved }: MotSettingsCardProps) {
   }, []);
 
   const bookingUrl =
-    typeof window !== 'undefined' && tenantDomain
+    typeof window !== "undefined" && tenantDomain
       ? `${window.location.origin}${getTenantMotBookingUrl(tenantDomain)}`
       : tenantDomain
         ? getTenantMotBookingUrl(tenantDomain)
-        : '';
+        : "";
 
   const handleCopy = async (value: string) => {
     try {
       await navigator.clipboard.writeText(value);
-      toast.success('Link copied');
+      toast.success("Link copied");
     } catch {
-      toast.error('Failed to copy link');
+      toast.error("Failed to copy link");
     }
   };
 
   const handleSave = async () => {
     const parsed = Number(price);
     if (!Number.isFinite(parsed) || parsed < 0) {
-      toast.error('Enter a valid price');
+      toast.error("Enter a valid price");
       return;
     }
 
@@ -74,10 +86,13 @@ export function MotSettingsCard({ onSaved }: MotSettingsCardProps) {
       setEnabled(Boolean(settings.public_booking_enabled));
       setTenantDomain(settings.tenant_domain);
       setTenantName(settings.tenant_name);
-      onSaved?.({ price: savedPrice, enabled: Boolean(settings.public_booking_enabled) });
-      toast.success('MOT settings updated');
+      onSaved?.({
+        price: savedPrice,
+        enabled: Boolean(settings.public_booking_enabled),
+      });
+      toast.success("MOT settings updated");
     } catch {
-      toast.error('Failed to update MOT settings');
+      toast.error("Failed to update MOT settings");
     } finally {
       setSaving(false);
     }
@@ -116,13 +131,22 @@ export function MotSettingsCard({ onSaved }: MotSettingsCardProps) {
               {tenantName || tenantDomain} public booking URL
             </div>
             <div className="flex flex-wrap gap-2">
-              <code className="flex-1 rounded-lg bg-background px-3 py-2 text-sm">{bookingUrl}</code>
-              <Button variant="outline" size="icon" onClick={() => handleCopy(bookingUrl)}>
+              <code className="flex-1 rounded-lg bg-background px-3 py-2 text-sm">
+                {bookingUrl}
+              </code>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => handleCopy(bookingUrl)}
+              >
                 <Copy className="h-4 w-4" />
               </Button>
               {enabled && (
                 <Button variant="outline" size="icon" asChild>
-                  <Link href={getTenantMotBookingUrl(tenantDomain)} target="_blank">
+                  <Link
+                    href={getTenantMotBookingUrl(tenantDomain)}
+                    target="_blank"
+                  >
                     <ExternalLink className="h-4 w-4" />
                   </Link>
                 </Button>
@@ -138,7 +162,10 @@ export function MotSettingsCard({ onSaved }: MotSettingsCardProps) {
 
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
           <div className="flex-1 space-y-2">
-            <Label htmlFor="mot-inspection-price" className="flex items-center gap-2">
+            <Label
+              htmlFor="mot-inspection-price"
+              className="flex items-center gap-2"
+            >
               <PoundSterling className="h-4 w-4" />
               Inspection price
             </Label>
@@ -158,9 +185,13 @@ export function MotSettingsCard({ onSaved }: MotSettingsCardProps) {
               />
             </div>
           </div>
-          <Button onClick={handleSave} disabled={loading || saving} className="sm:mb-0.5">
+          <Button
+            onClick={handleSave}
+            disabled={loading || saving}
+            className="sm:mb-0.5"
+          >
             <Save className="mr-2 h-4 w-4" />
-            {saving ? 'Saving...' : 'Save Settings'}
+            {saving ? "Saving..." : "Save Settings"}
           </Button>
         </div>
       </CardContent>

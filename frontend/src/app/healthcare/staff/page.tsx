@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { DashboardLayout } from '@/src/components/layout';
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { DashboardLayout } from "@/src/components/layout";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
-import { Label } from '@/src/components/ui/label';
-import { Badge } from '@/src/components/ui/badge';
-import { Checkbox } from '@/src/components/ui/checkbox';
-import { Switch } from '@/src/components/ui/switch';
+} from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
+import { Label } from "@/src/components/ui/label";
+import { Badge } from "@/src/components/ui/badge";
+import { Checkbox } from "@/src/components/ui/checkbox";
+import { Switch } from "@/src/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -22,7 +22,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/src/components/ui/dialog';
+} from "@/src/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -30,16 +30,16 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/src/components/ui/table';
-import { UserPlus, Edit, Trash2 } from 'lucide-react';
-import { toast } from 'sonner';
-import healthcareService from '@/src/services/HealthcareService';
-import type {
-  HealthcareStaff,
-  HealthcareStaffCreate,
-  HealthcareStaffUpdate,
-} from '@/src/models/healthcare';
-import { HEALTHCARE_PERMISSIONS } from '@/src/models/healthcare';
+} from "@/src/components/ui/table";
+import { UserPlus, Edit, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import healthcareService from "@/src/services/HealthcareService";
+import {
+  HEALTHCARE_PERMISSIONS,
+  type HealthcareStaff,
+  type HealthcareStaffCreate,
+  type HealthcareStaffUpdate,
+} from "@/src/models/healthcare";
 
 export default function HealthcareStaffPage() {
   return (
@@ -62,17 +62,17 @@ type StaffFormState = {
 };
 
 const PERMISSION_LABELS: Record<string, string> = {
-  'healthcare:view': 'View',
-  'healthcare:create': 'Create',
-  'healthcare:update': 'Update',
-  'healthcare:delete': 'Delete',
+  "healthcare:view": "View",
+  "healthcare:create": "Create",
+  "healthcare:update": "Update",
+  "healthcare:delete": "Delete",
 };
 
 function StaffContent() {
   const [staff, setStaff] = useState<HealthcareStaff[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const limit = 20;
   const totalPages = Math.ceil(total / limit) || 1;
@@ -82,18 +82,20 @@ function StaffContent() {
   const [submitLoading, setSubmitLoading] = useState(false);
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [staffToDelete, setStaffToDelete] = useState<HealthcareStaff | null>(null);
+  const [staffToDelete, setStaffToDelete] = useState<HealthcareStaff | null>(
+    null,
+  );
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   const [formData, setFormData] = useState<StaffFormState>({
-    username: '',
-    email: '',
-    password: '',
-    first_name: '',
-    last_name: '',
-    phone: '',
-    role: '',
-    permissions: ['healthcare:view'],
+    username: "",
+    email: "",
+    password: "",
+    first_name: "",
+    last_name: "",
+    phone: "",
+    role: "",
+    permissions: ["healthcare:view"],
     is_active: true,
   });
 
@@ -108,7 +110,7 @@ function StaffContent() {
       setStaff(res.staff);
       setTotal(res.total);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Failed to load staff');
+      toast.error(e instanceof Error ? e.message : "Failed to load staff");
     } finally {
       setLoading(false);
     }
@@ -121,14 +123,14 @@ function StaffContent() {
   const openAdd = () => {
     setEditing(null);
     setFormData({
-      username: '',
-      email: '',
-      password: '',
-      first_name: '',
-      last_name: '',
-      phone: '',
-      role: '',
-      permissions: ['healthcare:view'],
+      username: "",
+      email: "",
+      password: "",
+      first_name: "",
+      last_name: "",
+      phone: "",
+      role: "",
+      permissions: ["healthcare:view"],
       is_active: true,
     });
     setFormOpen(true);
@@ -139,12 +141,14 @@ function StaffContent() {
     setFormData({
       username: s.username,
       email: s.email,
-      password: '',
-      first_name: s.first_name ?? '',
-      last_name: s.last_name ?? '',
-      phone: s.phone ?? '',
-      role: s.role ?? '',
-      permissions: (s.permissions as string[])?.length ? [...(s.permissions as string[])] : ['healthcare:view'],
+      password: "",
+      first_name: s.first_name ?? "",
+      last_name: s.last_name ?? "",
+      phone: s.phone ?? "",
+      role: s.role ?? "",
+      permissions: (s.permissions as string[])?.length
+        ? [...(s.permissions as string[])]
+        : ["healthcare:view"],
       is_active: s.is_active,
     });
     setFormOpen(true);
@@ -156,8 +160,13 @@ function StaffContent() {
   };
 
   const permissionBadges = useMemo(() => {
-    const map = new Map<string, { label: string; variant: 'info' | 'outline' }>();
-    HEALTHCARE_PERMISSIONS.forEach((p) => map.set(p, { label: PERMISSION_LABELS[p] ?? p, variant: 'info' }));
+    const map = new Map<
+      string,
+      { label: string; variant: "info" | "outline" }
+    >();
+    HEALTHCARE_PERMISSIONS.forEach((p) =>
+      map.set(p, { label: PERMISSION_LABELS[p] ?? p, variant: "info" }),
+    );
     return map;
   }, []);
 
@@ -170,23 +179,27 @@ function StaffContent() {
         current.delete(perm);
       }
       const next = Array.from(current);
-      if (!next.includes('healthcare:view')) next.push('healthcare:view');
-      next.sort((a, b) => HEALTHCARE_PERMISSIONS.indexOf(a as any) - HEALTHCARE_PERMISSIONS.indexOf(b as any));
+      if (!next.includes("healthcare:view")) next.push("healthcare:view");
+      next.sort(
+        (a, b) =>
+          HEALTHCARE_PERMISSIONS.indexOf(a as any) -
+          HEALTHCARE_PERMISSIONS.indexOf(b as any),
+      );
       return { ...prev, permissions: next };
     });
   };
 
   const validate = () => {
     if (!formData.username.trim()) {
-      toast.error('Username is required');
+      toast.error("Username is required");
       return false;
     }
     if (!formData.email.trim()) {
-      toast.error('Email is required');
+      toast.error("Email is required");
       return false;
     }
     if (!editing && !formData.password.trim()) {
-      toast.error('Password is required');
+      toast.error("Password is required");
       return false;
     }
     return true;
@@ -210,7 +223,7 @@ function StaffContent() {
           password: formData.password.trim() ? formData.password : undefined,
         };
         await healthcareService.updateStaff(editing.id, payload);
-        toast.success('Staff updated');
+        toast.success("Staff updated");
       } else {
         const payload: HealthcareStaffCreate = {
           username: formData.username.trim(),
@@ -223,13 +236,13 @@ function StaffContent() {
           permissions: formData.permissions,
         };
         await healthcareService.createStaff(payload);
-        toast.success('Staff added');
+        toast.success("Staff added");
       }
       setFormOpen(false);
       loadStaff();
     } catch (e: any) {
-      const msg = e?.response?.data?.detail || e?.message || 'Request failed';
-      toast.error(typeof msg === 'string' ? msg : JSON.stringify(msg));
+      const msg = e?.response?.data?.detail || e?.message || "Request failed";
+      toast.error(typeof msg === "string" ? msg : JSON.stringify(msg));
     } finally {
       setSubmitLoading(false);
     }
@@ -240,25 +253,25 @@ function StaffContent() {
     try {
       setDeleteLoading(true);
       await healthcareService.deleteStaff(staffToDelete.id);
-      toast.success('Staff disabled');
+      toast.success("Staff disabled");
       setDeleteDialogOpen(false);
       setStaffToDelete(null);
       loadStaff();
     } catch (e: any) {
-      const msg = e?.response?.data?.detail || e?.message || 'Request failed';
-      toast.error(typeof msg === 'string' ? msg : JSON.stringify(msg));
+      const msg = e?.response?.data?.detail || e?.message || "Request failed";
+      toast.error(typeof msg === "string" ? msg : JSON.stringify(msg));
     } finally {
       setDeleteLoading(false);
     }
   };
 
   const formatName = (s: HealthcareStaff) => {
-    const name = `${s.first_name ?? ''} ${s.last_name ?? ''}`.trim();
-    return name || '—';
+    const name = `${s.first_name ?? ""} ${s.last_name ?? ""}`.trim();
+    return name || "—";
   };
 
   const formatPermissions = (perms: string[]) => {
-    const normalized = perms.filter((p) => p.startsWith('healthcare:'));
+    const normalized = perms.filter((p) => p.startsWith("healthcare:"));
     if (!normalized.length) return <span className="text-gray-500">—</span>;
     return (
       <div className="flex flex-wrap gap-1">
@@ -287,7 +300,9 @@ function StaffContent() {
       <Card className="mb-6">
         <CardHeader>
           <CardTitle>Search</CardTitle>
-          <CardDescription>Filter by name, username, email, role, or phone</CardDescription>
+          <CardDescription>
+            Filter by name, username, email, role, or phone
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex gap-4">
@@ -308,7 +323,7 @@ function StaffContent() {
         <CardHeader>
           <CardTitle>Staff</CardTitle>
           <CardDescription>
-            {total} staff member{total !== 1 ? 's' : ''} total
+            {total} staff member{total !== 1 ? "s" : ""} total
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -341,7 +356,9 @@ function StaffContent() {
           {loading ? (
             <div className="py-12 text-center text-gray-500">Loading...</div>
           ) : staff.length === 0 ? (
-            <div className="py-12 text-center text-gray-500">No staff yet. Add one to get started.</div>
+            <div className="py-12 text-center text-gray-500">
+              No staff yet. Add one to get started.
+            </div>
           ) : (
             <Table>
               <TableHeader>
@@ -359,12 +376,16 @@ function StaffContent() {
               <TableBody>
                 {staff.map((s) => (
                   <TableRow key={s.id}>
-                    <TableCell className="font-medium">{formatName(s)}</TableCell>
+                    <TableCell className="font-medium">
+                      {formatName(s)}
+                    </TableCell>
                     <TableCell className="font-mono">{s.username}</TableCell>
                     <TableCell>{s.email}</TableCell>
-                    <TableCell>{s.phone || '—'}</TableCell>
-                    <TableCell>{s.role || '—'}</TableCell>
-                    <TableCell className="max-w-[220px]">{formatPermissions(s.permissions as string[])}</TableCell>
+                    <TableCell>{s.phone || "—"}</TableCell>
+                    <TableCell>{s.role || "—"}</TableCell>
+                    <TableCell className="max-w-[220px]">
+                      {formatPermissions(s.permissions as string[])}
+                    </TableCell>
                     <TableCell>
                       {s.is_active ? (
                         <Badge variant="success">Active</Badge>
@@ -373,7 +394,11 @@ function StaffContent() {
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" onClick={() => openEdit(s)}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openEdit(s)}
+                      >
                         <Edit className="w-4 h-4 mr-1" />
                         Edit
                       </Button>
@@ -398,8 +423,10 @@ function StaffContent() {
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
         <DialogContent className="sm:max-w-[640px]">
           <DialogHeader>
-            <DialogTitle>{editing ? 'Edit Staff' : 'Add Staff'}</DialogTitle>
-            <DialogDescription>Create staff accounts and control healthcare permissions</DialogDescription>
+            <DialogTitle>{editing ? "Edit Staff" : "Add Staff"}</DialogTitle>
+            <DialogDescription>
+              Create staff accounts and control healthcare permissions
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-6 py-2">
@@ -408,7 +435,9 @@ function StaffContent() {
                 <Label>Username</Label>
                 <Input
                   value={formData.username}
-                  onChange={(e) => setFormData((p) => ({ ...p, username: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((p) => ({ ...p, username: e.target.value }))
+                  }
                   placeholder="e.g. reception01"
                 />
               </div>
@@ -417,7 +446,9 @@ function StaffContent() {
                 <Input
                   type="email"
                   value={formData.email}
-                  onChange={(e) => setFormData((p) => ({ ...p, email: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((p) => ({ ...p, email: e.target.value }))
+                  }
                   placeholder="staff@example.com"
                 />
               </div>
@@ -428,7 +459,9 @@ function StaffContent() {
                 <Label>First Name</Label>
                 <Input
                   value={formData.first_name}
-                  onChange={(e) => setFormData((p) => ({ ...p, first_name: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((p) => ({ ...p, first_name: e.target.value }))
+                  }
                   placeholder="First name"
                 />
               </div>
@@ -436,7 +469,9 @@ function StaffContent() {
                 <Label>Last Name</Label>
                 <Input
                   value={formData.last_name}
-                  onChange={(e) => setFormData((p) => ({ ...p, last_name: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((p) => ({ ...p, last_name: e.target.value }))
+                  }
                   placeholder="Last name"
                 />
               </div>
@@ -447,7 +482,9 @@ function StaffContent() {
                 <Label>Phone</Label>
                 <Input
                   value={formData.phone}
-                  onChange={(e) => setFormData((p) => ({ ...p, phone: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((p) => ({ ...p, phone: e.target.value }))
+                  }
                   placeholder="e.g. +92 300 1234567"
                 />
               </div>
@@ -455,7 +492,9 @@ function StaffContent() {
                 <Label>Role</Label>
                 <Input
                   value={formData.role}
-                  onChange={(e) => setFormData((p) => ({ ...p, role: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((p) => ({ ...p, role: e.target.value }))
+                  }
                   placeholder="e.g. Receptionist"
                 />
               </div>
@@ -463,12 +502,20 @@ function StaffContent() {
 
             <div className="grid grid-cols-2 gap-4 items-start">
               <div className="space-y-2">
-                <Label>{editing ? 'New Password (optional)' : 'Password'}</Label>
+                <Label>
+                  {editing ? "New Password (optional)" : "Password"}
+                </Label>
                 <Input
                   type="password"
                   value={formData.password}
-                  onChange={(e) => setFormData((p) => ({ ...p, password: e.target.value }))}
-                  placeholder={editing ? 'Leave empty to keep current' : 'Set initial password'}
+                  onChange={(e) =>
+                    setFormData((p) => ({ ...p, password: e.target.value }))
+                  }
+                  placeholder={
+                    editing
+                      ? "Leave empty to keep current"
+                      : "Set initial password"
+                  }
                 />
               </div>
               {editing && (
@@ -477,10 +524,12 @@ function StaffContent() {
                   <div className="flex items-center gap-3 h-10">
                     <Switch
                       checked={formData.is_active}
-                      onCheckedChange={(v) => setFormData((p) => ({ ...p, is_active: v }))}
+                      onCheckedChange={(v) =>
+                        setFormData((p) => ({ ...p, is_active: v }))
+                      }
                     />
                     <span className="text-sm text-gray-600">
-                      {formData.is_active ? 'Active' : 'Disabled'}
+                      {formData.is_active ? "Active" : "Disabled"}
                     </span>
                   </div>
                 </div>
@@ -492,7 +541,10 @@ function StaffContent() {
                 <Label>Healthcare Permissions</Label>
                 <div className="flex flex-wrap gap-1">
                   {formData.permissions.map((p) => (
-                    <Badge key={p} variant={permissionBadges.get(p)?.variant ?? 'outline'}>
+                    <Badge
+                      key={p}
+                      variant={permissionBadges.get(p)?.variant ?? "outline"}
+                    >
                       {PERMISSION_LABELS[p] ?? p}
                     </Badge>
                   ))}
@@ -502,16 +554,23 @@ function StaffContent() {
               <div className="grid grid-cols-2 gap-3">
                 {HEALTHCARE_PERMISSIONS.map((perm) => {
                   const checked = formData.permissions.includes(perm);
-                  const disabled = perm === 'healthcare:view';
+                  const disabled = perm === "healthcare:view";
                   return (
-                    <div key={perm} className="flex items-start gap-3 rounded-md border p-3">
+                    <div
+                      key={perm}
+                      className="flex items-start gap-3 rounded-md border p-3"
+                    >
                       <Checkbox
                         checked={checked}
                         disabled={disabled}
-                        onCheckedChange={(v) => togglePermission(perm, Boolean(v))}
+                        onCheckedChange={(v) =>
+                          togglePermission(perm, Boolean(v))
+                        }
                       />
                       <div className="space-y-0.5">
-                        <div className="text-sm font-medium">{PERMISSION_LABELS[perm] ?? perm}</div>
+                        <div className="text-sm font-medium">
+                          {PERMISSION_LABELS[perm] ?? perm}
+                        </div>
                         <div className="text-xs text-gray-500">{perm}</div>
                       </div>
                     </div>
@@ -526,7 +585,7 @@ function StaffContent() {
               Cancel
             </Button>
             <Button onClick={handleSubmit} disabled={submitLoading}>
-              {submitLoading ? 'Saving...' : editing ? 'Update' : 'Create'}
+              {submitLoading ? "Saving..." : editing ? "Update" : "Create"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -537,17 +596,26 @@ function StaffContent() {
           <DialogHeader>
             <DialogTitle>Disable Staff</DialogTitle>
             <DialogDescription>
-              Disable{' '}
-              {staffToDelete ? `${formatName(staffToDelete)} (${staffToDelete.username})` : 'this staff member'}?
-              They will lose healthcare access.
+              Disable{" "}
+              {staffToDelete
+                ? `${formatName(staffToDelete)} (${staffToDelete.username})`
+                : "this staff member"}
+              ? They will lose healthcare access.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+            >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDelete} disabled={deleteLoading}>
-              {deleteLoading ? 'Disabling...' : 'Disable'}
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={deleteLoading}
+            >
+              {deleteLoading ? "Disabling..." : "Disable"}
             </Button>
           </DialogFooter>
         </DialogContent>

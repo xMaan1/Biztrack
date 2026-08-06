@@ -59,7 +59,7 @@ export default function HRMPayrollPage() {
   return (
     <ModuleGuard
       module="hrm"
-      fallback={<div>You don't have access to HRM module</div>}
+      fallback={<div>You don&apos;t have access to HRM module</div>}
     >
       <HRMPayrollContent />
     </ModuleGuard>

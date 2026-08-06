@@ -1,24 +1,24 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState, useMemo } from 'react';
-import { useCachedApi } from '../../../hooks/useCachedApi';
-import { ModuleGuard } from '../../../components/guards/PermissionGuard';
+import React, { useEffect, useState, useMemo } from "react";
+import { useCachedApi } from "../../../hooks/useCachedApi";
+import { ModuleGuard } from "../../../components/guards/PermissionGuard";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from '../../../components/ui/card';
-import { Button } from '../../../components/ui/button';
-import { Badge } from '../../../components/ui/badge';
-import { Input } from '../../../components/ui/input';
+} from "../../../components/ui/card";
+import { Button } from "../../../components/ui/button";
+import { Badge } from "../../../components/ui/badge";
+import { Input } from "../../../components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../../components/ui/select';
+} from "../../../components/ui/select";
 import {
   Table,
   TableBody,
@@ -26,7 +26,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../../../components/ui/table';
+} from "../../../components/ui/table";
 import {
   ClipboardList,
   Plus,
@@ -36,19 +36,19 @@ import {
   Eye,
   Calendar,
   Building2,
-} from 'lucide-react';
-import { useAuth } from '../../../contexts/AuthContext';
-import { inventoryService } from '../../../services/InventoryService';
-import HRMService from '../../../services/HRMService';
+} from "lucide-react";
+import { useAuth } from "../../../contexts/AuthContext";
+import { inventoryService } from "../../../services/InventoryService";
+import HRMService from "../../../services/HRMService";
 import {
   PurchaseOrder,
   PurchaseOrderUpdate,
   PurchaseOrderStatus,
-} from '../../../models/inventory';
-import { DashboardLayout } from '../../../components/layout';
-import { formatDate } from '../../../lib/utils';
-import { getApiErrorMessage } from '../../../lib/apiError';
-import { useCurrency } from '../../../contexts/CurrencyContext';
+} from "../../../models/inventory";
+import { DashboardLayout } from "../../../components/layout";
+import { formatDate } from "../../../lib/utils";
+import { getApiErrorMessage } from "../../../lib/apiError";
+import { useCurrency } from "../../../contexts/CurrencyContext";
 import {
   Dialog,
   DialogContent,
@@ -56,39 +56,45 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '../../../components/ui/dialog';
-import { Label } from '../../../components/ui/label';
-import { Textarea } from '../../../components/ui/textarea';
-import { toast } from 'sonner';
-import PurchaseOrderModal from '../../../components/inventory/PurchaseOrderModal';
-import PurchaseOrderViewModal from '../../../components/inventory/PurchaseOrderViewModal';
-import { usePlanInfo } from '../../../hooks/usePlanInfo';
-import { VehicleSearch } from '../../../components/ui/vehicle-search';
-import { Vehicle } from '../../../models/workshop';
-import { WorkshopDocumentLinks, WorkshopDocumentLinksValue } from '../../../components/workshop/WorkshopDocumentLinks';
-import { SupplierFormDialog } from '../../../components/hrm/suppliers/SupplierFormDialog';
+} from "../../../components/ui/dialog";
+import { Label } from "../../../components/ui/label";
+import { Textarea } from "../../../components/ui/textarea";
+import { toast } from "sonner";
+import PurchaseOrderModal from "../../../components/inventory/PurchaseOrderModal";
+import PurchaseOrderViewModal from "../../../components/inventory/PurchaseOrderViewModal";
+import { usePlanInfo } from "../../../hooks/usePlanInfo";
+import { VehicleSearch } from "../../../components/ui/vehicle-search";
+import { Vehicle } from "../../../models/workshop";
+import {
+  WorkshopDocumentLinks,
+  WorkshopDocumentLinksValue,
+} from "../../../components/workshop/WorkshopDocumentLinks";
+import { SupplierFormDialog } from "../../../components/hrm/suppliers/SupplierFormDialog";
 import {
   emptySupplierForm,
   validateSupplierForm,
-} from '../../../components/hrm/suppliers/supplierUtils';
-import type { SupplierFormData } from '../../../components/hrm/suppliers/types';
+} from "../../../components/hrm/suppliers/supplierUtils";
+import type { SupplierFormData } from "../../../components/hrm/suppliers/types";
 
 export default function PurchaseOrdersPage() {
   return (
-    <ModuleGuard module="inventory" fallback={<div>You don't have access to Inventory module</div>}>
+    <ModuleGuard
+      module="inventory"
+      fallback={<div>You don&apos;t have access to Inventory module</div>}
+    >
       <PurchaseOrdersContent />
     </ModuleGuard>
   );
 }
 
 function PurchaseOrdersContent() {
-  const { } = useAuth();
+  const {} = useAuth();
   const { planInfo } = usePlanInfo();
-  const isHealthcare = planInfo?.planType === 'healthcare';
-  const isWorkshop = planInfo?.planType === 'workshop';
+  const isHealthcare = planInfo?.planType === "healthcare";
+  const isWorkshop = planInfo?.planType === "workshop";
   const { formatCurrency } = useCurrency();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
 
   // Debounce search term to reduce filtering operations
   useEffect(() => {
@@ -99,62 +105,74 @@ function PurchaseOrdersContent() {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState<PurchaseOrder | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<PurchaseOrder | null>(
+    null,
+  );
   const [viewingOrder, setViewingOrder] = useState<PurchaseOrder | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Use cached API calls with longer TTL for static data
-  const { data: suppliersData, loading: suppliersLoading, refetch: refetchSuppliers } = useCachedApi(
-    'suppliers',
+  const {
+    data: suppliersData,
+    loading: suppliersLoading,
+    refetch: refetchSuppliers,
+  } = useCachedApi(
+    "suppliers",
     () => HRMService.getSuppliers(),
-    { ttl: 15 * 60 * 1000 } // 15 minutes cache for suppliers
+    { ttl: 15 * 60 * 1000 }, // 15 minutes cache for suppliers
   );
 
   const { data: warehousesData, loading: warehousesLoading } = useCachedApi(
-    'warehouses',
+    "warehouses",
     () => inventoryService.getWarehouses(),
-    { ttl: 15 * 60 * 1000 } 
+    { ttl: 15 * 60 * 1000 },
   );
 
-  const { data: purchaseOrdersData, loading: purchaseOrdersLoading, refetch: refetchPurchaseOrders } = useCachedApi(
-    'purchase-orders',
+  const {
+    data: purchaseOrdersData,
+    loading: purchaseOrdersLoading,
+    refetch: refetchPurchaseOrders,
+  } = useCachedApi(
+    "purchase-orders",
     () => inventoryService.getPurchaseOrders(),
-    { ttl: 2 * 60 * 1000 } 
+    { ttl: 2 * 60 * 1000 },
   );
 
   const suppliers = suppliersData?.suppliers || [];
   const warehouses = warehousesData?.warehouses || [];
   const purchaseOrders = purchaseOrdersData?.purchaseOrders || [];
-  const isDataLoading = purchaseOrdersLoading || suppliersLoading || warehousesLoading;
+  const isDataLoading =
+    purchaseOrdersLoading || suppliersLoading || warehousesLoading;
   const [editOrder, setEditOrder] = useState<PurchaseOrderUpdate>({
-    orderNumber: '',
-    batchNumber: '',
-    supplierId: '',
-    supplierName: '',
-    warehouseId: '',
-    orderDate: '',
-    expectedDeliveryDate: '',
-    notes: '',
-    vehicleReg: '',
+    orderNumber: "",
+    batchNumber: "",
+    supplierId: "",
+    supplierName: "",
+    warehouseId: "",
+    orderDate: "",
+    expectedDeliveryDate: "",
+    notes: "",
+    vehicleReg: "",
     purchaseForType: undefined,
     vehicleId: undefined,
     jobCardId: undefined,
-    department: '',
-    deliveryLocation: '',
-    requisitionNumber: '',
+    department: "",
+    deliveryLocation: "",
+    requisitionNumber: "",
   });
-  const [editDocumentLinks, setEditDocumentLinks] = useState<WorkshopDocumentLinksValue>({});
-  const [editSelectedVehicle, setEditSelectedVehicle] = useState<Vehicle | null>(null);
+  const [editDocumentLinks, setEditDocumentLinks] =
+    useState<WorkshopDocumentLinksValue>({});
+  const [editSelectedVehicle, setEditSelectedVehicle] =
+    useState<Vehicle | null>(null);
   const [isEditAddSupplierOpen, setIsEditAddSupplierOpen] = useState(false);
-  const [editSupplierFormData, setEditSupplierFormData] = useState<SupplierFormData>(
-    emptySupplierForm(),
-  );
+  const [editSupplierFormData, setEditSupplierFormData] =
+    useState<SupplierFormData>(emptySupplierForm());
   const [isSavingEditSupplier, setIsSavingEditSupplier] = useState(false);
 
   const editOrderStatus = editOrder.status ?? PurchaseOrderStatus.DRAFT;
@@ -162,23 +180,25 @@ function PurchaseOrdersContent() {
     editOrderStatus !== PurchaseOrderStatus.ARRIVED &&
     editOrderStatus !== PurchaseOrderStatus.CANCELLED;
 
-
-
   const filteredPurchaseOrders = useMemo(() => {
     return purchaseOrders.filter((order) => {
       const searchLower = debouncedSearchTerm.toLowerCase();
       const matchesSearch =
         order.orderNumber.toLowerCase().includes(searchLower) ||
         order.supplierName.toLowerCase().includes(searchLower) ||
-        (order.vehicleReg && order.vehicleReg.toLowerCase().includes(searchLower)) ||
-        (order.department && order.department.toLowerCase().includes(searchLower)) ||
+        (order.vehicleReg &&
+          order.vehicleReg.toLowerCase().includes(searchLower)) ||
+        (order.department &&
+          order.department.toLowerCase().includes(searchLower)) ||
         (order.deliveryLocation &&
           order.deliveryLocation.toLowerCase().includes(searchLower)) ||
         (order.requisitionNumber &&
           order.requisitionNumber.toLowerCase().includes(searchLower));
 
       const matchesStatus =
-        statusFilter === 'all' || !statusFilter || order.status === statusFilter;
+        statusFilter === "all" ||
+        !statusFilter ||
+        order.status === statusFilter;
 
       return matchesSearch && matchesStatus;
     });
@@ -210,28 +230,37 @@ function PurchaseOrdersContent() {
     try {
       setDeleteLoading(true);
       await inventoryService.deletePurchaseOrder(selectedOrder.id);
-      toast.success('Purchase order deleted successfully');
+      toast.success("Purchase order deleted successfully");
       refetchPurchaseOrders();
       closeDeleteModal();
     } catch (error) {
-      toast.error(getApiErrorMessage(error, 'Failed to delete purchase order. Please try again.'));
+      toast.error(
+        getApiErrorMessage(
+          error,
+          "Failed to delete purchase order. Please try again.",
+        ),
+      );
     } finally {
       setDeleteLoading(false);
     }
   };
-
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
     try {
       const updateData: PurchaseOrderUpdate = {
         status: newStatus as any,
       };
-      
+
       await inventoryService.updatePurchaseOrder(orderId, updateData);
       toast.success(`Purchase order status updated to ${newStatus}`);
       refetchPurchaseOrders();
     } catch (error) {
-      toast.error(getApiErrorMessage(error, 'Failed to update purchase order status. Please try again.'));
+      toast.error(
+        getApiErrorMessage(
+          error,
+          "Failed to update purchase order status. Please try again.",
+        ),
+      );
     }
   };
 
@@ -239,21 +268,23 @@ function PurchaseOrdersContent() {
     setSelectedOrder(order);
     setEditOrder({
       orderNumber: order.orderNumber,
-      batchNumber: order.batchNumber || '',
+      batchNumber: order.batchNumber || "",
       supplierId: order.supplierId,
       supplierName: order.supplierName,
       warehouseId: order.warehouseId,
-      orderDate: order.orderDate ? order.orderDate.split('T')[0] : '',
-      expectedDeliveryDate: order.expectedDeliveryDate ? order.expectedDeliveryDate.split('T')[0] : '',
+      orderDate: order.orderDate ? order.orderDate.split("T")[0] : "",
+      expectedDeliveryDate: order.expectedDeliveryDate
+        ? order.expectedDeliveryDate.split("T")[0]
+        : "",
       status: order.status,
-      notes: order.notes || '',
-      vehicleReg: order.vehicleReg || '',
+      notes: order.notes || "",
+      vehicleReg: order.vehicleReg || "",
       purchaseForType: order.purchaseForType,
       vehicleId: order.vehicleId,
       jobCardId: order.jobCardId,
-      department: order.department || '',
-      deliveryLocation: order.deliveryLocation || '',
-      requisitionNumber: order.requisitionNumber || '',
+      department: order.department || "",
+      deliveryLocation: order.deliveryLocation || "",
+      requisitionNumber: order.requisitionNumber || "",
     });
     setEditDocumentLinks({
       jobCardId: order.jobCardId ?? undefined,
@@ -283,7 +314,7 @@ function PurchaseOrdersContent() {
     setIsSavingEditSupplier(true);
     try {
       const response = await HRMService.createSupplier(editSupplierFormData);
-      toast.success('Supplier created successfully');
+      toast.success("Supplier created successfully");
       setIsEditAddSupplierOpen(false);
       setEditSupplierFormData(emptySupplierForm());
       refetchSuppliers();
@@ -293,7 +324,7 @@ function PurchaseOrdersContent() {
         supplierName: response.supplier.name,
       }));
     } catch (error) {
-      toast.error(getApiErrorMessage(error, 'Failed to create supplier'));
+      toast.error(getApiErrorMessage(error, "Failed to create supplier"));
     } finally {
       setIsSavingEditSupplier(false);
     }
@@ -313,7 +344,7 @@ function PurchaseOrdersContent() {
       !editOrder.orderDate ||
       (editRequiresDelivery && !editOrder.expectedDeliveryDate)
     ) {
-      toast.error('Please fill in all required fields');
+      toast.error("Please fill in all required fields");
       return;
     }
 
@@ -330,8 +361,9 @@ function PurchaseOrdersContent() {
         if (isWorkshop) {
           updatePayload.jobCardId = editDocumentLinks.jobCardId ?? null;
         }
-        updatePayload.vehicleId = editOrder.purchaseForType === 'vehicle' ? editOrder.vehicleId : null;
-        if (editOrder.purchaseForType !== 'vehicle') {
+        updatePayload.vehicleId =
+          editOrder.purchaseForType === "vehicle" ? editOrder.vehicleId : null;
+        if (editOrder.purchaseForType !== "vehicle") {
           updatePayload.vehicleReg = null;
         }
       } else {
@@ -340,28 +372,35 @@ function PurchaseOrdersContent() {
         delete updatePayload.vehicleId;
         delete updatePayload.jobCardId;
       }
-      await inventoryService.updatePurchaseOrder(selectedOrder.id, updatePayload);
-      toast.success('Purchase order updated successfully');
+      await inventoryService.updatePurchaseOrder(
+        selectedOrder.id,
+        updatePayload,
+      );
+      toast.success("Purchase order updated successfully");
       setIsEditModalOpen(false);
       refetchPurchaseOrders();
     } catch (error) {
-      toast.error(getApiErrorMessage(error, 'Failed to update purchase order. Please try again.'));
+      toast.error(
+        getApiErrorMessage(
+          error,
+          "Failed to update purchase order. Please try again.",
+        ),
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
-
   const getStatusBadge = useMemo(() => {
-    return (status: string) => {
+    return function StatusBadge(status: string) {
       const statusConfig = {
-        draft: { variant: 'secondary', label: 'Draft' },
-        submitted: { variant: 'default', label: 'Submitted' },
-        approved: { variant: 'default', label: 'Approved' },
-        ordered: { variant: 'default', label: 'Ordered' },
-        arrived: { variant: 'default', label: 'Arrived' },
-        received: { variant: 'default', label: 'Received' },
-        cancelled: { variant: 'destructive', label: 'Cancelled' },
+        draft: { variant: "secondary", label: "Draft" },
+        submitted: { variant: "default", label: "Submitted" },
+        approved: { variant: "default", label: "Approved" },
+        ordered: { variant: "default", label: "Ordered" },
+        arrived: { variant: "default", label: "Arrived" },
+        received: { variant: "default", label: "Received" },
+        cancelled: { variant: "destructive", label: "Cancelled" },
       };
 
       const config =
@@ -372,8 +411,13 @@ function PurchaseOrdersContent() {
 
   const summaryStats = useMemo(() => {
     const totalPOs = purchaseOrders.length;
-    const pendingApproval = purchaseOrders.filter((po) => po.status === 'submitted').length;
-    const totalValue = purchaseOrders.reduce((sum, po) => sum + po.totalAmount, 0);
+    const pendingApproval = purchaseOrders.filter(
+      (po) => po.status === "submitted",
+    ).length;
+    const totalValue = purchaseOrders.reduce(
+      (sum, po) => sum + po.totalAmount,
+      0,
+    );
     const thisMonth = purchaseOrders.filter((po) => {
       const created = new Date(po.createdAt);
       const now = new Date();
@@ -403,12 +447,12 @@ function PurchaseOrdersContent() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">
-              {isHealthcare ? 'Medical supplies orders' : 'Purchase Orders'}
+              {isHealthcare ? "Medical supplies orders" : "Purchase Orders"}
             </h1>
             <p className="text-muted-foreground">
               {isHealthcare
-                ? 'Raise and track purchase orders for wards, pharmacy, and clinical stock'
-                : 'Manage purchase orders and supplier procurement'}
+                ? "Raise and track purchase orders for wards, pharmacy, and clinical stock"
+                : "Manage purchase orders and supplier procurement"}
             </p>
           </div>
           <Button onClick={() => setIsAddModalOpen(true)}>
@@ -429,8 +473,8 @@ function PurchaseOrdersContent() {
                 <Input
                   placeholder={
                     isHealthcare
-                      ? 'Search PO, supplier, department, location, requisition…'
-                      : 'Search by PO number or supplier name...'
+                      ? "Search PO, supplier, department, location, requisition…"
+                      : "Search by PO number or supplier name..."
                   }
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -505,7 +549,7 @@ function PurchaseOrdersContent() {
                           <span>
                             {order.expectedDeliveryDate
                               ? formatDate(order.expectedDeliveryDate)
-                              : '—'}
+                              : "—"}
                           </span>
                         </div>
                       </TableCell>
@@ -538,21 +582,25 @@ function PurchaseOrdersContent() {
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
-                          {order.status === 'draft' && (
+                          {order.status === "draft" && (
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleStatusChange(order.id, 'ordered')}
+                              onClick={() =>
+                                handleStatusChange(order.id, "ordered")
+                              }
                               className="bg-blue-50 hover:bg-blue-100 text-blue-700"
                             >
                               Order
                             </Button>
                           )}
-                          {order.status === 'ordered' && (
+                          {order.status === "ordered" && (
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleStatusChange(order.id, 'approved')}
+                              onClick={() =>
+                                handleStatusChange(order.id, "approved")
+                              }
                               className="bg-green-50 hover:bg-green-100 text-green-700"
                             >
                               Approve
@@ -578,11 +626,11 @@ function PurchaseOrdersContent() {
                   No purchase orders found
                 </h3>
                 <p className="text-muted-foreground mb-4">
-                  {searchTerm || statusFilter !== 'all'
-                    ? 'Try adjusting your search terms or filters'
-                    : 'Get started by creating your first purchase order'}
+                  {searchTerm || statusFilter !== "all"
+                    ? "Try adjusting your search terms or filters"
+                    : "Get started by creating your first purchase order"}
                 </p>
-                {!searchTerm && statusFilter === 'all' && (
+                {!searchTerm && statusFilter === "all" && (
                   <Button onClick={() => setIsAddModalOpen(true)}>
                     <Plus className="mr-2 h-4 w-4" />
                     Create Purchase Order
@@ -644,9 +692,7 @@ function PurchaseOrdersContent() {
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {summaryStats.thisMonth}
-              </div>
+              <div className="text-2xl font-bold">{summaryStats.thisMonth}</div>
               <p className="text-xs text-muted-foreground">
                 Created this month
               </p>
@@ -661,8 +707,8 @@ function PurchaseOrdersContent() {
           onSuccess={refetchPurchaseOrders}
           title={
             isHealthcare
-              ? 'Create medical supplies purchase order'
-              : 'Create New Purchase Order'
+              ? "Create medical supplies purchase order"
+              : "Create New Purchase Order"
           }
           showOrderDate={true}
           showSupplierCount={true}
@@ -683,8 +729,9 @@ function PurchaseOrdersContent() {
             <DialogHeader>
               <DialogTitle>Delete Purchase Order</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete purchase order{' '}
-                <strong>{selectedOrder?.orderNumber}</strong>? This action cannot be undone.
+                Are you sure you want to delete purchase order{" "}
+                <strong>{selectedOrder?.orderNumber}</strong>? This action
+                cannot be undone.
               </DialogDescription>
             </DialogHeader>
             <div className="flex justify-end space-x-2 mt-4">
@@ -700,7 +747,7 @@ function PurchaseOrdersContent() {
                 disabled={deleteLoading}
                 className="bg-red-600 hover:bg-red-700"
               >
-                {deleteLoading ? 'Deleting...' : 'Delete'}
+                {deleteLoading ? "Deleting..." : "Delete"}
               </Button>
             </div>
           </DialogContent>
@@ -726,7 +773,7 @@ function PurchaseOrdersContent() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="edit-batchNumber">
-                    {isHealthcare ? 'Lot / batch reference' : 'Batch Number'}
+                    {isHealthcare ? "Lot / batch reference" : "Batch Number"}
                   </Label>
                   <Input
                     id="edit-batchNumber"
@@ -738,7 +785,9 @@ function PurchaseOrdersContent() {
                       }))
                     }
                     placeholder={
-                      isHealthcare ? 'e.g. cold chain lot, supplier batch' : 'Enter batch number'
+                      isHealthcare
+                        ? "e.g. cold chain lot, supplier batch"
+                        : "Enter batch number"
                     }
                   />
                 </div>
@@ -789,7 +838,7 @@ function PurchaseOrdersContent() {
                           status: nextStatus,
                           expectedDeliveryDate: nextRequiresDelivery
                             ? prev.expectedDeliveryDate
-                            : '',
+                            : "",
                         };
                       })
                     }
@@ -798,17 +847,28 @@ function PurchaseOrdersContent() {
                       <SelectValue placeholder="Select status" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={PurchaseOrderStatus.DRAFT}>Draft</SelectItem>
-                      <SelectItem value={PurchaseOrderStatus.ORDERED}>Ordered</SelectItem>
-                      <SelectItem value={PurchaseOrderStatus.ARRIVED}>Arrived</SelectItem>
-                      <SelectItem value={PurchaseOrderStatus.CANCELLED}>Cancelled</SelectItem>
+                      <SelectItem value={PurchaseOrderStatus.DRAFT}>
+                        Draft
+                      </SelectItem>
+                      <SelectItem value={PurchaseOrderStatus.ORDERED}>
+                        Ordered
+                      </SelectItem>
+                      <SelectItem value={PurchaseOrderStatus.ARRIVED}>
+                        Arrived
+                      </SelectItem>
+                      <SelectItem value={PurchaseOrderStatus.CANCELLED}>
+                        Cancelled
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-warehouseId">{isWorkshop ? 'Garage / Warehouse *' : 'Warehouse *'} ({warehouses.length} available)</Label>
+                <Label htmlFor="edit-warehouseId">
+                  {isWorkshop ? "Garage / Warehouse *" : "Warehouse *"} (
+                  {warehouses.length} available)
+                </Label>
                 <Select
                   value={editOrder.warehouseId}
                   onValueChange={(value) => {
@@ -838,7 +898,9 @@ function PurchaseOrdersContent() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-supplierId">Supplier * ({suppliers.length} available)</Label>
+                <Label htmlFor="edit-supplierId">
+                  Supplier * ({suppliers.length} available)
+                </Label>
                 <div className="flex gap-2">
                   <Select
                     value={editOrder.supplierId}
@@ -847,7 +909,7 @@ function PurchaseOrdersContent() {
                       setEditOrder((prev) => ({
                         ...prev,
                         supplierId: value,
-                        supplierName: supplier?.name || '',
+                        supplierName: supplier?.name || "",
                       }));
                     }}
                   >
@@ -887,18 +949,23 @@ function PurchaseOrdersContent() {
                     <Label htmlFor="edit-department">Department</Label>
                     <Input
                       id="edit-department"
-                      value={editOrder.department ?? ''}
+                      value={editOrder.department ?? ""}
                       onChange={(e) =>
-                        setEditOrder((prev) => ({ ...prev, department: e.target.value }))
+                        setEditOrder((prev) => ({
+                          ...prev,
+                          department: e.target.value,
+                        }))
                       }
                       placeholder="e.g. Pharmacy, ICU"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="edit-deliveryLocation">Delivery location</Label>
+                    <Label htmlFor="edit-deliveryLocation">
+                      Delivery location
+                    </Label>
                     <Input
                       id="edit-deliveryLocation"
-                      value={editOrder.deliveryLocation ?? ''}
+                      value={editOrder.deliveryLocation ?? ""}
                       onChange={(e) =>
                         setEditOrder((prev) => ({
                           ...prev,
@@ -909,10 +976,12 @@ function PurchaseOrdersContent() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="edit-requisitionNumber">Internal requisition #</Label>
+                    <Label htmlFor="edit-requisitionNumber">
+                      Internal requisition #
+                    </Label>
                     <Input
                       id="edit-requisitionNumber"
-                      value={editOrder.requisitionNumber ?? ''}
+                      value={editOrder.requisitionNumber ?? ""}
                       onChange={(e) =>
                         setEditOrder((prev) => ({
                           ...prev,
@@ -930,16 +999,25 @@ function PurchaseOrdersContent() {
                   <div className="space-y-2">
                     <Label>Purchase for</Label>
                     <Select
-                      value={editOrder.purchaseForType || 'none'}
+                      value={editOrder.purchaseForType || "none"}
                       onValueChange={(v) => {
-                        const purchaseForType = v === 'none' ? undefined : (v as 'vehicle' | 'garage');
+                        const purchaseForType =
+                          v === "none"
+                            ? undefined
+                            : (v as "vehicle" | "garage");
                         setEditOrder((prev) => ({
                           ...prev,
                           purchaseForType,
-                          vehicleId: purchaseForType === 'vehicle' ? prev.vehicleId : undefined,
-                          vehicleReg: purchaseForType === 'vehicle' ? prev.vehicleReg : '',
+                          vehicleId:
+                            purchaseForType === "vehicle"
+                              ? prev.vehicleId
+                              : undefined,
+                          vehicleReg:
+                            purchaseForType === "vehicle"
+                              ? prev.vehicleReg
+                              : "",
                         }));
-                        if (v !== 'vehicle') {
+                        if (v !== "vehicle") {
                           setEditSelectedVehicle(null);
                         }
                       }}
@@ -949,12 +1027,14 @@ function PurchaseOrdersContent() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">Not specified</SelectItem>
-                        <SelectItem value="vehicle">Existing vehicle</SelectItem>
+                        <SelectItem value="vehicle">
+                          Existing vehicle
+                        </SelectItem>
                         <SelectItem value="garage">Garage</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  {editOrder.purchaseForType === 'vehicle' && (
+                  {editOrder.purchaseForType === "vehicle" && (
                     <>
                       <div className="space-y-2">
                         <VehicleSearch
@@ -966,7 +1046,7 @@ function PurchaseOrdersContent() {
                               setEditOrder((prev) => ({
                                 ...prev,
                                 vehicleId: v.id,
-                                vehicleReg: v.registration_number ?? '',
+                                vehicleReg: v.registration_number ?? "",
                               }));
                             }
                           }}
@@ -974,20 +1054,26 @@ function PurchaseOrdersContent() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="edit-vehicleReg">Vehicle Registration</Label>
+                        <Label htmlFor="edit-vehicleReg">
+                          Vehicle Registration
+                        </Label>
                         <Input
                           id="edit-vehicleReg"
-                          value={editOrder.vehicleReg ?? ''}
+                          value={editOrder.vehicleReg ?? ""}
                           onChange={(e) =>
-                            setEditOrder((prev) => ({ ...prev, vehicleReg: e.target.value }))
+                            setEditOrder((prev) => ({
+                              ...prev,
+                              vehicleReg: e.target.value,
+                            }))
                           }
                         />
                       </div>
                     </>
                   )}
-                  {editOrder.purchaseForType === 'garage' && (
+                  {editOrder.purchaseForType === "garage" && (
                     <p className="text-sm text-muted-foreground">
-                      Parts will be delivered to the selected garage/warehouse above.
+                      Parts will be delivered to the selected garage/warehouse
+                      above.
                     </p>
                   )}
                 </>
@@ -1006,7 +1092,9 @@ function PurchaseOrdersContent() {
                   <Label className="text-sm font-medium">Order Total</Label>
                   <div className="text-sm">
                     <span className="text-muted-foreground">Total:</span>
-                    <div className="font-medium">{formatCurrency(selectedOrder.totalAmount || 0)}</div>
+                    <div className="font-medium">
+                      {formatCurrency(selectedOrder.totalAmount || 0)}
+                    </div>
                   </div>
                 </div>
               )}
@@ -1032,11 +1120,8 @@ function PurchaseOrdersContent() {
               >
                 Cancel
               </Button>
-              <Button
-                onClick={handleUpdateOrder}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Updating...' : 'Update Purchase Order'}
+              <Button onClick={handleUpdateOrder} disabled={isSubmitting}>
+                {isSubmitting ? "Updating..." : "Update Purchase Order"}
               </Button>
             </DialogFooter>
           </DialogContent>

@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Badge } from '../ui/badge';
+import React, { useState, useEffect } from "react";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Badge } from "../ui/badge";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../ui/select';
+} from "../ui/select";
 import {
   Table,
   TableBody,
@@ -18,13 +18,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../ui/table';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '../ui/card';
+} from "../ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import {
   Dialog,
   DialogContent,
@@ -32,15 +27,19 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from '../ui/dialog';
-import { useCurrency } from '@/src/contexts/CurrencyContext';
-import { investmentService, Investment, InvestmentDashboardStats } from '../../services/InvestmentService';
-import { toast } from 'sonner';
-import InvestmentForm from './InvestmentForm';
-import InvestmentDetails from './InvestmentDetails';
+} from "../ui/dialog";
+import { useCurrency } from "@/src/contexts/CurrencyContext";
 import {
-  Plus, 
-  Search, 
+  investmentService,
+  Investment,
+  InvestmentDashboardStats,
+} from "../../services/InvestmentService";
+import { toast } from "sonner";
+import InvestmentForm from "./InvestmentForm";
+import InvestmentDetails from "./InvestmentDetails";
+import {
+  Plus,
+  Search,
   Calendar,
   CheckCircle2,
   Clock,
@@ -54,8 +53,8 @@ import {
   X,
   Edit,
   Eye,
-  Trash2
-} from 'lucide-react';
+  Trash2,
+} from "lucide-react";
 
 export default function InvestmentList() {
   const { getCurrencySymbol } = useCurrency();
@@ -63,12 +62,17 @@ export default function InvestmentList() {
   const [stats, setStats] = useState<InvestmentDashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingInvestment, setEditingInvestment] = useState<Investment | null>(null);
-  const [viewingInvestment, setViewingInvestment] = useState<Investment | null>(null);
-  const [deletingInvestment, setDeletingInvestment] = useState<Investment | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [editingInvestment, setEditingInvestment] = useState<Investment | null>(
+    null,
+  );
+  const [viewingInvestment, setViewingInvestment] = useState<Investment | null>(
+    null,
+  );
+  const [deletingInvestment, setDeletingInvestment] =
+    useState<Investment | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
 
   useEffect(() => {
     fetchInvestments();
@@ -89,8 +93,7 @@ export default function InvestmentList() {
     try {
       const response = await investmentService.getInvestmentDashboardStats();
       setStats(response);
-    } catch (error) {
-    }
+    } catch (error) {}
   };
 
   const handleApproveInvestment = async (investmentId: string) => {
@@ -98,28 +101,28 @@ export default function InvestmentList() {
       await investmentService.approveInvestment(investmentId);
       await fetchInvestments();
       await fetchStats();
-    } catch (error) {
-    }
+    } catch (error) {}
   };
 
   const handleCancelInvestment = async (investmentId: string) => {
     try {
-      await investmentService.updateInvestment(investmentId, { status: 'cancelled' });
+      await investmentService.updateInvestment(investmentId, {
+        status: "cancelled",
+      });
       await fetchInvestments();
       await fetchStats();
-    } catch (error) {
-    }
+    } catch (error) {}
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'completed':
+      case "completed":
         return <CheckCircle2 className="h-4 w-4 text-green-600" />;
-      case 'pending':
+      case "pending":
         return <Clock className="h-4 w-4 text-yellow-600" />;
-      case 'cancelled':
+      case "cancelled":
         return <XCircle className="h-4 w-4 text-red-600" />;
-      case 'failed':
+      case "failed":
         return <AlertTriangle className="h-4 w-4 text-red-600" />;
       default:
         return <Clock className="h-4 w-4 text-gray-600" />;
@@ -128,14 +131,14 @@ export default function InvestmentList() {
 
   const getStatusBadge = (status: string) => {
     const variants = {
-      completed: 'default',
-      pending: 'secondary',
-      cancelled: 'destructive',
-      failed: 'destructive',
+      completed: "default",
+      pending: "secondary",
+      cancelled: "destructive",
+      failed: "destructive",
     } as const;
 
     return (
-      <Badge variant={variants[status as keyof typeof variants] || 'secondary'}>
+      <Badge variant={variants[status as keyof typeof variants] || "secondary"}>
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </Badge>
     );
@@ -143,13 +146,13 @@ export default function InvestmentList() {
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'cash_investment':
+      case "cash_investment":
         return <TrendingUp className="h-4 w-4 text-green-600" />;
-      case 'card_transfer':
+      case "card_transfer":
         return <CreditCard className="h-4 w-4 text-blue-600" />;
-      case 'bank_transfer':
+      case "bank_transfer":
         return <Building className="h-4 w-4 text-purple-600" />;
-      case 'equipment_purchase':
+      case "equipment_purchase":
         return <Package className="h-4 w-4 text-orange-600" />;
       default:
         return <TrendingUp className="h-4 w-4 text-gray-600" />;
@@ -158,22 +161,29 @@ export default function InvestmentList() {
 
   const getTypeLabel = (type: string) => {
     const labels = {
-      cash_investment: 'Cash Investment',
-      card_transfer: 'Card Transfer',
-      bank_transfer: 'Bank Transfer',
-      equipment_purchase: 'Equipment Purchase',
+      cash_investment: "Cash Investment",
+      card_transfer: "Card Transfer",
+      bank_transfer: "Bank Transfer",
+      equipment_purchase: "Equipment Purchase",
     };
     return labels[type as keyof typeof labels] || type;
   };
 
-  const filteredInvestments = investments.filter(investment => {
-    const matchesSearch = investment.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         investment.investment_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         investment.reference_number?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === 'all' || investment.status === statusFilter;
-    const matchesType = typeFilter === 'all' || investment.investment_type === typeFilter;
-    
+  const filteredInvestments = investments.filter((investment) => {
+    const matchesSearch =
+      investment.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      investment.investment_number
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      investment.reference_number
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase());
+
+    const matchesStatus =
+      statusFilter === "all" || investment.status === statusFilter;
+    const matchesType =
+      typeFilter === "all" || investment.investment_type === typeFilter;
+
     return matchesSearch && matchesStatus && matchesType;
   });
 
@@ -205,7 +215,7 @@ export default function InvestmentList() {
       await fetchStats();
       setDeletingInvestment(null);
     } catch (error) {
-      toast.error('Failed to delete investment. Please try again.');
+      toast.error("Failed to delete investment. Please try again.");
     }
   };
 
@@ -246,13 +256,18 @@ export default function InvestmentList() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Investments</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Total Investments
+              </CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.total_investments}</div>
+              <div className="text-2xl font-bold">
+                {stats.total_investments}
+              </div>
               <p className="text-xs text-muted-foreground">
-                {getCurrencySymbol()}{stats.total_amount.toLocaleString()} total value
+                {getCurrencySymbol()}
+                {stats.total_amount.toLocaleString()} total value
               </p>
             </CardContent>
           </Card>
@@ -263,10 +278,10 @@ export default function InvestmentList() {
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.pending_investments}</div>
-              <p className="text-xs text-muted-foreground">
-                Awaiting approval
-              </p>
+              <div className="text-2xl font-bold">
+                {stats.pending_investments}
+              </div>
+              <p className="text-xs text-muted-foreground">Awaiting approval</p>
             </CardContent>
           </Card>
 
@@ -277,7 +292,8 @@ export default function InvestmentList() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {getCurrencySymbol()}{stats.monthly_investments.toLocaleString()}
+                {getCurrencySymbol()}
+                {stats.monthly_investments.toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground">
                 Monthly investment
@@ -291,7 +307,9 @@ export default function InvestmentList() {
               <Package className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.equipment_investments}</div>
+              <div className="text-2xl font-bold">
+                {stats.equipment_investments}
+              </div>
               <p className="text-xs text-muted-foreground">
                 Equipment purchases
               </p>
@@ -337,7 +355,9 @@ export default function InvestmentList() {
                 <SelectItem value="cash_investment">Cash Investment</SelectItem>
                 <SelectItem value="card_transfer">Card Transfer</SelectItem>
                 <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                <SelectItem value="equipment_purchase">Equipment Purchase</SelectItem>
+                <SelectItem value="equipment_purchase">
+                  Equipment Purchase
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -378,11 +398,14 @@ export default function InvestmentList() {
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-muted-foreground" />
-                      {new Date(investment.investment_date).toLocaleDateString()}
+                      {new Date(
+                        investment.investment_date,
+                      ).toLocaleDateString()}
                     </div>
                   </TableCell>
                   <TableCell className="font-medium">
-                    {getCurrencySymbol()}{investment.amount.toLocaleString()}
+                    {getCurrencySymbol()}
+                    {investment.amount.toLocaleString()}
                   </TableCell>
                   <TableCell className="max-w-xs truncate">
                     {investment.description}
@@ -411,7 +434,7 @@ export default function InvestmentList() {
                         <Eye className="h-3 w-3 mr-1" />
                         View
                       </Button>
-                      {investment.status === 'pending' && (
+                      {investment.status === "pending" && (
                         <Button
                           size="sm"
                           variant="outline"
@@ -422,12 +445,14 @@ export default function InvestmentList() {
                           Edit
                         </Button>
                       )}
-                      {investment.status === 'pending' && (
+                      {investment.status === "pending" && (
                         <>
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleApproveInvestment(investment.id)}
+                            onClick={() =>
+                              handleApproveInvestment(investment.id)
+                            }
                             className="h-8 px-2 text-green-600 border-green-600 hover:bg-green-50"
                           >
                             <Check className="h-3 w-3 mr-1" />
@@ -436,7 +461,9 @@ export default function InvestmentList() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleCancelInvestment(investment.id)}
+                            onClick={() =>
+                              handleCancelInvestment(investment.id)
+                            }
                             className="h-8 px-2 text-red-600 border-red-600 hover:bg-red-50"
                           >
                             <X className="h-3 w-3 mr-1" />
@@ -444,7 +471,7 @@ export default function InvestmentList() {
                           </Button>
                         </>
                       )}
-                      {investment.status === 'pending' && (
+                      {investment.status === "pending" && (
                         <Button
                           size="sm"
                           variant="outline"
@@ -455,7 +482,7 @@ export default function InvestmentList() {
                           Delete
                         </Button>
                       )}
-                      {investment.status === 'completed' && (
+                      {investment.status === "completed" && (
                         <>
                           <span className="text-sm text-green-600 font-medium whitespace-nowrap">
                             Approved
@@ -471,7 +498,7 @@ export default function InvestmentList() {
                           </Button>
                         </>
                       )}
-                      {investment.status === 'cancelled' && (
+                      {investment.status === "cancelled" && (
                         <span className="text-sm text-red-600 font-medium">
                           Cancelled
                         </span>
@@ -482,23 +509,24 @@ export default function InvestmentList() {
               ))}
             </TableBody>
           </Table>
-          
+
           {filteredInvestments.length === 0 && (
             <div className="text-center py-8">
               <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-medium mb-2">No investments found</h3>
               <p className="text-muted-foreground mb-4">
-                {searchTerm || statusFilter !== 'all' || typeFilter !== 'all'
-                  ? 'Try adjusting your search criteria'
-                  : 'Get started by adding your first investment'
-                }
+                {searchTerm || statusFilter !== "all" || typeFilter !== "all"
+                  ? "Try adjusting your search criteria"
+                  : "Get started by adding your first investment"}
               </p>
-              {!searchTerm && statusFilter === 'all' && typeFilter === 'all' && (
-                <Button onClick={() => setIsFormOpen(true)}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Investment
-                </Button>
-              )}
+              {!searchTerm &&
+                statusFilter === "all" &&
+                typeFilter === "all" && (
+                  <Button onClick={() => setIsFormOpen(true)}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Investment
+                  </Button>
+                )}
             </div>
           )}
         </CardContent>
@@ -520,27 +548,38 @@ export default function InvestmentList() {
       />
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={!!deletingInvestment} onOpenChange={() => setDeletingInvestment(null)}>
+      <Dialog
+        open={!!deletingInvestment}
+        onOpenChange={() => setDeletingInvestment(null)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Investment</DialogTitle>
             <DialogDescription>
-              {deletingInvestment?.status === 'completed'
-                ? 'This approved investment will be removed and its linked investment transactions will be deleted. This cannot be undone.'
-                : 'Are you sure you want to delete this investment? This action cannot be undone.'}
+              {deletingInvestment?.status === "completed"
+                ? "This approved investment will be removed and its linked investment transactions will be deleted. This cannot be undone."
+                : "Are you sure you want to delete this investment? This action cannot be undone."}
               {deletingInvestment && (
                 <div className="mt-2 p-3 bg-gray-50 rounded-md">
-                  <p className="font-medium">{deletingInvestment.investment_number}</p>
-                  <p className="text-sm text-gray-600">{deletingInvestment.description}</p>
+                  <p className="font-medium">
+                    {deletingInvestment.investment_number}
+                  </p>
                   <p className="text-sm text-gray-600">
-                    Amount: {getCurrencySymbol()}{deletingInvestment.amount.toLocaleString()}
+                    {deletingInvestment.description}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Amount: {getCurrencySymbol()}
+                    {deletingInvestment.amount.toLocaleString()}
                   </p>
                 </div>
               )}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeletingInvestment(null)}>
+            <Button
+              variant="outline"
+              onClick={() => setDeletingInvestment(null)}
+            >
               Cancel
             </Button>
             <Button variant="destructive" onClick={confirmDelete}>

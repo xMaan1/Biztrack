@@ -1,4 +1,4 @@
-import type { Lead } from './lead';
+import type { Lead } from "./lead";
 
 export {
   LeadStatus,
@@ -7,7 +7,7 @@ export {
   LeadSource,
   PIPELINE_LABELS,
   CALL_RESULTS,
-} from './lead';
+} from "./lead";
 export type {
   Lead,
   LeadCreate,
@@ -26,53 +26,53 @@ export type {
   LeadPipelineHistoryItem,
   CRMLeadFilters,
   CRMLeadsResponse,
-} from './lead';
+} from "./lead";
 
 export enum OpportunityStage {
-  PROSPECTING = 'prospecting',
-  QUALIFICATION = 'qualification',
-  PROPOSAL = 'proposal',
-  NEGOTIATION = 'negotiation',
-  CLOSED_WON = 'closed_won',
-  CLOSED_LOST = 'closed_lost',
+  PROSPECTING = "prospecting",
+  QUALIFICATION = "qualification",
+  PROPOSAL = "proposal",
+  NEGOTIATION = "negotiation",
+  CLOSED_WON = "closed_won",
+  CLOSED_LOST = "closed_lost",
 }
 
 export enum ContactType {
-  LEAD = 'lead',
-  CUSTOMER = 'customer',
-  PARTNER = 'partner',
-  VENDOR = 'vendor',
-  OTHER = 'other',
+  LEAD = "lead",
+  CUSTOMER = "customer",
+  PARTNER = "partner",
+  VENDOR = "vendor",
+  OTHER = "other",
 }
 
 export enum ActivityType {
-  CALL = 'call',
-  EMAIL = 'email',
-  MEETING = 'meeting',
-  TASK = 'task',
-  NOTE = 'note',
-  PROPOSAL = 'proposal',
-  CONTRACT = 'contract',
+  CALL = "call",
+  EMAIL = "email",
+  MEETING = "meeting",
+  TASK = "task",
+  NOTE = "note",
+  PROPOSAL = "proposal",
+  CONTRACT = "contract",
 }
 
 export enum CompanySize {
-  STARTUP = 'startup',
-  SMALL = 'small',
-  MEDIUM = 'medium',
-  LARGE = 'large',
-  ENTERPRISE = 'enterprise',
+  STARTUP = "startup",
+  SMALL = "small",
+  MEDIUM = "medium",
+  LARGE = "large",
+  ENTERPRISE = "enterprise",
 }
 
 export enum Industry {
-  TECHNOLOGY = 'technology',
-  HEALTHCARE = 'healthcare',
-  FINANCE = 'finance',
-  MANUFACTURING = 'manufacturing',
-  RETAIL = 'retail',
-  EDUCATION = 'education',
-  REAL_ESTATE = 'real_estate',
-  CONSULTING = 'consulting',
-  OTHER = 'other',
+  TECHNOLOGY = "technology",
+  HEALTHCARE = "healthcare",
+  FINANCE = "finance",
+  MANUFACTURING = "manufacturing",
+  RETAIL = "retail",
+  EDUCATION = "education",
+  REAL_ESTATE = "real_estate",
+  CONSULTING = "consulting",
+  OTHER = "other",
 }
 
 export type ContactAttachment = {
@@ -81,7 +81,7 @@ export type ContactAttachment = {
   s3_key?: string;
 };
 
-export type ContactLabel = 'work' | 'personal' | 'other';
+export type ContactLabel = "work" | "personal" | "other";
 
 export interface LabeledEmailItem {
   value: string;
@@ -436,8 +436,8 @@ export interface CRMDashboard {
   recentLeads: Lead[];
 }
 
-export type ContactDateField = 'created' | 'updated' | 'last_contacted';
-export type ContactDateQuickFilter = 'today' | '7d' | '30d' | '90d';
+export type ContactDateField = "created" | "updated" | "last_contacted";
+export type ContactDateQuickFilter = "today" | "7d" | "30d" | "90d";
 
 export interface CRMContactFilters {
   type?: ContactType;

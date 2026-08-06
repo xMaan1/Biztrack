@@ -1,24 +1,27 @@
-'use client';
+"use client";
 
-import { Search } from 'lucide-react';
+import { Search } from "lucide-react";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
-import { Label } from '@/src/components/ui/label';
+} from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
+import { Label } from "@/src/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
-import { MOT_BOOKING_STATUSES, MOT_TEST_TYPES } from '@/src/models/mot/MotBooking';
-import type { MotBookingFiltersState } from './types';
+} from "@/src/components/ui/select";
+import {
+  MOT_BOOKING_STATUSES,
+  MOT_TEST_TYPES,
+} from "@/src/models/mot/MotBooking";
+import type { MotBookingFiltersState } from "./types";
 
 type MotBookingsFiltersCardProps = {
   filters: MotBookingFiltersState;
@@ -54,7 +57,11 @@ export function MotBookingsFiltersCard({
             <Label>Status</Label>
             <Select
               value={filters.status}
-              onValueChange={(value) => onFiltersChange({ status: value as MotBookingFiltersState['status'] })}
+              onValueChange={(value) =>
+                onFiltersChange({
+                  status: value as MotBookingFiltersState["status"],
+                })
+              }
             >
               <SelectTrigger>
                 <SelectValue placeholder="All statuses" />
@@ -73,7 +80,11 @@ export function MotBookingsFiltersCard({
             <Label>Test type</Label>
             <Select
               value={filters.testType}
-              onValueChange={(value) => onFiltersChange({ testType: value as MotBookingFiltersState['testType'] })}
+              onValueChange={(value) =>
+                onFiltersChange({
+                  testType: value as MotBookingFiltersState["testType"],
+                })
+              }
             >
               <SelectTrigger>
                 <SelectValue placeholder="All types" />

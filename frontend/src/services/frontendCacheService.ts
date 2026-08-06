@@ -27,7 +27,7 @@ class FrontendCacheService {
    */
   get<T>(key: string): T | null {
     const entry = this.cache.get(key);
-    
+
     if (!entry) {
       this.log(`Cache miss for key: ${key}`);
       return null;
@@ -56,7 +56,7 @@ class FrontendCacheService {
     const entry: CacheEntry<T> = {
       data,
       timestamp: Date.now(),
-      ttl: ttl || this.defaultTTL
+      ttl: ttl || this.defaultTTL,
     };
 
     this.cache.set(key, entry);
@@ -69,12 +69,12 @@ class FrontendCacheService {
   has(key: string): boolean {
     const entry = this.cache.get(key);
     if (!entry) return false;
-    
+
     if (Date.now() - entry.timestamp > entry.ttl) {
       this.cache.delete(key);
       return false;
     }
-    
+
     return true;
   }
 
@@ -94,7 +94,7 @@ class FrontendCacheService {
    */
   clear(): void {
     this.cache.clear();
-    this.log('Cache cleared');
+    this.log("Cache cleared");
   }
 
   /**
@@ -131,7 +131,7 @@ class FrontendCacheService {
       size: this.cache.size,
       maxSize: this.maxSize,
       keys: Array.from(this.cache.keys()),
-      memoryUsage: this.estimateMemoryUsage()
+      memoryUsage: this.estimateMemoryUsage(),
     };
   }
 
@@ -140,7 +140,7 @@ class FrontendCacheService {
    */
   invalidatePattern(pattern: string | RegExp): number {
     let invalidatedCount = 0;
-    const regex = typeof pattern === 'string' ? new RegExp(pattern) : pattern;
+    const regex = typeof pattern === "string" ? new RegExp(pattern) : pattern;
 
     for (const key of Array.from(this.cache.keys())) {
       if (regex.test(key)) {
@@ -150,7 +150,9 @@ class FrontendCacheService {
     }
 
     if (invalidatedCount > 0) {
-      this.log(`Invalidated ${invalidatedCount} cache entries matching pattern: ${pattern}`);
+      this.log(
+        `Invalidated ${invalidatedCount} cache entries matching pattern: ${pattern}`,
+      );
     }
 
     return invalidatedCount;
@@ -162,7 +164,7 @@ class FrontendCacheService {
   async getOrSet<T>(
     key: string,
     fetchFn: () => Promise<T>,
-    ttl?: number
+    ttl?: number,
   ): Promise<T> {
     // Try to get from cache first
     const cached = this.get<T>(key);
@@ -186,11 +188,11 @@ class FrontendCacheService {
    */
   getMultiple<T>(keys: string[]): { [key: string]: T | null } {
     const result: { [key: string]: T | null } = {};
-    
+
     for (const key of keys) {
       result[key] = this.get<T>(key);
     }
-    
+
     return result;
   }
 
@@ -204,7 +206,7 @@ class FrontendCacheService {
   }
 
   private evictOldest(): void {
-    let oldestKey = '';
+    let oldestKey = "";
     let oldestTimestamp = Date.now();
 
     for (const [key, entry] of Array.from(this.cache.entries())) {
@@ -223,13 +225,13 @@ class FrontendCacheService {
   private estimateMemoryUsage(): number {
     // Rough estimation of memory usage
     let totalSize = 0;
-    
+
     for (const [key, entry] of Array.from(this.cache.entries())) {
       totalSize += key.length * 2; // Unicode characters
       totalSize += JSON.stringify(entry.data).length * 2;
       totalSize += 16; // Entry overhead (timestamp, ttl)
     }
-    
+
     return totalSize;
   }
 
@@ -243,13 +245,16 @@ class FrontendCacheService {
 export const frontendCache = new FrontendCacheService({
   ttl: 5 * 60 * 1000, // 5 minutes default
   maxSize: 100,
-  enableLogging: process.env.NODE_ENV === 'development' 
+  enableLogging: process.env.NODE_ENV === "development",
 });
 
 // Auto-cleanup expired entries every 5 minutes
-setInterval(() => {
-  frontendCache.clearExpired();
-}, 5 * 60 * 1000);
+setInterval(
+  () => {
+    frontendCache.clearExpired();
+  },
+  5 * 60 * 1000,
+);
 
 // Export the class for custom instances
 export { FrontendCacheService };

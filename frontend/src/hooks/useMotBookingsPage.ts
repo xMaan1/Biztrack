@@ -1,14 +1,17 @@
-'use client';
+"use client";
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import motBookingService from '@/src/services/MotBookingService';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import motBookingService from "@/src/services/MotBookingService";
 import type {
   MotBooking,
   MotBookingStats,
   MotBookingStatus,
-} from '@/src/models/mot/MotBooking';
-import type { MotBookingFiltersState, MotBookingFormData } from '@/src/components/mot-bookings/types';
+} from "@/src/models/mot/MotBooking";
+import type {
+  MotBookingFiltersState,
+  MotBookingFormData,
+} from "@/src/components/mot-bookings/types";
 import {
   applyTimeSlot,
   bookingToFormData,
@@ -16,7 +19,7 @@ import {
   emptyMotBookingFormData,
   filterBookings,
   formDataToPayload,
-} from '@/src/components/mot-bookings/motBookingUtils';
+} from "@/src/components/mot-bookings/motBookingUtils";
 
 export function useMotBookingsPage() {
   const searchParams = useSearchParams();
@@ -26,13 +29,18 @@ export function useMotBookingsPage() {
   const [stats, setStats] = useState<MotBookingStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [filters, setFilters] = useState<MotBookingFiltersState>(defaultFilters());
+  const [filters, setFilters] =
+    useState<MotBookingFiltersState>(defaultFilters());
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [editingBooking, setEditingBooking] = useState<MotBooking | null>(null);
-  const [bookingToDelete, setBookingToDelete] = useState<MotBooking | null>(null);
+  const [bookingToDelete, setBookingToDelete] = useState<MotBooking | null>(
+    null,
+  );
   const [viewingBooking, setViewingBooking] = useState<MotBooking | null>(null);
-  const [formData, setFormData] = useState<MotBookingFormData>(emptyMotBookingFormData());
+  const [formData, setFormData] = useState<MotBookingFormData>(
+    emptyMotBookingFormData(),
+  );
 
   const fetchBookings = useCallback(async () => {
     try {
@@ -73,15 +81,15 @@ export function useMotBookingsPage() {
   }, []);
 
   useEffect(() => {
-    if (searchParams.get('openAdd') !== 'true') return;
+    if (searchParams.get("openAdd") !== "true") return;
     openNewBookingDialog();
     const params = new URLSearchParams(searchParams.toString());
-    params.delete('openAdd');
+    params.delete("openAdd");
     const nextQuery = params.toString();
     router.replace(
       nextQuery
         ? `/workshop-management/mot/bookings?${nextQuery}`
-        : '/workshop-management/mot/bookings',
+        : "/workshop-management/mot/bookings",
     );
   }, [searchParams, router, openNewBookingDialog]);
 
@@ -105,7 +113,10 @@ export function useMotBookingsPage() {
       const payload = formDataToPayload(formData);
       try {
         if (editingBooking?.id) {
-          await motBookingService.adminUpdateBooking(editingBooking.id, payload);
+          await motBookingService.adminUpdateBooking(
+            editingBooking.id,
+            payload,
+          );
         } else {
           await motBookingService.adminCreateBooking(payload);
         }
@@ -153,10 +164,11 @@ export function useMotBookingsPage() {
   const handleStatusChange = useCallback(
     async (booking: MotBooking, status: MotBookingStatus) => {
       try {
-        await motBookingService.adminUpdateBookingStatus(booking.id, { status });
+        await motBookingService.adminUpdateBookingStatus(booking.id, {
+          status,
+        });
         await Promise.all([fetchBookings(), fetchStats()]);
-      } catch {
-      }
+      } catch {}
     },
     [fetchBookings, fetchStats],
   );

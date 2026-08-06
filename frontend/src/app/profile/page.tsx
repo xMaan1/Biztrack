@@ -1,21 +1,31 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import { useAuth } from '@/src/hooks/useAuth';
-import { DashboardLayout } from '@/src/components/layout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
-import { Label } from '@/src/components/ui/label';
-import { Avatar, AvatarFallback, AvatarImage } from '@/src/components/ui/avatar';
-import { Separator } from '@/src/components/ui/separator';
-import { Badge } from '@/src/components/ui/badge';
+import React, { useState, useEffect, useRef } from "react";
+import { useAuth } from "@/src/hooks/useAuth";
+import { DashboardLayout } from "@/src/components/layout";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
+import { Label } from "@/src/components/ui/label";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/src/components/ui/avatar";
+import { Separator } from "@/src/components/ui/separator";
+import { Badge } from "@/src/components/ui/badge";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '@/src/components/ui/tabs';
+} from "@/src/components/ui/tabs";
 import {
   User,
   Save,
@@ -24,12 +34,12 @@ import {
   AlertCircle,
   UploadCloud,
   X,
-} from 'lucide-react';
-import { toast } from 'sonner';
-import { useConfirm } from '@/src/contexts/ConfirmContext';
-import { apiService } from '@/src/services/ApiService';
-import { extractErrorMessage } from '@/src/utils/errorUtils';
-import { getInitials } from '@/src/lib/utils';
+} from "lucide-react";
+import { toast } from "sonner";
+import { useConfirm } from "@/src/contexts/ConfirmContext";
+import { apiService } from "@/src/services/ApiService";
+import { extractErrorMessage } from "@/src/utils/errorUtils";
+import { getInitials } from "@/src/lib/utils";
 
 export default function ProfilePage() {
   const confirm = useConfirm();
@@ -38,22 +48,22 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
   const [profileData, setProfileData] = useState({
-    userName: '',
-    email: '',
-    firstName: '',
-    lastName: '',
-    avatar: '',
+    userName: "",
+    email: "",
+    firstName: "",
+    lastName: "",
+    avatar: "",
   });
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
   });
   const [hasChanges, setHasChanges] = useState(false);
-  const [passwordError, setPasswordError] = useState('');
+  const [passwordError, setPasswordError] = useState("");
 
   useEffect(() => {
     fetchProfile();
@@ -62,11 +72,11 @@ export default function ProfilePage() {
   useEffect(() => {
     if (user) {
       const initialData = {
-        userName: user.userName || '',
-        email: user.email || '',
-        firstName: user.firstName || '',
-        lastName: user.lastName || '',
-        avatar: user.avatar || '',
+        userName: user.userName || "",
+        email: user.email || "",
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        avatar: user.avatar || "",
       };
       setProfileData(initialData);
       setAvatarPreview(null);
@@ -79,15 +89,15 @@ export default function ProfilePage() {
       const response = await apiService.getMyProfile();
       const profile = response;
       setProfileData({
-        userName: profile.userName || '',
-        email: profile.email || '',
-        firstName: profile.firstName || '',
-        lastName: profile.lastName || '',
-        avatar: profile.avatar || '',
+        userName: profile.userName || "",
+        email: profile.email || "",
+        firstName: profile.firstName || "",
+        lastName: profile.lastName || "",
+        avatar: profile.avatar || "",
       });
       setAvatarPreview(null);
     } catch (error) {
-      toast.error(extractErrorMessage(error, 'Failed to load profile'));
+      toast.error(extractErrorMessage(error, "Failed to load profile"));
     } finally {
       setLoading(false);
     }
@@ -103,19 +113,31 @@ export default function ProfilePage() {
     try {
       setSaving(true);
       setAvatarUploading(true);
-      
+
       const updateData: any = {};
-      if (profileData.userName !== user?.userName) updateData.userName = profileData.userName;
-      if (profileData.email !== user?.email) updateData.email = profileData.email;
-      if (profileData.firstName !== user?.firstName) updateData.firstName = profileData.firstName;
-      if (profileData.lastName !== user?.lastName) updateData.lastName = profileData.lastName;
-      
+      if (profileData.userName !== user?.userName)
+        updateData.userName = profileData.userName;
+      if (profileData.email !== user?.email)
+        updateData.email = profileData.email;
+      if (profileData.firstName !== user?.firstName)
+        updateData.firstName = profileData.firstName;
+      if (profileData.lastName !== user?.lastName)
+        updateData.lastName = profileData.lastName;
+
       if (profileData.avatar !== user?.avatar) {
-        if (profileData.avatar && user?.avatar && user.avatar.startsWith('http') && user.avatar.includes('avatars/')) {
+        if (
+          profileData.avatar &&
+          user?.avatar &&
+          user.avatar.startsWith("http") &&
+          user.avatar.includes("avatars/")
+        ) {
           try {
             await apiService.deleteAvatar();
           } catch (deleteError) {
-            console.warn('Failed to delete old avatar, continuing with upload:', deleteError);
+            console.warn(
+              "Failed to delete old avatar, continuing with upload:",
+              deleteError,
+            );
           }
         }
         updateData.avatar = profileData.avatar;
@@ -125,11 +147,14 @@ export default function ProfilePage() {
       await refreshUser();
       setHasChanges(false);
       setAvatarPreview(null);
-      toast.success('Profile updated successfully!');
+      toast.success("Profile updated successfully!");
     } catch (error) {
-      const errorMessage = extractErrorMessage(error, 'Failed to update profile');
+      const errorMessage = extractErrorMessage(
+        error,
+        "Failed to update profile",
+      );
       toast.error(errorMessage);
-      console.error('Profile update error:', error);
+      console.error("Profile update error:", error);
     } finally {
       setSaving(false);
       setAvatarUploading(false);
@@ -140,66 +165,70 @@ export default function ProfilePage() {
     avatarInputRef.current?.click();
   };
 
-  const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     try {
-      if (!file.type.startsWith('image/')) {
-        toast.error('Please select an image file (PNG, JPG, GIF, or WEBP)');
-        event.target.value = '';
+      if (!file.type.startsWith("image/")) {
+        toast.error("Please select an image file (PNG, JPG, GIF, or WEBP)");
+        event.target.value = "";
         return;
       }
 
       if (file.size > 5 * 1024 * 1024) {
-        toast.error('Image size must be less than 5MB');
-        event.target.value = '';
+        toast.error("Image size must be less than 5MB");
+        event.target.value = "";
         return;
       }
 
       const reader = new FileReader();
       reader.onerror = () => {
-        toast.error('Failed to read image file. Please try again.');
-        event.target.value = '';
+        toast.error("Failed to read image file. Please try again.");
+        event.target.value = "";
       };
-      
+
       reader.onload = (e) => {
         try {
           const base64 = e.target?.result as string;
           if (!base64) {
-            throw new Error('Failed to convert image to base64');
+            throw new Error("Failed to convert image to base64");
           }
           setAvatarPreview(base64);
-          setProfileData(prev => ({ ...prev, avatar: base64 }));
+          setProfileData((prev) => ({ ...prev, avatar: base64 }));
           setHasChanges(true);
           toast.success('Avatar selected. Click "Save Changes" to upload.');
         } catch (error) {
-          console.error('Error processing avatar:', error);
-          toast.error('Failed to process image. Please try a different file.');
+          console.error("Error processing avatar:", error);
+          toast.error("Failed to process image. Please try a different file.");
         }
       };
-      
+
       reader.readAsDataURL(file);
-      event.target.value = '';
+      event.target.value = "";
     } catch (error) {
-      console.error('Avatar selection error:', error);
-      toast.error('An error occurred while selecting the image. Please try again.');
-      event.target.value = '';
+      console.error("Avatar selection error:", error);
+      toast.error(
+        "An error occurred while selecting the image. Please try again.",
+      );
+      event.target.value = "";
     }
   };
 
   const handleRemoveAvatar = async () => {
     if (!user?.avatar) {
       setAvatarPreview(null);
-      setProfileData(prev => ({ ...prev, avatar: '' }));
+      setProfileData((prev) => ({ ...prev, avatar: "" }));
       setHasChanges(true);
       return;
     }
 
     const ok = await confirm({
-      description: 'Are you sure you want to remove your avatar?',
+      description: "Are you sure you want to remove your avatar?",
       destructive: true,
-      confirmLabel: 'Remove',
+      confirmLabel: "Remove",
     });
     if (!ok) return;
 
@@ -207,14 +236,17 @@ export default function ProfilePage() {
       setAvatarUploading(true);
       await apiService.deleteAvatar();
       setAvatarPreview(null);
-      setProfileData(prev => ({ ...prev, avatar: '' }));
+      setProfileData((prev) => ({ ...prev, avatar: "" }));
       await refreshUser();
       setHasChanges(false);
-      toast.success('Avatar removed successfully');
+      toast.success("Avatar removed successfully");
     } catch (error) {
-      const errorMessage = extractErrorMessage(error, 'Failed to remove avatar');
+      const errorMessage = extractErrorMessage(
+        error,
+        "Failed to remove avatar",
+      );
       toast.error(errorMessage);
-      console.error('Avatar deletion error:', error);
+      console.error("Avatar deletion error:", error);
     } finally {
       setAvatarUploading(false);
     }
@@ -222,34 +254,37 @@ export default function ProfilePage() {
 
   const handlePasswordChange = (field: string, value: string) => {
     setPasswordData((prev) => ({ ...prev, [field]: value }));
-    setPasswordError('');
+    setPasswordError("");
   };
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setPasswordError('New passwords do not match');
+      setPasswordError("New passwords do not match");
       return;
     }
 
     if (passwordData.newPassword.length < 8) {
-      setPasswordError('Password must be at least 8 characters long');
+      setPasswordError("Password must be at least 8 characters long");
       return;
     }
 
     try {
       setChangingPassword(true);
-      setPasswordError('');
-      await apiService.changePassword(passwordData.currentPassword, passwordData.newPassword);
+      setPasswordError("");
+      await apiService.changePassword(
+        passwordData.currentPassword,
+        passwordData.newPassword,
+      );
       setPasswordData({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
       });
-      toast.success('Password changed successfully!');
+      toast.success("Password changed successfully!");
     } catch (error) {
-      setPasswordError(extractErrorMessage(error, 'Failed to change password'));
+      setPasswordError(extractErrorMessage(error, "Failed to change password"));
     } finally {
       setChangingPassword(false);
     }
@@ -277,7 +312,9 @@ export default function ProfilePage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Profile</h1>
-              <p className="text-gray-600">Manage your account information and settings</p>
+              <p className="text-gray-600">
+                Manage your account information and settings
+              </p>
             </div>
           </div>
 
@@ -322,46 +359,52 @@ export default function ProfilePage() {
                             <Loader2 className="h-6 w-6 animate-spin text-white" />
                           </div>
                         )}
-                        <Avatar 
-                          className={`h-24 w-24 ${avatarUploading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`} 
-                          onClick={avatarUploading ? undefined : handleAvatarClick}
+                        <Avatar
+                          className={`h-24 w-24 ${avatarUploading ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
+                          onClick={
+                            avatarUploading ? undefined : handleAvatarClick
+                          }
                         >
-                          <AvatarImage 
-                            src={avatarPreview || profileData.avatar} 
-                            alt={profileData.userName} 
+                          <AvatarImage
+                            src={avatarPreview || profileData.avatar}
+                            alt={profileData.userName}
                           />
                           <AvatarFallback className="bg-gradient-primary text-white text-2xl">
                             {getInitials(
-                              `${profileData.firstName} ${profileData.lastName}` || profileData.userName
+                              `${profileData.firstName} ${profileData.lastName}` ||
+                                profileData.userName,
                             )}
                           </AvatarFallback>
                         </Avatar>
-                        {(avatarPreview || profileData.avatar) && !avatarUploading && (
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRemoveAvatar();
-                            }}
-                            disabled={avatarUploading}
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        )}
+                        {(avatarPreview || profileData.avatar) &&
+                          !avatarUploading && (
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="sm"
+                              className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveAvatar();
+                              }}
+                              disabled={avatarUploading}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          )}
                       </div>
                       <div className="flex-1">
                         <h3 className="text-lg font-semibold">
                           {profileData.firstName && profileData.lastName
                             ? `${profileData.firstName} ${profileData.lastName}`
-                            : profileData.userName || 'User'}
+                            : profileData.userName || "User"}
                         </h3>
-                        <p className="text-sm text-gray-600">{profileData.email}</p>
+                        <p className="text-sm text-gray-600">
+                          {profileData.email}
+                        </p>
                         {user?.userRole && (
                           <Badge variant="secondary" className="mt-2">
-                            {user.userRole.replace('_', ' ').toUpperCase()}
+                            {user.userRole.replace("_", " ").toUpperCase()}
                           </Badge>
                         )}
                         <div className="mt-3 flex gap-2">
@@ -381,15 +424,17 @@ export default function ProfilePage() {
                             ) : (
                               <>
                                 <UploadCloud className="h-4 w-4" />
-                                {profileData.avatar ? 'Change Avatar' : 'Upload Avatar'}
+                                {profileData.avatar
+                                  ? "Change Avatar"
+                                  : "Upload Avatar"}
                               </>
                             )}
                           </Button>
                         </div>
                         <p className="text-xs text-muted-foreground mt-2">
-                          {avatarUploading 
-                            ? 'Uploading avatar to server...' 
-                            : 'Click avatar or button to upload. Max 5MB.'}
+                          {avatarUploading
+                            ? "Uploading avatar to server..."
+                            : "Click avatar or button to upload. Max 5MB."}
                         </p>
                       </div>
                     </div>
@@ -400,7 +445,9 @@ export default function ProfilePage() {
                         <Input
                           id="userName"
                           value={profileData.userName}
-                          onChange={(e) => handleProfileChange('userName', e.target.value)}
+                          onChange={(e) =>
+                            handleProfileChange("userName", e.target.value)
+                          }
                           placeholder="username"
                         />
                       </div>
@@ -411,7 +458,9 @@ export default function ProfilePage() {
                           id="email"
                           type="email"
                           value={profileData.email}
-                          onChange={(e) => handleProfileChange('email', e.target.value)}
+                          onChange={(e) =>
+                            handleProfileChange("email", e.target.value)
+                          }
                           placeholder="email@example.com"
                         />
                       </div>
@@ -421,7 +470,9 @@ export default function ProfilePage() {
                         <Input
                           id="firstName"
                           value={profileData.firstName}
-                          onChange={(e) => handleProfileChange('firstName', e.target.value)}
+                          onChange={(e) =>
+                            handleProfileChange("firstName", e.target.value)
+                          }
                           placeholder="John"
                         />
                       </div>
@@ -431,7 +482,9 @@ export default function ProfilePage() {
                         <Input
                           id="lastName"
                           value={profileData.lastName}
-                          onChange={(e) => handleProfileChange('lastName', e.target.value)}
+                          onChange={(e) =>
+                            handleProfileChange("lastName", e.target.value)
+                          }
                           placeholder="Doe"
                         />
                       </div>
@@ -441,7 +494,8 @@ export default function ProfilePage() {
                       <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                         <AlertCircle className="h-4 w-4 text-yellow-600" />
                         <span className="text-sm text-yellow-800">
-                          You have unsaved changes. Don't forget to save your profile.
+                          You have unsaved changes. Don&apos;t forget to save
+                          your profile.
                         </span>
                       </div>
                     )}
@@ -457,7 +511,9 @@ export default function ProfilePage() {
                         ) : (
                           <Save className="h-4 w-4" />
                         )}
-                        {saving || avatarUploading ? 'Saving...' : 'Save Changes'}
+                        {saving || avatarUploading
+                          ? "Saving..."
+                          : "Save Changes"}
                       </Button>
                     </div>
                   </form>
@@ -480,12 +536,19 @@ export default function ProfilePage() {
                   <form onSubmit={handlePasswordSubmit} className="space-y-6">
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="currentPassword">Current Password</Label>
+                        <Label htmlFor="currentPassword">
+                          Current Password
+                        </Label>
                         <Input
                           id="currentPassword"
                           type="password"
                           value={passwordData.currentPassword}
-                          onChange={(e) => handlePasswordChange('currentPassword', e.target.value)}
+                          onChange={(e) =>
+                            handlePasswordChange(
+                              "currentPassword",
+                              e.target.value,
+                            )
+                          }
                           placeholder="Enter your current password"
                           required
                         />
@@ -499,7 +562,9 @@ export default function ProfilePage() {
                           id="newPassword"
                           type="password"
                           value={passwordData.newPassword}
-                          onChange={(e) => handlePasswordChange('newPassword', e.target.value)}
+                          onChange={(e) =>
+                            handlePasswordChange("newPassword", e.target.value)
+                          }
                           placeholder="Enter your new password"
                           required
                         />
@@ -509,12 +574,19 @@ export default function ProfilePage() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                        <Label htmlFor="confirmPassword">
+                          Confirm New Password
+                        </Label>
                         <Input
                           id="confirmPassword"
                           type="password"
                           value={passwordData.confirmPassword}
-                          onChange={(e) => handlePasswordChange('confirmPassword', e.target.value)}
+                          onChange={(e) =>
+                            handlePasswordChange(
+                              "confirmPassword",
+                              e.target.value,
+                            )
+                          }
                           placeholder="Confirm your new password"
                           required
                         />
@@ -524,14 +596,21 @@ export default function ProfilePage() {
                     {passwordError && (
                       <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
                         <AlertCircle className="h-4 w-4 text-red-600" />
-                        <span className="text-sm text-red-800">{passwordError}</span>
+                        <span className="text-sm text-red-800">
+                          {passwordError}
+                        </span>
                       </div>
                     )}
 
                     <div className="flex justify-end">
                       <Button
                         type="submit"
-                        disabled={changingPassword || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword}
+                        disabled={
+                          changingPassword ||
+                          !passwordData.currentPassword ||
+                          !passwordData.newPassword ||
+                          !passwordData.confirmPassword
+                        }
                         className="gap-2"
                       >
                         {changingPassword ? (
@@ -539,7 +618,7 @@ export default function ProfilePage() {
                         ) : (
                           <Lock className="h-4 w-4" />
                         )}
-                        {changingPassword ? 'Changing...' : 'Change Password'}
+                        {changingPassword ? "Changing..." : "Change Password"}
                       </Button>
                     </div>
                   </form>
@@ -552,4 +631,3 @@ export default function ProfilePage() {
     </DashboardLayout>
   );
 }
-

@@ -1,30 +1,35 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { ModuleGuard } from '../../../components/guards/PermissionGuard';
-import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
-import { Button } from '../../../components/ui/button';
-import { Input } from '../../../components/ui/input';
-import { Plus, Edit, Trash2, Car } from 'lucide-react';
-import { apiService } from '../../../services/ApiService';
-import { DashboardLayout } from '../../../components/layout';
-import { Vehicle } from '../../../models/workshop';
-import VehicleDialog from '../../../components/workshop/VehicleDialog';
+import React, { useState, useEffect, useCallback } from "react";
+import { ModuleGuard } from "../../../components/guards/PermissionGuard";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../../components/ui/card";
+import { Button } from "../../../components/ui/button";
+import { Input } from "../../../components/ui/input";
+import { Plus, Edit, Trash2, Car } from "lucide-react";
+import { apiService } from "../../../services/ApiService";
+import { DashboardLayout } from "../../../components/layout";
+import { Vehicle } from "../../../models/workshop";
+import VehicleDialog from "../../../components/workshop/VehicleDialog";
 
 function VehiclesContent() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
-  const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
+  const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [vehicleToDelete, setVehicleToDelete] = useState<Vehicle | null>(null);
 
   const fetchVehicles = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await apiService.get('/vehicles?limit=500');
+      const data = await apiService.get("/vehicles?limit=500");
       setVehicles(Array.isArray(data) ? data : []);
     } catch {
       setVehicles([]);
@@ -41,24 +46,24 @@ function VehiclesContent() {
     const q = searchTerm.toLowerCase();
     return (
       !searchTerm ||
-      (v.registration_number || '').toLowerCase().includes(q) ||
-      (v.vin || '').toLowerCase().includes(q) ||
-      (v.make || '').toLowerCase().includes(q) ||
-      (v.model || '').toLowerCase().includes(q) ||
-      (v.year || '').toLowerCase().includes(q) ||
-      (v.color || '').toLowerCase().includes(q)
+      (v.registration_number || "").toLowerCase().includes(q) ||
+      (v.vin || "").toLowerCase().includes(q) ||
+      (v.make || "").toLowerCase().includes(q) ||
+      (v.model || "").toLowerCase().includes(q) ||
+      (v.year || "").toLowerCase().includes(q) ||
+      (v.color || "").toLowerCase().includes(q)
     );
   });
 
   const openCreate = () => {
     setSelectedVehicle(null);
-    setDialogMode('create');
+    setDialogMode("create");
     setDialogOpen(true);
   };
 
   const openEdit = (v: Vehicle) => {
     setSelectedVehicle(v);
-    setDialogMode('edit');
+    setDialogMode("edit");
     setDialogOpen(true);
   };
 
@@ -81,8 +86,10 @@ function VehiclesContent() {
   };
 
   const displayLine = (v: Vehicle) => {
-    const parts = [v.registration_number, v.make, v.model, v.year].filter(Boolean);
-    return parts.length ? parts.join(' · ') : v.vin || '–';
+    const parts = [v.registration_number, v.make, v.model, v.year].filter(
+      Boolean,
+    );
+    return parts.length ? parts.join(" · ") : v.vin || "–";
   };
 
   return (
@@ -94,7 +101,9 @@ function VehiclesContent() {
               <Car className="h-8 w-8" />
               Vehicles
             </h1>
-            <p className="text-gray-600">Manage workshop vehicles. Use them in job cards and invoices.</p>
+            <p className="text-gray-600">
+              Manage workshop vehicles. Use them in job cards and invoices.
+            </p>
           </div>
           <Button onClick={openCreate}>
             <Plus className="h-4 w-4 mr-2" />
@@ -119,7 +128,9 @@ function VehiclesContent() {
             {loading ? (
               <div className="py-8 text-center text-gray-500">Loading...</div>
             ) : filtered.length === 0 ? (
-              <div className="py-8 text-center text-gray-500">No vehicles found.</div>
+              <div className="py-8 text-center text-gray-500">
+                No vehicles found.
+              </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">
@@ -137,18 +148,33 @@ function VehiclesContent() {
                   <tbody>
                     {filtered.map((v) => (
                       <tr key={v.id} className="border-b hover:bg-gray-50">
-                        <td className="py-2">{v.registration_number || '–'}</td>
-                        <td className="py-2">{(v.make || v.model) ? [v.make, v.model].filter(Boolean).join(' ') : '–'}</td>
-                        <td className="py-2">{v.year || '–'}</td>
-                        <td className="py-2">{v.color || '–'}</td>
-                        <td className="py-2 font-mono text-sm">{v.vin || '–'}</td>
-                        <td className="py-2">{v.mileage || '–'}</td>
+                        <td className="py-2">{v.registration_number || "–"}</td>
+                        <td className="py-2">
+                          {v.make || v.model
+                            ? [v.make, v.model].filter(Boolean).join(" ")
+                            : "–"}
+                        </td>
+                        <td className="py-2">{v.year || "–"}</td>
+                        <td className="py-2">{v.color || "–"}</td>
+                        <td className="py-2 font-mono text-sm">
+                          {v.vin || "–"}
+                        </td>
+                        <td className="py-2">{v.mileage || "–"}</td>
                         <td className="py-2 text-right">
-                          <Button variant="ghost" size="sm" onClick={() => openEdit(v)}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openEdit(v)}
+                          >
                             <Edit className="h-4 w-4 mr-1" />
                             Edit
                           </Button>
-                          <Button variant="ghost" size="sm" onClick={() => handleDeleteVehicle(v)} className="text-red-600 hover:text-red-700">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteVehicle(v)}
+                            className="text-red-600 hover:text-red-700"
+                          >
                             <Trash2 className="h-4 w-4 mr-1" />
                             Delete
                           </Button>
@@ -174,7 +200,9 @@ function VehiclesContent() {
             <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
               <h3 className="text-lg font-semibold mb-4">Delete Vehicle</h3>
               <p className="text-gray-600 mb-6">
-                Are you sure you want to delete &quot;{vehicleToDelete && displayLine(vehicleToDelete)}&quot;? This action cannot be undone.
+                Are you sure you want to delete &quot;
+                {vehicleToDelete && displayLine(vehicleToDelete)}&quot;? This
+                action cannot be undone.
               </p>
               <div className="flex justify-end gap-2">
                 <Button
@@ -200,7 +228,10 @@ function VehiclesContent() {
 
 export default function VehiclesPage() {
   return (
-    <ModuleGuard module="production" fallback={<div>You don&apos;t have access to this module</div>}>
+    <ModuleGuard
+      module="production"
+      fallback={<div>You don&apos;t have access to this module</div>}
+    >
       <VehiclesContent />
     </ModuleGuard>
   );

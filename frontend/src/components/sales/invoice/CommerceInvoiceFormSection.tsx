@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { CommerceInvoiceForm } from '../CommerceInvoiceForm';
-import type { UseInvoiceFormReturn } from '@/src/hooks/useInvoiceForm';
-import type { InvoiceFormMode } from '@/src/types/sales/invoiceForm';
+import { CommerceInvoiceForm } from "../CommerceInvoiceForm";
+import type { UseInvoiceFormReturn } from "@/src/hooks/useInvoiceForm";
+import type { InvoiceFormMode } from "@/src/types/sales/invoiceForm";
 
 type CommerceInvoiceFormSectionProps = {
   mode: InvoiceFormMode;
@@ -10,12 +10,16 @@ type CommerceInvoiceFormSectionProps = {
   error?: string | null;
 };
 
-export function CommerceInvoiceFormSection({ mode, form, error }: CommerceInvoiceFormSectionProps) {
+export function CommerceInvoiceFormSection({
+  mode,
+  form,
+  error,
+}: CommerceInvoiceFormSectionProps) {
   return (
     <form onSubmit={form.handleSubmit}>
       <CommerceInvoiceForm
         key={form.commerceFormKey}
-        mode={mode === 'view' ? 'create' : mode}
+        mode={mode === "view" ? "create" : mode}
         formData={form.formData}
         errors={form.errors}
         items={form.items}

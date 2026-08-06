@@ -1,56 +1,56 @@
 // POS Module Types and Interfaces
 
 export enum POSPaymentMethod {
-  CASH = 'cash',
-  CREDIT_CARD = 'credit_card',
-  DEBIT_CARD = 'debit_card',
-  BANK_TRANSFER = 'bank_transfer',
-  CHECK = 'check',
-  OTHER = 'other',
+  CASH = "cash",
+  CREDIT_CARD = "credit_card",
+  DEBIT_CARD = "debit_card",
+  BANK_TRANSFER = "bank_transfer",
+  CHECK = "check",
+  OTHER = "other",
 }
 
 export enum POSTransactionStatus {
-  PENDING = 'pending',
-  COMPLETED = 'completed',
-  CANCELLED = 'cancelled',
-  REFUNDED = 'refunded',
+  PENDING = "pending",
+  COMPLETED = "completed",
+  CANCELLED = "cancelled",
+  REFUNDED = "refunded",
 }
 
 export enum POSShiftStatus {
-  OPEN = 'open',
-  CLOSED = 'closed',
+  OPEN = "open",
+  CLOSED = "closed",
 }
 
 export enum ProductCategory {
-  ELECTRONICS = 'electronics',
-  CLOTHING = 'clothing',
-  FOOD = 'food',
-  BEVERAGES = 'beverages',
-  BEAUTY = 'beauty',
-  HOME = 'home',
-  AUTOMOTIVE = 'automotive',
-  SPORTS = 'sports',
-  BOOKS = 'books',
-  OTHER = 'other',
+  ELECTRONICS = "electronics",
+  CLOTHING = "clothing",
+  FOOD = "food",
+  BEVERAGES = "beverages",
+  BEAUTY = "beauty",
+  HOME = "home",
+  AUTOMOTIVE = "automotive",
+  SPORTS = "sports",
+  BOOKS = "books",
+  OTHER = "other",
 }
 
 export enum UnitOfMeasure {
-  PIECE = 'piece',
-  KILOGRAM = 'kilogram',
-  GRAM = 'gram',
-  LITER = 'litre',
-  MILLILITER = 'millilitre',
-  METER = 'meter',
-  CENTIMETER = 'centimeter',
-  SQUARE_METER = 'square meter',
-  CUBIC_METER = 'cubic meter',
-  BOX = 'box',
-  PACK = 'pack',
-  ROLL = 'roll',
-  SET = 'set',
-  PAIR = 'pair',
-  DOZEN = 'dozen',
-  OTHER = 'other',
+  PIECE = "piece",
+  KILOGRAM = "kilogram",
+  GRAM = "gram",
+  LITER = "litre",
+  MILLILITER = "millilitre",
+  METER = "meter",
+  CENTIMETER = "centimeter",
+  SQUARE_METER = "square meter",
+  CUBIC_METER = "cubic meter",
+  BOX = "box",
+  PACK = "pack",
+  ROLL = "roll",
+  SET = "set",
+  PAIR = "pair",
+  DOZEN = "dozen",
+  OTHER = "other",
 }
 
 // Product Types
@@ -173,7 +173,7 @@ export interface POSTransaction {
 export interface POSTransactionCreate {
   customerId?: string;
   customerName?: string;
-  items: Omit<POSTransactionItem, 'id' | 'total'>[];
+  items: Omit<POSTransactionItem, "id" | "total">[];
   taxRate: number;
   discount: number;
   paymentMethod: POSPaymentMethod;

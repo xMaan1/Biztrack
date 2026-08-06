@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
-import { Plus, Search, RefreshCw } from 'lucide-react';
-import type { ProjectsToolbarProps } from '@/src/types/projects';
+} from "@/src/components/ui/select";
+import { Plus, Search, RefreshCw } from "lucide-react";
+import type { ProjectsToolbarProps } from "@/src/types/projects";
 
 export function ProjectsToolbar({
   searchTerm,
@@ -59,7 +59,11 @@ export function ProjectsToolbar({
             <SelectItem value="high">High</SelectItem>
           </SelectContent>
         </Select>
-        <Button variant="outline" onClick={onClearFilters} className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          onClick={onClearFilters}
+          className="flex items-center gap-2"
+        >
           <RefreshCw className="h-4 w-4" />
           Clear
         </Button>

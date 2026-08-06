@@ -1,4 +1,4 @@
-import { cn } from '@/src/lib/utils';
+import { cn } from "@/src/lib/utils";
 
 export function SectionSkeleton({
   className,
@@ -10,7 +10,7 @@ export function SectionSkeleton({
   return (
     <div
       className={cn(
-        'animate-pulse rounded-2xl border border-slate-200/80 bg-slate-50/80 p-8',
+        "animate-pulse rounded-2xl border border-slate-200/80 bg-slate-50/80 p-8",
         className,
       )}
       aria-hidden

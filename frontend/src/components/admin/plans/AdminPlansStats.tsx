@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { Activity, CheckCircle, CreditCard, XCircle } from 'lucide-react';
-import { Card, CardContent } from '@/src/components/ui/card';
-import type { AdminPlanStats } from '@/src/types/adminPlan';
+import { Activity, CheckCircle, CreditCard, XCircle } from "lucide-react";
+import { Card, CardContent } from "@/src/components/ui/card";
+import type { AdminPlanStats } from "@/src/types/adminPlan";
 
 type AdminPlansStatsProps = {
   stats: AdminPlanStats;
@@ -19,7 +19,9 @@ export function AdminPlansStats({ stats }: AdminPlansStatsProps) {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Total Plans</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.totalPlans}</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {stats.totalPlans}
+              </p>
             </div>
           </div>
         </CardContent>
@@ -33,7 +35,9 @@ export function AdminPlansStats({ stats }: AdminPlansStatsProps) {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Active Plans</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.activePlans}</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {stats.activePlans}
+              </p>
             </div>
           </div>
         </CardContent>
@@ -46,8 +50,12 @@ export function AdminPlansStats({ stats }: AdminPlansStatsProps) {
               <XCircle className="h-6 w-6 text-red-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Inactive Plans</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.inactivePlans}</p>
+              <p className="text-sm font-medium text-gray-600">
+                Inactive Plans
+              </p>
+              <p className="text-2xl font-bold text-gray-900">
+                {stats.inactivePlans}
+              </p>
             </div>
           </div>
         </CardContent>
@@ -60,7 +68,9 @@ export function AdminPlansStats({ stats }: AdminPlansStatsProps) {
               <Activity className="h-6 w-6 text-purple-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Subscriptions</p>
+              <p className="text-sm font-medium text-gray-600">
+                Total Subscriptions
+              </p>
               <p className="text-2xl font-bold text-gray-900">
                 {stats.totalSubscriptions}
               </p>

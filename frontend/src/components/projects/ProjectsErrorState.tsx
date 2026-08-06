@@ -1,15 +1,18 @@
-'use client';
+"use client";
 
-import { Card, CardContent } from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { RefreshCw } from 'lucide-react';
+import { Card, CardContent } from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { RefreshCw } from "lucide-react";
 
 interface ProjectsErrorStateProps {
   error: string;
   onRetry: () => void;
 }
 
-export function ProjectsErrorState({ error, onRetry }: ProjectsErrorStateProps) {
+export function ProjectsErrorState({
+  error,
+  onRetry,
+}: ProjectsErrorStateProps) {
   return (
     <Card className="modern-card">
       <CardContent className="p-8 text-center">

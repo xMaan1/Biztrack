@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { Input } from '@/src/components/ui/input';
-import type { InvoiceCreate } from '@/src/models/sales';
-import type { InvoiceFormMode } from '@/src/types/sales/invoiceForm';
-import { COMMERCE_INPUT_CLS } from '../commerce-invoice/constants';
-import { InlineField } from '../commerce-invoice/InlineField';
+import { Input } from "@/src/components/ui/input";
+import type { InvoiceCreate } from "@/src/models/sales";
+import type { InvoiceFormMode } from "@/src/types/sales/invoiceForm";
+import { COMMERCE_INPUT_CLS } from "../commerce-invoice/constants";
+import { InlineField } from "../commerce-invoice/InlineField";
 
 type InvoiceLabourCostSectionProps = {
   mode: InvoiceFormMode;
@@ -25,9 +25,11 @@ export function InvoiceLabourCostSection({
           type="number"
           step="0.01"
           min="0"
-          disabled={mode === 'view'}
+          disabled={mode === "view"}
           value={value ?? 0}
-          onChange={(e) => onInputChange('labourCost', parseFloat(e.target.value) || 0)}
+          onChange={(e) =>
+            onInputChange("labourCost", parseFloat(e.target.value) || 0)
+          }
           className={COMMERCE_INPUT_CLS}
         />
       </InlineField>

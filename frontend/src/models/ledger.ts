@@ -56,11 +56,11 @@ export interface AccountReceivableUpdate {
 }
 
 export enum AccountReceivableStatus {
-  PENDING = 'pending',
-  PARTIALLY_PAID = 'partially_paid',
-  PAID = 'paid',
-  OVERDUE = 'overdue',
-  WRITTEN_OFF = 'written_off',
+  PENDING = "pending",
+  PARTIALLY_PAID = "partially_paid",
+  PAID = "paid",
+  OVERDUE = "overdue",
+  WRITTEN_OFF = "written_off",
 }
 
 export interface AccountReceivablesListResponse {
@@ -70,67 +70,71 @@ export interface AccountReceivablesListResponse {
   total_overdue: number;
 }
 
-export const getAccountReceivableStatusLabel = (status: AccountReceivableStatus): string => {
+export const getAccountReceivableStatusLabel = (
+  status: AccountReceivableStatus,
+): string => {
   const labels = {
-    [AccountReceivableStatus.PENDING]: 'Pending',
-    [AccountReceivableStatus.PARTIALLY_PAID]: 'Partially Paid',
-    [AccountReceivableStatus.PAID]: 'Paid',
-    [AccountReceivableStatus.OVERDUE]: 'Overdue',
-    [AccountReceivableStatus.WRITTEN_OFF]: 'Written Off',
+    [AccountReceivableStatus.PENDING]: "Pending",
+    [AccountReceivableStatus.PARTIALLY_PAID]: "Partially Paid",
+    [AccountReceivableStatus.PAID]: "Paid",
+    [AccountReceivableStatus.OVERDUE]: "Overdue",
+    [AccountReceivableStatus.WRITTEN_OFF]: "Written Off",
   };
   return labels[status] || status;
 };
 
-export const getAccountReceivableStatusColor = (status: AccountReceivableStatus): string => {
+export const getAccountReceivableStatusColor = (
+  status: AccountReceivableStatus,
+): string => {
   const colors = {
-    [AccountReceivableStatus.PENDING]: 'text-yellow-600',
-    [AccountReceivableStatus.PARTIALLY_PAID]: 'text-blue-600',
-    [AccountReceivableStatus.PAID]: 'text-green-600',
-    [AccountReceivableStatus.OVERDUE]: 'text-red-600',
-    [AccountReceivableStatus.WRITTEN_OFF]: 'text-gray-600',
+    [AccountReceivableStatus.PENDING]: "text-yellow-600",
+    [AccountReceivableStatus.PARTIALLY_PAID]: "text-blue-600",
+    [AccountReceivableStatus.PAID]: "text-green-600",
+    [AccountReceivableStatus.OVERDUE]: "text-red-600",
+    [AccountReceivableStatus.WRITTEN_OFF]: "text-gray-600",
   };
-  return colors[status] || '';
+  return colors[status] || "";
 };
 
 export enum AccountType {
-  ASSET = 'asset',
-  LIABILITY = 'liability',
-  EQUITY = 'equity',
-  REVENUE = 'revenue',
-  EXPENSE = 'expense',
+  ASSET = "asset",
+  LIABILITY = "liability",
+  EQUITY = "equity",
+  REVENUE = "revenue",
+  EXPENSE = "expense",
 }
 
 export enum TransactionType {
-  GENERAL = 'general',
-  PAYMENT = 'payment',
-  RECEIPT = 'receipt',
-  JOURNAL = 'journal',
-  ADJUSTMENT = 'adjustment',
-  INCOME = 'income',
-  EXPENSE = 'expense',
-  TRANSFER = 'transfer',
-  REFUND = 'refund',
+  GENERAL = "general",
+  PAYMENT = "payment",
+  RECEIPT = "receipt",
+  JOURNAL = "journal",
+  ADJUSTMENT = "adjustment",
+  INCOME = "income",
+  EXPENSE = "expense",
+  TRANSFER = "transfer",
+  REFUND = "refund",
 }
 
 export enum TransactionStatus {
-  DRAFT = 'draft',
-  PENDING = 'pending',
-  POSTED = 'posted',
-  CANCELLED = 'cancelled',
-  COMPLETED = 'completed',
-  FAILED = 'failed',
+  DRAFT = "draft",
+  PENDING = "pending",
+  POSTED = "posted",
+  CANCELLED = "cancelled",
+  COMPLETED = "completed",
+  FAILED = "failed",
 }
 
 export enum AccountCategory {
-  CURRENT_ASSET = 'current_asset',
-  FIXED_ASSET = 'fixed_asset',
-  CURRENT_LIABILITY = 'current_liability',
-  LONG_TERM_LIABILITY = 'long_term_liability',
-  EQUITY = 'equity',
-  OPERATING_REVENUE = 'operating_revenue',
-  NON_OPERATING_REVENUE = 'non_operating_revenue',
-  OPERATING_EXPENSE = 'operating_expense',
-  NON_OPERATING_EXPENSE = 'non_operating_expense',
+  CURRENT_ASSET = "current_asset",
+  FIXED_ASSET = "fixed_asset",
+  CURRENT_LIABILITY = "current_liability",
+  LONG_TERM_LIABILITY = "long_term_liability",
+  EQUITY = "equity",
+  OPERATING_REVENUE = "operating_revenue",
+  NON_OPERATING_REVENUE = "non_operating_revenue",
+  OPERATING_EXPENSE = "operating_expense",
+  NON_OPERATING_EXPENSE = "non_operating_expense",
 }
 
 export interface ChartOfAccountsCreate {
@@ -412,57 +416,57 @@ export interface ProfitLossDashboard {
 }
 
 export enum ProfitLossPeriod {
-  DAY = 'day',
-  WEEK = 'week',
-  MONTH = 'month',
-  QUARTER = 'quarter',
-  YEAR = 'year',
+  DAY = "day",
+  WEEK = "week",
+  MONTH = "month",
+  QUARTER = "quarter",
+  YEAR = "year",
 }
 
 export const getAccountTypeLabel = (type: AccountType): string => {
   const labels = {
-    [AccountType.ASSET]: 'Asset',
-    [AccountType.LIABILITY]: 'Liability',
-    [AccountType.EQUITY]: 'Equity',
-    [AccountType.REVENUE]: 'Revenue',
-    [AccountType.EXPENSE]: 'Expense',
+    [AccountType.ASSET]: "Asset",
+    [AccountType.LIABILITY]: "Liability",
+    [AccountType.EQUITY]: "Equity",
+    [AccountType.REVENUE]: "Revenue",
+    [AccountType.EXPENSE]: "Expense",
   };
   return labels[type] || type;
 };
 
 export const getTransactionTypeLabel = (type: TransactionType): string => {
   const labels: Record<TransactionType, string> = {
-    [TransactionType.GENERAL]: 'General',
-    [TransactionType.PAYMENT]: 'Payment',
-    [TransactionType.RECEIPT]: 'Receipt',
-    [TransactionType.JOURNAL]: 'Journal',
-    [TransactionType.ADJUSTMENT]: 'Adjustment',
-    [TransactionType.INCOME]: 'Income',
-    [TransactionType.EXPENSE]: 'Expense',
-    [TransactionType.TRANSFER]: 'Transfer',
-    [TransactionType.REFUND]: 'Refund',
+    [TransactionType.GENERAL]: "General",
+    [TransactionType.PAYMENT]: "Payment",
+    [TransactionType.RECEIPT]: "Receipt",
+    [TransactionType.JOURNAL]: "Journal",
+    [TransactionType.ADJUSTMENT]: "Adjustment",
+    [TransactionType.INCOME]: "Income",
+    [TransactionType.EXPENSE]: "Expense",
+    [TransactionType.TRANSFER]: "Transfer",
+    [TransactionType.REFUND]: "Refund",
   };
   return labels[type] || type;
 };
 
 export const getAccountTypeColor = (type: AccountType): string => {
   const colors = {
-    [AccountType.ASSET]: 'text-blue-600',
-    [AccountType.LIABILITY]: 'text-red-600',
-    [AccountType.EQUITY]: 'text-green-600',
-    [AccountType.REVENUE]: 'text-yellow-600',
-    [AccountType.EXPENSE]: 'text-orange-600',
+    [AccountType.ASSET]: "text-blue-600",
+    [AccountType.LIABILITY]: "text-red-600",
+    [AccountType.EQUITY]: "text-green-600",
+    [AccountType.REVENUE]: "text-yellow-600",
+    [AccountType.EXPENSE]: "text-orange-600",
   };
-  return colors[type] || '';
+  return colors[type] || "";
 };
 
 export const getProfitLossPeriodLabel = (period: ProfitLossPeriod): string => {
   const labels: Record<ProfitLossPeriod, string> = {
-    [ProfitLossPeriod.DAY]: 'Daily',
-    [ProfitLossPeriod.WEEK]: 'Weekly',
-    [ProfitLossPeriod.MONTH]: 'Monthly',
-    [ProfitLossPeriod.QUARTER]: 'Quarterly',
-    [ProfitLossPeriod.YEAR]: 'Yearly',
+    [ProfitLossPeriod.DAY]: "Daily",
+    [ProfitLossPeriod.WEEK]: "Weekly",
+    [ProfitLossPeriod.MONTH]: "Monthly",
+    [ProfitLossPeriod.QUARTER]: "Quarterly",
+    [ProfitLossPeriod.YEAR]: "Yearly",
   };
   return labels[period] || period;
 };

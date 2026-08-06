@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import type { Product } from '@/src/models/pos';
-import type { InvoiceItemCreate } from '@/src/models/sales';
+import type { Product } from "@/src/models/pos";
+import type { InvoiceItemCreate } from "@/src/models/sales";
 import type {
   CommerceItemNumericField,
   CommerceItemTextField,
-} from '@/src/utils/sales/commerceInvoiceUtils';
-import { CommerceInvoiceProductSearchTable } from './CommerceInvoiceProductSearchTable';
-import { CommerceInvoiceLineItemsTable } from './CommerceInvoiceLineItemsTable';
+} from "@/src/utils/sales/commerceInvoiceUtils";
+import { CommerceInvoiceProductSearchTable } from "./CommerceInvoiceProductSearchTable";
+import { CommerceInvoiceLineItemsTable } from "./CommerceInvoiceLineItemsTable";
 
 type CommerceInvoiceItemsTableProps = {
   items: InvoiceItemCreate[];

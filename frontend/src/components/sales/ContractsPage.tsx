@@ -1,24 +1,24 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../ui/card';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { Textarea } from '../ui/textarea';
+} from "../ui/card";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { Textarea } from "../ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../ui/select';
+} from "../ui/select";
 import {
   Dialog,
   DialogContent,
@@ -26,7 +26,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '../ui/dialog';
+} from "../ui/dialog";
 import {
   Table,
   TableBody,
@@ -34,9 +34,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../ui/table';
-import { Badge } from '../ui/badge';
-import { useCurrency } from '@/src/contexts/CurrencyContext';
+} from "../ui/table";
+import { Badge } from "../ui/badge";
+import { useCurrency } from "@/src/contexts/CurrencyContext";
 import {
   FileText,
   Plus,
@@ -45,15 +45,14 @@ import {
   Eye,
   Edit,
   Trash2,
-} from 'lucide-react';
-import { toast } from 'sonner';
-import { useConfirm } from '@/src/contexts/ConfirmContext';
-import CRMService from '../../services/CRMService';
-import apiService from '../../services/ApiService';
-import { ContractStatus } from '../../models/sales';
-import { Contract } from '../../models/sales';
-import { Opportunity, Contact, Company } from '../../models/crm';
-import { DashboardLayout } from '../layout';
+} from "lucide-react";
+import { toast } from "sonner";
+import { useConfirm } from "@/src/contexts/ConfirmContext";
+import CRMService from "../../services/CRMService";
+import apiService from "../../services/ApiService";
+import { Contract, ContractStatus } from "../../models/sales";
+import { Opportunity, Contact, Company } from "../../models/crm";
+import { DashboardLayout } from "../layout";
 
 export default function ContractsPage() {
   const confirm = useConfirm();
@@ -70,16 +69,16 @@ export default function ContractsPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   const [newContract, setNewContract] = useState({
-    contractNumber: '',
-    opportunityId: '',
-    contactId: '',
-    companyId: '',
-    title: '',
-    description: '',
-    value: '',
-    startDate: '',
-    endDate: '',
-    terms: '',
+    contractNumber: "",
+    opportunityId: "",
+    contactId: "",
+    companyId: "",
+    title: "",
+    description: "",
+    value: "",
+    startDate: "",
+    endDate: "",
+    terms: "",
     autoRenew: false,
   });
 
@@ -101,8 +100,8 @@ export default function ContractsPage() {
       setContacts(contactsData.contacts || []);
       setCompanies(companiesData.companies || []);
     } catch (error) {
-      toast.error('Failed to fetch data');
-      } finally {
+      toast.error("Failed to fetch data");
+    } finally {
       setLoading(false);
     }
   };
@@ -116,77 +115,77 @@ export default function ContractsPage() {
         endDate: new Date(newContract.endDate).toISOString(),
       };
       await apiService.createContract(contractData);
-      toast.success('Contract created successfully');
+      toast.success("Contract created successfully");
       setIsCreateDialogOpen(false);
       setNewContract({
-        contractNumber: '',
-        opportunityId: '',
-        contactId: '',
-        companyId: '',
-        title: '',
-        description: '',
-        value: '',
-        startDate: '',
-        endDate: '',
-        terms: '',
+        contractNumber: "",
+        opportunityId: "",
+        contactId: "",
+        companyId: "",
+        title: "",
+        description: "",
+        value: "",
+        startDate: "",
+        endDate: "",
+        terms: "",
         autoRenew: false,
       });
       fetchData();
     } catch (error) {
-      toast.error('Failed to create contract');
-      }
+      toast.error("Failed to create contract");
+    }
   };
 
   const handleUpdateContract = async () => {
     if (!selectedContract) return;
     try {
       await apiService.updateContract(selectedContract.id, selectedContract);
-      toast.success('Contract updated successfully');
+      toast.success("Contract updated successfully");
       setIsEditDialogOpen(false);
       setSelectedContract(null);
       fetchData();
     } catch (error) {
-      toast.error('Failed to update contract');
-      }
+      toast.error("Failed to update contract");
+    }
   };
 
   const handleDeleteContract = async (id: string) => {
     const ok = await confirm({
-      description: 'Are you sure you want to delete this contract?',
+      description: "Are you sure you want to delete this contract?",
       destructive: true,
-      confirmLabel: 'Delete',
+      confirmLabel: "Delete",
     });
     if (!ok) return;
     try {
       await apiService.deleteContract(id);
-      toast.success('Contract deleted successfully');
+      toast.success("Contract deleted successfully");
       fetchData();
     } catch (error) {
-      toast.error('Failed to delete contract');
-      }
+      toast.error("Failed to delete contract");
+    }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'draft':
-        return 'bg-gray-100 text-gray-800';
-      case 'active':
-        return 'bg-green-100 text-green-800';
-      case 'expired':
-        return 'bg-red-100 text-red-800';
-      case 'terminated':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'renewed':
-        return 'bg-blue-100 text-blue-800';
+      case "draft":
+        return "bg-gray-100 text-gray-800";
+      case "active":
+        return "bg-green-100 text-green-800";
+      case "expired":
+        return "bg-red-100 text-red-800";
+      case "terminated":
+        return "bg-yellow-100 text-yellow-800";
+      case "renewed":
+        return "bg-blue-100 text-blue-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const idsMatch = (a: string | undefined, b: string | undefined) => {
     if (a == null || b == null) return false;
-    const na = String(a).replace(/-/g, '').toLowerCase();
-    const nb = String(b).replace(/-/g, '').toLowerCase();
+    const na = String(a).replace(/-/g, "").toLowerCase();
+    const nb = String(b).replace(/-/g, "").toLowerCase();
     return na.length > 0 && na === nb;
   };
 
@@ -195,7 +194,7 @@ export default function ContractsPage() {
     const opp = opportunities.find((o) =>
       idsMatch(o.id, contract.opportunityId),
     );
-    return opp?.contactId ?? '';
+    return opp?.contactId ?? "";
   };
 
   const resolveCompanyId = (contract: Contract) => {
@@ -203,21 +202,21 @@ export default function ContractsPage() {
     const opp = opportunities.find((o) =>
       idsMatch(o.id, contract.opportunityId),
     );
-    return opp?.companyId ?? '';
+    return opp?.companyId ?? "";
   };
 
   const getContactName = (contactId: string) => {
-    if (!contactId) return 'Unknown Contact';
+    if (!contactId) return "Unknown Contact";
     const contact = contacts.find((c) => idsMatch(c.id, contactId));
     return contact
       ? `${contact.firstName} ${contact.lastName}`.trim()
-      : 'Unknown Contact';
+      : "Unknown Contact";
   };
 
   const getCompanyName = (companyId: string) => {
-    if (!companyId) return 'Unknown Company';
+    if (!companyId) return "Unknown Company";
     const company = companies.find((c) => idsMatch(c.id, companyId));
-    return company?.name?.trim() || 'Unknown Company';
+    return company?.name?.trim() || "Unknown Company";
   };
 
   if (loading) {
@@ -473,7 +472,10 @@ export default function ContractsPage() {
             <CardContent>
               <div className="text-2xl font-bold">
                 {formatCurrency(
-                  contracts.reduce((sum, contract) => sum + (contract.value || 0), 0)
+                  contracts.reduce(
+                    (sum, contract) => sum + (contract.value || 0),
+                    0,
+                  ),
                 )}
               </div>
             </CardContent>
@@ -486,7 +488,7 @@ export default function ContractsPage() {
             <CardContent>
               <div className="text-2xl font-bold">
                 {
-                  contracts.filter((contract) => contract.status === 'active')
+                  contracts.filter((contract) => contract.status === "active")
                     .length
                 }
               </div>
@@ -556,7 +558,8 @@ export default function ContractsPage() {
                         getContactName(resolveContactId(contract))}
                     </TableCell>
                     <TableCell>
-                      {getCurrencySymbol()}{(contract.value || 0).toLocaleString()}
+                      {getCurrencySymbol()}
+                      {(contract.value || 0).toLocaleString()}
                     </TableCell>
                     <TableCell>
                       <Badge className={getStatusColor(contract.status)}>
@@ -566,12 +569,12 @@ export default function ContractsPage() {
                     <TableCell>
                       {contract.startDate
                         ? new Date(contract.startDate).toLocaleDateString()
-                        : '-'}
+                        : "-"}
                     </TableCell>
                     <TableCell>
                       {contract.endDate
                         ? new Date(contract.endDate).toLocaleDateString()
-                        : '-'}
+                        : "-"}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2">
@@ -646,7 +649,7 @@ export default function ContractsPage() {
                   <Input
                     id="edit_value"
                     type="number"
-                    value={selectedContract.value?.toString() || ''}
+                    value={selectedContract.value?.toString() || ""}
                     onChange={(
                       e: React.ChangeEvent<
                         HTMLInputElement | HTMLTextAreaElement
@@ -691,8 +694,8 @@ export default function ContractsPage() {
                       selectedContract.startDate
                         ? new Date(selectedContract.startDate)
                             .toISOString()
-                            .split('T')[0]
-                        : ''
+                            .split("T")[0]
+                        : ""
                     }
                     onChange={(
                       e: React.ChangeEvent<
@@ -715,8 +718,8 @@ export default function ContractsPage() {
                       selectedContract.endDate
                         ? new Date(selectedContract.endDate)
                             .toISOString()
-                            .split('T')[0]
-                        : ''
+                            .split("T")[0]
+                        : ""
                     }
                     onChange={(
                       e: React.ChangeEvent<
@@ -734,7 +737,7 @@ export default function ContractsPage() {
                   <Label htmlFor="edit_description">Description</Label>
                   <Textarea
                     id="edit_description"
-                    value={selectedContract.description || ''}
+                    value={selectedContract.description || ""}
                     onChange={(
                       e: React.ChangeEvent<
                         HTMLInputElement | HTMLTextAreaElement

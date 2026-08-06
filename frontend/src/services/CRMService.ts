@@ -1,4 +1,4 @@
-import { apiService } from './ApiService';
+import { apiService } from "./ApiService";
 import {
   LeadCreate,
   LeadUpdate,
@@ -25,7 +25,7 @@ import {
   CRMCompanyFilters,
   CRMOpportunityFilters,
   CRMActivityFilters,
-} from '../models/crm';
+} from "../models/crm";
 
 // Re-export customer types and service from shared CustomerService
 export type {
@@ -38,9 +38,9 @@ export type {
   ContactLabel,
   LabeledEmailItem,
   LabeledPhoneItem,
-} from './CustomerService';
+} from "./CustomerService";
 
-export { CustomerService } from './CustomerService';
+export { CustomerService } from "./CustomerService";
 
 export interface Guarantor {
   id: string;
@@ -82,8 +82,8 @@ export interface Lead {
   jobTitle?: string;
   leadSource?: string;
   source?: string;
-  status?: 'new' | 'contacted' | 'qualified' | 'proposal' | 'won' | 'lost';
-  priority: 'low' | 'medium' | 'high' | 'urgent';
+  status?: "new" | "contacted" | "qualified" | "proposal" | "won" | "lost";
+  priority: "low" | "medium" | "high" | "urgent";
   assignedToId?: string;
   notes?: string;
   createdAt: string;
@@ -98,18 +98,18 @@ export class CRMService {
   ) {
     const payload: Record<string, unknown> = { ...opportunity };
     const optionalStringFields = [
-      'expectedCloseDate',
-      'leadId',
-      'contactId',
-      'companyId',
-      'assignedTo',
-      'notes',
-      'description',
+      "expectedCloseDate",
+      "leadId",
+      "contactId",
+      "companyId",
+      "assignedTo",
+      "notes",
+      "description",
     ];
 
     optionalStringFields.forEach((field) => {
       const value = payload[field];
-      if (typeof value === 'string') {
+      if (typeof value === "string") {
         const trimmed = value.trim();
         if (!trimmed) {
           delete payload[field];
@@ -129,19 +129,19 @@ export class CRMService {
     limit: number = 10,
   ): Promise<CRMLeadsResponse> {
     const params = new URLSearchParams();
-    if (filters?.status) params.append('status', String(filters.status));
-    if (filters?.source) params.append('source', String(filters.source));
-    if (filters?.assignedTo) params.append('assigned_to', filters.assignedTo);
-    if (filters?.search) params.append('search', filters.search);
-    if (filters?.pipeline) params.append('pipeline', filters.pipeline);
-    if (filters?.rating) params.append('rating', filters.rating);
-    if (filters?.priority) params.append('priority', filters.priority);
-    if (filters?.leadType) params.append('lead_type', filters.leadType);
+    if (filters?.status) params.append("status", String(filters.status));
+    if (filters?.source) params.append("source", String(filters.source));
+    if (filters?.assignedTo) params.append("assigned_to", filters.assignedTo);
+    if (filters?.search) params.append("search", filters.search);
+    if (filters?.pipeline) params.append("pipeline", filters.pipeline);
+    if (filters?.rating) params.append("rating", filters.rating);
+    if (filters?.priority) params.append("priority", filters.priority);
+    if (filters?.leadType) params.append("lead_type", filters.leadType);
     if (filters?.isPartial != null)
-      params.append('is_partial', String(filters.isPartial));
-    if (filters?.sort) params.append('sort', filters.sort);
-    params.append('page', page.toString());
-    params.append('limit', limit.toString());
+      params.append("is_partial", String(filters.isPartial));
+    if (filters?.sort) params.append("sort", filters.sort);
+    params.append("page", page.toString());
+    params.append("limit", limit.toString());
 
     return this.apiService.get(`/crm/leads?${params.toString()}`);
   }
@@ -161,10 +161,10 @@ export class CRMService {
       payload.leadSource = normalizedLeadSource;
     }
     delete payload.source;
-    if (typeof payload.email === 'string') {
+    if (typeof payload.email === "string") {
       payload.email = payload.email.trim();
     }
-    return this.apiService.post('/crm/leads', payload);
+    return this.apiService.post("/crm/leads", payload);
   }
 
   async updateLead(id: string, lead: LeadUpdate): Promise<Lead> {
@@ -174,7 +174,7 @@ export class CRMService {
       payload.leadSource = normalizedLeadSource;
     }
     delete payload.source;
-    if (typeof payload.email === 'string') {
+    if (typeof payload.email === "string") {
       payload.email = payload.email.trim();
     }
     return this.apiService.put(`/crm/leads/${id}`, payload);
@@ -194,7 +194,7 @@ export class CRMService {
     priority?: string;
     tags?: string[];
   }): Promise<{ message: string; updated: number }> {
-    return this.apiService.post('/crm/leads/bulk', data);
+    return this.apiService.post("/crm/leads/bulk", data);
   }
 
   async updateLeadPipeline(id: string, pipelineStage: string): Promise<any> {
@@ -233,7 +233,10 @@ export class CRMService {
     );
   }
 
-  async createLeadTask(id: string, data: Record<string, unknown>): Promise<any> {
+  async createLeadTask(
+    id: string,
+    data: Record<string, unknown>,
+  ): Promise<any> {
     return this.apiService.post(`/crm/leads/${id}/tasks`, data);
   }
 
@@ -264,7 +267,7 @@ export class CRMService {
   }
 
   async getLeadEmails(id: string, direction?: string): Promise<any[]> {
-    const q = direction ? `?direction=${direction}` : '';
+    const q = direction ? `?direction=${direction}` : "";
     return this.apiService.get(`/crm/leads/${id}/emails${q}`);
   }
 
@@ -287,7 +290,7 @@ export class CRMService {
   }
 
   async getLeadCampaigns(): Promise<any[]> {
-    return this.apiService.get('/crm/leads/campaigns');
+    return this.apiService.get("/crm/leads/campaigns");
   }
 
   async createLeadCampaign(data: {
@@ -295,7 +298,7 @@ export class CRMService {
     description?: string;
     steps?: Record<string, unknown>[];
   }): Promise<any> {
-    return this.apiService.post('/crm/leads/campaigns', data);
+    return this.apiService.post("/crm/leads/campaigns", data);
   }
 
   async getLeadCampaignAssignments(id: string): Promise<any[]> {
@@ -358,7 +361,10 @@ export class CRMService {
     return this.apiService.get(`/crm/leads/${id}/sales`);
   }
 
-  async createLeadSale(id: string, data: Record<string, unknown>): Promise<any> {
+  async createLeadSale(
+    id: string,
+    data: Record<string, unknown>,
+  ): Promise<any> {
     return this.apiService.post(`/crm/leads/${id}/sales`, data);
   }
 
@@ -374,18 +380,18 @@ export class CRMService {
   }
 
   async getSavedLeadFilters(): Promise<any[]> {
-    return this.apiService.get('/crm/leads/saved-filters');
+    return this.apiService.get("/crm/leads/saved-filters");
   }
 
   async createSavedLeadFilter(data: Record<string, unknown>): Promise<any> {
-    return this.apiService.post('/crm/leads/saved-filters', data);
+    return this.apiService.post("/crm/leads/saved-filters", data);
   }
 
   async getLeadIntegrationsStatus(): Promise<{
     twilioConfigured: boolean;
     smtpConfigured: boolean;
   }> {
-    return this.apiService.get('/crm/leads/integrations/status');
+    return this.apiService.get("/crm/leads/integrations/status");
   }
 
   async convertLeadToContact(
@@ -402,27 +408,28 @@ export class CRMService {
     limit: number = 10,
   ): Promise<CRMContactsResponse> {
     const params = new URLSearchParams();
-    if (filters?.type) params.append('type', filters.type);
-    if (filters?.companyId) params.append('company_id', filters.companyId);
-    if (filters?.search) params.append('search', filters.search);
-    if (filters?.assignedTo) params.append('assigned_to', filters.assignedTo);
-    if (filters?.industry) params.append('industry', filters.industry);
+    if (filters?.type) params.append("type", filters.type);
+    if (filters?.companyId) params.append("company_id", filters.companyId);
+    if (filters?.search) params.append("search", filters.search);
+    if (filters?.assignedTo) params.append("assigned_to", filters.assignedTo);
+    if (filters?.industry) params.append("industry", filters.industry);
     if (filters?.website?.trim())
-      params.append('website', filters.website.trim());
+      params.append("website", filters.website.trim());
     if (
       filters?.birthdayMonth != null &&
       filters.birthdayMonth >= 1 &&
       filters.birthdayMonth <= 12
     )
-      params.append('birthday_month', String(filters.birthdayMonth));
+      params.append("birthday_month", String(filters.birthdayMonth));
     if (filters?.country?.trim())
-      params.append('country', filters.country.trim());
-    if (filters?.dateField) params.append('date_field', filters.dateField);
-    if (filters?.dateFrom) params.append('date_from', filters.dateFrom);
-    if (filters?.dateTo) params.append('date_to', filters.dateTo);
-    if (filters?.quickFilter) params.append('quick_filter', filters.quickFilter);
-    params.append('page', page.toString());
-    params.append('limit', limit.toString());
+      params.append("country", filters.country.trim());
+    if (filters?.dateField) params.append("date_field", filters.dateField);
+    if (filters?.dateFrom) params.append("date_from", filters.dateFrom);
+    if (filters?.dateTo) params.append("date_to", filters.dateTo);
+    if (filters?.quickFilter)
+      params.append("quick_filter", filters.quickFilter);
+    params.append("page", page.toString());
+    params.append("limit", limit.toString());
 
     return this.apiService.get(`/crm/contacts?${params.toString()}`);
   }
@@ -432,7 +439,7 @@ export class CRMService {
   }
 
   async createContact(contact: ContactCreate): Promise<Contact> {
-    return this.apiService.post('/crm/contacts', contact);
+    return this.apiService.post("/crm/contacts", contact);
   }
 
   async updateContact(id: string, contact: ContactUpdate): Promise<Contact> {
@@ -450,11 +457,11 @@ export class CRMService {
     limit: number = 10,
   ): Promise<CRMCompaniesResponse> {
     const params = new URLSearchParams();
-    if (filters?.industry) params.append('industry', filters.industry);
-    if (filters?.size) params.append('size', filters.size);
-    if (filters?.search) params.append('search', filters.search);
-    params.append('page', page.toString());
-    params.append('limit', limit.toString());
+    if (filters?.industry) params.append("industry", filters.industry);
+    if (filters?.size) params.append("size", filters.size);
+    if (filters?.search) params.append("search", filters.search);
+    params.append("page", page.toString());
+    params.append("limit", limit.toString());
 
     return this.apiService.get(`/crm/companies?${params.toString()}`);
   }
@@ -464,7 +471,7 @@ export class CRMService {
   }
 
   async createCompany(company: CompanyCreate): Promise<Company> {
-    return this.apiService.post('/crm/companies', company);
+    return this.apiService.post("/crm/companies", company);
   }
 
   async updateCompany(id: string, company: CompanyUpdate): Promise<Company> {
@@ -482,11 +489,11 @@ export class CRMService {
     limit: number = 10,
   ): Promise<CRMOpportunitiesResponse> {
     const params = new URLSearchParams();
-    if (filters?.stage) params.append('stage', filters.stage);
-    if (filters?.assignedTo) params.append('assigned_to', filters.assignedTo);
-    if (filters?.search) params.append('search', filters.search);
-    params.append('page', page.toString());
-    params.append('limit', limit.toString());
+    if (filters?.stage) params.append("stage", filters.stage);
+    if (filters?.assignedTo) params.append("assigned_to", filters.assignedTo);
+    if (filters?.search) params.append("search", filters.search);
+    params.append("page", page.toString());
+    params.append("limit", limit.toString());
 
     return this.apiService.get(`/crm/opportunities?${params.toString()}`);
   }
@@ -499,7 +506,7 @@ export class CRMService {
     opportunity: OpportunityCreate,
   ): Promise<Opportunity> {
     const payload = this.normalizeOpportunityPayload(opportunity);
-    return this.apiService.post('/crm/opportunities', payload);
+    return this.apiService.post("/crm/opportunities", payload);
   }
 
   async updateOpportunity(
@@ -521,12 +528,12 @@ export class CRMService {
     limit: number = 10,
   ): Promise<CRMActivitiesResponse> {
     const params = new URLSearchParams();
-    if (filters?.type) params.append('type', filters.type);
+    if (filters?.type) params.append("type", filters.type);
     if (filters?.completed !== undefined)
-      params.append('completed', filters.completed.toString());
-    if (filters?.search) params.append('search', filters.search);
-    params.append('page', page.toString());
-    params.append('limit', limit.toString());
+      params.append("completed", filters.completed.toString());
+    if (filters?.search) params.append("search", filters.search);
+    params.append("page", page.toString());
+    params.append("limit", limit.toString());
 
     return this.apiService.get(`/crm/activities?${params.toString()}`);
   }
@@ -536,7 +543,7 @@ export class CRMService {
   }
 
   async createActivity(activity: SalesActivityCreate): Promise<SalesActivity> {
-    return this.apiService.post('/crm/activities', activity);
+    return this.apiService.post("/crm/activities", activity);
   }
 
   async updateActivity(
@@ -576,70 +583,70 @@ export class CRMService {
   }
 
   async getDashboard(): Promise<CRMDashboard> {
-    return this.apiService.get('/crm/dashboard');
+    return this.apiService.get("/crm/dashboard");
   }
 
   // Utility Methods
   getLeadStatusColor(status: string): string {
     const statusColors: { [key: string]: string } = {
-      new: 'bg-blue-100 text-blue-800',
-      contacted: 'bg-yellow-100 text-yellow-800',
-      qualified: 'bg-green-100 text-green-800',
-      proposal_sent: 'bg-purple-100 text-purple-800',
-      negotiation: 'bg-orange-100 text-orange-800',
-      won: 'bg-green-100 text-green-800',
-      lost: 'bg-red-100 text-red-800',
+      new: "bg-blue-100 text-blue-800",
+      contacted: "bg-yellow-100 text-yellow-800",
+      qualified: "bg-green-100 text-green-800",
+      proposal_sent: "bg-purple-100 text-purple-800",
+      negotiation: "bg-orange-100 text-orange-800",
+      won: "bg-green-100 text-green-800",
+      lost: "bg-red-100 text-red-800",
     };
-    return statusColors[status] || 'bg-gray-100 text-gray-800';
+    return statusColors[status] || "bg-gray-100 text-gray-800";
   }
 
   getOpportunityStageColor(stage: string): string {
     const stageColors: { [key: string]: string } = {
-      prospecting: 'bg-blue-100 text-blue-800',
-      qualification: 'bg-yellow-100 text-yellow-800',
-      proposal: 'bg-purple-100 text-purple-800',
-      negotiation: 'bg-orange-100 text-orange-800',
-      closed_won: 'bg-green-100 text-green-800',
-      closed_lost: 'bg-red-100 text-red-800',
+      prospecting: "bg-blue-100 text-blue-800",
+      qualification: "bg-yellow-100 text-yellow-800",
+      proposal: "bg-purple-100 text-purple-800",
+      negotiation: "bg-orange-100 text-orange-800",
+      closed_won: "bg-green-100 text-green-800",
+      closed_lost: "bg-red-100 text-red-800",
     };
-    return stageColors[stage] || 'bg-gray-100 text-gray-800';
+    return stageColors[stage] || "bg-gray-100 text-gray-800";
   }
 
   getActivityTypeColor(type: string): string {
     const typeColors: { [key: string]: string } = {
-      call: 'bg-blue-100 text-blue-800',
-      email: 'bg-green-100 text-green-800',
-      meeting: 'bg-purple-100 text-purple-800',
-      task: 'bg-yellow-100 text-yellow-800',
-      note: 'bg-gray-100 text-gray-800',
-      proposal: 'bg-indigo-100 text-indigo-800',
-      contract: 'bg-pink-100 text-pink-800',
+      call: "bg-blue-100 text-blue-800",
+      email: "bg-green-100 text-green-800",
+      meeting: "bg-purple-100 text-purple-800",
+      task: "bg-yellow-100 text-yellow-800",
+      note: "bg-gray-100 text-gray-800",
+      proposal: "bg-indigo-100 text-indigo-800",
+      contract: "bg-pink-100 text-pink-800",
     };
-    return typeColors[type] || 'bg-gray-100 text-gray-800';
+    return typeColors[type] || "bg-gray-100 text-gray-800";
   }
 
   formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
     }).format(amount);
   }
 
   formatDate(date: string): string {
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+    return new Date(date).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   }
 
   formatDateTime(date: string): string {
-    return new Date(date).toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+    return new Date(date).toLocaleString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   }
 }

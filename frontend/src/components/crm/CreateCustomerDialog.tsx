@@ -38,16 +38,15 @@ import {
   UserPlus,
 } from "lucide-react";
 import { toast } from "sonner";
-import {
-  Customer,
-  CustomerCreate,
-  CustomerAttachment,
+import crmService, {
   CustomerService,
-  GuarantorCreate,
-  LabeledEmailItem,
-  LabeledPhoneItem,
+  type Customer,
+  type CustomerAttachment,
+  type CustomerCreate,
+  type GuarantorCreate,
+  type LabeledEmailItem,
+  type LabeledPhoneItem,
 } from "@/src/services/CRMService";
-import crmService from "@/src/services/CRMService";
 import fileUploadService from "@/src/services/FileUploadService";
 import { LabeledContactFields } from "@/src/components/crm/LabeledContactFields";
 import { CustomerTypeNameFields } from "@/src/components/crm/CustomerTypeNameFields";

@@ -1,26 +1,29 @@
-import type { MotBooking } from '@/src/models/mot/MotBooking';
+import type { MotBooking } from "@/src/models/mot/MotBooking";
 
 const BOOKED_STATUSES = new Set([
-  'scheduled',
-  'confirmed',
-  'in_progress',
-  'passed',
-  'failed',
+  "scheduled",
+  "confirmed",
+  "in_progress",
+  "passed",
+  "failed",
 ]);
 
 export function formatLocalDate(date: Date): string {
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
 
 export function parseLocalDate(isoDate: string): Date {
-  const [year, month, day] = isoDate.split('-').map(Number);
+  const [year, month, day] = isoDate.split("-").map(Number);
   return new Date(year, month - 1, day);
 }
 
-export function getCalendarDateRange(monthsAhead = 6): { dateFrom: string; dateTo: string } {
+export function getCalendarDateRange(monthsAhead = 6): {
+  dateFrom: string;
+  dateTo: string;
+} {
   const from = new Date();
   from.setHours(0, 0, 0, 0);
   const to = new Date(from);
@@ -33,14 +36,17 @@ export function getCalendarDateRange(monthsAhead = 6): { dateFrom: string; dateT
 
 export function normalizeTimeSlot(time?: string): string | null {
   if (!time) return null;
-  const [hours, minutes] = time.split(':');
+  const [hours, minutes] = time.split(":");
   const hour = parseInt(hours, 10);
-  const minute = parseInt(minutes || '0', 10);
+  const minute = parseInt(minutes || "0", 10);
   if (Number.isNaN(hour)) return null;
-  return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
 }
 
-function isActiveBooking(booking: MotBooking, excludeBookingId?: string | null): boolean {
+function isActiveBooking(
+  booking: MotBooking,
+  excludeBookingId?: string | null,
+): boolean {
   if (excludeBookingId && booking.id === excludeBookingId) return false;
   if (!booking.is_active) return false;
   if (!BOOKED_STATUSES.has(booking.status)) return false;

@@ -1,28 +1,28 @@
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
-import { Label } from '@/src/components/ui/label';
-import { Textarea } from '@/src/components/ui/textarea';
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
+import { Label } from "@/src/components/ui/label";
+import { Textarea } from "@/src/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/src/components/ui/dialog';
+} from "@/src/components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
+} from "@/src/components/ui/select";
 import {
   DONOR_LEAD_SOURCE_OPTIONS,
   DONOR_LEAD_STATUS_OPTIONS,
   type DonorLeadSource,
   type DonorLeadStatus,
-} from '@/src/constants/ngo/donorLead';
-import type { DonorLeadCreate } from '@/src/models/ngo';
+} from "@/src/constants/ngo/donorLead";
+import type { DonorLeadCreate } from "@/src/models/ngo";
 
 type DonorLeadFormDialogProps = {
   open: boolean;
@@ -43,13 +43,16 @@ export function DonorLeadFormDialog({
   onSubmit,
   submitLoading,
 }: DonorLeadFormDialogProps) {
-  const patch = (partial: Partial<DonorLeadCreate>) => onFormChange({ ...formData, ...partial });
+  const patch = (partial: Partial<DonorLeadCreate>) =>
+    onFormChange({ ...formData, ...partial });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{editing ? 'Edit Donor Lead' : 'Add New Donor Lead'}</DialogTitle>
+          <DialogTitle>
+            {editing ? "Edit Donor Lead" : "Add New Donor Lead"}
+          </DialogTitle>
         </DialogHeader>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="space-y-2">
@@ -69,12 +72,15 @@ export function DonorLeadFormDialog({
           </div>
           <div className="space-y-2">
             <Label>Phone</Label>
-            <Input value={formData.phone ?? ''} onChange={(e) => patch({ phone: e.target.value })} />
+            <Input
+              value={formData.phone ?? ""}
+              onChange={(e) => patch({ phone: e.target.value })}
+            />
           </div>
           <div className="space-y-2">
             <Label>Organization</Label>
             <Input
-              value={formData.organization ?? ''}
+              value={formData.organization ?? ""}
               onChange={(e) => patch({ organization: e.target.value })}
             />
           </div>
@@ -84,13 +90,15 @@ export function DonorLeadFormDialog({
               type="number"
               min={0}
               value={formData.expected_donation ?? 0}
-              onChange={(e) => patch({ expected_donation: Number(e.target.value) })}
+              onChange={(e) =>
+                patch({ expected_donation: Number(e.target.value) })
+              }
             />
           </div>
           <div className="space-y-2">
             <Label>Lead Status</Label>
             <Select
-              value={formData.status ?? 'new'}
+              value={formData.status ?? "new"}
               onValueChange={(v) => patch({ status: v as DonorLeadStatus })}
             >
               <SelectTrigger>
@@ -108,7 +116,7 @@ export function DonorLeadFormDialog({
           <div className="space-y-2">
             <Label>Lead Source</Label>
             <Select
-              value={formData.source ?? 'other'}
+              value={formData.source ?? "other"}
               onValueChange={(v) => patch({ source: v as DonorLeadSource })}
             >
               <SelectTrigger>
@@ -126,7 +134,7 @@ export function DonorLeadFormDialog({
           <div className="space-y-2">
             <Label>Assigned To</Label>
             <Input
-              value={formData.assigned_to ?? ''}
+              value={formData.assigned_to ?? ""}
               onChange={(e) => patch({ assigned_to: e.target.value })}
             />
           </div>
@@ -134,7 +142,7 @@ export function DonorLeadFormDialog({
             <Label>Notes</Label>
             <Textarea
               rows={2}
-              value={formData.notes ?? ''}
+              value={formData.notes ?? ""}
               onChange={(e) => patch({ notes: e.target.value })}
             />
           </div>
@@ -148,7 +156,7 @@ export function DonorLeadFormDialog({
             onClick={onSubmit}
             disabled={submitLoading}
           >
-            {submitLoading ? 'Saving...' : 'Save Lead'}
+            {submitLoading ? "Saving..." : "Save Lead"}
           </Button>
         </DialogFooter>
       </DialogContent>

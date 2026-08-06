@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useRouter } from 'next/navigation';
-import { Button } from '@/src/components/ui/button';
-import { Lead } from '@/src/models/crm';
-import CRMService from '@/src/services/CRMService';
-import { useConfirm } from '@/src/contexts/ConfirmContext';
-import type { LeadUserOption } from '@/src/components/crm/leads/leadUtils';
-import { LeadAgentSelect } from './LeadAgentSelect';
+import { useRouter } from "next/navigation";
+import { Button } from "@/src/components/ui/button";
+import { Lead } from "@/src/models/crm";
+import CRMService from "@/src/services/CRMService";
+import { useConfirm } from "@/src/contexts/ConfirmContext";
+import type { LeadUserOption } from "@/src/components/crm/leads/leadUtils";
+import { LeadAgentSelect } from "./LeadAgentSelect";
 
 type Props = {
   lead: Lead;
@@ -25,7 +25,7 @@ export function LeadAgentsPanel({ lead, leadId, users, patchLead }: Props) {
         <div className="grid grid-cols-2 gap-3 text-xs">
           <LeadAgentSelect
             label="Main agent"
-            value={lead.mainAgentId || lead.assignedTo || ''}
+            value={lead.mainAgentId || lead.assignedTo || ""}
             users={users}
             onChange={(v) =>
               patchLead({ mainAgentId: v || null, assignedTo: v || null })
@@ -33,13 +33,13 @@ export function LeadAgentsPanel({ lead, leadId, users, patchLead }: Props) {
           />
           <LeadAgentSelect
             label="List Agent"
-            value={lead.listAgentId || ''}
+            value={lead.listAgentId || ""}
             users={users}
             onChange={(v) => patchLead({ listAgentId: v || null })}
           />
           <LeadAgentSelect
             label="Mort. agent"
-            value={lead.mortgageAgentId || ''}
+            value={lead.mortgageAgentId || ""}
             users={users}
             onChange={(v) => patchLead({ mortgageAgentId: v || null })}
           />
@@ -51,12 +51,12 @@ export function LeadAgentsPanel({ lead, leadId, users, patchLead }: Props) {
           className="text-destructive border-destructive/40"
           onClick={async () => {
             const ok = await confirm({
-              title: 'Delete lead?',
-              description: 'This cannot be undone.',
+              title: "Delete lead?",
+              description: "This cannot be undone.",
             });
             if (!ok) return;
             await CRMService.deleteLead(leadId);
-            router.push('/crm/leads');
+            router.push("/crm/leads");
           }}
         >
           Delete

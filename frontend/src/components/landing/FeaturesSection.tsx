@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   FolderOpen,
@@ -8,63 +8,63 @@ import {
   Zap,
   Globe,
   type LucideIcon,
-} from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { cn } from '@/src/lib/utils';
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { cn } from "@/src/lib/utils";
 
 const FEATURES: {
   icon: LucideIcon;
   title: string;
   description: string;
-  accent: 'blue' | 'green';
+  accent: "blue" | "green";
 }[] = [
   {
     icon: FolderOpen,
-    title: 'Project Management',
+    title: "Project Management",
     description:
-      'Plan, track, and manage projects with ease. Set milestones, assign tasks, and monitor progress in real-time.',
-    accent: 'blue',
+      "Plan, track, and manage projects with ease. Set milestones, assign tasks, and monitor progress in real-time.",
+    accent: "blue",
   },
   {
     icon: Users,
-    title: 'Team Collaboration',
+    title: "Team Collaboration",
     description:
-      'Work together seamlessly with team chat, file sharing, and real-time collaboration tools.',
-    accent: 'green',
+      "Work together seamlessly with team chat, file sharing, and real-time collaboration tools.",
+    accent: "green",
   },
   {
     icon: BarChart3,
-    title: 'Advanced Analytics',
+    title: "Advanced Analytics",
     description:
-      'Get insights into your business performance with comprehensive dashboards and reports.',
-    accent: 'blue',
+      "Get insights into your business performance with comprehensive dashboards and reports.",
+    accent: "blue",
   },
   {
     icon: Shield,
-    title: 'Enterprise Security',
+    title: "Enterprise Security",
     description:
-      'Bank-level security with role-based access control, audit logs, and data encryption.',
-    accent: 'green',
+      "Bank-level security with role-based access control, audit logs, and data encryption.",
+    accent: "green",
   },
   {
     icon: Zap,
-    title: 'Automation',
+    title: "Automation",
     description:
-      'Automate repetitive tasks and workflows to boost productivity and reduce errors.',
-    accent: 'blue',
+      "Automate repetitive tasks and workflows to boost productivity and reduce errors.",
+    accent: "blue",
   },
   {
     icon: Globe,
-    title: 'Multi-tenant',
+    title: "Multi-tenant",
     description:
-      'Scale your business with our robust multi-tenant architecture designed for growth.',
-    accent: 'green',
+      "Scale your business with our robust multi-tenant architecture designed for growth.",
+    accent: "green",
   },
 ];
 
 const iconRing = {
-  blue: 'bg-blue-100 text-blue-700 group-hover:bg-blue-200',
-  green: 'bg-emerald-100 text-emerald-700 group-hover:bg-emerald-200',
+  blue: "bg-blue-100 text-blue-700 group-hover:bg-blue-200",
+  green: "bg-emerald-100 text-emerald-700 group-hover:bg-emerald-200",
 };
 
 export function FeaturesSection() {
@@ -96,7 +96,7 @@ export function FeaturesSection() {
               <CardHeader className="text-center pb-4 pt-6">
                 <div
                   className={cn(
-                    'mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl transition-colors',
+                    "mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl transition-colors",
                     iconRing[feature.accent],
                   )}
                 >

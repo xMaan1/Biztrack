@@ -1,32 +1,32 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
+import React, { useState, useEffect, useCallback } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from '../../../components/ui/card';
-import { Button } from '../../../components/ui/button';
-import { Badge } from '../../../components/ui/badge';
-import { Avatar, AvatarFallback } from '../../../components/ui/avatar';
-import { Progress } from '../../../components/ui/progress';
+} from "../../../components/ui/card";
+import { Button } from "../../../components/ui/button";
+import { Badge } from "../../../components/ui/badge";
+import { Avatar, AvatarFallback } from "../../../components/ui/avatar";
+import { Progress } from "../../../components/ui/progress";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from '../../../components/ui/dropdown-menu';
+} from "../../../components/ui/dropdown-menu";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '../../../components/ui/tabs';
-import { Alert, AlertDescription } from '../../../components/ui/alert';
+} from "../../../components/ui/tabs";
+import { Alert, AlertDescription } from "../../../components/ui/alert";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -34,9 +34,9 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from '../../../components/ui/breadcrumb';
-import { useCurrency } from '@/src/contexts/CurrencyContext';
-import { toast } from 'sonner';
+} from "../../../components/ui/breadcrumb";
+import { useCurrency } from "@/src/contexts/CurrencyContext";
+import { toast } from "sonner";
 import {
   Edit,
   Trash2,
@@ -51,21 +51,21 @@ import {
   CheckSquare,
   Loader2,
   AlertCircle,
-} from 'lucide-react';
+} from "lucide-react";
 import {
   Project,
   ProjectStatus,
   ProjectPriority,
-} from '../../../models/project';
-import { Task } from '../../../models/task';
-import { apiService } from '../../../services/ApiService';
-import { extractErrorMessage } from '../../../utils/errorUtils';
-import { useAuth } from '../../../hooks/useAuth';
-import { usePermissions } from '../../../hooks/usePermissions';
-import { DashboardLayout } from '../../../components/layout';
-import { useConfirm } from '@/src/contexts/ConfirmContext';
-import { ProjectDialog } from '../../../components/projects';
-import { TaskCard } from '../../../components/tasks';
+} from "../../../models/project";
+import { Task } from "../../../models/task";
+import { apiService } from "../../../services/ApiService";
+import { extractErrorMessage } from "../../../utils/errorUtils";
+import { useAuth } from "../../../hooks/useAuth";
+import { usePermissions } from "../../../hooks/usePermissions";
+import { DashboardLayout } from "../../../components/layout";
+import { useConfirm } from "@/src/contexts/ConfirmContext";
+import { ProjectDialog } from "../../../components/projects";
+import { TaskCard } from "../../../components/tasks";
 
 export default function ProjectDetailsPage() {
   const params = useParams();
@@ -81,7 +81,7 @@ export default function ProjectDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [tasksLoading, setTasksLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState("overview");
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const loadProjectDetails = useCallback(async () => {
@@ -91,7 +91,7 @@ export default function ProjectDetailsPage() {
       const response = await apiService.getProject(projectId);
       setProject(response);
     } catch (err: any) {
-      setError(extractErrorMessage(err, 'Failed to load project details'));
+      setError(extractErrorMessage(err, "Failed to load project details"));
     } finally {
       setLoading(false);
     }
@@ -117,7 +117,7 @@ export default function ProjectDetailsPage() {
   }, [loadProjectDetails]);
 
   useEffect(() => {
-    if (activeTab === 'tasks') {
+    if (activeTab === "tasks") {
       loadTasks();
     }
   }, [activeTab, loadTasks]);
@@ -129,33 +129,33 @@ export default function ProjectDetailsPage() {
   const handleDeleteProject = async () => {
     const ok = await confirm({
       description:
-        'Are you sure you want to delete this project? This action cannot be undone.',
+        "Are you sure you want to delete this project? This action cannot be undone.",
       destructive: true,
-      confirmLabel: 'Delete',
+      confirmLabel: "Delete",
     });
     if (!ok) return;
 
     try {
       await apiService.deleteProject(projectId);
-      router.push('/projects');
+      router.push("/projects");
     } catch (err) {
-      toast.error(extractErrorMessage(err, 'Failed to delete project'));
+      toast.error(extractErrorMessage(err, "Failed to delete project"));
     }
   };
 
   const handleRequestDeletion = async () => {
     const ok = await confirm({
       description:
-        'This will send a deletion request to the owner for approval. Continue?',
-      confirmLabel: 'Request Deletion',
+        "This will send a deletion request to the owner for approval. Continue?",
+      confirmLabel: "Request Deletion",
     });
     if (!ok) return;
     try {
       const updated = await apiService.requestProjectDeletion(projectId);
       setProject(updated);
-      toast.success('Deletion request sent to the owner for approval');
+      toast.success("Deletion request sent to the owner for approval");
     } catch (err) {
-      toast.error(extractErrorMessage(err, 'Failed to request deletion'));
+      toast.error(extractErrorMessage(err, "Failed to request deletion"));
     }
   };
 
@@ -163,9 +163,11 @@ export default function ProjectDetailsPage() {
     try {
       const updated = await apiService.approveProjectDeletion(projectId);
       setProject(updated);
-      toast.success('Deletion approved. The project manager can now delete it.');
+      toast.success(
+        "Deletion approved. The project manager can now delete it.",
+      );
     } catch (err) {
-      toast.error(extractErrorMessage(err, 'Failed to approve deletion'));
+      toast.error(extractErrorMessage(err, "Failed to approve deletion"));
     }
   };
 
@@ -173,9 +175,9 @@ export default function ProjectDetailsPage() {
     try {
       const updated = await apiService.rejectProjectDeletion(projectId);
       setProject(updated);
-      toast.success('Deletion request rejected');
+      toast.success("Deletion request rejected");
     } catch (err) {
-      toast.error(extractErrorMessage(err, 'Failed to reject deletion'));
+      toast.error(extractErrorMessage(err, "Failed to reject deletion"));
     }
   };
 
@@ -184,8 +186,7 @@ export default function ProjectDetailsPage() {
     return project?.projectManager?.id === uid || project?.createdById === uid;
   };
 
-  const canDeleteDirectly = () =>
-    user?.userRole === 'super_admin' || isOwner();
+  const canDeleteDirectly = () => user?.userRole === "super_admin" || isOwner();
 
   const canActOnDeletion = () =>
     canDeleteDirectly() || (canDeleteProjects() && isDeleteRequester());
@@ -258,7 +259,7 @@ export default function ProjectDetailsPage() {
   };
 
   const canEditProject = () => {
-    if (user?.userRole === 'super_admin' || isOwner()) return true;
+    if (user?.userRole === "super_admin" || isOwner()) return true;
     if (!canUpdateProjects() || !project) return false;
     const uid = user?.id;
     return project.projectManager?.id === uid || project.createdById === uid;
@@ -266,11 +267,11 @@ export default function ProjectDetailsPage() {
 
   const getTaskStats = () => {
     const totalTasks = tasks.length;
-    const completedTasks = tasks.filter((t) => t.status === 'completed').length;
+    const completedTasks = tasks.filter((t) => t.status === "completed").length;
     const inProgressTasks = tasks.filter(
-      (t) => t.status === 'in_progress',
+      (t) => t.status === "in_progress",
     ).length;
-    const todoTasks = tasks.filter((t) => t.status === 'todo').length;
+    const todoTasks = tasks.filter((t) => t.status === "todo").length;
 
     return { totalTasks, completedTasks, inProgressTasks, todoTasks };
   };
@@ -294,11 +295,11 @@ export default function ProjectDetailsPage() {
           <Alert className="mb-4 border-red-200 bg-red-50">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription className="text-red-800">
-              {error || 'Project not found'}
+              {error || "Project not found"}
             </AlertDescription>
           </Alert>
           <Button
-            onClick={() => router.push('/projects')}
+            onClick={() => router.push("/projects")}
             className="flex items-center space-x-2"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -362,8 +363,9 @@ export default function ProjectDetailsPage() {
                     )}
                     {canActOnDeletion() && (
                       <>
-                        {(canEditProject()) && <DropdownMenuSeparator />}
-                        {canDeleteDirectly() || project.deletionStatus === 'approved' ? (
+                        {canEditProject() && <DropdownMenuSeparator />}
+                        {canDeleteDirectly() ||
+                        project.deletionStatus === "approved" ? (
                           <DropdownMenuItem
                             onClick={handleDeleteProject}
                             className="text-red-600"
@@ -371,7 +373,7 @@ export default function ProjectDetailsPage() {
                             <Trash2 className="mr-2 h-4 w-4" />
                             Delete Project
                           </DropdownMenuItem>
-                        ) : project.deletionStatus === 'pending' ? (
+                        ) : project.deletionStatus === "pending" ? (
                           <DropdownMenuItem disabled>
                             <Clock className="mr-2 h-4 w-4" />
                             Deletion Pending Approval
@@ -392,13 +394,14 @@ export default function ProjectDetailsPage() {
               )}
             </div>
 
-            {isOwner() && project.deletionStatus === 'pending' && (
+            {isOwner() && project.deletionStatus === "pending" && (
               <Alert className="mb-6 border-amber-200 bg-amber-50">
                 <AlertCircle className="h-4 w-4 text-amber-600" />
                 <AlertDescription className="flex flex-col gap-3 text-amber-800 md:flex-row md:items-center md:justify-between">
                   <span>
-                    A deletion request is pending for this project. Approve to allow
-                    the project manager to delete it, or reject to keep it.
+                    A deletion request is pending for this project. Approve to
+                    allow the project manager to delete it, or reject to keep
+                    it.
                   </span>
                   <div className="flex gap-2">
                     <Button
@@ -477,11 +480,13 @@ export default function ProjectDetailsPage() {
               <Card className="text-center p-4 bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-200">
                 <TrendingUp className="h-10 w-10 text-yellow-600 mx-auto mb-2" />
                 <div className="text-3xl font-bold text-yellow-600 mb-1">
-                  {getCurrencySymbol()}{project.budget?.toLocaleString() || '0'}
+                  {getCurrencySymbol()}
+                  {project.budget?.toLocaleString() || "0"}
                 </div>
                 <div className="text-sm text-gray-600">Budget</div>
                 <div className="text-xs text-gray-500 mt-1">
-                  {getCurrencySymbol()}{project.actualCost?.toLocaleString() || '0'} spent
+                  {getCurrencySymbol()}
+                  {project.actualCost?.toLocaleString() || "0"} spent
                 </div>
               </Card>
             </div>
@@ -591,7 +596,7 @@ export default function ProjectDetailsPage() {
                       </Button>
                       <Button
                         variant="outline"
-                        onClick={() => setActiveTab('tasks')}
+                        onClick={() => setActiveTab("tasks")}
                         className="flex items-center space-x-2"
                       >
                         <CheckSquare className="h-4 w-4" />
@@ -599,7 +604,7 @@ export default function ProjectDetailsPage() {
                       </Button>
                       <Button
                         variant="outline"
-                        onClick={() => setActiveTab('timeline')}
+                        onClick={() => setActiveTab("timeline")}
                         className="flex items-center space-x-2"
                       >
                         <Clock className="h-4 w-4" />
@@ -646,7 +651,7 @@ export default function ProjectDetailsPage() {
                           <div>
                             <p className="font-medium">{member.name}</p>
                             <p className="text-sm text-gray-500">
-                              {member.role || 'Team Member'}
+                              {member.role || "Team Member"}
                             </p>
                           </div>
                         </div>

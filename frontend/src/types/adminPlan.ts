@@ -27,6 +27,6 @@ export interface AdminPlansListResponse {
 export type AdminPlanUpdatePayload = Partial<
   Pick<
     AdminPlan,
-    'name' | 'description' | 'price' | 'billingCycle' | 'maxUsers' | 'isActive'
+    "name" | "description" | "price" | "billingCycle" | "maxUsers" | "isActive"
   >
 >;

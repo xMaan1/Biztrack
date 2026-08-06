@@ -1,4 +1,4 @@
-import type { Supplier, SupplierCreate } from '@/src/models/hrm';
+import type { Supplier, SupplierCreate } from "@/src/models/hrm";
 
 export type SupplierFormData = SupplierCreate;
 
@@ -35,7 +35,10 @@ export type SupplierFormDialogProps = {
   formData: SupplierFormData;
   submitting: boolean;
   onOpenChange: (open: boolean) => void;
-  onFormChange: (field: keyof SupplierFormData, value: string | number | boolean | undefined) => void;
+  onFormChange: (
+    field: keyof SupplierFormData,
+    value: string | number | boolean | undefined,
+  ) => void;
   onSubmit: () => void;
   onCancel: () => void;
 };

@@ -1,44 +1,55 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { useCurrency } from '@/src/contexts/CurrencyContext';
-import { DashboardLayout } from '@/src/components/layout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Label } from '@/src/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/src/components/ui/select';
-import { Separator } from '@/src/components/ui/separator';
-import { Badge } from '@/src/components/ui/badge';
+import React, { useState, useEffect } from "react";
+import { useCurrency } from "@/src/contexts/CurrencyContext";
+import { DashboardLayout } from "@/src/components/layout";
 import {
-  Settings,
-  Save,
-  AlertCircle,
-  Loader2,
-} from 'lucide-react';
-import { toast } from 'sonner';
-import InvoiceCustomizationService from '@/src/services/InvoiceCustomizationService';
-import { useNotifications } from '@/src/contexts/NotificationContext';
-import { Bell } from 'lucide-react';
-import { extractErrorMessage } from '@/src/utils/errorUtils';
-import { usePermissions } from '@/src/hooks/usePermissions';
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { Label } from "@/src/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/src/components/ui/select";
+import { Separator } from "@/src/components/ui/separator";
+import { Badge } from "@/src/components/ui/badge";
+import { AlertCircle, Bell, Loader2, Save, Settings } from "lucide-react";
+import { toast } from "sonner";
+import InvoiceCustomizationService from "@/src/services/InvoiceCustomizationService";
+import { useNotifications } from "@/src/contexts/NotificationContext";
+import { extractErrorMessage } from "@/src/utils/errorUtils";
+import { usePermissions } from "@/src/hooks/usePermissions";
 
 const CURRENCIES = [
-  { code: 'USD', name: 'US Dollar', symbol: '$' },
-  { code: 'EUR', name: 'Euro', symbol: '€' },
-  { code: 'GBP', name: 'British Pound', symbol: '£' },
-  { code: 'CAD', name: 'Canadian Dollar', symbol: 'C$' },
-  { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' },
-  { code: 'JPY', name: 'Japanese Yen', symbol: '¥' },
+  { code: "USD", name: "US Dollar", symbol: "$" },
+  { code: "EUR", name: "Euro", symbol: "€" },
+  { code: "GBP", name: "British Pound", symbol: "£" },
+  { code: "CAD", name: "Canadian Dollar", symbol: "C$" },
+  { code: "AUD", name: "Australian Dollar", symbol: "A$" },
+  { code: "JPY", name: "Japanese Yen", symbol: "¥" },
 ];
 
 export default function SettingsPage() {
   const { isOwner, hasPermission, initializing } = usePermissions();
-  const { currency, setCurrency, formatCurrency, loading: currencyLoading } = useCurrency();
+  const {
+    currency,
+    setCurrency,
+    formatCurrency,
+    loading: currencyLoading,
+  } = useCurrency();
   const { preferences, unreadCount } = useNotifications();
   const [selectedCurrency, setSelectedCurrency] = useState(currency);
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
-  const canManageSettings = isOwner() || hasPermission('users:view');
+  const canManageSettings = isOwner() || hasPermission("users:view");
 
   useEffect(() => {
     setSelectedCurrency(currency);
@@ -63,15 +74,22 @@ export default function SettingsPage() {
       setCurrency(selectedCurrency);
       setHasChanges(false);
 
-      toast.success('Currency settings updated successfully!');
+      toast.success("Currency settings updated successfully!");
     } catch (error) {
-      toast.error(extractErrorMessage(error, 'Failed to update currency settings. Please try again.'));
+      toast.error(
+        extractErrorMessage(
+          error,
+          "Failed to update currency settings. Please try again.",
+        ),
+      );
     } finally {
       setSaving(false);
     }
   };
 
-  const selectedCurrencyInfo = CURRENCIES.find(c => c.code === selectedCurrency);
+  const selectedCurrencyInfo = CURRENCIES.find(
+    (c) => c.code === selectedCurrency,
+  );
 
   if (currencyLoading || initializing) {
     return (
@@ -107,7 +125,9 @@ export default function SettingsPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
-              <p className="text-gray-600">Manage your application preferences</p>
+              <p className="text-gray-600">
+                Manage your application preferences
+              </p>
             </div>
           </div>
 
@@ -118,7 +138,8 @@ export default function SettingsPage() {
                 Currency Settings
               </CardTitle>
               <CardDescription>
-                Set your default currency for invoices, transactions, and financial displays
+                Set your default currency for invoices, transactions, and
+                financial displays
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -136,7 +157,9 @@ export default function SettingsPage() {
                       <SelectItem key={curr.code} value={curr.code}>
                         <div className="flex items-center gap-2">
                           <span className="font-medium">{curr.symbol}</span>
-                          <span>{curr.name} ({curr.code})</span>
+                          <span>
+                            {curr.name} ({curr.code})
+                          </span>
                         </div>
                       </SelectItem>
                     ))}
@@ -150,7 +173,8 @@ export default function SettingsPage() {
                     <div>
                       <p className="font-medium">Selected Currency</p>
                       <p className="text-sm text-gray-600">
-                        {selectedCurrencyInfo.name} ({selectedCurrencyInfo.code})
+                        {selectedCurrencyInfo.name} ({selectedCurrencyInfo.code}
+                        )
                       </p>
                     </div>
                     <Badge variant="outline" className="text-lg">
@@ -164,7 +188,7 @@ export default function SettingsPage() {
                     <p className="text-sm font-medium">Preview:</p>
                     <div className="flex gap-4 text-sm">
                       <span>Price: {formatCurrency(99.99)}</span>
-                      <span>Total: {formatCurrency(1250.50)}</span>
+                      <span>Total: {formatCurrency(1250.5)}</span>
                       <span>Tax: {formatCurrency(125.05)}</span>
                     </div>
                   </div>
@@ -175,7 +199,8 @@ export default function SettingsPage() {
                 <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                   <AlertCircle className="h-4 w-4 text-yellow-600" />
                   <span className="text-sm text-yellow-800">
-                    You have unsaved changes. Don't forget to save your settings.
+                    You have unsaved changes. Don&apos;t forget to save your
+                    settings.
                   </span>
                 </div>
               )}
@@ -191,7 +216,7 @@ export default function SettingsPage() {
                   ) : (
                     <Save className="h-4 w-4" />
                   )}
-                  {saving ? 'Saving...' : 'Save Changes'}
+                  {saving ? "Saving..." : "Save Changes"}
                 </Button>
               </div>
             </CardContent>
@@ -229,7 +254,9 @@ export default function SettingsPage() {
                   )}
                   <Button
                     variant="outline"
-                    onClick={() => window.location.href = '/notifications/settings'}
+                    onClick={() =>
+                      (window.location.href = "/notifications/settings")
+                    }
                     className="gap-2"
                   >
                     <Settings className="h-4 w-4" />
@@ -237,24 +264,27 @@ export default function SettingsPage() {
                   </Button>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="text-center p-3 border rounded-lg">
                   <h4 className="font-medium text-sm mb-1">Email</h4>
                   <p className="text-xs text-gray-600">
-                    {preferences.filter(p => p.email_enabled).length} categories enabled
+                    {preferences.filter((p) => p.email_enabled).length}{" "}
+                    categories enabled
                   </p>
                 </div>
                 <div className="text-center p-3 border rounded-lg">
                   <h4 className="font-medium text-sm mb-1">Push</h4>
                   <p className="text-xs text-gray-600">
-                    {preferences.filter(p => p.push_enabled).length} categories enabled
+                    {preferences.filter((p) => p.push_enabled).length}{" "}
+                    categories enabled
                   </p>
                 </div>
                 <div className="text-center p-3 border rounded-lg">
                   <h4 className="font-medium text-sm mb-1">In-App</h4>
                   <p className="text-xs text-gray-600">
-                    {preferences.filter(p => p.in_app_enabled).length} categories enabled
+                    {preferences.filter((p) => p.in_app_enabled).length}{" "}
+                    categories enabled
                   </p>
                 </div>
               </div>

@@ -1,10 +1,10 @@
-import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
-import { SessionManager } from './SessionManager';
+import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
+import { SessionManager } from "./SessionManager";
 import {
   offlineGetCacheKey,
   offlineRequestPathname,
   offlineUseAggregateFallback,
-} from './offlineCacheKey';
+} from "./offlineCacheKey";
 
 export interface ApiResponse<T = any> {
   data: T;
@@ -25,31 +25,38 @@ export interface PaginatedResponse<T> {
 export class ApiService {
   private client: AxiosInstance;
   private sessionManager: SessionManager;
-  private publicEndpoints = ['/auth/login', '/auth/register', '/auth/reset-password', '/auth/reset-password/confirm', '/public/plans', '/public/mot'];
+  private publicEndpoints = [
+    "/auth/login",
+    "/auth/register",
+    "/auth/reset-password",
+    "/auth/reset-password/confirm",
+    "/public/plans",
+    "/public/mot",
+  ];
   private currentTenantId: string | null = null;
 
   constructor() {
     this.sessionManager = new SessionManager();
 
     const getApiUrl = () => {
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         const runtimeUrl = (window as any).__API_URL__;
         if (runtimeUrl) return runtimeUrl;
       }
-      return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      return process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
     };
 
     this.client = axios.create({
       baseURL: getApiUrl(),
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       timeout: 30000,
     });
 
     // Initialize tenant ID from localStorage if available
-    if (typeof window !== 'undefined') {
-      this.currentTenantId = localStorage.getItem('currentTenantId');
+    if (typeof window !== "undefined") {
+      this.currentTenantId = localStorage.getItem("currentTenantId");
     }
 
     this.setupInterceptors();
@@ -63,12 +70,12 @@ export class ApiService {
   // Tenant management
   setTenantId(tenantId: string | null) {
     this.currentTenantId = tenantId;
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       if (tenantId) {
-        localStorage.setItem('currentTenantId', tenantId);
+        localStorage.setItem("currentTenantId", tenantId);
       } else {
-        localStorage.removeItem('currentTenantId');
-        localStorage.removeItem('userTenants');
+        localStorage.removeItem("currentTenantId");
+        localStorage.removeItem("userTenants");
       }
     }
   }
@@ -77,28 +84,28 @@ export class ApiService {
     if (this.currentTenantId) {
       return this.currentTenantId;
     }
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('currentTenantId');
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("currentTenantId");
     }
     return null;
   }
 
   // Store user tenants in localStorage
   setUserTenants(tenants: any[]) {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('userTenants', JSON.stringify(tenants));
+    if (typeof window !== "undefined") {
+      localStorage.setItem("userTenants", JSON.stringify(tenants));
     }
   }
 
   // Get user tenants from localStorage
   getUserTenants(): any[] {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('userTenants');
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("userTenants");
       if (stored) {
         try {
           return JSON.parse(stored);
         } catch (error) {
-          localStorage.removeItem('userTenants');
+          localStorage.removeItem("userTenants");
         }
       }
     }
@@ -132,8 +139,12 @@ export class ApiService {
     // Request interceptor
     this.client.interceptors.request.use(
       (config) => {
-        console.log('[ApiService Interceptor] Request intercepted:', config.method, config.url);
-        
+        console.log(
+          "[ApiService Interceptor] Request intercepted:",
+          config.method,
+          config.url,
+        );
+
         // Check if this is a public endpoint
         const isPublicEndpoint = this.publicEndpoints.some((endpoint) => {
           const matches = config.url?.includes(endpoint);
@@ -141,111 +152,130 @@ export class ApiService {
         });
 
         if (isPublicEndpoint) {
-          console.log('[ApiService Interceptor] Public endpoint, skipping auth');
+          console.log(
+            "[ApiService Interceptor] Public endpoint, skipping auth",
+          );
           return config;
         }
 
-        if (typeof window === 'undefined') {
+        if (typeof window === "undefined") {
           console.error(
-            `[ApiService Interceptor] Server-side request to protected endpoint without auth | URL: ${config.url} | Method: ${config.method}`
+            `[ApiService Interceptor] Server-side request to protected endpoint without auth | URL: ${config.url} | Method: ${config.method}`,
           );
-          return Promise.reject(new Error('Server-side requests to protected endpoints are not allowed'));
+          return Promise.reject(
+            new Error(
+              "Server-side requests to protected endpoints are not allowed",
+            ),
+          );
         }
 
         const isSessionValid = this.sessionManager.isSessionValid();
-        console.log('[ApiService Interceptor] Session valid:', isSessionValid);
-        
+        console.log("[ApiService Interceptor] Session valid:", isSessionValid);
+
         if (!isSessionValid) {
           console.warn(
-            `[ApiService Interceptor] Session invalid - rejecting request | URL: ${config.url} | Method: ${config.method}`
+            `[ApiService Interceptor] Session invalid - rejecting request | URL: ${config.url} | Method: ${config.method}`,
           );
-          return Promise.reject(new Error('Not authenticated'));
+          return Promise.reject(new Error("Not authenticated"));
         }
 
         const token = this.sessionManager.getToken();
-        console.log('[ApiService Interceptor] Token exists:', !!token);
-        
+        console.log("[ApiService Interceptor] Token exists:", !!token);
+
         if (!token) {
           console.error(
-            `[ApiService Interceptor] Session valid but token missing - rejecting request | URL: ${config.url} | Method: ${config.method}`
+            `[ApiService Interceptor] Session valid but token missing - rejecting request | URL: ${config.url} | Method: ${config.method}`,
           );
-          return Promise.reject(new Error('Authentication token missing'));
+          return Promise.reject(new Error("Authentication token missing"));
         }
 
         config.headers.Authorization = `Bearer ${token}`;
-        console.log('[ApiService Interceptor] Authorization header set');
+        console.log("[ApiService Interceptor] Authorization header set");
 
         const tenantId = this.getTenantId();
-        console.log('[ApiService Interceptor] Tenant ID:', tenantId);
-        
+        console.log("[ApiService Interceptor] Tenant ID:", tenantId);
+
         if (tenantId) {
-          config.headers['X-Tenant-ID'] = tenantId;
-          console.log('[ApiService Interceptor] X-Tenant-ID header set:', tenantId);
+          config.headers["X-Tenant-ID"] = tenantId;
+          console.log(
+            "[ApiService Interceptor] X-Tenant-ID header set:",
+            tenantId,
+          );
         } else {
           console.warn(
-            `[ApiService Interceptor] Tenant ID missing for protected endpoint | URL: ${config.url} | Method: ${config.method}`
+            `[ApiService Interceptor] Tenant ID missing for protected endpoint | URL: ${config.url} | Method: ${config.method}`,
           );
         }
 
         if (
-          typeof FormData !== 'undefined' &&
+          typeof FormData !== "undefined" &&
           config.data &&
           config.data instanceof FormData
         ) {
           if (config.headers) {
-            delete (config.headers as Record<string, unknown>)['Content-Type'];
-            delete (config.headers as Record<string, unknown>)['content-type'];
+            delete (config.headers as Record<string, unknown>)["Content-Type"];
+            delete (config.headers as Record<string, unknown>)["content-type"];
           }
         }
 
-        console.log('[ApiService Interceptor] Request config final:', {
+        console.log("[ApiService Interceptor] Request config final:", {
           url: config.url,
           method: config.method,
           headers: {
-            Authorization: config.headers.Authorization ? 'Bearer ***' : 'missing',
-            'X-Tenant-ID': config.headers['X-Tenant-ID'] || 'missing'
-          }
+            Authorization: config.headers.Authorization
+              ? "Bearer ***"
+              : "missing",
+            "X-Tenant-ID": config.headers["X-Tenant-ID"] || "missing",
+          },
         });
 
         return config;
       },
       (error) => {
-        console.error('[ApiService Interceptor] Request interceptor error:', error);
+        console.error(
+          "[ApiService Interceptor] Request interceptor error:",
+          error,
+        );
         return Promise.reject(error);
       },
     );
 
     this.client.interceptors.response.use(
       async (response) => {
-        if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
+        if (typeof window !== "undefined" && "__TAURI_INTERNALS__" in window) {
           try {
             if (
               navigator.onLine &&
-              (response.config.method || '').toLowerCase() === 'get' &&
-              response.config.responseType !== 'blob' &&
+              (response.config.method || "").toLowerCase() === "get" &&
+              response.config.responseType !== "blob" &&
               !(response.data instanceof Blob)
             ) {
-              const { invoke } = await import('@tauri-apps/api/core');
-              const tid = this.getTenantId() || '';
-              const u = String(response.config.url || '');
+              const { invoke } = await import("@tauri-apps/api/core");
+              const tid = this.getTenantId() || "";
+              const u = String(response.config.url || "");
               const key = offlineGetCacheKey(
                 tid,
                 u,
                 (response.config.params as Record<string, unknown>) || {},
               );
               const value =
-                typeof response.data === 'string'
+                typeof response.data === "string"
                   ? response.data
                   : JSON.stringify(response.data);
-              await invoke('offline_cache_put', { key, value });
+              await invoke("offline_cache_put", { key, value });
             }
           } catch {}
         }
         return response;
       },
       async (error) => {
-        if (error.code === 'ECONNABORTED' && error.message.includes('timeout')) {
-          const timeoutError = new Error('Request timeout. Please try again.') as Error & {
+        if (
+          error.code === "ECONNABORTED" &&
+          error.message.includes("timeout")
+        ) {
+          const timeoutError = new Error(
+            "Request timeout. Please try again.",
+          ) as Error & {
             isTimeout?: boolean;
             config?: typeof error.config;
           };
@@ -255,34 +285,34 @@ export class ApiService {
         }
 
         if (error.response?.status === 401) {
-          const requestUrl = String(error.config?.url ?? '');
-          const isLoginRequest = requestUrl.includes('auth/login');
+          const requestUrl = String(error.config?.url ?? "");
+          const isLoginRequest = requestUrl.includes("auth/login");
           if (isLoginRequest) {
             return Promise.reject(error);
           }
-          console.warn('401 Unauthorized error:', error.config?.url);
+          console.warn("401 Unauthorized error:", error.config?.url);
           if (error.config._retry) {
-            console.error('Token refresh failed, clearing session');
+            console.error("Token refresh failed, clearing session");
             this.sessionManager.clearSession();
-            if (typeof window !== 'undefined') {
-              window.location.href = '/login';
+            if (typeof window !== "undefined") {
+              window.location.href = "/login";
             }
             return Promise.reject(error);
           }
 
-          console.log('Attempting to refresh token...');
+          console.log("Attempting to refresh token...");
           const refreshSuccess = await this.sessionManager.refreshAccessToken();
           if (refreshSuccess) {
-            console.log('Token refreshed successfully, retrying request');
+            console.log("Token refreshed successfully, retrying request");
             const originalRequest = error.config;
             originalRequest._retry = true;
             originalRequest.headers.Authorization = `Bearer ${this.sessionManager.getToken()}`;
             return this.client(originalRequest);
           } else {
-            console.error('Token refresh failed, clearing session');
+            console.error("Token refresh failed, clearing session");
             this.sessionManager.clearSession();
-            if (typeof window !== 'undefined') {
-              window.location.href = '/login';
+            if (typeof window !== "undefined") {
+              window.location.href = "/login";
             }
           }
         }
@@ -294,66 +324,81 @@ export class ApiService {
   private setupOfflineInterceptors() {
     this.client.interceptors.request.use(
       async (config) => {
-        if (typeof window === 'undefined' || !('__TAURI_INTERNALS__' in window)) {
+        if (
+          typeof window === "undefined" ||
+          !("__TAURI_INTERNALS__" in window)
+        ) {
           return config;
         }
-        if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+        if (
+          typeof FormData !== "undefined" &&
+          config.data instanceof FormData
+        ) {
           return config;
         }
-        const online = typeof navigator !== 'undefined' && navigator.onLine;
-        const method = (config.method || 'get').toUpperCase();
-        const url = String(config.url || '');
+        const online = typeof navigator !== "undefined" && navigator.onLine;
+        const method = (config.method || "get").toUpperCase();
+        const url = String(config.url || "");
         const isPublicEndpoint = this.publicEndpoints.some((endpoint) =>
           url.includes(endpoint),
         );
         if (isPublicEndpoint) {
           return config;
         }
-        const isMutation = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method);
+        const isMutation = ["POST", "PUT", "PATCH", "DELETE"].includes(method);
         if (!online && isMutation) {
-          const { invoke } = await import('@tauri-apps/api/core');
+          const { invoke } = await import("@tauri-apps/api/core");
           const token = this.sessionManager.getToken();
           const tid = this.getTenantId();
-          await invoke('offline_enqueue', {
+          await invoke("offline_enqueue", {
             method,
             url,
             queryJson: config.params ? JSON.stringify(config.params) : null,
             bodyJson:
               config.data !== undefined && config.data !== null
-                ? typeof config.data === 'string'
+                ? typeof config.data === "string"
                   ? config.data
                   : JSON.stringify(config.data)
                 : null,
             headersJson: JSON.stringify({
-              Authorization: token ? `Bearer ${token}` : config.headers?.Authorization,
-              'X-Tenant-ID': tid || (config.headers as Record<string, unknown>)['X-Tenant-ID'],
+              Authorization: token
+                ? `Bearer ${token}`
+                : config.headers?.Authorization,
+              "X-Tenant-ID":
+                tid ||
+                (config.headers as Record<string, unknown>)["X-Tenant-ID"],
             }),
             tenantId: tid,
           });
-          (config as { adapter?: (c: typeof config) => Promise<unknown> }).adapter = () =>
+          (
+            config as { adapter?: (c: typeof config) => Promise<unknown> }
+          ).adapter = () =>
             Promise.resolve({
               data: { success: true, offlineQueued: true },
               status: 202,
-              statusText: 'Accepted',
+              statusText: "Accepted",
               headers: {},
               config,
               request: {},
             });
           return config;
         }
-        if (!online && method === 'GET') {
-          const { invoke } = await import('@tauri-apps/api/core');
-          const tid = this.getTenantId() || '';
+        if (!online && method === "GET") {
+          const { invoke } = await import("@tauri-apps/api/core");
+          const tid = this.getTenantId() || "";
           const key = offlineGetCacheKey(
             tid,
             url,
             (config.params as Record<string, unknown>) || {},
           );
-          let payload: string | null = await invoke<string | null>('offline_cache_get', { key });
+          let payload: string | null = await invoke<string | null>(
+            "offline_cache_get",
+            { key },
+          );
           if (payload == null) {
             const pathname = offlineRequestPathname(url);
             if (offlineUseAggregateFallback(pathname, url)) {
-              payload = await invoke<string | null>('offline_aggregate_get', {
+              payload = await invoke<string | null>("offline_aggregate_get", {
                 tenant_id: tid,
                 route_key: pathname,
               });
@@ -366,11 +411,13 @@ export class ApiService {
             } catch {
               parsed = payload;
             }
-            (config as { adapter?: (c: typeof config) => Promise<unknown> }).adapter = () =>
+            (
+              config as { adapter?: (c: typeof config) => Promise<unknown> }
+            ).adapter = () =>
               Promise.resolve({
                 data: parsed,
                 status: 200,
-                statusText: 'OK',
+                statusText: "OK",
                 headers: {},
                 config,
                 request: {},
@@ -389,7 +436,7 @@ export class ApiService {
   }
 
   async getBlob(url: string): Promise<Blob> {
-    const response = await this.client.get(url, { responseType: 'blob' });
+    const response = await this.client.get(url, { responseType: "blob" });
     return response.data;
   }
 
@@ -398,25 +445,31 @@ export class ApiService {
     data?: any,
     config?: AxiosRequestConfig,
   ): Promise<T> {
-    console.log('[ApiService] POST request:', url);
-    console.log('[ApiService] POST data:', data);
-    console.log('[ApiService] Base URL:', this.client.defaults.baseURL);
-    console.log('[ApiService] Full URL:', `${this.client.defaults.baseURL}${url}`);
-    console.log('[ApiService] Tenant ID:', this.getTenantId());
-    console.log('[ApiService] Session valid:', this.sessionManager.isSessionValid());
-    
+    console.log("[ApiService] POST request:", url);
+    console.log("[ApiService] POST data:", data);
+    console.log("[ApiService] Base URL:", this.client.defaults.baseURL);
+    console.log(
+      "[ApiService] Full URL:",
+      `${this.client.defaults.baseURL}${url}`,
+    );
+    console.log("[ApiService] Tenant ID:", this.getTenantId());
+    console.log(
+      "[ApiService] Session valid:",
+      this.sessionManager.isSessionValid(),
+    );
+
     try {
       const response = await this.client.post<T>(url, data, config);
-      console.log('[ApiService] POST response status:', response.status);
-      console.log('[ApiService] POST response data:', response.data);
+      console.log("[ApiService] POST response status:", response.status);
+      console.log("[ApiService] POST response data:", response.data);
       return response.data;
     } catch (error: any) {
-      console.error('[ApiService] POST error:', error);
-      console.error('[ApiService] POST error message:', error?.message);
-      console.error('[ApiService] POST error response:', error?.response);
+      console.error("[ApiService] POST error:", error);
+      console.error("[ApiService] POST error message:", error?.message);
+      console.error("[ApiService] POST error response:", error?.response);
       if (error?.response) {
-        console.error('[ApiService] POST error status:', error.response.status);
-        console.error('[ApiService] POST error data:', error.response.data);
+        console.error("[ApiService] POST error status:", error.response.status);
+        console.error("[ApiService] POST error data:", error.response.data);
       }
       throw error;
     }
@@ -448,7 +501,7 @@ export class ApiService {
   // Auth endpoints
   async login(credentials: { email: string; password: string }) {
     try {
-      const response = await this.post('/auth/login', credentials);
+      const response = await this.post("/auth/login", credentials);
 
       // Store session after successful login
       if (response.success && response.token && response.user) {
@@ -487,16 +540,16 @@ export class ApiService {
     firstName?: string;
     lastName?: string;
   }) {
-    return this.post('/auth/register', userData);
+    return this.post("/auth/register", userData);
   }
 
   async getCurrentUser() {
-    return this.get('/auth/me');
+    return this.get("/auth/me");
   }
 
   async logout() {
     try {
-      const response = await this.post('/auth/logout');
+      const response = await this.post("/auth/logout");
       // Clear all tenant information on logout
       this.setTenantId(null);
       return response;
@@ -514,7 +567,7 @@ export class ApiService {
     if (tenantId) {
       return this.getTenantUsers(tenantId);
     }
-    return this.get('/users');
+    return this.get("/users");
   }
 
   async getTenantUsers(tenantId: string) {
@@ -525,7 +578,7 @@ export class ApiService {
   async getCurrentTenantUsers() {
     const tenantId = this.getTenantId();
     if (!tenantId) {
-      throw new Error('No tenant selected');
+      throw new Error("No tenant selected");
     }
     return this.getTenantUsers(tenantId);
   }
@@ -539,34 +592,34 @@ export class ApiService {
   }
 
   async getMyProfile() {
-    return this.get('/profile/me');
+    return this.get("/profile/me");
   }
 
   async updateMyProfile(data: any) {
-    return this.put('/profile/me', data);
+    return this.put("/profile/me", data);
   }
 
   async uploadCompanyLogo(file: File) {
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append("file", file);
 
-    return this.post('/file-upload/logo', formData, {
+    return this.post("/file-upload/logo", formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        "Content-Type": "multipart/form-data",
       },
     });
   }
 
   async deleteCompanyLogo() {
-    return this.delete('/file-upload/logo');
+    return this.delete("/file-upload/logo");
   }
 
   async deleteAvatar() {
-    return this.delete('/profile/avatar');
+    return this.delete("/profile/avatar");
   }
 
   async changePassword(currentPassword: string, newPassword: string) {
-    return this.post('/profile/change-password', {
+    return this.post("/profile/change-password", {
       current_password: currentPassword,
       new_password: newPassword,
     });
@@ -577,7 +630,7 @@ export class ApiService {
   }
   // SaaS Plans and Subscription
   async getPlans() {
-    return this.get('/plans');
+    return this.get("/plans");
   }
 
   async subscribeToPlan(data: {
@@ -585,16 +638,16 @@ export class ApiService {
     tenantName: string;
     domain?: string;
   }) {
-    return this.post('/tenants/subscribe', data);
+    return this.post("/tenants/subscribe", data);
   }
 
   async createTenantFromLanding(data: {
     planId: string;
     tenantName: string;
     domain?: string;
-    paymentMethod?: 'stripe' | 'paypal';
+    paymentMethod?: "stripe" | "paypal";
   }) {
-    return this.post('/tenants/create-tenant', data);
+    return this.post("/tenants/create-tenant", data);
   }
 
   async confirmPayPalSubscription(tenantId: string, subscriptionId: string) {
@@ -612,7 +665,9 @@ export class ApiService {
   }
 
   async cancelSubscription(tenantId: string, reason: string) {
-    return this.post(`/subscriptions/cancel?tenant_id=${tenantId}&reason=${encodeURIComponent(reason)}`);
+    return this.post(
+      `/subscriptions/cancel?tenant_id=${tenantId}&reason=${encodeURIComponent(reason)}`,
+    );
   }
 
   async reactivateSubscription(tenantId: string) {
@@ -620,10 +675,10 @@ export class ApiService {
   }
 
   async upgradePlan(tenantId: string, newPlanId: string, oldPlanId: string) {
-    return this.post('/subscriptions/upgrade', {
+    return this.post("/subscriptions/upgrade", {
       tenant_id: tenantId,
       new_plan_id: newPlanId,
-      old_plan_id: oldPlanId
+      old_plan_id: oldPlanId,
     });
   }
 
@@ -632,12 +687,14 @@ export class ApiService {
   }
 
   async getPlanLimits(tenantId: string, resourceType: string) {
-    return this.get(`/subscriptions/limits?tenant_id=${tenantId}&resource_type=${resourceType}`);
+    return this.get(
+      `/subscriptions/limits?tenant_id=${tenantId}&resource_type=${resourceType}`,
+    );
   }
 
   // Tenant endpoints
   async getMyTenants() {
-    return this.get('/tenants/my-tenants');
+    return this.get("/tenants/my-tenants");
   }
 
   async getTenant(tenantId: string) {
@@ -650,7 +707,7 @@ export class ApiService {
     const tenant = storedTenants.find((t: any) => t.id === tenantId);
 
     if (!tenant) {
-      throw new Error('Access denied to this tenant');
+      throw new Error("Access denied to this tenant");
     }
 
     this.setTenantId(tenantId);
@@ -659,7 +716,7 @@ export class ApiService {
 
   // Project endpoints
   async getProjects() {
-    return this.get('/projects');
+    return this.get("/projects");
   }
 
   async getProject(id: string) {
@@ -667,7 +724,7 @@ export class ApiService {
   }
 
   async createProject(data: any) {
-    return this.post('/projects', data);
+    return this.post("/projects", data);
   }
 
   async updateProject(id: string, data: any) {
@@ -691,7 +748,7 @@ export class ApiService {
   }
 
   async getProjectTeamMembers() {
-    return this.get('/projects/team-members');
+    return this.get("/projects/team-members");
   }
 
   // Task endpoints
@@ -705,29 +762,29 @@ export class ApiService {
     limit?: number;
   }) {
     const queryParams = new URLSearchParams();
-    if (params?.project) queryParams.append('project', params.project);
-    if (params?.status) queryParams.append('status', params.status);
-    if (params?.assignedTo) queryParams.append('assignedTo', params.assignedTo);
+    if (params?.project) queryParams.append("project", params.project);
+    if (params?.status) queryParams.append("status", params.status);
+    if (params?.assignedTo) queryParams.append("assignedTo", params.assignedTo);
     if (params?.includeSubtasks !== undefined)
-      queryParams.append('include_subtasks', params.includeSubtasks.toString());
+      queryParams.append("include_subtasks", params.includeSubtasks.toString());
     if (params?.mainTasksOnly !== undefined)
-      queryParams.append('main_tasks_only', params.mainTasksOnly.toString());
-    if (params?.page) queryParams.append('page', params.page.toString());
-    if (params?.limit) queryParams.append('limit', params.limit.toString());
+      queryParams.append("main_tasks_only", params.mainTasksOnly.toString());
+    if (params?.page) queryParams.append("page", params.page.toString());
+    if (params?.limit) queryParams.append("limit", params.limit.toString());
 
-    const url = `/tasks${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const url = `/tasks${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
     return this.get(url);
   }
 
   async getTask(id: string, includeSubtasks: boolean = true) {
     const params = includeSubtasks
-      ? '?include_subtasks=true'
-      : '?include_subtasks=false';
+      ? "?include_subtasks=true"
+      : "?include_subtasks=false";
     return this.get(`/tasks/${id}${params}`);
   }
 
   async createTask(data: any) {
-    return await this.post('/tasks', data);
+    return await this.post("/tasks", data);
   }
 
   async updateTask(id: string, data: any) {
@@ -739,7 +796,7 @@ export class ApiService {
   }
 
   async getTasksByProject(projectId: string, mainTasksOnly: boolean = false) {
-    const params = mainTasksOnly ? '?main_tasks_only=true' : '';
+    const params = mainTasksOnly ? "?main_tasks_only=true" : "";
     return this.get(`/tasks?project=${projectId}${params}`);
   }
 
@@ -765,7 +822,7 @@ export class ApiService {
 
   // Health check
   async healthCheck() {
-    return this.get('/health');
+    return this.get("/health");
   }
 
   // Custom Roles & Permissions
@@ -793,12 +850,12 @@ export class ApiService {
   }
 
   async getPermissions() {
-    return this.get('/tenants/permissions');
+    return this.get("/tenants/permissions");
   }
   // Test connection
   async testConnection() {
     try {
-      const response = await this.get('/health');
+      const response = await this.get("/health");
       return response;
     } catch (error) {
       throw error;
@@ -815,15 +872,15 @@ export class ApiService {
   }) {
     try {
       const queryParams = new URLSearchParams();
-      if (params?.project) queryParams.append('project_id', params.project);
-      if (params?.user) queryParams.append('user_id', params.user);
-      if (params?.status) queryParams.append('status_filter', params.status);
+      if (params?.project) queryParams.append("project_id", params.project);
+      if (params?.user) queryParams.append("user_id", params.user);
+      if (params?.status) queryParams.append("status_filter", params.status);
       if (params?.page)
         queryParams.append(
-          'skip',
+          "skip",
           ((params.page - 1) * (params.limit || 100)).toString(),
         );
-      if (params?.limit) queryParams.append('limit', params.limit.toString());
+      if (params?.limit) queryParams.append("limit", params.limit.toString());
 
       const url = `/events?${queryParams.toString()}`;
       const response = await this.get(url);
@@ -844,7 +901,7 @@ export class ApiService {
 
   async createEvent(data: any) {
     try {
-      const response = await this.post('/events', data);
+      const response = await this.post("/events", data);
       return response;
     } catch (error) {
       throw error;
@@ -898,7 +955,7 @@ export class ApiService {
 
   async getGoogleAuthUrl() {
     try {
-      const response = await this.get('/events/google/authorize');
+      const response = await this.get("/events/google/authorize");
       return response;
     } catch (error) {
       throw error;
@@ -907,7 +964,7 @@ export class ApiService {
 
   async googleAuthCallback(code: string) {
     try {
-      const response = await this.post('/events/google/callback', { code });
+      const response = await this.post("/events/google/callback", { code });
       return response;
     } catch (error) {
       throw error;
@@ -916,7 +973,7 @@ export class ApiService {
 
   async getGoogleAuthStatus() {
     try {
-      const response = await this.get('/events/google/status');
+      const response = await this.get("/events/google/status");
       return response;
     } catch (error) {
       throw error;
@@ -935,7 +992,7 @@ export class ApiService {
   // Sales methods
   async getSalesDashboard(): Promise<any> {
     try {
-      const response = await this.client.get('/sales/dashboard');
+      const response = await this.client.get("/sales/dashboard");
       return response.data;
     } catch (error) {
       throw error;
@@ -953,7 +1010,7 @@ export class ApiService {
     } = {},
   ): Promise<any> {
     try {
-      const response = await this.client.get('/sales/leads', { params });
+      const response = await this.client.get("/sales/leads", { params });
       return response.data;
     } catch (error) {
       throw error;
@@ -962,7 +1019,7 @@ export class ApiService {
 
   async createLead(leadData: any): Promise<any> {
     try {
-      const response = await this.client.post('/sales/leads', leadData);
+      const response = await this.client.post("/sales/leads", leadData);
       return response.data;
     } catch (error) {
       throw error;
@@ -1000,7 +1057,7 @@ export class ApiService {
     } = {},
   ): Promise<any> {
     try {
-      const response = await this.client.get('/sales/contacts', { params });
+      const response = await this.client.get("/sales/contacts", { params });
       return response.data;
     } catch (error) {
       throw error;
@@ -1009,7 +1066,7 @@ export class ApiService {
 
   async createContact(contactData: any): Promise<any> {
     try {
-      const response = await this.client.post('/sales/contacts', contactData);
+      const response = await this.client.post("/sales/contacts", contactData);
       return response.data;
     } catch (error) {
       throw error;
@@ -1046,7 +1103,7 @@ export class ApiService {
     } = {},
   ): Promise<any> {
     try {
-      const response = await this.client.get('/sales/companies', { params });
+      const response = await this.client.get("/sales/companies", { params });
       return response.data;
     } catch (error) {
       throw error;
@@ -1055,7 +1112,7 @@ export class ApiService {
 
   async createCompany(companyData: any): Promise<any> {
     try {
-      const response = await this.client.post('/sales/companies', companyData);
+      const response = await this.client.post("/sales/companies", companyData);
       return response.data;
     } catch (error) {
       throw error;
@@ -1095,7 +1152,7 @@ export class ApiService {
     } = {},
   ): Promise<any> {
     try {
-      const response = await this.client.get('/sales/opportunities', {
+      const response = await this.client.get("/sales/opportunities", {
         params,
       });
       return response.data;
@@ -1107,7 +1164,7 @@ export class ApiService {
   async createOpportunity(opportunityData: any): Promise<any> {
     try {
       const response = await this.client.post(
-        '/sales/opportunities',
+        "/sales/opportunities",
         opportunityData,
       );
       return response.data;
@@ -1151,7 +1208,7 @@ export class ApiService {
     } = {},
   ): Promise<any> {
     try {
-      const response = await this.client.get('/sales/quotes', { params });
+      const response = await this.client.get("/sales/quotes", { params });
       return response.data;
     } catch (error) {
       throw error;
@@ -1160,7 +1217,7 @@ export class ApiService {
 
   async createQuote(quoteData: any): Promise<any> {
     try {
-      const response = await this.client.post('/sales/quotes', quoteData);
+      const response = await this.client.post("/sales/quotes", quoteData);
       return response.data;
     } catch (error) {
       throw error;
@@ -1197,7 +1254,7 @@ export class ApiService {
     } = {},
   ): Promise<any> {
     try {
-      const response = await this.client.get('/sales/contracts', { params });
+      const response = await this.client.get("/sales/contracts", { params });
       return response.data;
     } catch (error) {
       throw error;
@@ -1206,7 +1263,7 @@ export class ApiService {
 
   async createContract(contractData: any): Promise<any> {
     try {
-      const response = await this.client.post('/sales/contracts', contractData);
+      const response = await this.client.post("/sales/contracts", contractData);
       return response.data;
     } catch (error) {
       throw error;
@@ -1248,7 +1305,7 @@ export class ApiService {
     } = {},
   ): Promise<any> {
     try {
-      const response = await this.client.get('/sales/activities', { params });
+      const response = await this.client.get("/sales/activities", { params });
       return response.data;
     } catch (error) {
       throw error;
@@ -1258,7 +1315,7 @@ export class ApiService {
   async createSalesActivity(activityData: any): Promise<any> {
     try {
       const response = await this.client.post(
-        '/sales/activities',
+        "/sales/activities",
         activityData,
       );
       return response.data;
@@ -1268,7 +1325,7 @@ export class ApiService {
   }
 
   async getRevenueAnalytics(
-    period: string = 'monthly',
+    period: string = "monthly",
     startDate?: string,
     endDate?: string,
   ): Promise<any> {
@@ -1277,7 +1334,7 @@ export class ApiService {
       if (startDate) params.start_date = startDate;
       if (endDate) params.end_date = endDate;
 
-      const response = await this.client.get('/sales/analytics/revenue', {
+      const response = await this.client.get("/sales/analytics/revenue", {
         params,
       });
       return response.data;
@@ -1288,7 +1345,7 @@ export class ApiService {
 
   async getConversionAnalytics(): Promise<any> {
     try {
-      const response = await this.client.get('/sales/analytics/conversion');
+      const response = await this.client.get("/sales/analytics/conversion");
       return response.data;
     } catch (error) {
       throw error;
@@ -1303,7 +1360,7 @@ export class ApiService {
     is_active?: boolean;
   }): Promise<any[]> {
     try {
-      const response = await this.client.get('/admin/tenants', { params });
+      const response = await this.client.get("/admin/tenants", { params });
       return response.data;
     } catch (error) {
       throw error;
@@ -1321,9 +1378,12 @@ export class ApiService {
 
   async updateTenantStatus(tenantId: string, isActive: boolean): Promise<any> {
     try {
-      const response = await this.client.put(`/admin/tenants/${tenantId}/status`, {
-        is_active: isActive,
-      });
+      const response = await this.client.put(
+        `/admin/tenants/${tenantId}/status`,
+        {
+          is_active: isActive,
+        },
+      );
       return response.data;
     } catch (error) {
       throw error;
@@ -1332,7 +1392,7 @@ export class ApiService {
 
   async getAdminStats(): Promise<any> {
     try {
-      const response = await this.client.get('/admin/stats');
+      const response = await this.client.get("/admin/stats");
       return response.data;
     } catch (error) {
       throw error;

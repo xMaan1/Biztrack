@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   Dialog,
@@ -6,10 +6,10 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/src/components/ui/dialog';
-import { Button } from '@/src/components/ui/button';
-import { SupplierFormFields } from './SupplierFormFields';
-import type { SupplierFormDialogProps } from './types';
+} from "@/src/components/ui/dialog";
+import { Button } from "@/src/components/ui/button";
+import { SupplierFormFields } from "./SupplierFormFields";
+import type { SupplierFormDialogProps } from "./types";
 
 export function SupplierFormDialog({
   open,
@@ -25,11 +25,13 @@ export function SupplierFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{editingSupplier ? 'Edit Supplier' : 'Add Supplier'}</DialogTitle>
+          <DialogTitle>
+            {editingSupplier ? "Edit Supplier" : "Add Supplier"}
+          </DialogTitle>
           <DialogDescription>
             {editingSupplier
-              ? 'Update the supplier information below.'
-              : 'Add a new supplier to your vendor network.'}
+              ? "Update the supplier information below."
+              : "Add a new supplier to your vendor network."}
           </DialogDescription>
         </DialogHeader>
 
@@ -42,11 +44,11 @@ export function SupplierFormDialog({
           <Button onClick={onSubmit} disabled={submitting}>
             {submitting
               ? editingSupplier
-                ? 'Updating...'
-                : 'Creating...'
+                ? "Updating..."
+                : "Creating..."
               : editingSupplier
-                ? 'Update Supplier'
-                : 'Create Supplier'}
+                ? "Update Supplier"
+                : "Create Supplier"}
           </Button>
         </div>
       </DialogContent>

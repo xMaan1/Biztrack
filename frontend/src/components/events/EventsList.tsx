@@ -1,22 +1,22 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
+import React, { useState, useEffect } from "react";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../ui/select';
-import { Card, CardContent } from '../ui/card';
-import { Calendar, Plus, Search, Grid, List, Link2 } from 'lucide-react';
-import EventCard from './EventCard';
-import EventForm from './EventForm';
-import { useApiService } from '../../hooks/useApiService';
-import { toast } from 'sonner';
-import { useConfirm } from '@/src/contexts/ConfirmContext';
+} from "../ui/select";
+import { Card, CardContent } from "../ui/card";
+import { Calendar, Plus, Search, Grid, List, Link2 } from "lucide-react";
+import EventCard from "./EventCard";
+import EventForm from "./EventForm";
+import { useApiService } from "../../hooks/useApiService";
+import { toast } from "sonner";
+import { useConfirm } from "@/src/contexts/ConfirmContext";
 
 interface Event {
   id: string;
@@ -37,10 +37,10 @@ export default function EventsList() {
   const confirm = useConfirm();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [typeFilter, setTypeFilter] = useState<string>('all');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
   const [isAuthorized, setIsAuthorized] = useState(false);
@@ -64,19 +64,19 @@ export default function EventsList() {
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      if (event.data && event.data.type === 'GOOGLE_AUTH_SUCCESS') {
+      if (event.data && event.data.type === "GOOGLE_AUTH_SUCCESS") {
         checkAuthStatus();
         setAuthLoading(false);
-        toast.success('Google Calendar connected successfully!');
-      } else if (event.data && event.data.type === 'GOOGLE_AUTH_ERROR') {
+        toast.success("Google Calendar connected successfully!");
+      } else if (event.data && event.data.type === "GOOGLE_AUTH_ERROR") {
         setAuthLoading(false);
-        toast.error(event.data.error || 'Authorization failed');
+        toast.error(event.data.error || "Authorization failed");
       }
     };
 
-    window.addEventListener('message', handleMessage);
+    window.addEventListener("message", handleMessage);
     return () => {
-      window.removeEventListener('message', handleMessage);
+      window.removeEventListener("message", handleMessage);
     };
   }, []);
 
@@ -84,24 +84,26 @@ export default function EventsList() {
     try {
       setAuthLoading(true);
       const response = await apiService.getGoogleAuthUrl();
-      
+
       const width = 500;
       const height = 600;
       const left = (window.screen.width - width) / 2;
       const top = (window.screen.height - height) / 2;
-      
+
       const popup = window.open(
         response.authorization_url,
-        'google-oauth',
-        `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes,resizable=yes`
+        "google-oauth",
+        `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes,resizable=yes`,
       );
-      
+
       if (!popup) {
-        toast.error('Please allow popups for this site to complete authorization');
+        toast.error(
+          "Please allow popups for this site to complete authorization",
+        );
         setAuthLoading(false);
         return;
       }
-      
+
       const checkPopup = setInterval(() => {
         if (popup.closed) {
           clearInterval(checkPopup);
@@ -109,15 +111,16 @@ export default function EventsList() {
           checkAuthStatus();
         }
       }, 500);
-      
+
       setTimeout(() => {
         if (!popup.closed) {
           clearInterval(checkPopup);
         }
       }, 300000);
-      
     } catch (error: any) {
-      toast.error(error.response?.data?.detail || 'Failed to get authorization URL');
+      toast.error(
+        error.response?.data?.detail || "Failed to get authorization URL",
+      );
       setAuthLoading(false);
     }
   };
@@ -128,40 +131,39 @@ export default function EventsList() {
       const response = await apiService.getEvents();
       setEvents(response.events || []);
     } catch (error) {
-      } finally {
+    } finally {
       setLoading(false);
     }
   };
 
   const handleDeleteEvent = async (id: string) => {
     const ok = await confirm({
-      description: 'Are you sure you want to delete this event?',
+      description: "Are you sure you want to delete this event?",
       destructive: true,
-      confirmLabel: 'Delete',
+      confirmLabel: "Delete",
     });
     if (!ok) return;
     try {
       await apiService.deleteEvent(id);
       setEvents(events.filter((event) => event.id !== id));
-    } catch (error) {
-      }
+    } catch (error) {}
   };
 
   const handleJoinEvent = async (id: string) => {
     try {
       const event = events.find((e) => e.id === id);
       if (event?.googleMeetLink) {
-        window.open(event.googleMeetLink, '_blank');
+        window.open(event.googleMeetLink, "_blank");
       } else {
         const response = await apiService.joinEvent(id);
         if (response?.meet_link) {
-          window.open(response.meet_link, '_blank');
+          window.open(response.meet_link, "_blank");
         }
-        toast.success('You have joined this event');
+        toast.success("You have joined this event");
         loadEvents();
       }
     } catch (error) {
-      toast.error('Failed to join event');
+      toast.error("Failed to join event");
     }
   };
 
@@ -170,8 +172,7 @@ export default function EventsList() {
       await apiService.leaveEvent(id);
       // Refresh events to update status
       loadEvents();
-    } catch (error) {
-      }
+    } catch (error) {}
   };
 
   const handleCreateEvent = async (eventData: any) => {
@@ -179,10 +180,10 @@ export default function EventsList() {
       setCreateLoading(true);
       await apiService.createEvent(eventData);
       setShowCreateForm(false);
-      toast.success('Event created successfully!');
+      toast.success("Event created successfully!");
       loadEvents();
     } catch (error) {
-      toast.error('Failed to create event. Please try again.');
+      toast.error("Failed to create event. Please try again.");
     } finally {
       setCreateLoading(false);
     }
@@ -194,26 +195,26 @@ export default function EventsList() {
       (event.description &&
         event.description.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesStatus =
-      statusFilter === 'all' || event.status === statusFilter;
-    const matchesType = typeFilter === 'all' || event.eventType === typeFilter;
+      statusFilter === "all" || event.status === statusFilter;
+    const matchesType = typeFilter === "all" || event.eventType === typeFilter;
 
     return matchesSearch && matchesStatus && matchesType;
   });
 
   const getStatusOptions = () => [
-    { value: 'all', label: 'All Statuses' },
-    { value: 'scheduled', label: 'Scheduled' },
-    { value: 'in_progress', label: 'In Progress' },
-    { value: 'completed', label: 'Completed' },
-    { value: 'cancelled', label: 'Cancelled' },
+    { value: "all", label: "All Statuses" },
+    { value: "scheduled", label: "Scheduled" },
+    { value: "in_progress", label: "In Progress" },
+    { value: "completed", label: "Completed" },
+    { value: "cancelled", label: "Cancelled" },
   ];
 
   const getTypeOptions = () => [
-    { value: 'all', label: 'All Types' },
-    { value: 'meeting', label: 'Meeting' },
-    { value: 'workshop', label: 'Workshop' },
-    { value: 'deadline', label: 'Deadline' },
-    { value: 'other', label: 'Other' },
+    { value: "all", label: "All Types" },
+    { value: "meeting", label: "Meeting" },
+    { value: "workshop", label: "Workshop" },
+    { value: "deadline", label: "Deadline" },
+    { value: "other", label: "Other" },
   ];
 
   if (loading) {
@@ -244,7 +245,7 @@ export default function EventsList() {
               disabled={authLoading}
             >
               <Link2 className="h-4 w-4" />
-              {authLoading ? 'Connecting...' : 'Connect Google Calendar'}
+              {authLoading ? "Connecting..." : "Connect Google Calendar"}
             </Button>
           )}
           <Button
@@ -305,17 +306,17 @@ export default function EventsList() {
             {/* View Mode Toggle */}
             <div className="flex border rounded-lg">
               <Button
-                variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                variant={viewMode === "grid" ? "default" : "ghost"}
                 size="sm"
-                onClick={() => setViewMode('grid')}
+                onClick={() => setViewMode("grid")}
                 className="rounded-r-none"
               >
                 <Grid className="h-4 w-4" />
               </Button>
               <Button
-                variant={viewMode === 'list' ? 'default' : 'ghost'}
+                variant={viewMode === "list" ? "default" : "ghost"}
                 size="sm"
-                onClick={() => setViewMode('list')}
+                onClick={() => setViewMode("list")}
                 className="rounded-l-none"
               >
                 <List className="h-4 w-4" />
@@ -329,7 +330,7 @@ export default function EventsList() {
       <div className="flex items-center gap-2 text-sm text-gray-600">
         <Calendar className="h-4 w-4" />
         <span>
-          {filteredEvents.length} event{filteredEvents.length !== 1 ? 's' : ''}{' '}
+          {filteredEvents.length} event{filteredEvents.length !== 1 ? "s" : ""}{" "}
           found
         </span>
       </div>
@@ -343,11 +344,11 @@ export default function EventsList() {
               No events found
             </h3>
             <p className="text-gray-600 mb-4">
-              {searchQuery || statusFilter !== 'all' || typeFilter !== 'all'
-                ? 'Try adjusting your filters or search terms'
-                : 'Get started by creating your first event'}
+              {searchQuery || statusFilter !== "all" || typeFilter !== "all"
+                ? "Try adjusting your filters or search terms"
+                : "Get started by creating your first event"}
             </p>
-            {!searchQuery && statusFilter === 'all' && typeFilter === 'all' && (
+            {!searchQuery && statusFilter === "all" && typeFilter === "all" && (
               <Button onClick={() => setShowCreateForm(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Create Event
@@ -358,17 +359,16 @@ export default function EventsList() {
       ) : (
         <div
           className={
-            viewMode === 'grid'
-              ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
-              : 'space-y-4'
+            viewMode === "grid"
+              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              : "space-y-4"
           }
         >
           {filteredEvents.map((event) => (
             <EventCard
               key={event.id}
               event={event}
-              onEdit={(_event) => {
-              }}
+              onEdit={(_event) => {}}
               onDelete={handleDeleteEvent}
               onJoin={handleJoinEvent}
               onLeave={handleLeaveEvent}
@@ -400,7 +400,6 @@ export default function EventsList() {
           </div>
         </div>
       )}
-
     </div>
   );
 }

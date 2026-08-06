@@ -1,19 +1,26 @@
-'use client';
+"use client";
 
-import { useRouter } from 'next/navigation';
-import { Checkbox } from '@/src/components/ui/checkbox';
-import { Badge } from '@/src/components/ui/badge';
-import { Button } from '@/src/components/ui/button';
+import { useRouter } from "next/navigation";
+import { Checkbox } from "@/src/components/ui/checkbox";
+import { Badge } from "@/src/components/ui/badge";
+import { Button } from "@/src/components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
-import { Flag, CheckSquare, Phone, Mail, MessageSquare, Trash2 } from 'lucide-react';
-import { Lead, PIPELINE_LABELS } from '@/src/models/crm';
-import CRMService from '@/src/services/CRMService';
+} from "@/src/components/ui/select";
+import {
+  Flag,
+  CheckSquare,
+  Phone,
+  Mail,
+  MessageSquare,
+  Trash2,
+} from "lucide-react";
+import { Lead, PIPELINE_LABELS } from "@/src/models/crm";
+import CRMService from "@/src/services/CRMService";
 import {
   pipelineClass,
   relTime,
@@ -22,9 +29,11 @@ import {
   safePipelineValue,
   safeAssigneeValue,
   type LeadUserOption,
-} from '@/src/components/crm/leads/leadUtils';
+} from "@/src/components/crm/leads/leadUtils";
 
-const PIPELINE_OPTIONS = Object.entries(PIPELINE_LABELS).filter(([v]) => Boolean(v));
+const PIPELINE_OPTIONS = Object.entries(PIPELINE_LABELS).filter(([v]) =>
+  Boolean(v),
+);
 
 type Props = {
   leads: Lead[];
@@ -95,7 +104,10 @@ export function LeadsDenseTable({
         <tbody className="divide-y">
           {rows.length === 0 ? (
             <tr>
-              <td colSpan={10} className="p-8 text-center text-muted-foreground">
+              <td
+                colSpan={10}
+                className="p-8 text-center text-muted-foreground"
+              >
                 No leads found
               </td>
             </tr>
@@ -109,179 +121,186 @@ export function LeadsDenseTable({
               );
               const createdLabel = lead.createdAt
                 ? CRMService.formatDateTime(lead.createdAt)
-                : '—';
+                : "—";
               return (
-              <tr
-                key={lead.id}
-                className="hover:bg-muted/30 cursor-pointer"
-                onClick={() => router.push(`/crm/leads/${lead.id}`)}
-              >
-                <td
-                  className="p-3 align-top"
-                  onClick={(e) => e.stopPropagation()}
+                <tr
+                  key={lead.id}
+                  className="hover:bg-muted/30 cursor-pointer"
+                  onClick={() => router.push(`/crm/leads/${lead.id}`)}
                 >
-                  <div className="flex flex-col items-center gap-2">
-                    <Checkbox
-                      checked={selectedIds.has(lead.id)}
-                      onCheckedChange={() => onToggleSelect(lead.id)}
-                    />
-                    <button
-                      type="button"
-                      className="text-muted-foreground hover:text-destructive"
-                      onClick={() => onDelete(lead.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </td>
-                <td className="p-3 align-top min-w-[180px]">
-                  <div className="font-medium">
-                    {lead.firstName} {lead.lastName}
-                  </div>
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                    <Phone className="h-3 w-3" /> {lead.phone || '—'}
-                  </div>
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Mail className="h-3 w-3" /> {lead.email}
-                  </div>
-                  {lead.leadRating && (
-                    <Badge variant="outline" className="mt-1 text-[10px] capitalize">
-                      {lead.leadRating}
-                    </Badge>
-                  )}
-                </td>
-                <td
-                  className="p-3 align-top min-w-[160px]"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Select
-                    value={pipelineValue}
-                    onValueChange={(v) => onPipelineChange(lead.id, v)}
+                  <td
+                    className="p-3 align-top"
+                    onClick={(e) => e.stopPropagation()}
                   >
-                    <SelectTrigger
-                      className={`h-8 text-xs border-0 ${pipelineClass(pipelineValue)}`}
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PIPELINE_OPTIONS.map(([v, label]) => (
-                        <SelectItem key={v} value={v}>
-                          {label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <div className="mt-2 text-xs">
-                    Status:{' '}
-                    <span className="rounded-full bg-muted px-2 py-0.5 capitalize">
-                      {lead.status || 'open'}
-                    </span>
-                  </div>
-                  <div className="mt-1 text-xs text-muted-foreground">
-                    {lead.leadType || 'Lead Type'}
-                  </div>
-                </td>
-                <td className="p-3 align-top text-xs min-w-[130px]">
-                  <div className="font-medium">{createdLabel}</div>
-                  {lead.campaignSource && (
-                    <div className="text-muted-foreground mt-1 truncate max-w-[120px]">
-                      {lead.campaignSource}
+                    <div className="flex flex-col items-center gap-2">
+                      <Checkbox
+                        checked={selectedIds.has(lead.id)}
+                        onCheckedChange={() => onToggleSelect(lead.id)}
+                      />
+                      <button
+                        type="button"
+                        className="text-muted-foreground hover:text-destructive"
+                        onClick={() => onDelete(lead.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </div>
-                  )}
-                  {lead.refSource && (
-                    <div className="text-muted-foreground">{lead.refSource}</div>
-                  )}
-                  {lead.city && (
-                    <div className="text-muted-foreground">{lead.city}</div>
-                  )}
-                </td>
-                <td className="p-3 align-top text-xs min-w-[110px]">
-                  <div>Min: {money(lead.priceMin)}</div>
-                  <div>Max: {money(lead.priceMax)}</div>
-                  <div className="mt-2 text-muted-foreground">
-                    Buy: {lead.buyIntent || 'N/A'}
-                  </div>
-                  <div className="text-muted-foreground">
-                    Sell: {lead.sellIntent || 'N/A'}
-                  </div>
-                </td>
-                <td className="p-3 align-top text-xs min-w-[90px]">
-                  <div className="font-medium">{ageLabel(lead.createdAt)}</div>
-                  <div className="flex items-center gap-1 mt-1 text-muted-foreground">
-                    <Phone className="h-3 w-3" /> {lead.callCount || 0}
-                  </div>
-                  <div className="flex items-center gap-1 text-muted-foreground">
-                    <Mail className="h-3 w-3" /> {lead.emailCount || 0}
-                  </div>
-                </td>
-                <td className="p-3 align-top text-xs min-w-[80px]">
-                  <div className="flex items-center gap-1 text-muted-foreground">
-                    <Phone className="h-3 w-3" /> {lead.callCount || 0}
-                  </div>
-                  <div className="flex items-center gap-1 text-muted-foreground">
-                    <Mail className="h-3 w-3" /> {lead.emailCount || 0}
-                  </div>
-                  <div className="flex items-center gap-1 text-muted-foreground">
-                    <MessageSquare className="h-3 w-3" /> {lead.smsCount || 0}
-                  </div>
-                </td>
-                <td className="p-3 align-top text-xs min-w-[120px]">
-                  <div className="font-medium">
-                    {relTime(lead.lastContactAt || lead.lastContactDate)}
-                  </div>
-                  <div className="flex items-center gap-1 mt-1 text-muted-foreground">
-                    <Phone className="h-3 w-3" /> ({lead.callCount || 0}){' '}
-                    {relTime(lead.lastCallAt)}
-                  </div>
-                  <div className="flex items-center gap-1 text-muted-foreground">
-                    <Mail className="h-3 w-3" /> ({lead.emailCount || 0}){' '}
-                    {relTime(lead.lastEmailAt)}
-                  </div>
-                  <div className="flex items-center gap-1 text-muted-foreground">
-                    <MessageSquare className="h-3 w-3" /> ({lead.smsCount || 0}){' '}
-                    {relTime(lead.lastSmsAt)}
-                  </div>
-                </td>
-                <td className="p-3 align-top text-center">
-                  <Flag
-                    className={`h-4 w-4 mx-auto mb-1 ${
-                      lead.hasFlaggedTask
-                        ? 'text-red-500'
-                        : 'text-muted-foreground/40'
-                    }`}
-                  />
-                  <CheckSquare
-                    className={`h-4 w-4 mx-auto ${
-                      lead.hasOpenTask
-                        ? 'text-emerald-500'
-                        : 'text-muted-foreground/40'
-                    }`}
-                  />
-                </td>
-                <td
-                  className="p-3 align-top text-xs min-w-[140px]"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Select
-                    value={assigneeValue}
-                    onValueChange={(v) =>
-                      onAssigneeChange(lead.id, v === '__none__' ? '' : v)
-                    }
+                  </td>
+                  <td className="p-3 align-top min-w-[180px]">
+                    <div className="font-medium">
+                      {lead.firstName} {lead.lastName}
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                      <Phone className="h-3 w-3" /> {lead.phone || "—"}
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Mail className="h-3 w-3" /> {lead.email}
+                    </div>
+                    {lead.leadRating && (
+                      <Badge
+                        variant="outline"
+                        className="mt-1 text-[10px] capitalize"
+                      >
+                        {lead.leadRating}
+                      </Badge>
+                    )}
+                  </td>
+                  <td
+                    className="p-3 align-top min-w-[160px]"
+                    onClick={(e) => e.stopPropagation()}
                   >
-                    <SelectTrigger className="h-8 text-xs">
-                      <SelectValue placeholder="Unassigned" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__none__">Unassigned</SelectItem>
-                      {users.map((u) => (
-                        <SelectItem key={u.id} value={u.id}>
-                          {u.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </td>
-              </tr>
+                    <Select
+                      value={pipelineValue}
+                      onValueChange={(v) => onPipelineChange(lead.id, v)}
+                    >
+                      <SelectTrigger
+                        className={`h-8 text-xs border-0 ${pipelineClass(pipelineValue)}`}
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PIPELINE_OPTIONS.map(([v, label]) => (
+                          <SelectItem key={v} value={v}>
+                            {label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <div className="mt-2 text-xs">
+                      Status:{" "}
+                      <span className="rounded-full bg-muted px-2 py-0.5 capitalize">
+                        {lead.status || "open"}
+                      </span>
+                    </div>
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      {lead.leadType || "Lead Type"}
+                    </div>
+                  </td>
+                  <td className="p-3 align-top text-xs min-w-[130px]">
+                    <div className="font-medium">{createdLabel}</div>
+                    {lead.campaignSource && (
+                      <div className="text-muted-foreground mt-1 truncate max-w-[120px]">
+                        {lead.campaignSource}
+                      </div>
+                    )}
+                    {lead.refSource && (
+                      <div className="text-muted-foreground">
+                        {lead.refSource}
+                      </div>
+                    )}
+                    {lead.city && (
+                      <div className="text-muted-foreground">{lead.city}</div>
+                    )}
+                  </td>
+                  <td className="p-3 align-top text-xs min-w-[110px]">
+                    <div>Min: {money(lead.priceMin)}</div>
+                    <div>Max: {money(lead.priceMax)}</div>
+                    <div className="mt-2 text-muted-foreground">
+                      Buy: {lead.buyIntent || "N/A"}
+                    </div>
+                    <div className="text-muted-foreground">
+                      Sell: {lead.sellIntent || "N/A"}
+                    </div>
+                  </td>
+                  <td className="p-3 align-top text-xs min-w-[90px]">
+                    <div className="font-medium">
+                      {ageLabel(lead.createdAt)}
+                    </div>
+                    <div className="flex items-center gap-1 mt-1 text-muted-foreground">
+                      <Phone className="h-3 w-3" /> {lead.callCount || 0}
+                    </div>
+                    <div className="flex items-center gap-1 text-muted-foreground">
+                      <Mail className="h-3 w-3" /> {lead.emailCount || 0}
+                    </div>
+                  </td>
+                  <td className="p-3 align-top text-xs min-w-[80px]">
+                    <div className="flex items-center gap-1 text-muted-foreground">
+                      <Phone className="h-3 w-3" /> {lead.callCount || 0}
+                    </div>
+                    <div className="flex items-center gap-1 text-muted-foreground">
+                      <Mail className="h-3 w-3" /> {lead.emailCount || 0}
+                    </div>
+                    <div className="flex items-center gap-1 text-muted-foreground">
+                      <MessageSquare className="h-3 w-3" /> {lead.smsCount || 0}
+                    </div>
+                  </td>
+                  <td className="p-3 align-top text-xs min-w-[120px]">
+                    <div className="font-medium">
+                      {relTime(lead.lastContactAt || lead.lastContactDate)}
+                    </div>
+                    <div className="flex items-center gap-1 mt-1 text-muted-foreground">
+                      <Phone className="h-3 w-3" /> ({lead.callCount || 0}){" "}
+                      {relTime(lead.lastCallAt)}
+                    </div>
+                    <div className="flex items-center gap-1 text-muted-foreground">
+                      <Mail className="h-3 w-3" /> ({lead.emailCount || 0}){" "}
+                      {relTime(lead.lastEmailAt)}
+                    </div>
+                    <div className="flex items-center gap-1 text-muted-foreground">
+                      <MessageSquare className="h-3 w-3" /> (
+                      {lead.smsCount || 0}) {relTime(lead.lastSmsAt)}
+                    </div>
+                  </td>
+                  <td className="p-3 align-top text-center">
+                    <Flag
+                      className={`h-4 w-4 mx-auto mb-1 ${
+                        lead.hasFlaggedTask
+                          ? "text-red-500"
+                          : "text-muted-foreground/40"
+                      }`}
+                    />
+                    <CheckSquare
+                      className={`h-4 w-4 mx-auto ${
+                        lead.hasOpenTask
+                          ? "text-emerald-500"
+                          : "text-muted-foreground/40"
+                      }`}
+                    />
+                  </td>
+                  <td
+                    className="p-3 align-top text-xs min-w-[140px]"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Select
+                      value={assigneeValue}
+                      onValueChange={(v) =>
+                        onAssigneeChange(lead.id, v === "__none__" ? "" : v)
+                      }
+                    >
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue placeholder="Unassigned" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">Unassigned</SelectItem>
+                        {users.map((u) => (
+                          <SelectItem key={u.id} value={u.id}>
+                            {u.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </td>
+                </tr>
               );
             })
           )}

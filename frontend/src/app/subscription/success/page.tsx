@@ -1,12 +1,17 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Button } from '@/src/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
-import { CheckCircle, Loader2, RefreshCw } from 'lucide-react';
-import { apiService } from '@/src/services/ApiService';
-import { toast } from 'sonner';
+import React, { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Button } from "@/src/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/src/components/ui/card";
+import { CheckCircle, Loader2, RefreshCw } from "lucide-react";
+import { apiService } from "@/src/services/ApiService";
+import { toast } from "sonner";
 
 export default function SubscriptionSuccessPage() {
   const router = useRouter();
@@ -14,23 +19,23 @@ export default function SubscriptionSuccessPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
-  const sessionId = searchParams.get('session_id');
-  const provider = searchParams.get('provider');
-  const tenantId = searchParams.get('tenant_id');
-  const paypalSubscriptionId = searchParams.get('subscription_id');
+  const sessionId = searchParams.get("session_id");
+  const provider = searchParams.get("provider");
+  const tenantId = searchParams.get("tenant_id");
+  const paypalSubscriptionId = searchParams.get("subscription_id");
 
   useEffect(() => {
     const handleSuccess = async () => {
-      const isPayPal = provider === 'paypal';
+      const isPayPal = provider === "paypal";
 
       if (!isPayPal && !sessionId) {
-        setError('No session ID provided');
+        setError("No session ID provided");
         setLoading(false);
         return;
       }
 
       if (isPayPal && (!tenantId || !paypalSubscriptionId)) {
-        setError('Missing PayPal subscription details');
+        setError("Missing PayPal subscription details");
         setLoading(false);
         return;
       }
@@ -40,7 +45,10 @@ export default function SubscriptionSuccessPage() {
           let confirmed = false;
           for (let attempt = 0; attempt < 5; attempt += 1) {
             try {
-              await apiService.confirmPayPalSubscription(tenantId, paypalSubscriptionId);
+              await apiService.confirmPayPalSubscription(
+                tenantId,
+                paypalSubscriptionId,
+              );
               confirmed = true;
               break;
             } catch (confirmErr) {
@@ -48,7 +56,9 @@ export default function SubscriptionSuccessPage() {
             }
           }
           if (!confirmed) {
-            setError('PayPal payment received but subscription activation is still pending. Try syncing below.');
+            setError(
+              "PayPal payment received but subscription activation is still pending. Try syncing below.",
+            );
             setLoading(false);
             return;
           }
@@ -62,27 +72,33 @@ export default function SubscriptionSuccessPage() {
           try {
             await apiService.refreshTenants();
             const tenants = apiService.getUserTenants();
-            
+
             if (tenants && tenants.length > 0) {
               const latestTenant = tenantId
                 ? tenants.find((tenant) => tenant.id === tenantId) || tenants[0]
                 : tenants[0];
               apiService.setTenantId(latestTenant.id);
-              
+
               try {
-                const subscriptionResponse = await apiService.get('/tenants/current/subscription');
-                const status = subscriptionResponse?.subscription?.status?.toLowerCase();
-                if (status === 'active' || status === 'trial') {
+                const subscriptionResponse = await apiService.get(
+                  "/tenants/current/subscription",
+                );
+                const status =
+                  subscriptionResponse?.subscription?.status?.toLowerCase();
+                if (status === "active" || status === "trial") {
                   return true;
                 }
               } catch (subErr) {
-                console.log('Subscription check failed, but tenant exists. Proceeding...', subErr);
+                console.log(
+                  "Subscription check failed, but tenant exists. Proceeding...",
+                  subErr,
+                );
               }
               return true;
             }
             return false;
           } catch (err) {
-            console.error('Error verifying subscription:', err);
+            console.error("Error verifying subscription:", err);
             return false;
           }
         };
@@ -91,50 +107,54 @@ export default function SubscriptionSuccessPage() {
           while (attempts < maxAttempts) {
             attempts++;
             const verified = await verifySubscription();
-            
+
             if (verified) {
               setLoading(false);
               setTimeout(() => {
-                router.push('/dashboard');
+                router.push("/dashboard");
               }, 1500);
               return;
             }
-            
-            await new Promise(resolve => setTimeout(resolve, pollInterval));
+
+            await new Promise((resolve) => setTimeout(resolve, pollInterval));
           }
 
           await apiService.refreshTenants();
           const tenants = apiService.getUserTenants();
-          
+
           if (tenants && tenants.length > 0) {
             const latestTenant = tenantId
               ? tenants.find((tenant) => tenant.id === tenantId) || tenants[0]
               : tenants[0];
             apiService.setTenantId(latestTenant.id);
-            
+
             const latestTenantId = latestTenant.id;
             try {
               if (latestTenantId) {
                 await apiService.syncSubscriptionStatus(latestTenantId);
               }
             } catch (syncErr) {
-              console.error('Failed to sync subscription:', syncErr);
+              console.error("Failed to sync subscription:", syncErr);
             }
-            
+
             setLoading(false);
             setTimeout(() => {
-              router.push('/dashboard');
+              router.push("/dashboard");
             }, 1500);
           } else {
-            setError('Tenant created but not found. Please try logging in again or contact support.');
+            setError(
+              "Tenant created but not found. Please try logging in again or contact support.",
+            );
             setLoading(false);
           }
         };
 
         pollForSubscription();
       } catch (err) {
-        console.error('Error in handleSuccess:', err);
-        setError('Failed to complete setup. Please contact support if the issue persists.');
+        console.error("Error in handleSuccess:", err);
+        setError(
+          "Failed to complete setup. Please contact support if the issue persists.",
+        );
         setLoading(false);
       }
     };
@@ -149,7 +169,9 @@ export default function SubscriptionSuccessPage() {
           <CardContent className="pt-6">
             <div className="text-center">
               <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-primary" />
-              <p className="text-muted-foreground">Completing your subscription...</p>
+              <p className="text-muted-foreground">
+                Completing your subscription...
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -176,19 +198,29 @@ export default function SubscriptionSuccessPage() {
                     const tenants = apiService.getUserTenants();
                     if (tenants && tenants.length > 0) {
                       const latestTenant = tenantId
-                        ? tenants.find((tenant) => tenant.id === tenantId) || tenants[0]
+                        ? tenants.find((tenant) => tenant.id === tenantId) ||
+                          tenants[0]
                         : tenants[0];
-                      if (provider === 'paypal' && tenantId && paypalSubscriptionId) {
-                        await apiService.confirmPayPalSubscription(tenantId, paypalSubscriptionId);
+                      if (
+                        provider === "paypal" &&
+                        tenantId &&
+                        paypalSubscriptionId
+                      ) {
+                        await apiService.confirmPayPalSubscription(
+                          tenantId,
+                          paypalSubscriptionId,
+                        );
                       }
                       await apiService.syncSubscriptionStatus(latestTenant.id);
-                      toast.success('Subscription status synced. Please refresh.');
-                      router.push('/dashboard');
+                      toast.success(
+                        "Subscription status synced. Please refresh.",
+                      );
+                      router.push("/dashboard");
                     } else {
-                      toast.error('No tenant found');
+                      toast.error("No tenant found");
                     }
                   } catch (err) {
-                    toast.error('Failed to sync subscription status');
+                    toast.error("Failed to sync subscription status");
                   } finally {
                     setSyncing(false);
                   }
@@ -196,13 +228,22 @@ export default function SubscriptionSuccessPage() {
                 disabled={syncing}
                 className="w-full"
               >
-                <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
+                <RefreshCw
+                  className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`}
+                />
                 Sync Subscription Status
               </Button>
-              <Button onClick={() => router.push('/dashboard')} className="w-full">
+              <Button
+                onClick={() => router.push("/dashboard")}
+                className="w-full"
+              >
                 Go to Dashboard
               </Button>
-              <Button onClick={() => router.push('/')} variant="outline" className="w-full">
+              <Button
+                onClick={() => router.push("/")}
+                variant="outline"
+                className="w-full"
+              >
                 Return to Home
               </Button>
             </div>
@@ -220,9 +261,13 @@ export default function SubscriptionSuccessPage() {
             <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
             <h1 className="text-2xl font-bold mb-2">Payment Successful!</h1>
             <p className="text-muted-foreground mb-6">
-              Your subscription has been activated. Redirecting to your dashboard...
+              Your subscription has been activated. Redirecting to your
+              dashboard...
             </p>
-            <Button onClick={() => router.push('/dashboard')} className="w-full">
+            <Button
+              onClick={() => router.push("/dashboard")}
+              className="w-full"
+            >
               Go to Dashboard
             </Button>
           </div>

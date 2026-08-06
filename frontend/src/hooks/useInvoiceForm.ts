@@ -1,16 +1,20 @@
-'use client';
+"use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { Invoice, InvoiceCreate, InvoiceItemCreate } from '@/src/models/sales';
-import type { Product } from '@/src/models/pos';
-import type { Vehicle, JobCard } from '@/src/models/workshop';
-import type { Customer } from '@/src/services/CustomerService';
-import InvoiceService from '@/src/services/InvoiceService';
-import { apiService } from '@/src/services/ApiService';
-import { useCurrency } from '@/src/contexts/CurrencyContext';
-import { usePlanInfo } from '@/src/hooks/usePlanInfo';
-import { getCustomerDisplayName } from '@/src/utils/customerUtils';
-import { resolveCustomerPhone } from '@/src/utils/phoneUtils';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type {
+  Invoice,
+  InvoiceCreate,
+  InvoiceItemCreate,
+} from "@/src/models/sales";
+import type { Product } from "@/src/models/pos";
+import type { Vehicle, JobCard } from "@/src/models/workshop";
+import type { Customer } from "@/src/services/CustomerService";
+import InvoiceService from "@/src/services/InvoiceService";
+import { apiService } from "@/src/services/ApiService";
+import { useCurrency } from "@/src/contexts/CurrencyContext";
+import { usePlanInfo } from "@/src/hooks/usePlanInfo";
+import { getCustomerDisplayName } from "@/src/utils/customerUtils";
+import { resolveCustomerPhone } from "@/src/utils/phoneUtils";
 import {
   calculateInvoiceTotals,
   customerFallbackFromInvoice,
@@ -22,11 +26,11 @@ import {
   invoiceItemsFromJobCard,
   validateInvoiceForm,
   validateNewItem,
-} from '@/src/utils/sales/invoiceFormUtils';
+} from "@/src/utils/sales/invoiceFormUtils";
 import type {
   InstallmentPlanCreateOption,
   InvoiceFormMode,
-} from '@/src/types/sales/invoiceForm';
+} from "@/src/types/sales/invoiceForm";
 
 type UseInvoiceFormOptions = {
   open: boolean;
@@ -56,25 +60,32 @@ export function useInvoiceForm({
 }: UseInvoiceFormOptions) {
   const { currency } = useCurrency();
   const { planInfo } = usePlanInfo();
-  const isWorkshop = planInfo?.planType === 'workshop';
+  const isWorkshop = planInfo?.planType === "workshop";
   const isCommerceOrAgency =
-    planInfo?.planType === 'commerce' || planInfo?.planType === 'agency';
-  const useCommerceInvoiceLayout = planInfo?.planType === 'commerce';
+    planInfo?.planType === "commerce" || planInfo?.planType === "agency";
+  const useCommerceInvoiceLayout = planInfo?.planType === "commerce";
   const isActive = inline || open;
 
   const [createInstallmentPlan, setCreateInstallmentPlan] = useState(false);
   const [installmentCount, setInstallmentCount] = useState(3);
-  const [installmentFrequency, setInstallmentFrequency] = useState('monthly');
-  const [installmentFirstDueDate, setInstallmentFirstDueDate] = useState('');
-  const [formData, setFormData] = useState<InvoiceCreate>(() => emptyInvoiceForm());
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [installmentFrequency, setInstallmentFrequency] = useState("monthly");
+  const [installmentFirstDueDate, setInstallmentFirstDueDate] = useState("");
+  const [formData, setFormData] = useState<InvoiceCreate>(() =>
+    emptyInvoiceForm(),
+  );
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
+    null,
+  );
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [items, setItems] = useState<InvoiceItemCreate[]>([]);
-  const [newItem, setNewItem] = useState<InvoiceItemCreate>({ ...EMPTY_NEW_ITEM });
+  const [newItem, setNewItem] = useState<InvoiceItemCreate>({
+    ...EMPTY_NEW_ITEM,
+  });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [showCreateCustomerDialog, setShowCreateCustomerDialog] = useState(false);
+  const [showCreateCustomerDialog, setShowCreateCustomerDialog] =
+    useState(false);
   const [jobCardId, setJobCardId] = useState<string | undefined>(undefined);
   const [commerceFormKey, setCommerceFormKey] = useState(0);
 
@@ -85,7 +96,7 @@ export function useInvoiceForm({
 
   const fetchProducts = useCallback(async () => {
     try {
-      const response = await apiService.get('/pos/products?limit=1000&page=1');
+      const response = await apiService.get("/pos/products?limit=1000&page=1");
       setProducts(response.products || []);
     } catch {
       setProducts([]);
@@ -93,12 +104,12 @@ export function useInvoiceForm({
   }, []);
 
   useEffect(() => {
-    if (!isActive || mode === 'view') return;
+    if (!isActive || mode === "view") return;
     setCreateInstallmentPlan(false);
     setInstallmentCount(3);
-    setInstallmentFrequency('monthly');
+    setInstallmentFrequency("monthly");
     setInstallmentFirstDueDate(
-      (mode === 'edit' ? invoice?.dueDate : undefined) || defaultDueDate(),
+      (mode === "edit" ? invoice?.dueDate : undefined) || defaultDueDate(),
     );
   }, [isActive, mode, invoice?.id, invoice?.dueDate]);
 
@@ -107,14 +118,16 @@ export function useInvoiceForm({
   }, [isActive, fetchProducts]);
 
   useEffect(() => {
-    if (invoice && (mode === 'edit' || mode === 'view')) {
+    if (invoice && (mode === "edit" || mode === "view")) {
       setFormData(invoiceFormDataFromInvoice(invoice));
       setItems(invoiceItemsFromInvoice(invoice));
       setJobCardId(invoice.jobCardId || undefined);
       if (invoice.customerId) {
         InvoiceService.getCustomerById(invoice.customerId)
           .then(setSelectedCustomer)
-          .catch(() => setSelectedCustomer(customerFallbackFromInvoice(invoice)));
+          .catch(() =>
+            setSelectedCustomer(customerFallbackFromInvoice(invoice)),
+          );
       } else {
         setSelectedCustomer(null);
       }
@@ -129,7 +142,7 @@ export function useInvoiceForm({
           ...seededForm,
           customerId: seedCustomer.id,
           customerName: getCustomerDisplayName(seedCustomer),
-          customerEmail: seedCustomer.email ?? '',
+          customerEmail: seedCustomer.email ?? "",
           customerPhone: resolveCustomerPhone(seedCustomer),
         };
       }
@@ -138,7 +151,11 @@ export function useInvoiceForm({
       setSelectedCustomer(seedCustomer ?? null);
       setSelectedVehicle(null);
       setJobCardId(seed?.jobCardId || undefined);
-      if (mode === 'create' && useCommerceInvoiceLayout && !seededForm.orderNumber) {
+      if (
+        mode === "create" &&
+        useCommerceInvoiceLayout &&
+        !seededForm.orderNumber
+      ) {
         InvoiceService.getNextOrderNumber()
           .then((orderNumber) => {
             setFormData((prev) => ({ ...prev, orderNumber }));
@@ -149,10 +166,13 @@ export function useInvoiceForm({
     setErrors({});
   }, [invoice, mode, isActive, useCommerceInvoiceLayout]);
 
-  const handleInputChange = (field: keyof InvoiceCreate, value: string | number) => {
+  const handleInputChange = (
+    field: keyof InvoiceCreate,
+    value: string | number,
+  ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: '' }));
+      setErrors((prev) => ({ ...prev, [field]: "" }));
     }
   };
 
@@ -163,22 +183,22 @@ export function useInvoiceForm({
         ...prev,
         customerId: customer.id,
         customerName: getCustomerDisplayName(customer),
-        customerEmail: customer.email ?? '',
+        customerEmail: customer.email ?? "",
         customerPhone: resolveCustomerPhone(customer),
       }));
       setErrors((prev) => ({
         ...prev,
-        customer: '',
-        customerName: '',
-        customerEmail: '',
+        customer: "",
+        customerName: "",
+        customerEmail: "",
       }));
     } else {
       setFormData((prev) => ({
         ...prev,
-        customerId: '',
-        customerName: '',
-        customerEmail: '',
-        customerPhone: '',
+        customerId: "",
+        customerName: "",
+        customerEmail: "",
+        customerPhone: "",
       }));
     }
   };
@@ -193,7 +213,7 @@ export function useInvoiceForm({
         setItems(mapped);
       }
       const vi = (jc.vehicle_info || {}) as Record<string, unknown>;
-      const reg = vi.registration_number ? String(vi.registration_number) : '';
+      const reg = vi.registration_number ? String(vi.registration_number) : "";
       setFormData((prev) => ({
         ...prev,
         vehicleReg: reg || prev.vehicleReg,
@@ -206,13 +226,12 @@ export function useInvoiceForm({
           .then(setSelectedCustomer)
           .catch(() => {});
       }
-    } catch {
-    }
+    } catch {}
   }, []);
 
   const clearFieldError = (key: string) => {
     if (errors[key]) {
-      setErrors((prev) => ({ ...prev, [key]: '' }));
+      setErrors((prev) => ({ ...prev, [key]: "" }));
     }
   };
 
@@ -223,7 +242,7 @@ export function useInvoiceForm({
       productId,
       description: product?.name || prev.description,
       salePrice: product?.salePrice ?? prev.salePrice,
-      unit: product?.unitOfMeasure || prev.unit || 'piece',
+      unit: product?.unitOfMeasure || prev.unit || "piece",
     }));
   };
 
@@ -231,14 +250,17 @@ export function useInvoiceForm({
     const product = products.find((p) => p.id === productId);
     if (!product || product.unitOfMeasure === unit) return;
     try {
-      await apiService.put(`/pos/products/${productId}`, { unitOfMeasure: unit });
+      await apiService.put(`/pos/products/${productId}`, {
+        unitOfMeasure: unit,
+      });
       setProducts((prev) =>
         prev.map((p) =>
-          p.id === productId ? { ...p, unitOfMeasure: unit as Product['unitOfMeasure'] } : p,
+          p.id === productId
+            ? { ...p, unitOfMeasure: unit as Product["unitOfMeasure"] }
+            : p,
         ),
       );
-    } catch {
-    }
+    } catch {}
   };
 
   const resetNewItem = () => setNewItem({ ...EMPTY_NEW_ITEM });
@@ -250,7 +272,7 @@ export function useInvoiceForm({
       return;
     }
     const product = products.find((p) => p.id === newItem.productId);
-    const unit = newItem.unit?.trim() || product?.unitOfMeasure || 'piece';
+    const unit = newItem.unit?.trim() || product?.unitOfMeasure || "piece";
     setItems((prev) => [...prev, { ...newItem, unit }]);
     if (newItem.productId && unit !== product?.unitOfMeasure) {
       await syncProductUnit(newItem.productId, unit);
@@ -266,8 +288,8 @@ export function useInvoiceForm({
     }
 
     const description = newItem.description.trim();
-    const unit = newItem.unit?.trim() || 'piece';
-    let productId = newItem.productId || '';
+    const unit = newItem.unit?.trim() || "piece";
+    let productId = newItem.productId || "";
     const existingByName = products.find(
       (p) => p.name.toLowerCase() === description.toLowerCase(),
     );
@@ -278,10 +300,10 @@ export function useInvoiceForm({
       try {
         setLoading(true);
         const sku = `EXT-${Date.now().toString(36).toUpperCase()}`;
-        const response = await apiService.post('/pos/products', {
+        const response = await apiService.post("/pos/products", {
           name: description,
           sku,
-          category: 'other',
+          category: "other",
           salePrice: newItem.salePrice,
           costPerUnitPrice: newItem.salePrice,
           stockQuantity: 0,
@@ -294,7 +316,7 @@ export function useInvoiceForm({
       } catch {
         setErrors((prev) => ({
           ...prev,
-          newItemDescription: 'Failed to save item to inventory',
+          newItemDescription: "Failed to save item to inventory",
         }));
         return;
       } finally {
@@ -316,7 +338,7 @@ export function useInvoiceForm({
     setJobCardId(undefined);
     setCreateInstallmentPlan(false);
     setInstallmentCount(3);
-    setInstallmentFrequency('monthly');
+    setInstallmentFrequency("monthly");
     setInstallmentFirstDueDate(defaultDueDate());
     setErrors({});
     setCommerceFormKey((k) => k + 1);
@@ -345,7 +367,7 @@ export function useInvoiceForm({
   );
 
   const handleDismiss = () => {
-    if (inline && mode === 'create') {
+    if (inline && mode === "create") {
       clearInvoice();
       return;
     }
@@ -354,9 +376,13 @@ export function useInvoiceForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (mode === 'view') return;
+    if (mode === "view") return;
 
-    const validationErrors = validateInvoiceForm(formData, items, !!selectedCustomer);
+    const validationErrors = validateInvoiceForm(
+      formData,
+      items,
+      !!selectedCustomer,
+    );
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
@@ -376,13 +402,14 @@ export function useInvoiceForm({
                 total_amount: totals.total,
                 number_of_installments: installmentCount,
                 frequency: installmentFrequency,
-                first_due_date: (installmentFirstDueDate || formData.dueDate) + 'T00:00:00Z',
+                first_due_date:
+                  (installmentFirstDueDate || formData.dueDate) + "T00:00:00Z",
                 currency,
               } as InstallmentPlanCreateOption,
             }
           : undefined;
       await onSubmit(submitData, options);
-      if (inline && mode === 'create') {
+      if (inline && mode === "create") {
         clearInvoice();
       } else {
         onOpenChange(false);

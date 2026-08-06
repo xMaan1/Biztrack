@@ -1,22 +1,22 @@
-'use client';
+"use client";
 
-import { MotBookingStepNav } from '@/src/components/mot-bookings/wizard/MotBookingStepNav';
-import { MotBookingSummaryPanel } from '@/src/components/mot-bookings/wizard/MotBookingSummaryPanel';
-import { MotPrivacyConfirmModal } from '@/src/components/mot-bookings/wizard/MotPrivacyConfirmModal';
-import { Step1VehicleDetails } from '@/src/components/mot-bookings/wizard/steps/Step1VehicleDetails';
-import { Step1VehicleModel } from '@/src/components/mot-bookings/wizard/steps/Step1VehicleModel';
-import { Step2Services } from '@/src/components/mot-bookings/wizard/steps/Step2Services';
-import { Step3DateTime } from '@/src/components/mot-bookings/wizard/steps/Step3DateTime';
-import { Step4YourDetails } from '@/src/components/mot-bookings/wizard/steps/Step4YourDetails';
-import { Step5ConfirmSummary } from '@/src/components/mot-bookings/wizard/steps/Step5ConfirmSummary';
+import { MotBookingStepNav } from "@/src/components/mot-bookings/wizard/MotBookingStepNav";
+import { MotBookingSummaryPanel } from "@/src/components/mot-bookings/wizard/MotBookingSummaryPanel";
+import { MotPrivacyConfirmModal } from "@/src/components/mot-bookings/wizard/MotPrivacyConfirmModal";
+import { Step1VehicleDetails } from "@/src/components/mot-bookings/wizard/steps/Step1VehicleDetails";
+import { Step1VehicleModel } from "@/src/components/mot-bookings/wizard/steps/Step1VehicleModel";
+import { Step2Services } from "@/src/components/mot-bookings/wizard/steps/Step2Services";
+import { Step3DateTime } from "@/src/components/mot-bookings/wizard/steps/Step3DateTime";
+import { Step4YourDetails } from "@/src/components/mot-bookings/wizard/steps/Step4YourDetails";
+import { Step5ConfirmSummary } from "@/src/components/mot-bookings/wizard/steps/Step5ConfirmSummary";
 import {
   isCustomerDetailsComplete,
   isVehicleDetailsComplete,
   isVehicleModelComplete,
   isServicesComplete,
   isDateTimeComplete,
-} from '@/src/components/mot-bookings/wizard/wizardUtils';
-import type { MotBookingWizardState } from '@/src/hooks/useMotBookingWizard';
+} from "@/src/components/mot-bookings/wizard/wizardUtils";
+import type { MotBookingWizardState } from "@/src/hooks/useMotBookingWizard";
 
 type MotBookingWizardShellProps = {
   wizard: MotBookingWizardState;
@@ -24,7 +24,7 @@ type MotBookingWizardShellProps = {
 
 export function MotBookingWizardShell({ wizard }: MotBookingWizardShellProps) {
   const renderStep = () => {
-    if (wizard.currentStep === 1 && wizard.vehicleSubStep === 'details') {
+    if (wizard.currentStep === 1 && wizard.vehicleSubStep === "details") {
       return (
         <Step1VehicleDetails
           vehicle={wizard.data.vehicle}
@@ -34,12 +34,12 @@ export function MotBookingWizardShell({ wizard }: MotBookingWizardShellProps) {
         />
       );
     }
-    if (wizard.currentStep === 1 && wizard.vehicleSubStep === 'model') {
+    if (wizard.currentStep === 1 && wizard.vehicleSubStep === "model") {
       return (
         <Step1VehicleModel
           vehicle={wizard.data.vehicle}
           onChange={wizard.updateVehicle}
-          onBack={() => wizard.setVehicleSubStep('details')}
+          onBack={() => wizard.setVehicleSubStep("details")}
           onNext={wizard.completeVehicleStep}
           canNext={isVehicleModelComplete(wizard.data)}
         />
@@ -53,7 +53,7 @@ export function MotBookingWizardShell({ wizard }: MotBookingWizardShellProps) {
           onChange={wizard.updateServices}
           onBack={() => {
             wizard.setCurrentStep(1);
-            wizard.setVehicleSubStep('model');
+            wizard.setVehicleSubStep("model");
           }}
           onNext={() => wizard.setCurrentStep(3)}
           canNext={isServicesComplete(wizard.data)}
@@ -106,7 +106,8 @@ export function MotBookingWizardShell({ wizard }: MotBookingWizardShellProps) {
           Book Your MOT Checkup
         </h1>
         <p className="mt-2 max-w-2xl text-muted-foreground">
-          A smooth, step-by-step booking experience. Your progress is saved as you go.
+          A smooth, step-by-step booking experience. Your progress is saved as
+          you go.
         </p>
       </div>
 
@@ -117,7 +118,9 @@ export function MotBookingWizardShell({ wizard }: MotBookingWizardShellProps) {
       />
 
       <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
-        <div className="rounded-3xl border bg-card p-6 shadow-sm sm:p-8">{renderStep()}</div>
+        <div className="rounded-3xl border bg-card p-6 shadow-sm sm:p-8">
+          {renderStep()}
+        </div>
 
         {wizard.currentStep < 5 && (
           <MotBookingSummaryPanel

@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
-import { Plus, Trash2 } from 'lucide-react';
-import { Lead } from '@/src/models/crm';
-import CRMService from '@/src/services/CRMService';
+import { useState } from "react";
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
+import { Plus, Trash2 } from "lucide-react";
+import { Lead } from "@/src/models/crm";
+import CRMService from "@/src/services/CRMService";
 
 type Props = {
   lead: Lead;
@@ -14,10 +14,10 @@ type Props = {
 };
 
 export function LeadListingSearchesCard({ lead, leadId, reload }: Props) {
-  const [searchName, setSearchName] = useState('');
-  const [searchCity, setSearchCity] = useState('');
-  const [searchMin, setSearchMin] = useState('');
-  const [searchMax, setSearchMax] = useState('');
+  const [searchName, setSearchName] = useState("");
+  const [searchCity, setSearchCity] = useState("");
+  const [searchMin, setSearchMin] = useState("");
+  const [searchMax, setSearchMax] = useState("");
 
   return (
     <div className="rounded-lg border bg-card p-3 space-y-3">
@@ -28,17 +28,17 @@ export function LeadListingSearchesCard({ lead, leadId, reload }: Props) {
           variant="outline"
           onClick={async () => {
             if (!searchName.trim()) {
-              setSearchName('New search');
+              setSearchName("New search");
             }
             await CRMService.createListingSearch(leadId, {
-              name: searchName || `${lead.city || 'Area'} Search`,
+              name: searchName || `${lead.city || "Area"} Search`,
               city: searchCity || lead.city,
               priceMin: searchMin ? Number(searchMin) : lead.priceMin,
               priceMax: searchMax ? Number(searchMax) : lead.priceMax,
               propertyTypes: [],
               intervalHours: 24,
             });
-            setSearchName('');
+            setSearchName("");
             reload();
           }}
         >
@@ -98,8 +98,8 @@ export function LeadListingSearchesCard({ lead, leadId, reload }: Props) {
             {s.city} · ${s.priceMin || 0} - ${s.priceMax || 0}
           </div>
           <div className="text-muted-foreground">
-            emails sent {s.emailsSent || 0} · next{' '}
-            {s.nextSendAt ? new Date(s.nextSendAt).toLocaleString() : '—'}
+            emails sent {s.emailsSent || 0} · next{" "}
+            {s.nextSendAt ? new Date(s.nextSendAt).toLocaleString() : "—"}
           </div>
         </div>
       ))}

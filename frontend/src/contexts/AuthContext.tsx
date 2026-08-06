@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, LoginCredentials } from '@/src/models/auth';
-import { apiService } from '@/src/services/ApiService';
-import { SessionManager } from '@/src/services/SessionManager';
-import { startOfflineOutboxFlush } from '@/src/services/offlineOutboxFlush';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { User, LoginCredentials } from "@/src/models/auth";
+import { apiService } from "@/src/services/ApiService";
+import { SessionManager } from "@/src/services/SessionManager";
+import { startOfflineOutboxFlush } from "@/src/services/offlineOutboxFlush";
 import {
   runTenantFullSync,
   TENANT_FULL_SYNC_TOTAL_STEPS,
   type TenantSyncProgressPayload,
-} from '@/src/services/tenantOfflineSync';
-import { isTauriApp } from '@/src/lib/isTauriApp';
-import { toast } from 'sonner';
+} from "@/src/services/tenantOfflineSync";
+import { isTauriApp } from "@/src/lib/isTauriApp";
+import { toast } from "sonner";
 
 interface Tenant {
   id: string;
@@ -40,12 +40,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [currentTenant, setCurrentTenant] = useState<Tenant | null>(null);
-  const [tauriTenantSync, setTauriTenantSync] = useState<TenantSyncProgressPayload | null>(null);
+  const [tauriTenantSync, setTauriTenantSync] =
+    useState<TenantSyncProgressPayload | null>(null);
 
-  const startTauriTenantDataSync = (client: ReturnType<typeof apiService.getClient>, tenantId: string) => {
+  const startTauriTenantDataSync = (
+    client: ReturnType<typeof apiService.getClient>,
+    tenantId: string,
+  ) => {
     if (!isTauriApp() || !tenantId || !navigator.onLine) return;
     void (async () => {
-      setTauriTenantSync({ step: 0, total: TENANT_FULL_SYNC_TOTAL_STEPS, label: 'starting' });
+      setTauriTenantSync({
+        step: 0,
+        total: TENANT_FULL_SYNC_TOTAL_STEPS,
+        label: "starting",
+      });
       try {
         await runTenantFullSync(client, tenantId, (p) => setTauriTenantSync(p));
       } finally {
@@ -85,7 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Ensure user has both id and userId properties
             const userWithId = {
               ...session.user,
-              id: session.user.userId || session.user.id
+              id: session.user.userId || session.user.id,
             };
             setUser(userWithId);
 
@@ -141,7 +149,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Ensure user has both id and userId properties
         const userWithId = {
           ...response.user,
-          id: response.user.userId || response.user.id
+          id: response.user.userId || response.user.id,
         };
         setUser(userWithId);
 
@@ -176,17 +184,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await apiService.logout();
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to logout';
+      const errorMessage =
+        error?.response?.data?.detail || error?.message || "Failed to logout";
       toast.error(`Logout Error: ${errorMessage}`);
-      } finally {
+    } finally {
       const sessionManager = new SessionManager();
       setUser(null);
       setTenants([]);
       setCurrentTenant(null);
       sessionManager.clearSession();
       apiService.setTenantId(null);
-      if (typeof window !== 'undefined') {
-        window.location.href = '/login';
+      if (typeof window !== "undefined") {
+        window.location.href = "/login";
       }
     }
   };
@@ -220,7 +229,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }

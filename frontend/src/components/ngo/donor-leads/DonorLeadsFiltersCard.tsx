@@ -1,15 +1,18 @@
-import { RotateCcw, Search } from 'lucide-react';
-import { Card, CardContent } from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
+import { RotateCcw, Search } from "lucide-react";
+import { Card, CardContent } from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
-import { DONOR_LEAD_SOURCE_OPTIONS, DONOR_LEAD_STATUS_OPTIONS } from '@/src/constants/ngo/donorLead';
+} from "@/src/components/ui/select";
+import {
+  DONOR_LEAD_SOURCE_OPTIONS,
+  DONOR_LEAD_STATUS_OPTIONS,
+} from "@/src/constants/ngo/donorLead";
 
 type DonorLeadsFiltersCardProps = {
   search: string;
@@ -46,13 +49,13 @@ export function DonorLeadsFiltersCard({
               placeholder="Search leads..."
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && onApply()}
+              onKeyDown={(e) => e.key === "Enter" && onApply()}
               className="pl-11"
             />
           </div>
           <Select
-            value={statusFilter || 'all'}
-            onValueChange={(v) => onStatusChange(v === 'all' ? '' : v)}
+            value={statusFilter || "all"}
+            onValueChange={(v) => onStatusChange(v === "all" ? "" : v)}
           >
             <SelectTrigger>
               <SelectValue placeholder="All Statuses" />
@@ -67,8 +70,8 @@ export function DonorLeadsFiltersCard({
             </SelectContent>
           </Select>
           <Select
-            value={sourceFilter || 'all'}
-            onValueChange={(v) => onSourceChange(v === 'all' ? '' : v)}
+            value={sourceFilter || "all"}
+            onValueChange={(v) => onSourceChange(v === "all" ? "" : v)}
           >
             <SelectTrigger>
               <SelectValue placeholder="All Sources" />
@@ -82,13 +85,24 @@ export function DonorLeadsFiltersCard({
               ))}
             </SelectContent>
           </Select>
-          <Input type="date" value={dateFilter} onChange={(e) => onDateChange(e.target.value)} />
+          <Input
+            type="date"
+            value={dateFilter}
+            onChange={(e) => onDateChange(e.target.value)}
+          />
         </div>
         <div className="mt-4 flex justify-end gap-2">
-          <Button onClick={onApply} className="bg-emerald-600 hover:bg-emerald-700">
+          <Button
+            onClick={onApply}
+            className="bg-emerald-600 hover:bg-emerald-700"
+          >
             Apply Filters
           </Button>
-          <Button variant="ghost" onClick={onReset} className="text-muted-foreground">
+          <Button
+            variant="ghost"
+            onClick={onReset}
+            className="text-muted-foreground"
+          >
             <RotateCcw className="mr-2 h-4 w-4" />
             Reset Filters
           </Button>

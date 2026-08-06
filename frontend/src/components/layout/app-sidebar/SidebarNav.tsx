@@ -1,8 +1,8 @@
-import type { Ref } from 'react';
-import type { MenuItem, SubMenuItem } from '@/src/types/sidebar';
-import { SidebarMenuItem } from './SidebarMenuItem';
-import { SidebarNavSkeleton } from './SidebarNavSkeleton';
-import { SidebarEmptySearch } from './SidebarEmptySearch';
+import type { Ref } from "react";
+import type { MenuItem, SubMenuItem } from "@/src/types/sidebar";
+import { SidebarMenuItem } from "./SidebarMenuItem";
+import { SidebarNavSkeleton } from "./SidebarNavSkeleton";
+import { SidebarEmptySearch } from "./SidebarEmptySearch";
 
 interface SidebarNavProps {
   navRef: Ref<HTMLElement>;
@@ -38,7 +38,11 @@ export function SidebarNav({
   return (
     <nav
       ref={navRef}
-      className={collapsed ? 'flex-1 space-y-2 overflow-y-auto p-2' : 'flex-1 space-y-3 overflow-y-auto p-4'}
+      className={
+        collapsed
+          ? "flex-1 space-y-2 overflow-y-auto p-2"
+          : "flex-1 space-y-3 overflow-y-auto p-4"
+      }
       onScroll={onScroll}
     >
       {loading ? (

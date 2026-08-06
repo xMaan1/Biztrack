@@ -3,7 +3,10 @@ type PartnerOrganizationDetailRowProps = {
   value: string;
 };
 
-export function PartnerOrganizationDetailRow({ label, value }: PartnerOrganizationDetailRowProps) {
+export function PartnerOrganizationDetailRow({
+  label,
+  value,
+}: PartnerOrganizationDetailRowProps) {
   return (
     <div className="grid grid-cols-2 gap-2 border-b pb-2 last:border-0">
       <span className="text-muted-foreground">{label}</span>

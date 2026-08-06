@@ -1,9 +1,9 @@
-import type { Product } from '@/src/models/pos';
-import type { InvoiceItemCreate } from '@/src/models/sales';
-import { lineItemTotal } from '@/src/utils/sales/invoiceFormUtils';
+import type { Product } from "@/src/models/pos";
+import type { InvoiceItemCreate } from "@/src/models/sales";
+import { lineItemTotal } from "@/src/utils/sales/invoiceFormUtils";
 
-export type CommerceItemNumericField = 'quantity' | 'salePrice' | 'discount';
-export type CommerceItemTextField = 'description' | 'unit';
+export type CommerceItemNumericField = "quantity" | "salePrice" | "discount";
+export type CommerceItemTextField = "description" | "unit";
 
 export function lineGross(item: InvoiceItemCreate): number {
   return item.quantity * item.salePrice;
@@ -35,9 +35,9 @@ export function resolveItemUnit(
   if (item.unit) return item.unit;
   if (item.productId) {
     const p = products.find((x) => x.id === item.productId);
-    return p?.unitOfMeasure || '';
+    return p?.unitOfMeasure || "";
   }
-  return '';
+  return "";
 }
 
 export function sumItemQuantities(items: InvoiceItemCreate[]): number {
@@ -59,7 +59,7 @@ export function itemFieldKey(
 }
 
 export function parseDraftNumber(raw: string): number | null {
-  if (raw === '' || raw === '.') return null;
+  if (raw === "" || raw === ".") return null;
   const parsed = parseFloat(raw);
   return Number.isNaN(parsed) ? null : parsed;
 }

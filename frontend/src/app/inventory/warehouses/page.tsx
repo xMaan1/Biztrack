@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { ModuleGuard } from '../../../components/guards/PermissionGuard';
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { ModuleGuard } from "../../../components/guards/PermissionGuard";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from '../../../components/ui/card';
-import { Button } from '../../../components/ui/button';
-import { Badge } from '../../../components/ui/badge';
-import { Input } from '../../../components/ui/input';
+} from "../../../components/ui/card";
+import { Button } from "../../../components/ui/button";
+import { Badge } from "../../../components/ui/badge";
+import { Input } from "../../../components/ui/input";
 import {
   Table,
   TableBody,
@@ -19,14 +19,14 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../../../components/ui/table';
+} from "../../../components/ui/table";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '../../../components/ui/dialog';
+} from "../../../components/ui/dialog";
 import {
   Warehouse,
   Plus,
@@ -37,16 +37,19 @@ import {
   Building2,
   Phone,
   Mail,
-} from 'lucide-react';
-import { useAuth } from '../../../contexts/AuthContext';
-import { inventoryService } from '../../../services/InventoryService';
-import { Warehouse as WarehouseType } from '../../../models/inventory';
-import { DashboardLayout } from '../../../components/layout';
-import { formatDate } from '../../../lib/utils';
+} from "lucide-react";
+import { useAuth } from "../../../contexts/AuthContext";
+import { inventoryService } from "../../../services/InventoryService";
+import { Warehouse as WarehouseType } from "../../../models/inventory";
+import { DashboardLayout } from "../../../components/layout";
+import { formatDate } from "../../../lib/utils";
 
 export default function WarehousesPage() {
   return (
-    <ModuleGuard module="inventory" fallback={<div>You don't have access to Inventory module</div>}>
+    <ModuleGuard
+      module="inventory"
+      fallback={<div>You don&apos;t have access to Inventory module</div>}
+    >
       <WarehousesContent />
     </ModuleGuard>
   );
@@ -57,9 +60,10 @@ function WarehousesContent() {
   const router = useRouter();
   const [warehouses, setWarehouses] = useState<WarehouseType[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [warehouseToDelete, setWarehouseToDelete] = useState<WarehouseType | null>(null);
+  const [warehouseToDelete, setWarehouseToDelete] =
+    useState<WarehouseType | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -80,8 +84,9 @@ function WarehousesContent() {
       }
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () =>
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, []);
 
   const fetchWarehouses = async () => {
@@ -90,7 +95,7 @@ function WarehousesContent() {
       const response = await inventoryService.getWarehouses();
       setWarehouses(response.warehouses);
     } catch (error) {
-      } finally {
+    } finally {
       setLoading(false);
     }
   };
@@ -114,7 +119,7 @@ function WarehousesContent() {
 
   const handleDelete = async () => {
     if (!warehouseToDelete) return;
-    
+
     try {
       setDeleteLoading(true);
       await inventoryService.deleteWarehouse(warehouseToDelete.id);
@@ -147,7 +152,7 @@ function WarehousesContent() {
               Manage your warehouse locations and storage facilities
             </p>
           </div>
-          <Button onClick={() => router.push('/inventory/warehouses/new')}>
+          <Button onClick={() => router.push("/inventory/warehouses/new")}>
             <Plus className="mr-2 h-4 w-4" />
             Add Warehouse
           </Button>
@@ -242,9 +247,9 @@ function WarehousesContent() {
                       </TableCell>
                       <TableCell>
                         <Badge
-                          variant={warehouse.isActive ? 'default' : 'secondary'}
+                          variant={warehouse.isActive ? "default" : "secondary"}
                         >
-                          {warehouse.isActive ? 'Active' : 'Inactive'}
+                          {warehouse.isActive ? "Active" : "Inactive"}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -286,12 +291,12 @@ function WarehousesContent() {
                 </h3>
                 <p className="text-muted-foreground mb-4">
                   {searchTerm
-                    ? 'Try adjusting your search terms'
-                    : 'Get started by creating your first warehouse'}
+                    ? "Try adjusting your search terms"
+                    : "Get started by creating your first warehouse"}
                 </p>
                 {!searchTerm && (
                   <Button
-                    onClick={() => router.push('/inventory/warehouses/new')}
+                    onClick={() => router.push("/inventory/warehouses/new")}
                   >
                     <Plus className="mr-2 h-4 w-4" />
                     Add Warehouse
@@ -360,8 +365,9 @@ function WarehousesContent() {
             <DialogHeader>
               <DialogTitle>Delete Warehouse</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete{' '}
-                <strong>{warehouseToDelete?.name}</strong>? This action cannot be undone.
+                Are you sure you want to delete{" "}
+                <strong>{warehouseToDelete?.name}</strong>? This action cannot
+                be undone.
               </DialogDescription>
             </DialogHeader>
             <div className="flex justify-end space-x-2 mt-4">

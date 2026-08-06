@@ -1,9 +1,13 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { useRBAC, CreateRoleData, UpdateRoleData } from '@/src/contexts/RBACContext';
-import { extractErrorMessage } from '@/src/utils/errorUtils';
-import { Button } from '@/src/components/ui/button';
+import React, { useState, useEffect } from "react";
+import {
+  useRBAC,
+  CreateRoleData,
+  UpdateRoleData,
+} from "@/src/contexts/RBACContext";
+import { extractErrorMessage } from "@/src/utils/errorUtils";
+import { Button } from "@/src/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -11,15 +15,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/src/components/ui/dialog';
-import { Input } from '@/src/components/ui/input';
-import { Label } from '@/src/components/ui/label';
-import { Textarea } from '@/src/components/ui/textarea';
-import { Badge } from '@/src/components/ui/badge';
-import { Alert, AlertDescription } from '@/src/components/ui/alert';
-import { Loader2, Plus, Edit, Trash2 } from 'lucide-react';
-import { Checkbox } from '@/src/components/ui/checkbox';
-import { RBAC_PERMISSION_MODULES } from '@/src/constants/rbacPermissions';
+} from "@/src/components/ui/dialog";
+import { Input } from "@/src/components/ui/input";
+import { Label } from "@/src/components/ui/label";
+import { Textarea } from "@/src/components/ui/textarea";
+import { Badge } from "@/src/components/ui/badge";
+import { Alert, AlertDescription } from "@/src/components/ui/alert";
+import { Loader2, Plus, Edit, Trash2 } from "lucide-react";
+import { Checkbox } from "@/src/components/ui/checkbox";
+import { RBAC_PERMISSION_MODULES } from "@/src/constants/rbacPermissions";
 
 interface RoleManagementModalProps {
   open: boolean;
@@ -27,21 +31,25 @@ interface RoleManagementModalProps {
   onSuccess: () => void;
 }
 
-export function RoleManagementModal({ open, onOpenChange, onSuccess }: RoleManagementModalProps) {
+export function RoleManagementModal({
+  open,
+  onOpenChange,
+  onSuccess,
+}: RoleManagementModalProps) {
   const { roles, createRole, updateRole, deleteRole } = useRBAC();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingRole, setEditingRole] = useState<any>(null);
   const [deletingRole, setDeletingRole] = useState<any>(null);
   const [formData, setFormData] = useState<CreateRoleData>({
-    name: '',
-    display_name: '',
-    description: '',
+    name: "",
+    display_name: "",
+    description: "",
     permissions: [],
     isActive: true,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (open) {
@@ -49,13 +57,13 @@ export function RoleManagementModal({ open, onOpenChange, onSuccess }: RoleManag
       setEditingRole(null);
       setDeletingRole(null);
       setFormData({
-        name: '',
-        display_name: '',
-        description: '',
+        name: "",
+        display_name: "",
+        description: "",
         permissions: [],
         isActive: true,
       });
-      setError('');
+      setError("");
     }
   }, [open]);
 
@@ -63,9 +71,9 @@ export function RoleManagementModal({ open, onOpenChange, onSuccess }: RoleManag
     setShowCreateForm(true);
     setEditingRole(null);
     setFormData({
-      name: '',
-      display_name: '',
-      description: '',
+      name: "",
+      display_name: "",
+      description: "",
       permissions: [],
       isActive: true,
     });
@@ -77,7 +85,7 @@ export function RoleManagementModal({ open, onOpenChange, onSuccess }: RoleManag
     setFormData({
       name: role.name,
       display_name: role.display_name,
-      description: role.description || '',
+      description: role.description || "",
       permissions: role.permissions || [],
       isActive: role.isActive,
     });
@@ -85,14 +93,14 @@ export function RoleManagementModal({ open, onOpenChange, onSuccess }: RoleManag
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.name || !formData.display_name) {
-      setError('Name and display name are required');
+      setError("Name and display name are required");
       return;
     }
 
     setIsSubmitting(true);
-    setError('');
+    setError("");
 
     try {
       if (editingRole) {
@@ -108,47 +116,55 @@ export function RoleManagementModal({ open, onOpenChange, onSuccess }: RoleManag
       }
       onSuccess();
     } catch (error: any) {
-      setError(extractErrorMessage(error, 'Failed to save role'));
+      setError(extractErrorMessage(error, "Failed to save role"));
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handlePermissionToggle = (permission: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       permissions: prev.permissions.includes(permission)
-        ? prev.permissions.filter(p => p !== permission)
-        : [...prev.permissions, permission]
+        ? prev.permissions.filter((p) => p !== permission)
+        : [...prev.permissions, permission],
     }));
   };
 
   const handleGroupToggle = (permissions: string[]) => {
-    const allSelected = permissions.every(p => formData.permissions.includes(p));
+    const allSelected = permissions.every((p) =>
+      formData.permissions.includes(p),
+    );
     if (allSelected) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        permissions: prev.permissions.filter(p => !permissions.includes(p))
+        permissions: prev.permissions.filter((p) => !permissions.includes(p)),
       }));
       return;
     }
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      permissions: Array.from(new Set([...prev.permissions, ...permissions]))
+      permissions: Array.from(new Set([...prev.permissions, ...permissions])),
     }));
   };
 
   const handleModuleToggle = (modulePermissions: string[]) => {
-    const allSelected = modulePermissions.every(p => formData.permissions.includes(p));
+    const allSelected = modulePermissions.every((p) =>
+      formData.permissions.includes(p),
+    );
     if (allSelected) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        permissions: prev.permissions.filter(p => !modulePermissions.includes(p))
+        permissions: prev.permissions.filter(
+          (p) => !modulePermissions.includes(p),
+        ),
       }));
     } else {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        permissions: Array.from(new Set([...prev.permissions, ...modulePermissions]))
+        permissions: Array.from(
+          new Set([...prev.permissions, ...modulePermissions]),
+        ),
       }));
     }
   };
@@ -157,19 +173,18 @@ export function RoleManagementModal({ open, onOpenChange, onSuccess }: RoleManag
     if (!deletingRole) return;
 
     setIsDeleting(true);
-    setError('');
+    setError("");
 
     try {
       await deleteRole(deletingRole.id);
       setDeletingRole(null);
       onSuccess();
     } catch (error: any) {
-      setError(extractErrorMessage(error, 'Failed to delete role'));
+      setError(extractErrorMessage(error, "Failed to delete role"));
     } finally {
       setIsDeleting(false);
     }
   };
-
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -177,10 +192,11 @@ export function RoleManagementModal({ open, onOpenChange, onSuccess }: RoleManag
         <DialogHeader>
           <DialogTitle>Role Management</DialogTitle>
           <DialogDescription>
-            Create and manage roles with specific permissions for your organization.
+            Create and manage roles with specific permissions for your
+            organization.
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-4">
           {error && (
             <Alert variant="destructive">
@@ -197,18 +213,26 @@ export function RoleManagementModal({ open, onOpenChange, onSuccess }: RoleManag
                   Create Role
                 </Button>
               </div>
-              
+
               <div className="space-y-2">
                 {roles.map((role) => (
-                  <div key={role.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div
+                    key={role.id}
+                    className="flex items-center justify-between p-3 border rounded-lg"
+                  >
                     <div>
                       <div className="font-medium">{role.display_name}</div>
-                      <div className="text-sm text-muted-foreground">{role.description}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {role.description}
+                      </div>
                       <div className="flex gap-1 mt-1">
                         <Badge variant="outline" className="text-xs">
                           {role.permissions.length} permissions
                         </Badge>
-                        <Badge variant={role.isActive ? "default" : "secondary"} className="text-xs">
+                        <Badge
+                          variant={role.isActive ? "default" : "secondary"}
+                          className="text-xs"
+                        >
                           {role.isActive ? "Active" : "Inactive"}
                         </Badge>
                       </div>
@@ -221,7 +245,7 @@ export function RoleManagementModal({ open, onOpenChange, onSuccess }: RoleManag
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
-                      {role.name !== 'owner' && (
+                      {role.name !== "owner" && (
                         <Button
                           variant="ghost"
                           size="sm"
@@ -244,7 +268,9 @@ export function RoleManagementModal({ open, onOpenChange, onSuccess }: RoleManag
                   <Input
                     id="name"
                     value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, name: e.target.value }))
+                    }
                     placeholder="crm_manager"
                     disabled={!!editingRole}
                   />
@@ -254,7 +280,12 @@ export function RoleManagementModal({ open, onOpenChange, onSuccess }: RoleManag
                   <Input
                     id="display_name"
                     value={formData.display_name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, display_name: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        display_name: e.target.value,
+                      }))
+                    }
                     placeholder="CRM Manager"
                   />
                 </div>
@@ -265,7 +296,12 @@ export function RoleManagementModal({ open, onOpenChange, onSuccess }: RoleManag
                 <Textarea
                   id="description"
                   value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
+                  }
                   placeholder="Manages CRM operations and customer data"
                 />
               </div>
@@ -273,50 +309,93 @@ export function RoleManagementModal({ open, onOpenChange, onSuccess }: RoleManag
               <div className="space-y-4">
                 <Label>Permissions</Label>
                 {RBAC_PERMISSION_MODULES.map((module) => {
-                  const moduleSubPermissions = module.submodules.flatMap(sub => sub.permissions.map(p => p.value));
-                  const allModulePermissions = [...module.permissions.map(p => p.value), ...moduleSubPermissions];
+                  const moduleSubPermissions = module.submodules.flatMap(
+                    (sub) => sub.permissions.map((p) => p.value),
+                  );
+                  const allModulePermissions = [
+                    ...module.permissions.map((p) => p.value),
+                    ...moduleSubPermissions,
+                  ];
                   return (
-                    <details key={module.label} className="rounded-md border px-3 py-2">
+                    <details
+                      key={module.label}
+                      className="rounded-md border px-3 py-2"
+                    >
                       <summary className="cursor-pointer list-none">
                         <div className="flex items-center space-x-2">
                           <Checkbox
-                            checked={allModulePermissions.every(p => formData.permissions.includes(p))}
-                            onCheckedChange={() => handleModuleToggle(allModulePermissions)}
+                            checked={allModulePermissions.every((p) =>
+                              formData.permissions.includes(p),
+                            )}
+                            onCheckedChange={() =>
+                              handleModuleToggle(allModulePermissions)
+                            }
                           />
-                          <Label className="font-medium cursor-pointer">{module.label}</Label>
+                          <Label className="font-medium cursor-pointer">
+                            {module.label}
+                          </Label>
                         </div>
                       </summary>
                       <div className="ml-6 mt-3 space-y-3">
                         <div className="space-y-1">
                           {module.permissions.map((permission) => (
-                            <div key={permission.value} className="flex items-center space-x-2">
+                            <div
+                              key={permission.value}
+                              className="flex items-center space-x-2"
+                            >
                               <Checkbox
-                                checked={formData.permissions.includes(permission.value)}
-                                onCheckedChange={() => handlePermissionToggle(permission.value)}
+                                checked={formData.permissions.includes(
+                                  permission.value,
+                                )}
+                                onCheckedChange={() =>
+                                  handlePermissionToggle(permission.value)
+                                }
                               />
-                              <Label className="text-sm cursor-pointer">{permission.label} ({permission.value})</Label>
+                              <Label className="text-sm cursor-pointer">
+                                {permission.label} ({permission.value})
+                              </Label>
                             </div>
                           ))}
                         </div>
                         {module.submodules.map((submodule) => {
-                          const subPermissions = submodule.permissions.map(p => p.value);
+                          const subPermissions = submodule.permissions.map(
+                            (p) => p.value,
+                          );
                           return (
-                            <div key={submodule.label} className="rounded border p-2 space-y-1">
+                            <div
+                              key={submodule.label}
+                              className="rounded border p-2 space-y-1"
+                            >
                               <div className="flex items-center space-x-2">
                                 <Checkbox
-                                  checked={subPermissions.every(p => formData.permissions.includes(p))}
-                                  onCheckedChange={() => handleGroupToggle(subPermissions)}
+                                  checked={subPermissions.every((p) =>
+                                    formData.permissions.includes(p),
+                                  )}
+                                  onCheckedChange={() =>
+                                    handleGroupToggle(subPermissions)
+                                  }
                                 />
-                                <Label className="text-sm font-medium cursor-pointer">{submodule.label}</Label>
+                                <Label className="text-sm font-medium cursor-pointer">
+                                  {submodule.label}
+                                </Label>
                               </div>
                               <div className="ml-5 space-y-1">
                                 {submodule.permissions.map((permission) => (
-                                  <div key={permission.value} className="flex items-center space-x-2">
+                                  <div
+                                    key={permission.value}
+                                    className="flex items-center space-x-2"
+                                  >
                                     <Checkbox
-                                      checked={formData.permissions.includes(permission.value)}
-                                      onCheckedChange={() => handlePermissionToggle(permission.value)}
+                                      checked={formData.permissions.includes(
+                                        permission.value,
+                                      )}
+                                      onCheckedChange={() =>
+                                        handlePermissionToggle(permission.value)
+                                      }
                                     />
-                                    <Label className="text-sm cursor-pointer">{permission.label} ({permission.value})</Label>
+                                    <Label className="text-sm cursor-pointer">
+                                      {permission.label} ({permission.value})
+                                    </Label>
                                   </div>
                                 ))}
                               </div>
@@ -342,25 +421,32 @@ export function RoleManagementModal({ open, onOpenChange, onSuccess }: RoleManag
                   Cancel
                 </Button>
                 <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {editingRole ? 'Update Role' : 'Create Role'}
+                  {isSubmitting && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  {editingRole ? "Update Role" : "Create Role"}
                 </Button>
               </DialogFooter>
             </form>
           )}
         </div>
 
-        <Dialog open={!!deletingRole} onOpenChange={(open) => {
-          if (!open) {
-            setDeletingRole(null);
-            setError('');
-          }
-        }}>
+        <Dialog
+          open={!!deletingRole}
+          onOpenChange={(open) => {
+            if (!open) {
+              setDeletingRole(null);
+              setError("");
+            }
+          }}
+        >
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Delete Role</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete the role "{deletingRole?.display_name}"? This action cannot be undone.
+                Are you sure you want to delete the role &quot;
+                {deletingRole?.display_name}&quot;? This action cannot be
+                undone.
               </DialogDescription>
             </DialogHeader>
             {error && (
@@ -381,7 +467,9 @@ export function RoleManagementModal({ open, onOpenChange, onSuccess }: RoleManag
                 onClick={handleDeleteRole}
                 disabled={isDeleting}
               >
-                {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isDeleting && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 Delete Role
               </Button>
             </DialogFooter>

@@ -1,19 +1,25 @@
-'use client';
+"use client";
 
-import React, { Suspense, useState, useEffect, useCallback, useRef } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { ModuleGuard } from '../../../components/guards/PermissionGuard';
-import { LeadsDenseTable } from '@/src/components/crm/leads/LeadsDenseTable';
-import { LeadsListToolbar } from '@/src/components/crm/leads/list/LeadsListToolbar';
-import { LeadsPinnedFilters } from '@/src/components/crm/leads/list/LeadsPinnedFilters';
-import { LeadsListControls } from '@/src/components/crm/leads/list/LeadsListControls';
-import { LeadCreateDialog } from '@/src/components/crm/leads/list/LeadCreateDialog';
-import { mapTenantUsers } from '@/src/components/crm/leads/leadUtils';
-import CRMService from '@/src/services/CRMService';
-import { Lead, CRMLeadFilters, LeadSavedFilter } from '@/src/models/crm';
-import { DashboardLayout } from '../../../components/layout';
-import { useConfirm } from '@/src/contexts/ConfirmContext';
-import { useRBAC } from '@/src/contexts/RBACContext';
+import React, {
+  Suspense,
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+} from "react";
+import { useSearchParams } from "next/navigation";
+import { ModuleGuard } from "../../../components/guards/PermissionGuard";
+import { LeadsDenseTable } from "@/src/components/crm/leads/LeadsDenseTable";
+import { LeadsListToolbar } from "@/src/components/crm/leads/list/LeadsListToolbar";
+import { LeadsPinnedFilters } from "@/src/components/crm/leads/list/LeadsPinnedFilters";
+import { LeadsListControls } from "@/src/components/crm/leads/list/LeadsListControls";
+import { LeadCreateDialog } from "@/src/components/crm/leads/list/LeadCreateDialog";
+import { mapTenantUsers } from "@/src/components/crm/leads/leadUtils";
+import CRMService from "@/src/services/CRMService";
+import { Lead, CRMLeadFilters, LeadSavedFilter } from "@/src/models/crm";
+import { DashboardLayout } from "../../../components/layout";
+import { useConfirm } from "@/src/contexts/ConfirmContext";
+import { useRBAC } from "@/src/contexts/RBACContext";
 
 export default function CRMLeadsPage() {
   return (
@@ -36,8 +42,8 @@ function CRMLeadsContent() {
   const [loading, setLoading] = useState(true);
   const [listLoading, setListLoading] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
-  const [filters, setFilters] = useState<CRMLeadFilters>({ sort: 'newest' });
-  const [search, setSearch] = useState('');
+  const [filters, setFilters] = useState<CRMLeadFilters>({ sort: "newest" });
+  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
@@ -63,7 +69,9 @@ function CRMLeadsContent() {
         isPartial: showPartialOnly ? true : undefined,
       };
       const response = await CRMService.getLeads(active, page, pageSize);
-      const list = Array.isArray(response?.leads) ? (response.leads as Lead[]) : [];
+      const list = Array.isArray(response?.leads)
+        ? (response.leads as Lead[])
+        : [];
       setLeads(list);
       setTotalPages(response?.pagination?.pages || 1);
       setTotalCount(response?.pagination?.total || 0);
@@ -96,8 +104,8 @@ function CRMLeadsContent() {
   }, [loadSavedFilters]);
 
   useEffect(() => {
-    if (searchParams.get('new') === '1') setIsCreateDialogOpen(true);
-    if (searchParams.get('partial') === '1') setShowPartialOnly(true);
+    if (searchParams.get("new") === "1") setIsCreateDialogOpen(true);
+    if (searchParams.get("partial") === "1") setShowPartialOnly(true);
   }, [searchParams]);
 
   const applyPinned = (sf: LeadSavedFilter) => {
@@ -119,8 +127,8 @@ function CRMLeadsContent() {
 
   const handleDelete = async (id: string) => {
     const ok = await confirm({
-      title: 'Delete lead?',
-      description: 'This cannot be undone.',
+      title: "Delete lead?",
+      description: "This cannot be undone.",
     });
     if (!ok) return;
     await CRMService.deleteLead(id);
@@ -144,11 +152,14 @@ function CRMLeadsContent() {
     });
   };
 
-  const runBulk = async (action: string, extra: Record<string, string> = {}) => {
+  const runBulk = async (
+    action: string,
+    extra: Record<string, string> = {},
+  ) => {
     if (selectedIds.size === 0) return;
-    if (action === 'delete') {
+    if (action === "delete") {
       const ok = await confirm({
-        title: 'Delete selected leads?',
+        title: "Delete selected leads?",
         description: `Delete ${selectedIds.size} leads?`,
       });
       if (!ok) return;
@@ -182,8 +193,8 @@ function CRMLeadsContent() {
           showPartialOnly={showPartialOnly}
           onApplyFilter={applyPinned}
           onClearFilters={() => {
-            setFilters({ sort: 'newest' });
-            setSearch('');
+            setFilters({ sort: "newest" });
+            setSearch("");
             setShowPartialOnly(false);
             setPage(1);
           }}

@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
-import { Switch } from '@/src/components/ui/switch';
-import { Lead, LeadSmsItem } from '@/src/models/crm';
-import CRMService from '@/src/services/CRMService';
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
+import { Switch } from "@/src/components/ui/switch";
+import { Lead, LeadSmsItem } from "@/src/models/crm";
+import CRMService from "@/src/services/CRMService";
 
 type Props = {
   lead: Lead;
@@ -46,17 +46,17 @@ export function LeadSmsTab({
         {sms.map((m) => (
           <div
             key={m.id}
-            className={`flex flex-col ${m.direction === 'outgoing' ? 'items-end' : 'items-start'}`}
+            className={`flex flex-col ${m.direction === "outgoing" ? "items-end" : "items-start"}`}
           >
             <div className="text-[10px] text-emerald-600 mb-1">{m.status}</div>
             <div
-              className={`rounded-xl p-3 max-w-[90%] text-sm ${m.direction === 'outgoing' ? 'bg-blue-100 rounded-tr-none' : 'bg-muted rounded-tl-none'}`}
+              className={`rounded-xl p-3 max-w-[90%] text-sm ${m.direction === "outgoing" ? "bg-blue-100 rounded-tr-none" : "bg-muted rounded-tl-none"}`}
             >
               {m.body}
               <div className="text-[10px] text-muted-foreground text-right mt-1">
                 {m.sentAt || m.createdAt
-                  ? new Date(m.sentAt || m.createdAt || '').toLocaleString()
-                  : ''}
+                  ? new Date(m.sentAt || m.createdAt || "").toLocaleString()
+                  : ""}
               </div>
             </div>
           </div>
@@ -72,7 +72,7 @@ export function LeadSmsTab({
           onClick={async () => {
             if (!smsBody.trim()) return;
             await CRMService.sendLeadSms(leadId, { body: smsBody });
-            setSmsBody('');
+            setSmsBody("");
             loadTabData();
             reload();
           }}

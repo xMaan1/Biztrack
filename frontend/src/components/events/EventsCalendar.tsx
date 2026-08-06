@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
-import { useApiService } from '../../hooks/useApiService';
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { useApiService } from "../../hooks/useApiService";
 
 interface Event {
   id: string;
@@ -32,7 +32,7 @@ export default function EventsCalendar() {
       const response = await apiService.getEvents();
       setEvents(response.events || []);
     } catch (error) {
-      } finally {
+    } finally {
       setLoading(false);
     }
   };
@@ -64,14 +64,14 @@ export default function EventsCalendar() {
 
   const getEventTypeColor = (type: string) => {
     switch (type) {
-      case 'meeting':
-        return 'bg-purple-100 text-purple-800';
-      case 'workshop':
-        return 'bg-orange-100 text-orange-800';
-      case 'deadline':
-        return 'bg-red-100 text-red-800';
+      case "meeting":
+        return "bg-purple-100 text-purple-800";
+      case "workshop":
+        return "bg-orange-100 text-orange-800";
+      case "deadline":
+        return "bg-red-100 text-red-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -92,21 +92,21 @@ export default function EventsCalendar() {
   };
 
   const monthNames = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
 
-  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   const { daysInMonth, startingDay } = getDaysInMonth(currentDate);
 
@@ -197,13 +197,13 @@ export default function EventsCalendar() {
                 <div
                   key={day}
                   className={`p-2 min-h-[100px] border border-gray-200 ${
-                    isToday ? 'bg-blue-50 border-blue-300' : 'bg-white'
+                    isToday ? "bg-blue-50 border-blue-300" : "bg-white"
                   }`}
                 >
                   <div className="flex items-center justify-between mb-1">
                     <span
                       className={`text-sm font-medium ${
-                        isToday ? 'text-blue-600' : 'text-gray-900'
+                        isToday ? "text-blue-600" : "text-gray-900"
                       }`}
                     >
                       {day}
@@ -223,7 +223,7 @@ export default function EventsCalendar() {
                           variant="secondary"
                         >
                           {event.title.length > 15
-                            ? event.title.substring(0, 15) + '...'
+                            ? event.title.substring(0, 15) + "..."
                             : event.title}
                         </Badge>
                       </div>

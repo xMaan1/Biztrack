@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import React from 'react';
+import React from "react";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../ui/card';
-import { Badge } from '../ui/badge';
+} from "../ui/card";
+import { Badge } from "../ui/badge";
 import {
   TrendingUp,
   FileText,
@@ -17,10 +17,10 @@ import {
   Clock,
   Users,
   BarChart3,
-} from 'lucide-react';
-import { InvoiceDashboard as InvoiceDashboardType } from '../../models/sales';
-import InvoiceService from '../../services/InvoiceService';
-import { useCurrency } from '@/src/contexts/CurrencyContext';
+} from "lucide-react";
+import { InvoiceDashboard as InvoiceDashboardType } from "../../models/sales";
+import InvoiceService from "../../services/InvoiceService";
+import { useCurrency } from "@/src/contexts/CurrencyContext";
 
 interface InvoiceDashboardProps {
   dashboard: InvoiceDashboardType;

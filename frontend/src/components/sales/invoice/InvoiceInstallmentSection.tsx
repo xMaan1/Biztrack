@@ -1,15 +1,20 @@
-'use client';
+"use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
-import { Input } from '@/src/components/ui/input';
-import { Label } from '@/src/components/ui/label';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/src/components/ui/card";
+import { Input } from "@/src/components/ui/input";
+import { Label } from "@/src/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
+} from "@/src/components/ui/select";
 
 type InvoiceInstallmentSectionProps = {
   createInstallmentPlan: boolean;
@@ -46,7 +51,9 @@ export function InvoiceInstallmentSection({
             onChange={(e) => onToggle(e.target.checked)}
             className="rounded border-gray-300"
           />
-          <Label htmlFor="createInstallmentPlan">Create installment plan for this invoice</Label>
+          <Label htmlFor="createInstallmentPlan">
+            Create installment plan for this invoice
+          </Label>
         </div>
         {createInstallmentPlan && (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -58,12 +65,17 @@ export function InvoiceInstallmentSection({
                 min={1}
                 max={60}
                 value={installmentCount}
-                onChange={(e) => onCountChange(parseInt(e.target.value, 10) || 1)}
+                onChange={(e) =>
+                  onCountChange(parseInt(e.target.value, 10) || 1)
+                }
               />
             </div>
             <div>
               <Label htmlFor="installmentFrequency">Frequency</Label>
-              <Select value={installmentFrequency} onValueChange={onFrequencyChange}>
+              <Select
+                value={installmentFrequency}
+                onValueChange={onFrequencyChange}
+              >
                 <SelectTrigger id="installmentFrequency">
                   <SelectValue />
                 </SelectTrigger>

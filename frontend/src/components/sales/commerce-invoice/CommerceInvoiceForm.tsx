@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { Alert, AlertDescription } from '@/src/components/ui/alert';
-import { Textarea } from '@/src/components/ui/textarea';
-import type { Product } from '@/src/models/pos';
-import { useCommerceInvoiceFormUi } from '@/src/hooks/useCommerceInvoiceFormUi';
-import { CommerceInvoiceDetailsSection } from './CommerceInvoiceDetailsSection';
-import { CommerceInvoiceFormHeader } from './CommerceInvoiceFormHeader';
-import { CommerceInvoiceInstallmentSection } from './CommerceInvoiceInstallmentSection';
-import { CommerceInvoiceItemsTable } from './CommerceInvoiceItemsTable';
-import { CommerceInvoiceProductEntrySection } from './CommerceInvoiceProductEntrySection';
-import { CommerceInvoiceTotalsSection } from './CommerceInvoiceTotalsSection';
-import type { CommerceInvoiceFormProps } from './types';
+import { Alert, AlertDescription } from "@/src/components/ui/alert";
+import { Textarea } from "@/src/components/ui/textarea";
+import type { Product } from "@/src/models/pos";
+import { useCommerceInvoiceFormUi } from "@/src/hooks/useCommerceInvoiceFormUi";
+import { CommerceInvoiceDetailsSection } from "./CommerceInvoiceDetailsSection";
+import { CommerceInvoiceFormHeader } from "./CommerceInvoiceFormHeader";
+import { CommerceInvoiceInstallmentSection } from "./CommerceInvoiceInstallmentSection";
+import { CommerceInvoiceItemsTable } from "./CommerceInvoiceItemsTable";
+import { CommerceInvoiceProductEntrySection } from "./CommerceInvoiceProductEntrySection";
+import { CommerceInvoiceTotalsSection } from "./CommerceInvoiceTotalsSection";
+import type { CommerceInvoiceFormProps } from "./types";
 
 export function CommerceInvoiceForm({
   mode,
@@ -46,24 +46,24 @@ export function CommerceInvoiceForm({
   const ui = useCommerceInvoiceFormUi({ items, products, onUpdateItem });
 
   const handleOrderTimeChange = (value: string) => {
-    onInputChange('orderTime', value);
+    onInputChange("orderTime", value);
     if (value) {
-      onInputChange('issueDate', value.slice(0, 10));
+      onInputChange("issueDate", value.slice(0, 10));
     }
   };
 
   const pickProduct = (product: Product) => {
     onProductSelect(product.id);
-    ui.setProductSearch('');
-    clearFieldError('newItemProduct');
-    clearFieldError('newItemDescription');
+    ui.setProductSearch("");
+    clearFieldError("newItemProduct");
+    clearFieldError("newItemDescription");
   };
 
   const handleCustomerPick = (customerId: string) => {
     const customer = ui.customerOptions.find((c) => c.id === customerId);
     if (customer) {
       onCustomerSelect(customer);
-      ui.setCustomerSearch('');
+      ui.setCustomerSearch("");
     }
   };
 
@@ -93,7 +93,6 @@ export function CommerceInvoiceForm({
         productSearch={ui.productSearch}
         totals={totals}
         onProductSearchChange={ui.setProductSearch}
-        onProductSelect={onProductSelect}
         onNewItemChange={onNewItemChange}
         onAddItem={onAddItem}
         onAddExtraItem={onAddExtraItem}
@@ -140,8 +139,8 @@ export function CommerceInvoiceForm({
 
       <div className="hidden">
         <Textarea
-          value={formData.terms || ''}
-          onChange={(e) => onInputChange('terms', e.target.value)}
+          value={formData.terms || ""}
+          onChange={(e) => onInputChange("terms", e.target.value)}
         />
       </div>
 

@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { DashboardLayout } from '@/src/components/layout';
+import React, { useState, useEffect, useCallback } from "react";
+import { DashboardLayout } from "@/src/components/layout";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
-import { Label } from '@/src/components/ui/label';
-import { Textarea } from '@/src/components/ui/textarea';
+} from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
+import { Label } from "@/src/components/ui/label";
+import { Textarea } from "@/src/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +20,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/src/components/ui/dialog';
+} from "@/src/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -28,24 +28,32 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/src/components/ui/table';
+} from "@/src/components/ui/table";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
-import { UserPlus, Edit, Trash2, ChevronRight, ChevronLeft, Plus, X } from 'lucide-react';
-import healthcareService from '@/src/services/HealthcareService';
-import type {
-  Doctor,
-  DoctorCreate,
-  DoctorUpdate,
-  DoctorAvailabilitySlot,
-} from '@/src/models/healthcare';
-import { DAYS_OF_WEEK } from '@/src/models/healthcare';
-import { toast } from 'sonner';
+} from "@/src/components/ui/select";
+import {
+  UserPlus,
+  Edit,
+  Trash2,
+  ChevronRight,
+  ChevronLeft,
+  Plus,
+  X,
+} from "lucide-react";
+import healthcareService from "@/src/services/HealthcareService";
+import {
+  DAYS_OF_WEEK,
+  type Doctor,
+  type DoctorAvailabilitySlot,
+  type DoctorCreate,
+  type DoctorUpdate,
+} from "@/src/models/healthcare";
+import { toast } from "sonner";
 
 export default function HealthcareDoctorsPage() {
   return (
@@ -59,7 +67,7 @@ function DoctorsContent() {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const limit = 20;
   const totalPages = Math.ceil(total / limit) || 1;
@@ -72,14 +80,14 @@ function DoctorsContent() {
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   const [formData, setFormData] = useState<DoctorCreate>({
-    pmdc_number: '',
-    phone: '',
-    first_name: '',
-    last_name: '',
-    email: '',
-    specialization: '',
-    qualification: '',
-    address: '',
+    pmdc_number: "",
+    phone: "",
+    first_name: "",
+    last_name: "",
+    email: "",
+    specialization: "",
+    qualification: "",
+    address: "",
     availability: [],
   });
 
@@ -94,7 +102,7 @@ function DoctorsContent() {
       setDoctors(res.doctors);
       setTotal(res.total);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Failed to load doctors');
+      toast.error(e instanceof Error ? e.message : "Failed to load doctors");
     } finally {
       setLoading(false);
     }
@@ -107,14 +115,14 @@ function DoctorsContent() {
   const openAdd = () => {
     setEditingDoctor(null);
     setFormData({
-      pmdc_number: '',
-      phone: '',
-      first_name: '',
-      last_name: '',
-      email: '',
-      specialization: '',
-      qualification: '',
-      address: '',
+      pmdc_number: "",
+      phone: "",
+      first_name: "",
+      last_name: "",
+      email: "",
+      specialization: "",
+      qualification: "",
+      address: "",
       availability: [],
     });
     setStep(1);
@@ -128,10 +136,10 @@ function DoctorsContent() {
       phone: d.phone,
       first_name: d.first_name,
       last_name: d.last_name,
-      email: d.email ?? '',
-      specialization: d.specialization ?? '',
-      qualification: d.qualification ?? '',
-      address: d.address ?? '',
+      email: d.email ?? "",
+      specialization: d.specialization ?? "",
+      qualification: d.qualification ?? "",
+      address: d.address ?? "",
       availability: d.availability?.length ? [...d.availability] : [],
     });
     setStep(1);
@@ -143,18 +151,28 @@ function DoctorsContent() {
     setDeleteDialogOpen(true);
   };
 
-  const handleFormChange = (field: keyof DoctorCreate, value: string | DoctorAvailabilitySlot[]) => {
+  const handleFormChange = (
+    field: keyof DoctorCreate,
+    value: string | DoctorAvailabilitySlot[],
+  ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const addAvailabilitySlot = () => {
     setFormData((prev) => ({
       ...prev,
-      availability: [...prev.availability, { day: 'Monday', start_time: '09:00', end_time: '17:00' }],
+      availability: [
+        ...prev.availability,
+        { day: "Monday", start_time: "09:00", end_time: "17:00" },
+      ],
     }));
   };
 
-  const updateAvailabilitySlot = (index: number, field: keyof DoctorAvailabilitySlot, value: string) => {
+  const updateAvailabilitySlot = (
+    index: number,
+    field: keyof DoctorAvailabilitySlot,
+    value: string,
+  ) => {
     setFormData((prev) => {
       const next = [...prev.availability];
       next[index] = { ...next[index], [field]: value };
@@ -171,11 +189,11 @@ function DoctorsContent() {
 
   const validateStep1 = () => {
     if (!formData.pmdc_number.trim()) {
-      toast.error('PMDC number is required');
+      toast.error("PMDC number is required");
       return false;
     }
     if (!formData.phone.trim()) {
-      toast.error('Phone number is required');
+      toast.error("Phone number is required");
       return false;
     }
     return true;
@@ -183,11 +201,11 @@ function DoctorsContent() {
 
   const validateStep2 = () => {
     if (!formData.first_name.trim()) {
-      toast.error('First name is required');
+      toast.error("First name is required");
       return false;
     }
     if (!formData.last_name.trim()) {
-      toast.error('Last name is required');
+      toast.error("Last name is required");
       return false;
     }
     return true;
@@ -222,16 +240,16 @@ function DoctorsContent() {
       if (editingDoctor) {
         const updatePayload: DoctorUpdate = { ...payload };
         await healthcareService.updateDoctor(editingDoctor.id, updatePayload);
-        toast.success('Doctor updated');
+        toast.success("Doctor updated");
       } else {
         await healthcareService.createDoctor(payload);
-        toast.success('Doctor added');
+        toast.success("Doctor added");
       }
       setFormOpen(false);
       loadDoctors();
     } catch (e: any) {
-      const msg = e?.response?.data?.detail || e?.message || 'Request failed';
-      toast.error(typeof msg === 'string' ? msg : JSON.stringify(msg));
+      const msg = e?.response?.data?.detail || e?.message || "Request failed";
+      toast.error(typeof msg === "string" ? msg : JSON.stringify(msg));
     } finally {
       setSubmitLoading(false);
     }
@@ -242,23 +260,23 @@ function DoctorsContent() {
     try {
       setDeleteLoading(true);
       await healthcareService.deleteDoctor(doctorToDelete.id);
-      toast.success('Doctor deleted');
+      toast.success("Doctor deleted");
       setDeleteDialogOpen(false);
       setDoctorToDelete(null);
       loadDoctors();
     } catch (e: any) {
-      const msg = e?.response?.data?.detail || e?.message || 'Delete failed';
-      toast.error(typeof msg === 'string' ? msg : JSON.stringify(msg));
+      const msg = e?.response?.data?.detail || e?.message || "Delete failed";
+      toast.error(typeof msg === "string" ? msg : JSON.stringify(msg));
     } finally {
       setDeleteLoading(false);
     }
   };
 
   const formatAvailability = (availability: DoctorAvailabilitySlot[]) => {
-    if (!availability?.length) return '—';
+    if (!availability?.length) return "—";
     return availability
       .map((a) => `${a.day} ${a.start_time}-${a.end_time}`)
-      .join('; ');
+      .join("; ");
   };
 
   return (
@@ -277,7 +295,9 @@ function DoctorsContent() {
       <Card className="mb-6">
         <CardHeader>
           <CardTitle>Search</CardTitle>
-          <CardDescription>Filter by name, PMDC, phone, or specialization</CardDescription>
+          <CardDescription>
+            Filter by name, PMDC, phone, or specialization
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex gap-4">
@@ -295,7 +315,7 @@ function DoctorsContent() {
         <CardHeader>
           <CardTitle>Doctors</CardTitle>
           <CardDescription>
-            {total} doctor{total !== 1 ? 's' : ''} total
+            {total} doctor{total !== 1 ? "s" : ""} total
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -327,7 +347,9 @@ function DoctorsContent() {
           {loading ? (
             <div className="py-12 text-center text-gray-500">Loading...</div>
           ) : doctors.length === 0 ? (
-            <div className="py-12 text-center text-gray-500">No doctors yet. Add one to get started.</div>
+            <div className="py-12 text-center text-gray-500">
+              No doctors yet. Add one to get started.
+            </div>
           ) : (
             <Table>
               <TableHeader>
@@ -349,13 +371,20 @@ function DoctorsContent() {
                       {d.first_name} {d.last_name}
                     </TableCell>
                     <TableCell>{d.phone}</TableCell>
-                    <TableCell>{d.specialization || '—'}</TableCell>
-                    <TableCell>{d.qualification || '—'}</TableCell>
-                    <TableCell className="max-w-[200px] truncate" title={formatAvailability(d.availability)}>
+                    <TableCell>{d.specialization || "—"}</TableCell>
+                    <TableCell>{d.qualification || "—"}</TableCell>
+                    <TableCell
+                      className="max-w-[200px] truncate"
+                      title={formatAvailability(d.availability)}
+                    >
                       {formatAvailability(d.availability)}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" onClick={() => openEdit(d)}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openEdit(d)}
+                      >
                         <Edit className="w-4 h-4 mr-1" />
                         Edit
                       </Button>
@@ -380,9 +409,16 @@ function DoctorsContent() {
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>{editingDoctor ? 'Edit Doctor' : 'Add Doctor'}</DialogTitle>
+            <DialogTitle>
+              {editingDoctor ? "Edit Doctor" : "Add Doctor"}
+            </DialogTitle>
             <DialogDescription>
-              Step {step} of 3: {step === 1 ? 'PMDC & contact' : step === 2 ? 'Details' : 'Availability'}
+              Step {step} of 3:{" "}
+              {step === 1
+                ? "PMDC & contact"
+                : step === 2
+                  ? "Details"
+                  : "Availability"}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -392,7 +428,9 @@ function DoctorsContent() {
                   <Label>PMDC Number</Label>
                   <Input
                     value={formData.pmdc_number}
-                    onChange={(e) => handleFormChange('pmdc_number', e.target.value)}
+                    onChange={(e) =>
+                      handleFormChange("pmdc_number", e.target.value)
+                    }
                     placeholder="e.g. 12345"
                     disabled={!!editingDoctor}
                   />
@@ -401,7 +439,7 @@ function DoctorsContent() {
                   <Label>Phone</Label>
                   <Input
                     value={formData.phone}
-                    onChange={(e) => handleFormChange('phone', e.target.value)}
+                    onChange={(e) => handleFormChange("phone", e.target.value)}
                     placeholder="e.g. +92 300 1234567"
                   />
                 </div>
@@ -414,7 +452,9 @@ function DoctorsContent() {
                     <Label>First Name</Label>
                     <Input
                       value={formData.first_name}
-                      onChange={(e) => handleFormChange('first_name', e.target.value)}
+                      onChange={(e) =>
+                        handleFormChange("first_name", e.target.value)
+                      }
                       placeholder="First name"
                     />
                   </div>
@@ -422,7 +462,9 @@ function DoctorsContent() {
                     <Label>Last Name</Label>
                     <Input
                       value={formData.last_name}
-                      onChange={(e) => handleFormChange('last_name', e.target.value)}
+                      onChange={(e) =>
+                        handleFormChange("last_name", e.target.value)
+                      }
                       placeholder="Last name"
                     />
                   </div>
@@ -432,7 +474,7 @@ function DoctorsContent() {
                   <Input
                     type="email"
                     value={formData.email}
-                    onChange={(e) => handleFormChange('email', e.target.value)}
+                    onChange={(e) => handleFormChange("email", e.target.value)}
                     placeholder="doctor@example.com"
                   />
                 </div>
@@ -440,7 +482,9 @@ function DoctorsContent() {
                   <Label>Specialization</Label>
                   <Input
                     value={formData.specialization}
-                    onChange={(e) => handleFormChange('specialization', e.target.value)}
+                    onChange={(e) =>
+                      handleFormChange("specialization", e.target.value)
+                    }
                     placeholder="e.g. Cardiology"
                   />
                 </div>
@@ -448,7 +492,9 @@ function DoctorsContent() {
                   <Label>Qualification</Label>
                   <Input
                     value={formData.qualification}
-                    onChange={(e) => handleFormChange('qualification', e.target.value)}
+                    onChange={(e) =>
+                      handleFormChange("qualification", e.target.value)
+                    }
                     placeholder="e.g. MBBS, MD"
                   />
                 </div>
@@ -456,7 +502,9 @@ function DoctorsContent() {
                   <Label>Address</Label>
                   <Textarea
                     value={formData.address}
-                    onChange={(e) => handleFormChange('address', e.target.value)}
+                    onChange={(e) =>
+                      handleFormChange("address", e.target.value)
+                    }
                     placeholder="Address"
                     rows={2}
                   />
@@ -467,20 +515,32 @@ function DoctorsContent() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <Label>Availability</Label>
-                  <Button type="button" variant="outline" size="sm" onClick={addAvailabilitySlot}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addAvailabilitySlot}
+                  >
                     <Plus className="w-4 h-4 mr-1" />
                     Add slot
                   </Button>
                 </div>
                 <div className="space-y-3 max-h-[280px] overflow-y-auto">
                   {formData.availability.length === 0 ? (
-                    <p className="text-sm text-gray-500">No slots. Click &quot;Add slot&quot; to add.</p>
+                    <p className="text-sm text-gray-500">
+                      No slots. Click &quot;Add slot&quot; to add.
+                    </p>
                   ) : (
                     formData.availability.map((slot, idx) => (
-                      <div key={idx} className="flex flex-wrap items-center gap-2 p-2 border rounded-md">
+                      <div
+                        key={idx}
+                        className="flex flex-wrap items-center gap-2 p-2 border rounded-md"
+                      >
                         <Select
                           value={slot.day}
-                          onValueChange={(v) => updateAvailabilitySlot(idx, 'day', v)}
+                          onValueChange={(v) =>
+                            updateAvailabilitySlot(idx, "day", v)
+                          }
                         >
                           <SelectTrigger className="w-[120px]">
                             <SelectValue />
@@ -496,14 +556,26 @@ function DoctorsContent() {
                         <Input
                           type="time"
                           value={slot.start_time}
-                          onChange={(e) => updateAvailabilitySlot(idx, 'start_time', e.target.value)}
+                          onChange={(e) =>
+                            updateAvailabilitySlot(
+                              idx,
+                              "start_time",
+                              e.target.value,
+                            )
+                          }
                           className="w-[100px]"
                         />
                         <span className="text-gray-500">to</span>
                         <Input
                           type="time"
                           value={slot.end_time}
-                          onChange={(e) => updateAvailabilitySlot(idx, 'end_time', e.target.value)}
+                          onChange={(e) =>
+                            updateAvailabilitySlot(
+                              idx,
+                              "end_time",
+                              e.target.value,
+                            )
+                          }
                           className="w-[100px]"
                         />
                         <Button
@@ -539,7 +611,11 @@ function DoctorsContent() {
                   </Button>
                 ) : (
                   <Button onClick={handleSubmit} disabled={submitLoading}>
-                    {submitLoading ? 'Saving...' : editingDoctor ? 'Update' : 'Create'}
+                    {submitLoading
+                      ? "Saving..."
+                      : editingDoctor
+                        ? "Update"
+                        : "Create"}
                   </Button>
                 )}
               </div>
@@ -553,19 +629,26 @@ function DoctorsContent() {
           <DialogHeader>
             <DialogTitle>Delete Doctor</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete{' '}
+              Are you sure you want to delete{" "}
               {doctorToDelete
                 ? `${doctorToDelete.first_name} ${doctorToDelete.last_name} (${doctorToDelete.pmdc_number})`
-                : 'this doctor'}
+                : "this doctor"}
               ? This cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+            >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDelete} disabled={deleteLoading}>
-              {deleteLoading ? 'Deleting...' : 'Delete'}
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={deleteLoading}
+            >
+              {deleteLoading ? "Deleting..." : "Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>

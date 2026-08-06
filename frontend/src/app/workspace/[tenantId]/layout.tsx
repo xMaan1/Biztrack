@@ -1,27 +1,24 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import Link from 'next/link';
-import axios from 'axios';
-import { Button } from '../../../components/ui/button';
-import { Avatar, AvatarFallback } from '../../../components/ui/avatar';
-import { Badge } from '../../../components/ui/badge';
-import {
-  Sheet,
-  SheetContent,
-} from '../../../components/ui/sheet';
+import React, { useState, useEffect, useCallback } from "react";
+import { useRouter, useParams } from "next/navigation";
+import Link from "next/link";
+import axios from "axios";
+import { Button } from "../../../components/ui/button";
+import { Avatar, AvatarFallback } from "../../../components/ui/avatar";
+import { Badge } from "../../../components/ui/badge";
+import { Sheet, SheetContent } from "../../../components/ui/sheet";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '../../../components/ui/dropdown-menu';
-import { Separator } from '../../../components/ui/separator';
-import { useAuth } from '../../../contexts/AuthContext';
-import { usePermissions } from '../../../hooks/usePermissions';
-import { SessionManager } from '../../../services/SessionManager';
-import { Toaster } from 'sonner';
+} from "../../../components/ui/dropdown-menu";
+import { Separator } from "../../../components/ui/separator";
+import { useAuth } from "../../../contexts/AuthContext";
+import { usePermissions } from "../../../hooks/usePermissions";
+import { SessionManager } from "../../../services/SessionManager";
+import { Toaster } from "sonner";
 import {
   Menu as MenuIcon,
   Building2,
@@ -35,7 +32,7 @@ import {
   PieChart,
   BarChart3,
   Shield,
-} from 'lucide-react';
+} from "lucide-react";
 
 interface TenantLayoutProps {
   children: React.ReactNode;
@@ -52,20 +49,20 @@ const TenantLayout: React.FC<TenantLayoutProps> = ({ children }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [tenantInfo, setTenantInfo] = useState<TenantInfo | null>(null);
   const { user, logout } = useAuth();
-  const { 
-    canViewCRM, 
-    canViewHRM, 
-    canViewInventory, 
-    canViewFinance, 
-    canViewProjects, 
-    canViewQuality, 
-    canManageUsers, 
+  const {
+    canViewCRM,
+    canViewHRM,
+    canViewInventory,
+    canViewFinance,
+    canViewProjects,
+    canViewQuality,
+    canManageUsers,
     canViewReports,
-    isOwner 
+    isOwner,
   } = usePermissions();
   const router = useRouter();
   const params = useParams();
-  const tenantId = params?.tenantId ? (params.tenantId as string) : '';
+  const tenantId = params?.tenantId ? (params.tenantId as string) : "";
 
   const fetchTenantInfo = useCallback(async () => {
     try {
@@ -73,24 +70,22 @@ const TenantLayout: React.FC<TenantLayoutProps> = ({ children }) => {
       const token = sessionManager.getToken();
 
       if (!token) {
-        router.push('/');
+        router.push("/");
         return;
       }
 
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-      const apiUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
-      const response = await axios.get(
-        `${apiUrl}/tenants/${tenantId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      const baseUrl =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const apiUrl = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
+      const response = await axios.get(`${apiUrl}/tenants/${tenantId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      );
+      });
 
       setTenantInfo(response.data);
     } catch (error) {
-      router.push('/');
+      router.push("/");
     }
   }, [tenantId, router]);
 
@@ -103,7 +98,7 @@ const TenantLayout: React.FC<TenantLayoutProps> = ({ children }) => {
   };
 
   const handleSwitchWorkspace = () => {
-    router.push('/');
+    router.push("/");
   };
 
   const sidebarContent = (
@@ -112,15 +107,15 @@ const TenantLayout: React.FC<TenantLayoutProps> = ({ children }) => {
         <div className="flex items-center space-x-3">
           <Avatar className="h-10 w-10 bg-gradient-primary">
             <AvatarFallback className="bg-gradient-primary text-white font-semibold">
-              {tenantInfo?.name?.charAt(0).toUpperCase() || 'W'}
+              {tenantInfo?.name?.charAt(0).toUpperCase() || "W"}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
             <h3 className="text-sm font-semibold text-gray-900 truncate">
-              {tenantInfo?.name || 'Workspace'}
+              {tenantInfo?.name || "Workspace"}
             </h3>
             <Badge variant="secondary" className="mt-1 text-xs">
-              {isOwner() ? 'Owner' : tenantInfo?.user_role || 'member'}
+              {isOwner() ? "Owner" : tenantInfo?.user_role || "member"}
             </Badge>
           </div>
         </div>
@@ -134,70 +129,70 @@ const TenantLayout: React.FC<TenantLayoutProps> = ({ children }) => {
           <LayoutDashboard className="h-5 w-5" />
           <span className="text-sm font-medium">Dashboard</span>
         </Link>
-        
+
         {canViewProjects() && (
           <Link
-            href={'/projects'}
+            href={"/projects"}
             className="flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
           >
             <FolderOpen className="h-5 w-5" />
             <span className="text-sm font-medium">Projects</span>
           </Link>
         )}
-        
+
         {canViewCRM() && (
           <Link
-            href={'/crm/customers'}
+            href={"/crm/customers"}
             className="flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
           >
             <Users className="h-5 w-5" />
             <span className="text-sm font-medium">CRM</span>
           </Link>
         )}
-        
+
         {canViewHRM() && (
           <Link
-            href={'/hrm/employees'}
+            href={"/hrm/employees"}
             className="flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
           >
             <UserCheck className="h-5 w-5" />
             <span className="text-sm font-medium">HRM</span>
           </Link>
         )}
-        
+
         {canViewInventory() && (
           <Link
-            href={'/inventory/products'}
+            href={"/inventory/products"}
             className="flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
           >
             <Package className="h-5 w-5" />
             <span className="text-sm font-medium">Inventory</span>
           </Link>
         )}
-        
+
         {canViewFinance() && (
           <Link
-            href={'/ledger'}
+            href={"/ledger"}
             className="flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
           >
             <PieChart className="h-5 w-5" />
             <span className="text-sm font-medium">Finance</span>
           </Link>
         )}
-        
+
         {canViewQuality() && (
           <Link
-            href={'/workshop-management/quality-control'}
+            href={"/workshop-management/quality-control"}
             className="flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
           >
             <Shield className="h-5 w-5" />
             <span className="text-sm font-medium">Quality Control</span>
           </Link>
         )}
-        
+
         {canViewReports() && (
           <Link
-            href={'/reports'}
+            href={"/reports"}
             className="flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
           >
             <BarChart3 className="h-5 w-5" />
@@ -210,7 +205,7 @@ const TenantLayout: React.FC<TenantLayoutProps> = ({ children }) => {
           <>
             <Separator className="my-4" />
             <Link
-              href={'/users'}
+              href={"/users"}
               className="flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
             >
               <Users className="h-5 w-5" />
@@ -220,11 +215,11 @@ const TenantLayout: React.FC<TenantLayoutProps> = ({ children }) => {
         )}
 
         {/* Admin section - Only for super_admin */}
-        {user?.userRole === 'super_admin' && (
+        {user?.userRole === "super_admin" && (
           <>
             <Separator className="my-4" />
             <Link
-              href={'/admin/tenants'}
+              href={"/admin/tenants"}
               className="flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
             >
               <Building2 className="h-5 w-5" />
@@ -273,7 +268,7 @@ const TenantLayout: React.FC<TenantLayoutProps> = ({ children }) => {
               </Button>
 
               <h1 className="text-xl font-semibold text-gray-900">
-                {tenantInfo?.name || 'Workspace'}
+                {tenantInfo?.name || "Workspace"}
               </h1>
             </div>
 
@@ -295,11 +290,11 @@ const TenantLayout: React.FC<TenantLayoutProps> = ({ children }) => {
                   >
                     <Avatar className="h-8 w-8">
                       <AvatarFallback className="bg-gradient-primary text-white text-sm">
-                        {user?.userName?.charAt(0).toUpperCase() || 'U'}
+                        {user?.userName?.charAt(0).toUpperCase() || "U"}
                       </AvatarFallback>
                     </Avatar>
                     <span className="hidden sm:block text-sm font-medium text-gray-700">
-                      {user?.userName || 'User'}
+                      {user?.userName || "User"}
                     </span>
                   </Button>
                 </DropdownMenuTrigger>

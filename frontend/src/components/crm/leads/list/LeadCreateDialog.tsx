@@ -1,42 +1,42 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
+} from "@/src/components/ui/select";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/src/components/ui/dialog';
-import { Label } from '@/src/components/ui/label';
-import { Textarea } from '@/src/components/ui/textarea';
-import { CustomOptionDialog } from '@/src/components/common/CustomOptionDialog';
-import { LeadCreate, LeadSource } from '@/src/models/crm';
-import CRMService from '@/src/services/CRMService';
-import { useCustomOptions } from '@/src/hooks/useCustomOptions';
+} from "@/src/components/ui/dialog";
+import { Label } from "@/src/components/ui/label";
+import { Textarea } from "@/src/components/ui/textarea";
+import { CustomOptionDialog } from "@/src/components/common/CustomOptionDialog";
+import { LeadCreate, LeadSource } from "@/src/models/crm";
+import CRMService from "@/src/services/CRMService";
+import { useCustomOptions } from "@/src/hooks/useCustomOptions";
 
 const emptyForm = (): LeadCreate => ({
-  firstName: '',
-  lastName: '',
-  email: '',
-  phone: '',
-  company: '',
-  jobTitle: '',
-  status: 'open',
+  firstName: "",
+  lastName: "",
+  email: "",
+  phone: "",
+  company: "",
+  jobTitle: "",
+  status: "open",
   source: LeadSource.WEBSITE,
-  notes: '',
+  notes: "",
   tags: [],
   score: 0,
-  pipelineStage: 'new_lead',
+  pipelineStage: "new_lead",
 });
 
 type Props = {
@@ -54,11 +54,11 @@ export function LeadCreateDialog({ open, onOpenChange }: Props) {
     useState(false);
 
   const handleCreateLead = async () => {
-    const firstName = (formData.firstName || '').trim();
-    const lastName = (formData.lastName || '').trim();
-    const email = (formData.email || '').trim();
+    const firstName = (formData.firstName || "").trim();
+    const lastName = (formData.lastName || "").trim();
+    const email = (formData.email || "").trim();
     if (!firstName || !lastName || !emailPattern.test(email)) {
-      setFormError('First name, last name, and a valid email are required.');
+      setFormError("First name, last name, and a valid email are required.");
       return;
     }
     try {
@@ -74,7 +74,7 @@ export function LeadCreateDialog({ open, onOpenChange }: Props) {
       setFormData(emptyForm());
       router.push(`/crm/leads/${created.id}`);
     } catch (e: any) {
-      setFormError(e?.message || 'Failed to create lead');
+      setFormError(e?.message || "Failed to create lead");
     }
   };
 
@@ -121,7 +121,7 @@ export function LeadCreateDialog({ open, onOpenChange }: Props) {
             <div>
               <Label>Phone</Label>
               <Input
-                value={formData.phone || ''}
+                value={formData.phone || ""}
                 onChange={(e) =>
                   setFormData((p) => ({ ...p, phone: e.target.value }))
                 }
@@ -131,7 +131,7 @@ export function LeadCreateDialog({ open, onOpenChange }: Props) {
               <div>
                 <Label>Lead type</Label>
                 <Input
-                  value={formData.leadType || ''}
+                  value={formData.leadType || ""}
                   onChange={(e) =>
                     setFormData((p) => ({ ...p, leadType: e.target.value }))
                   }
@@ -143,7 +143,7 @@ export function LeadCreateDialog({ open, onOpenChange }: Props) {
                 <Select
                   value={String(formData.source || LeadSource.WEBSITE)}
                   onValueChange={(v) => {
-                    if (v === '__custom__') {
+                    if (v === "__custom__") {
                       setShowCustomLeadSourceDialog(true);
                       return;
                     }
@@ -156,16 +156,16 @@ export function LeadCreateDialog({ open, onOpenChange }: Props) {
                   <SelectContent>
                     {Object.values(LeadSource).map((s) => (
                       <SelectItem key={s} value={s}>
-                        {s.replace(/_/g, ' ')}
+                        {s.replace(/_/g, " ")}
                       </SelectItem>
                     ))}
                     {(customLeadSources || [])
                       .filter((s) => Boolean(s?.name?.trim()))
                       .map((s) => (
-                      <SelectItem key={s.id} value={s.name}>
-                        {s.name}
-                      </SelectItem>
-                    ))}
+                        <SelectItem key={s.id} value={s.name}>
+                          {s.name}
+                        </SelectItem>
+                      ))}
                     <SelectItem value="__custom__">+ Custom</SelectItem>
                   </SelectContent>
                 </Select>
@@ -174,7 +174,7 @@ export function LeadCreateDialog({ open, onOpenChange }: Props) {
             <div>
               <Label>Notes</Label>
               <Textarea
-                value={formData.notes || ''}
+                value={formData.notes || ""}
                 onChange={(e) =>
                   setFormData((p) => ({ ...p, notes: e.target.value }))
                 }

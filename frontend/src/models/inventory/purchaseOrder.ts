@@ -1,12 +1,12 @@
 export enum PurchaseOrderStatus {
-  DRAFT = 'draft',
-  SUBMITTED = 'submitted',
-  APPROVED = 'approved',
-  ORDERED = 'ordered',
-  ARRIVED = 'arrived',
-  PARTIALLY_RECEIVED = 'partially_received',
-  RECEIVED = 'received',
-  CANCELLED = 'cancelled',
+  DRAFT = "draft",
+  SUBMITTED = "submitted",
+  APPROVED = "approved",
+  ORDERED = "ordered",
+  ARRIVED = "arrived",
+  PARTIALLY_RECEIVED = "partially_received",
+  RECEIVED = "received",
+  CANCELLED = "cancelled",
 }
 
 export interface PurchaseOrderItem {
@@ -34,7 +34,7 @@ export interface PurchaseOrder {
   totalAmount: number;
   notes?: string;
   vehicleReg?: string;
-  purchaseForType?: 'vehicle' | 'garage';
+  purchaseForType?: "vehicle" | "garage";
   vehicleId?: string;
   jobCardId?: string | null;
   department?: string;
@@ -56,7 +56,7 @@ export interface PurchaseOrderCreate {
   status?: PurchaseOrderStatus;
   notes?: string;
   vehicleReg?: string;
-  purchaseForType?: 'vehicle' | 'garage';
+  purchaseForType?: "vehicle" | "garage";
   vehicleId?: string;
   jobCardId?: string | null;
   department?: string;
@@ -79,7 +79,7 @@ export interface PurchaseOrderUpdate {
   totalAmount?: number;
   notes?: string;
   vehicleReg?: string | null;
-  purchaseForType?: 'vehicle' | 'garage';
+  purchaseForType?: "vehicle" | "garage";
   vehicleId?: string | null;
   jobCardId?: string | null;
   department?: string;

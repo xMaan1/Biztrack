@@ -1,8 +1,8 @@
-import React from 'react';
-import { Button } from '@/src/components/ui/button';
-import { Label } from '@/src/components/ui/label';
-import { Paperclip, ExternalLink, Trash2 } from 'lucide-react';
-import { ContactCreate, ContactAttachment } from '@/src/models/crm';
+import React from "react";
+import { Button } from "@/src/components/ui/button";
+import { Label } from "@/src/components/ui/label";
+import { Paperclip, ExternalLink, Trash2 } from "lucide-react";
+import { ContactCreate, ContactAttachment } from "@/src/models/crm";
 
 type ContactFormAttachmentsSectionProps = {
   formData: ContactCreate;
@@ -38,7 +38,7 @@ export function ContactFormAttachmentsSection({
           onClick={() => attachmentFileInputRef.current?.click()}
         >
           <Paperclip className="h-4 w-4 mr-1" />
-          {attachmentUploading ? 'Uploading…' : 'Add file'}
+          {attachmentUploading ? "Uploading…" : "Add file"}
         </Button>
         <span className="text-xs text-muted-foreground">
           PDF, DOC, DOCX (max 10MB)
@@ -55,7 +55,7 @@ export function ContactFormAttachmentsSection({
                 className="truncate flex-1"
                 title={att.original_filename || att.url}
               >
-                {att.original_filename || 'Attachment'}
+                {att.original_filename || "Attachment"}
               </span>
               <div className="flex items-center gap-1 shrink-0">
                 <a

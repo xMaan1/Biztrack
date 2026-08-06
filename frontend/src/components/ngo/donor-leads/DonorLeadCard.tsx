@@ -1,13 +1,22 @@
-import { Building2, Calendar, DollarSign, Edit, Eye, Tag, Trash2, User } from 'lucide-react';
-import { Badge } from '@/src/components/ui/badge';
-import { Button } from '@/src/components/ui/button';
-import type { DonorLead } from '@/src/models/ngo';
+import {
+  Building2,
+  Calendar,
+  DollarSign,
+  Edit,
+  Eye,
+  Tag,
+  Trash2,
+  User,
+} from "lucide-react";
+import { Badge } from "@/src/components/ui/badge";
+import { Button } from "@/src/components/ui/button";
+import type { DonorLead } from "@/src/models/ngo";
 import {
   donorLeadSourceLabel,
   donorLeadStatusBadgeClass,
   donorLeadStatusLabel,
   formatDonorLeadDate,
-} from '@/src/utils/ngo/donorLeadUtils';
+} from "@/src/utils/ngo/donorLeadUtils";
 
 type DonorLeadCardProps = {
   lead: DonorLead;
@@ -29,7 +38,9 @@ export function DonorLeadCard({
       <div className="mb-3 flex items-start justify-between">
         <div>
           <h3 className="text-lg font-bold text-gray-800">{lead.full_name}</h3>
-          <p className="text-sm text-muted-foreground">{lead.email || 'No email'}</p>
+          <p className="text-sm text-muted-foreground">
+            {lead.email || "No email"}
+          </p>
         </div>
         <Badge className={donorLeadStatusBadgeClass(lead.status)}>
           {donorLeadStatusLabel(lead.status)}
@@ -64,15 +75,30 @@ export function DonorLeadCard({
         )}
       </div>
       <div className="mt-4 flex justify-end gap-3 border-t pt-3">
-        <Button variant="ghost" size="sm" className="text-emerald-600" onClick={onView}>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-emerald-600"
+          onClick={onView}
+        >
           <Eye className="mr-1 h-4 w-4" />
           View
         </Button>
-        <Button variant="ghost" size="sm" className="text-blue-600" onClick={onEdit}>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-blue-600"
+          onClick={onEdit}
+        >
           <Edit className="mr-1 h-4 w-4" />
           Edit
         </Button>
-        <Button variant="ghost" size="sm" className="text-red-600" onClick={onDelete}>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-red-600"
+          onClick={onDelete}
+        >
           <Trash2 className="mr-1 h-4 w-4" />
           Delete
         </Button>

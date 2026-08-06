@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   Dialog,
@@ -7,11 +7,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/src/components/ui/dialog';
-import { Button } from '@/src/components/ui/button';
-import type { MotBooking } from '@/src/models/mot/MotBooking';
-import type { MotBookingFormData } from './types';
-import { MotBookingFormFields } from './MotBookingFormFields';
+} from "@/src/components/ui/dialog";
+import { Button } from "@/src/components/ui/button";
+import type { MotBooking } from "@/src/models/mot/MotBooking";
+import type { MotBookingFormData } from "./types";
+import { MotBookingFormFields } from "./MotBookingFormFields";
 
 type MotBookingFormDialogProps = {
   open: boolean;
@@ -38,11 +38,13 @@ export function MotBookingFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{editingBooking ? 'Edit MOT Booking' : 'New MOT Booking'}</DialogTitle>
+          <DialogTitle>
+            {editingBooking ? "Edit MOT Booking" : "New MOT Booking"}
+          </DialogTitle>
           <DialogDescription>
             {editingBooking
-              ? 'Update the MOT checkup booking details.'
-              : 'Schedule a new MOT test appointment.'}
+              ? "Update the MOT checkup booking details."
+              : "Schedule a new MOT test appointment."}
           </DialogDescription>
         </DialogHeader>
 
@@ -54,11 +56,15 @@ export function MotBookingFormDialog({
           />
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={saving}>
-              {editingBooking ? 'Update Booking' : 'Create Booking'}
+              {editingBooking ? "Update Booking" : "Create Booking"}
             </Button>
           </DialogFooter>
         </form>

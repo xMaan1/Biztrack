@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { Pin } from 'lucide-react';
-import { LeadSavedFilter } from '@/src/models/crm';
+import { Pin } from "lucide-react";
+import { LeadSavedFilter } from "@/src/models/crm";
 
 type Props = {
   pinned: LeadSavedFilter[];
@@ -20,7 +20,7 @@ export function LeadsPinnedFilters({ pinned, onApply }: Props) {
           type="button"
           onClick={() => onApply(sf)}
           className="rounded-full px-3 py-1 text-white text-xs"
-          style={{ backgroundColor: sf.color || '#3b82f6' }}
+          style={{ backgroundColor: sf.color || "#3b82f6" }}
         >
           {sf.name}
         </button>

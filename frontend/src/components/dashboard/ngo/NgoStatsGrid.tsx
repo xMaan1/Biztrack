@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
 import {
   CircleDollarSign,
   HeartHandshake,
   TrendingUp,
   Users,
-} from 'lucide-react';
-import type { NgoSnapshot } from '@/src/types/ngoDashboard';
-import { NgoStatCard } from './NgoStatCard';
+} from "lucide-react";
+import type { NgoSnapshot } from "@/src/types/ngoDashboard";
+import { NgoStatCard } from "./NgoStatCard";
 
 type NgoStatsGridProps = {
   snapshot: NgoSnapshot;

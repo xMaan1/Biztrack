@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { ClipboardCheck, ExternalLink, Plus } from 'lucide-react';
-import { Button } from '@/src/components/ui/button';
-import { useAuth } from '@/src/contexts/AuthContext';
-import { getTenantMotBookingUrl } from '@/src/models/mot/MotSettings';
+import Link from "next/link";
+import { ClipboardCheck, ExternalLink, Plus } from "lucide-react";
+import { Button } from "@/src/components/ui/button";
+import { useAuth } from "@/src/contexts/AuthContext";
+import { getTenantMotBookingUrl } from "@/src/models/mot/MotSettings";
 
 export function MotBookingsPageHeader() {
   const { currentTenant } = useAuth();
   const tenantDomain = currentTenant?.domain;
-  const bookingUrl = tenantDomain ? getTenantMotBookingUrl(tenantDomain) : '';
+  const bookingUrl = tenantDomain ? getTenantMotBookingUrl(tenantDomain) : "";
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-4">
@@ -23,9 +23,13 @@ export function MotBookingsPageHeader() {
         </p>
         {tenantDomain && (
           <p className="mt-2 text-sm text-muted-foreground">
-            Public booking URL:{' '}
-            <Link href={bookingUrl} target="_blank" className="font-medium text-primary hover:underline">
-              {typeof window !== 'undefined'
+            Public booking URL:{" "}
+            <Link
+              href={bookingUrl}
+              target="_blank"
+              className="font-medium text-primary hover:underline"
+            >
+              {typeof window !== "undefined"
                 ? `${window.location.origin}${bookingUrl}`
                 : bookingUrl}
             </Link>

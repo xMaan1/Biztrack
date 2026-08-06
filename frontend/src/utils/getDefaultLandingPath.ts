@@ -1,17 +1,17 @@
-import { SIDEBAR_PATH_PERMISSIONS } from '@/src/constants/rbacPermissions';
+import { SIDEBAR_PATH_PERMISSIONS } from "@/src/constants/rbacPermissions";
 
 const LANDING_PRIORITY = [
-  '/dashboard',
-  '/projects',
-  '/users',
-  '/crm',
-  '/tasks',
-  '/team',
-  '/inventory/products',
-  '/sales/invoice-dashboard',
-  '/hrm/employees',
-  '/reports',
-  '/events',
+  "/dashboard",
+  "/projects",
+  "/users",
+  "/crm",
+  "/tasks",
+  "/team",
+  "/inventory/products",
+  "/sales/invoice-dashboard",
+  "/hrm/employees",
+  "/reports",
+  "/events",
 ];
 
 export function getDefaultLandingPath(
@@ -19,12 +19,12 @@ export function getDefaultLandingPath(
   isOwner: boolean,
   userRole?: string,
 ): string {
-  if (userRole === 'super_admin') {
-    return '/admin/tenants';
+  if (userRole === "super_admin") {
+    return "/admin/tenants";
   }
 
   if (isOwner) {
-    return '/dashboard';
+    return "/dashboard";
   }
 
   for (const path of LANDING_PRIORITY) {
@@ -40,5 +40,5 @@ export function getDefaultLandingPath(
     }
   }
 
-  return '/dashboard';
+  return "/dashboard";
 }

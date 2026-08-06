@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { useRouter } from 'next/navigation';
-import { usePermissions } from '@/src/hooks/usePermissions';
-import { useAuth } from '@/src/contexts/AuthContext';
-import { getDefaultLandingPath } from '@/src/utils/getDefaultLandingPath';
+import React from "react";
+import { useRouter } from "next/navigation";
+import { usePermissions } from "@/src/hooks/usePermissions";
+import { useAuth } from "@/src/contexts/AuthContext";
+import { getDefaultLandingPath } from "@/src/utils/getDefaultLandingPath";
 
 interface PermissionGuardProps {
   children: React.ReactNode;
@@ -23,7 +23,13 @@ export function PermissionGuard({
   fallback = <div>Access Denied</div>,
   redirectTo = undefined,
 }: PermissionGuardProps) {
-  const { hasPermission, hasModuleAccess, isOwner, userPermissions, initializing } = usePermissions();
+  const {
+    hasPermission,
+    hasModuleAccess,
+    isOwner,
+    userPermissions,
+    initializing,
+  } = usePermissions();
   const { user } = useAuth();
   const router = useRouter();
 
@@ -34,13 +40,14 @@ export function PermissionGuard({
     return true;
   })();
 
-  const resolvedRedirect = redirectTo === undefined
-    ? getDefaultLandingPath(
-        userPermissions?.permissions || [],
-        userPermissions?.is_owner || false,
-        user?.userRole,
-      )
-    : redirectTo;
+  const resolvedRedirect =
+    redirectTo === undefined
+      ? getDefaultLandingPath(
+          userPermissions?.permissions || [],
+          userPermissions?.is_owner || false,
+          user?.userRole,
+        )
+      : redirectTo;
 
   React.useEffect(() => {
     if (!initializing && userPermissions && !hasAccess && resolvedRedirect) {
@@ -49,9 +56,11 @@ export function PermissionGuard({
   }, [hasAccess, resolvedRedirect, router, initializing, userPermissions]);
 
   if (initializing || !userPermissions) {
-    return <div className="flex items-center justify-center p-8">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-    </div>;
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
   }
 
   if (!hasAccess) {
@@ -68,9 +77,18 @@ interface ModuleGuardProps {
   redirectTo?: string | null;
 }
 
-export function ModuleGuard({ children, module, fallback, redirectTo }: ModuleGuardProps) {
+export function ModuleGuard({
+  children,
+  module,
+  fallback,
+  redirectTo,
+}: ModuleGuardProps) {
   return (
-    <PermissionGuard module={module} fallback={fallback} redirectTo={redirectTo}>
+    <PermissionGuard
+      module={module}
+      fallback={fallback}
+      redirectTo={redirectTo}
+    >
       {children}
     </PermissionGuard>
   );
@@ -82,9 +100,17 @@ interface OwnerGuardProps {
   redirectTo?: string | null;
 }
 
-export function OwnerGuard({ children, fallback, redirectTo }: OwnerGuardProps) {
+export function OwnerGuard({
+  children,
+  fallback,
+  redirectTo,
+}: OwnerGuardProps) {
   return (
-    <PermissionGuard requireOwner={true} fallback={fallback} redirectTo={redirectTo}>
+    <PermissionGuard
+      requireOwner={true}
+      fallback={fallback}
+      redirectTo={redirectTo}
+    >
       {children}
     </PermissionGuard>
   );
@@ -96,12 +122,16 @@ interface SuperAdminGuardProps {
   redirectTo?: string;
 }
 
-export function SuperAdminGuard({ children, fallback, redirectTo }: SuperAdminGuardProps) {
+export function SuperAdminGuard({
+  children,
+  fallback,
+  redirectTo,
+}: SuperAdminGuardProps) {
   const { user } = useAuth();
   const router = useRouter();
 
   // Check if user is super admin
-  const isSuperAdmin = user?.userRole === 'super_admin';
+  const isSuperAdmin = user?.userRole === "super_admin";
 
   // Redirect if no access and redirectTo is specified
   React.useEffect(() => {
@@ -111,9 +141,14 @@ export function SuperAdminGuard({ children, fallback, redirectTo }: SuperAdminGu
   }, [isSuperAdmin, redirectTo, router]);
 
   if (!isSuperAdmin) {
-    return <>{fallback || <div>You need super admin privileges to access this page.</div>}</>;
+    return (
+      <>
+        {fallback || (
+          <div>You need super admin privileges to access this page.</div>
+        )}
+      </>
+    );
   }
 
   return <>{children}</>;
 }
-

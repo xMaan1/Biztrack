@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,12 +8,12 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '../ui/dialog';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { Alert, AlertDescription } from '../ui/alert';
-import { Progress } from '../ui/progress';
+} from "../ui/dialog";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { Alert, AlertDescription } from "../ui/alert";
+import { Progress } from "../ui/progress";
 import {
   Upload,
   Download,
@@ -22,10 +22,10 @@ import {
   XCircle,
   AlertCircle,
   Loader2,
-} from 'lucide-react';
-import { apiService } from '../../services/ApiService';
-import { toast } from 'sonner';
-import { extractErrorMessage } from '@/src/utils/errorUtils';
+} from "lucide-react";
+import { apiService } from "../../services/ApiService";
+import { toast } from "sonner";
+import { extractErrorMessage } from "@/src/utils/errorUtils";
 
 interface ImportResult {
   success: boolean;
@@ -54,9 +54,9 @@ export default function CustomerImportDialog({
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
-      const fileExtension = selectedFile.name.toLowerCase().split('.').pop();
-      if (!['csv', 'xlsx', 'xls'].includes(fileExtension || '')) {
-        toast.error('Please select a CSV or Excel file');
+      const fileExtension = selectedFile.name.toLowerCase().split(".").pop();
+      if (!["csv", "xlsx", "xls"].includes(fileExtension || "")) {
+        toast.error("Please select a CSV or Excel file");
         return;
       }
       setFile(selectedFile);
@@ -66,7 +66,7 @@ export default function CustomerImportDialog({
 
   const handleImport = async () => {
     if (!file) {
-      toast.error('Please select a file to import');
+      toast.error("Please select a file to import");
       return;
     }
 
@@ -76,7 +76,7 @@ export default function CustomerImportDialog({
 
       // Simulate progress
       const progressInterval = setInterval(() => {
-        setProgress(prev => {
+        setProgress((prev) => {
           if (prev >= 90) {
             clearInterval(progressInterval);
             return 90;
@@ -86,13 +86,17 @@ export default function CustomerImportDialog({
       }, 200);
 
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append("file", file);
 
-      const response = await apiService.post('/crm/customers/import', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
+      const response = await apiService.post(
+        "/crm/customers/import",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
         },
-      });
+      );
 
       clearInterval(progressInterval);
       setProgress(100);
@@ -107,16 +111,18 @@ export default function CustomerImportDialog({
         });
 
         if (response.imported_count > 0) {
-          toast.success(`Successfully imported ${response.imported_count} customers`);
+          toast.success(
+            `Successfully imported ${response.imported_count} customers`,
+          );
           onImportComplete();
         } else {
-          toast.error('No customers were imported');
+          toast.error("No customers were imported");
         }
       } else {
-        toast.error(response.message || 'Import failed');
+        toast.error(response.message || "Import failed");
       }
     } catch (error: any) {
-      const errorMessage = extractErrorMessage(error, 'Import failed');
+      const errorMessage = extractErrorMessage(error, "Import failed");
       toast.error(errorMessage);
       setImportResult({
         success: false,
@@ -132,26 +138,26 @@ export default function CustomerImportDialog({
 
   const handleDownloadTemplate = async () => {
     try {
-      const response = await apiService.get('/crm/customers/import/template');
+      const response = await apiService.get("/crm/customers/import/template");
 
       if (response.success) {
         // Create blob and download
-        const blob = new Blob([response.template], { type: 'text/csv' });
+        const blob = new Blob([response.template], { type: "text/csv" });
         const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
+        const link = document.createElement("a");
         link.href = url;
-        link.download = response.filename || 'customer_import_template.csv';
+        link.download = response.filename || "customer_import_template.csv";
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
 
-        toast.success('Template downloaded successfully');
+        toast.success("Template downloaded successfully");
       } else {
-        toast.error('Failed to download template');
+        toast.error("Failed to download template");
       }
     } catch (error) {
-      toast.error('Failed to download template');
+      toast.error("Failed to download template");
     }
   };
 
@@ -166,8 +172,10 @@ export default function CustomerImportDialog({
 
   const getStatusIcon = () => {
     if (uploading) return <Loader2 className="h-4 w-4 animate-spin" />;
-    if (importResult?.success) return <CheckCircle className="h-4 w-4 text-green-500" />;
-    if (importResult && !importResult.success) return <XCircle className="h-4 w-4 text-red-500" />;
+    if (importResult?.success)
+      return <CheckCircle className="h-4 w-4 text-green-500" />;
+    if (importResult && !importResult.success)
+      return <XCircle className="h-4 w-4 text-red-500" />;
     return <FileText className="h-4 w-4" />;
   };
 
@@ -238,14 +246,21 @@ export default function CustomerImportDialog({
 
           {/* Import Result */}
           {importResult && (
-            <Alert className={importResult.success ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}>
+            <Alert
+              className={
+                importResult.success
+                  ? "border-green-200 bg-green-50"
+                  : "border-red-200 bg-red-50"
+              }
+            >
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
                 <div className="space-y-2">
                   <p className="font-medium">{importResult.message}</p>
                   {importResult.imported_count > 0 && (
                     <p className="text-sm">
-                      ✅ Successfully imported: {importResult.imported_count} customers
+                      ✅ Successfully imported: {importResult.imported_count}{" "}
+                      customers
                     </p>
                   )}
                   {importResult.failed_count > 0 && (
@@ -261,7 +276,9 @@ export default function CustomerImportDialog({
                           <li key={index}>{error}</li>
                         ))}
                         {importResult.errors.length > 5 && (
-                          <li>... and {importResult.errors.length - 5} more errors</li>
+                          <li>
+                            ... and {importResult.errors.length - 5} more errors
+                          </li>
                         )}
                       </ul>
                     </div>
@@ -275,9 +292,15 @@ export default function CustomerImportDialog({
           <div className="text-sm text-gray-600 space-y-2">
             <p className="font-medium">Required columns:</p>
             <ul className="list-disc list-inside space-y-1 ml-4">
-              <li><strong>firstName</strong> - Customer's first name</li>
-              <li><strong>lastName</strong> - Customer's last name</li>
-              <li><strong>email</strong> - Customer's email address</li>
+              <li>
+                <strong>firstName</strong> - Customer&apos;s first name
+              </li>
+              <li>
+                <strong>lastName</strong> - Customer&apos;s last name
+              </li>
+              <li>
+                <strong>email</strong> - Customer&apos;s email address
+              </li>
             </ul>
             <p className="font-medium mt-3">Optional columns:</p>
             <ul className="list-disc list-inside space-y-1 ml-4">
@@ -291,7 +314,7 @@ export default function CustomerImportDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={handleClose} disabled={uploading}>
-            {importResult ? 'Close' : 'Cancel'}
+            {importResult ? "Close" : "Cancel"}
           </Button>
           {!importResult && (
             <Button

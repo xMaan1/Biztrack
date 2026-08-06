@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import type { UseInvoiceFormReturn } from '@/src/hooks/useInvoiceForm';
-import type { InvoiceFormMode } from '@/src/types/sales/invoiceForm';
-import { CommerceInvoiceFormHeader } from '../commerce-invoice/CommerceInvoiceFormHeader';
-import { InvoiceFormDetailsSection } from './InvoiceFormDetailsSection';
-import { InvoiceFormItemsSection } from './InvoiceFormItemsSection';
-import { InvoiceFormTotalsSummary } from './InvoiceFormTotalsSummary';
-import { InvoiceLabourCostSection } from './InvoiceLabourCostSection';
-import { InvoiceFormNotesSection } from './InvoiceFormNotesSection';
-import { InvoiceInstallmentSection } from './InvoiceInstallmentSection';
-import { InvoiceFormActions } from './InvoiceFormActions';
+import type { UseInvoiceFormReturn } from "@/src/hooks/useInvoiceForm";
+import type { InvoiceFormMode } from "@/src/types/sales/invoiceForm";
+import { CommerceInvoiceFormHeader } from "../commerce-invoice/CommerceInvoiceFormHeader";
+import { InvoiceFormDetailsSection } from "./InvoiceFormDetailsSection";
+import { InvoiceFormItemsSection } from "./InvoiceFormItemsSection";
+import { InvoiceFormTotalsSummary } from "./InvoiceFormTotalsSummary";
+import { InvoiceLabourCostSection } from "./InvoiceLabourCostSection";
+import { InvoiceFormNotesSection } from "./InvoiceFormNotesSection";
+import { InvoiceInstallmentSection } from "./InvoiceInstallmentSection";
+import { InvoiceFormActions } from "./InvoiceFormActions";
 
 type WorkshopInvoiceFormProps = {
   mode: InvoiceFormMode;
@@ -17,18 +17,25 @@ type WorkshopInvoiceFormProps = {
   error?: string | null;
 };
 
-export function WorkshopInvoiceForm({ mode, form, error }: WorkshopInvoiceFormProps) {
+export function WorkshopInvoiceForm({
+  mode,
+  form,
+  error,
+}: WorkshopInvoiceFormProps) {
   const clearNewItemErrors = () => {
-    form.clearFieldError('newItemProduct');
-    form.clearFieldError('newItemDescription');
-    form.clearFieldError('newItemQuantity');
-    form.clearFieldError('newItemUnitPrice');
+    form.clearFieldError("newItemProduct");
+    form.clearFieldError("newItemDescription");
+    form.clearFieldError("newItemQuantity");
+    form.clearFieldError("newItemUnitPrice");
   };
 
   return (
-    <form onSubmit={form.handleSubmit} className="flex w-full min-w-0 max-w-full flex-col gap-2 text-foreground">
+    <form
+      onSubmit={form.handleSubmit}
+      className="flex w-full min-w-0 max-w-full flex-col gap-2 text-foreground"
+    >
       <CommerceInvoiceFormHeader
-        mode={mode === 'view' ? 'create' : mode}
+        mode={mode === "view" ? "create" : mode}
         onClearInvoice={form.clearInvoice}
       />
 
@@ -57,6 +64,8 @@ export function WorkshopInvoiceForm({ mode, form, error }: WorkshopInvoiceFormPr
         onNewItemChange={form.setNewItem}
         onAddItem={form.addItem}
         onRemoveItem={form.removeItem}
+        onUpdateItem={form.updateItem}
+        onProductSelect={form.handleProductSelect}
         clearNewItemErrors={clearNewItemErrors}
       />
 
@@ -68,9 +77,12 @@ export function WorkshopInvoiceForm({ mode, form, error }: WorkshopInvoiceFormPr
 
       <InvoiceFormTotalsSummary totals={form.totals} />
 
-      <InvoiceFormNotesSection formData={form.formData} onInputChange={form.handleInputChange} />
+      <InvoiceFormNotesSection
+        formData={form.formData}
+        onInputChange={form.handleInputChange}
+      />
 
-      {form.isCommerceOrAgency && mode !== 'view' && (
+      {form.isCommerceOrAgency && mode !== "view" && (
         <InvoiceInstallmentSection
           createInstallmentPlan={form.createInstallmentPlan}
           installmentCount={form.installmentCount}
@@ -83,7 +95,12 @@ export function WorkshopInvoiceForm({ mode, form, error }: WorkshopInvoiceFormPr
         />
       )}
 
-      <InvoiceFormActions mode={mode} loading={form.loading} error={error} onCancel={form.handleDismiss} />
+      <InvoiceFormActions
+        mode={mode}
+        loading={form.loading}
+        error={error}
+        onCancel={form.handleDismiss}
+      />
     </form>
   );
 }

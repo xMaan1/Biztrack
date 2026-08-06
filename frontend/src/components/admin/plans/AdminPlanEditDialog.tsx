@@ -1,22 +1,22 @@
-'use client';
+"use client";
 
-import { Button } from '@/src/components/ui/button';
+import { Button } from "@/src/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/src/components/ui/dialog';
-import { Input } from '@/src/components/ui/input';
+} from "@/src/components/ui/dialog";
+import { Input } from "@/src/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
-import type { AdminPlan } from '@/src/types/adminPlan';
+} from "@/src/components/ui/select";
+import type { AdminPlan } from "@/src/types/adminPlan";
 
 type AdminPlanEditDialogProps = {
   open: boolean;
@@ -54,7 +54,9 @@ export function AdminPlanEditDialog({
         <div className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium text-gray-700">Plan Name</label>
+              <label className="text-sm font-medium text-gray-700">
+                Plan Name
+              </label>
               <Input
                 value={plan.name}
                 onChange={(e) => onPatchPlan({ name: e.target.value })}
@@ -74,7 +76,9 @@ export function AdminPlanEditDialog({
           </div>
 
           <div>
-            <label className="text-sm font-medium text-gray-700">Description</label>
+            <label className="text-sm font-medium text-gray-700">
+              Description
+            </label>
             <Input
               value={plan.description}
               onChange={(e) => onPatchPlan({ description: e.target.value })}
@@ -83,7 +87,9 @@ export function AdminPlanEditDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium text-gray-700">Billing Cycle</label>
+              <label className="text-sm font-medium text-gray-700">
+                Billing Cycle
+              </label>
               <Select
                 value={plan.billingCycle}
                 onValueChange={(value) => onPatchPlan({ billingCycle: value })}
@@ -98,10 +104,12 @@ export function AdminPlanEditDialog({
               </Select>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700">Max Users</label>
+              <label className="text-sm font-medium text-gray-700">
+                Max Users
+              </label>
               <Input
                 type="number"
-                value={plan.maxUsers ?? ''}
+                value={plan.maxUsers ?? ""}
                 onChange={(e) => {
                   const parsed = parseInt(e.target.value, 10);
                   onPatchPlan({
@@ -120,7 +128,10 @@ export function AdminPlanEditDialog({
               onChange={(e) => onPatchPlan({ isActive: e.target.checked })}
               className="rounded"
             />
-            <label htmlFor="isActive" className="text-sm font-medium text-gray-700">
+            <label
+              htmlFor="isActive"
+              className="text-sm font-medium text-gray-700"
+            >
               Plan is active
             </label>
           </div>
@@ -130,7 +141,7 @@ export function AdminPlanEditDialog({
               Cancel
             </Button>
             <Button onClick={onSave} disabled={isUpdating}>
-              {isUpdating ? 'Updating...' : 'Update Plan'}
+              {isUpdating ? "Updating..." : "Update Plan"}
             </Button>
           </div>
         </div>

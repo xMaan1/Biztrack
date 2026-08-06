@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
 
 export default function StorageLocationEditRedirectPage() {
   const params = useParams<{ id: string }>();
@@ -10,7 +10,7 @@ export default function StorageLocationEditRedirectPage() {
   useEffect(() => {
     const id = params?.id;
     if (!id) {
-      router.replace('/inventory/storage-locations');
+      router.replace("/inventory/storage-locations");
       return;
     }
     router.replace(`/inventory/storage-locations?edit=${id}`);

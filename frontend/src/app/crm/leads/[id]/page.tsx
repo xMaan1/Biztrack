@@ -1,31 +1,31 @@
-'use client';
+"use client";
 
-import React, { useCallback, useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { ModuleGuard } from '../../../../components/guards/PermissionGuard';
-import { DashboardLayout } from '../../../../components/layout';
-import { Button } from '@/src/components/ui/button';
-import CRMService from '@/src/services/CRMService';
-import { Lead } from '@/src/models/crm';
-import { useRBAC } from '@/src/contexts/RBACContext';
-import { mapTenantUsers } from '@/src/components/crm/leads/leadUtils';
-import { LeadDetailHeader } from '@/src/components/crm/leads/detail/LeadDetailHeader';
-import { LeadActivityInfoCard } from '@/src/components/crm/leads/detail/LeadActivityInfoCard';
-import { LeadContactCard } from '@/src/components/crm/leads/detail/LeadContactCard';
-import { LeadOpenTaskBanner } from '@/src/components/crm/leads/detail/LeadOpenTaskBanner';
-import { LeadStatsSection } from '@/src/components/crm/leads/detail/LeadStatsSection';
-import { LeadPipelineIntegrations } from '@/src/components/crm/leads/detail/LeadPipelineIntegrations';
-import { LeadListingSearchesCard } from '@/src/components/crm/leads/detail/LeadListingSearchesCard';
-import { LeadWorkspaceTabs } from '@/src/components/crm/leads/detail/LeadWorkspaceTabs';
-import { LeadDataPanel } from '@/src/components/crm/leads/detail/LeadDataPanel';
-import { LeadMapPanel } from '@/src/components/crm/leads/detail/LeadMapPanel';
-import { LeadAgentsPanel } from '@/src/components/crm/leads/detail/LeadAgentsPanel';
+import React, { useCallback, useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { ModuleGuard } from "../../../../components/guards/PermissionGuard";
+import { DashboardLayout } from "../../../../components/layout";
+import { Button } from "@/src/components/ui/button";
+import CRMService from "@/src/services/CRMService";
+import { Lead } from "@/src/models/crm";
+import { useRBAC } from "@/src/contexts/RBACContext";
+import { mapTenantUsers } from "@/src/components/crm/leads/leadUtils";
+import { LeadDetailHeader } from "@/src/components/crm/leads/detail/LeadDetailHeader";
+import { LeadActivityInfoCard } from "@/src/components/crm/leads/detail/LeadActivityInfoCard";
+import { LeadContactCard } from "@/src/components/crm/leads/detail/LeadContactCard";
+import { LeadOpenTaskBanner } from "@/src/components/crm/leads/detail/LeadOpenTaskBanner";
+import { LeadStatsSection } from "@/src/components/crm/leads/detail/LeadStatsSection";
+import { LeadPipelineIntegrations } from "@/src/components/crm/leads/detail/LeadPipelineIntegrations";
+import { LeadListingSearchesCard } from "@/src/components/crm/leads/detail/LeadListingSearchesCard";
+import { LeadWorkspaceTabs } from "@/src/components/crm/leads/detail/LeadWorkspaceTabs";
+import { LeadDataPanel } from "@/src/components/crm/leads/detail/LeadDataPanel";
+import { LeadMapPanel } from "@/src/components/crm/leads/detail/LeadMapPanel";
+import { LeadAgentsPanel } from "@/src/components/crm/leads/detail/LeadAgentsPanel";
 
 export default function LeadDetailPage() {
   return (
     <ModuleGuard
       module="crm"
-      fallback={<div>You don't have access to CRM module</div>}
+      fallback={<div>You don&apos;t have access to CRM module</div>}
     >
       <LeadDetailContent />
     </ModuleGuard>
@@ -36,7 +36,7 @@ function LeadDetailContent() {
   const params = useParams();
   const router = useRouter();
   const { tenantUsers, fetchTenantUsers } = useRBAC();
-  const leadId = String(params.id || '');
+  const leadId = String(params.id || "");
 
   const [lead, setLead] = useState<Lead | null>(null);
   const [loading, setLoading] = useState(true);
@@ -87,7 +87,7 @@ function LeadDetailContent() {
       <DashboardLayout>
         <div className="p-6">
           <p>Lead not found</p>
-          <Button className="mt-4" onClick={() => router.push('/crm/leads')}>
+          <Button className="mt-4" onClick={() => router.push("/crm/leads")}>
             Back to leads
           </Button>
         </div>

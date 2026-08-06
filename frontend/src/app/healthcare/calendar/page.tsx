@@ -1,9 +1,14 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { DashboardLayout } from '@/src/components/layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
+import React, { useState, useEffect, useCallback } from "react";
+import { DashboardLayout } from "@/src/components/layout";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
 import {
   ChevronLeft,
   ChevronRight,
@@ -16,18 +21,23 @@ import {
   UserPlus,
   CheckCircle,
   XCircle,
-} from 'lucide-react';
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/src/components/ui/dropdown-menu';
-import healthcareService from '@/src/services/HealthcareService';
-import type { Appointment, AppointmentCreate, Doctor, Patient } from '@/src/models/healthcare';
-import { APPOINTMENT_STATUSES } from '@/src/models/healthcare';
-import { toast } from 'sonner';
+} from "@/src/components/ui/dropdown-menu";
+import healthcareService from "@/src/services/HealthcareService";
+import {
+  APPOINTMENT_STATUSES,
+  type Appointment,
+  type AppointmentCreate,
+  type Doctor,
+  type Patient,
+} from "@/src/models/healthcare";
+import { toast } from "sonner";
 import {
   format,
   startOfMonth,
@@ -37,9 +47,9 @@ import {
   addMonths,
   subMonths,
   isToday,
-} from 'date-fns';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+} from "date-fns";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -47,17 +57,17 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/src/components/ui/dialog';
-import { Input } from '@/src/components/ui/input';
-import { Label } from '@/src/components/ui/label';
-import { Textarea } from '@/src/components/ui/textarea';
+} from "@/src/components/ui/dialog";
+import { Input } from "@/src/components/ui/input";
+import { Label } from "@/src/components/ui/label";
+import { Textarea } from "@/src/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
+} from "@/src/components/ui/select";
 
 export default function HealthcareCalendarPage() {
   return (
@@ -76,36 +86,40 @@ function CalendarContent() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [dayDialogOpen, setDayDialogOpen] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
-  const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
-  const [formData, setFormData] = useState<AppointmentCreate & { patient_id?: string }>({
-    doctor_id: '',
-    patient_id: '__none__',
-    patient_name: '',
-    patient_phone: '',
-    appointment_date: '',
-    start_time: '09:00',
-    end_time: '09:30',
-    status: 'scheduled',
-    notes: '',
+  const [editingAppointment, setEditingAppointment] =
+    useState<Appointment | null>(null);
+  const [formData, setFormData] = useState<
+    AppointmentCreate & { patient_id?: string }
+  >({
+    doctor_id: "",
+    patient_id: "__none__",
+    patient_name: "",
+    patient_phone: "",
+    appointment_date: "",
+    start_time: "09:00",
+    end_time: "09:30",
+    status: "scheduled",
+    notes: "",
   });
   const [submitLoading, setSubmitLoading] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [appointmentToDelete, setAppointmentToDelete] = useState<Appointment | null>(null);
+  const [appointmentToDelete, setAppointmentToDelete] =
+    useState<Appointment | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const router = useRouter();
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
-  const dateFrom = format(monthStart, 'yyyy-MM-dd');
-  const dateTo = format(monthEnd, 'yyyy-MM-dd');
+  const dateFrom = format(monthStart, "yyyy-MM-dd");
+  const dateTo = format(monthEnd, "yyyy-MM-dd");
 
   const loadDoctors = useCallback(async () => {
     try {
       const res = await healthcareService.getDoctors({ limit: 500 });
       setDoctors(res.doctors);
     } catch {
-      toast.error('Failed to load doctors');
+      toast.error("Failed to load doctors");
     }
   }, []);
 
@@ -114,17 +128,22 @@ function CalendarContent() {
       const res = await healthcareService.getPatients({ limit: 500 });
       setPatients(res.patients);
     } catch {
-      toast.error('Failed to load patients');
+      toast.error("Failed to load patients");
     }
   }, []);
 
   const loadAppointments = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await healthcareService.getAppointmentsCalendar({ date_from: dateFrom, date_to: dateTo });
+      const res = await healthcareService.getAppointmentsCalendar({
+        date_from: dateFrom,
+        date_to: dateTo,
+      });
       setAppointments(res.appointments);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Failed to load appointments');
+      toast.error(
+        e instanceof Error ? e.message : "Failed to load appointments",
+      );
     } finally {
       setLoading(false);
     }
@@ -158,7 +177,7 @@ function CalendarContent() {
   const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
   const firstDayOfWeek = monthStart.getDay();
   const leadingBlanks = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
-  const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
   const openDay = (d: Date) => {
     setSelectedDate(d);
@@ -169,15 +188,15 @@ function CalendarContent() {
     const d = selectedDate || new Date();
     setEditingAppointment(null);
     setFormData({
-      doctor_id: doctors[0]?.id ?? '',
-      patient_id: '__none__',
-      patient_name: '',
-      patient_phone: '',
-      appointment_date: format(d, 'yyyy-MM-dd'),
-      start_time: '09:00',
-      end_time: '09:30',
-      status: 'scheduled',
-      notes: '',
+      doctor_id: doctors[0]?.id ?? "",
+      patient_id: "__none__",
+      patient_name: "",
+      patient_phone: "",
+      appointment_date: format(d, "yyyy-MM-dd"),
+      start_time: "09:00",
+      end_time: "09:30",
+      status: "scheduled",
+      notes: "",
     });
     setDayDialogOpen(false);
     setFormOpen(true);
@@ -187,22 +206,27 @@ function CalendarContent() {
     setEditingAppointment(a);
     setFormData({
       doctor_id: a.doctor_id,
-      patient_id: a.patient_id ?? '__none__',
+      patient_id: a.patient_id ?? "__none__",
       patient_name: a.patient_name,
-      patient_phone: a.patient_phone ?? '',
+      patient_phone: a.patient_phone ?? "",
       appointment_date: a.appointment_date,
       start_time: a.start_time,
       end_time: a.end_time,
       status: a.status,
-      notes: a.notes ?? '',
+      notes: a.notes ?? "",
     });
     setDayDialogOpen(false);
     setFormOpen(true);
   };
 
   const onPatientSelect = (value: string) => {
-    if (value === '__none__') {
-      setFormData((prev) => ({ ...prev, patient_id: '__none__', patient_name: '', patient_phone: '' }));
+    if (value === "__none__") {
+      setFormData((prev) => ({
+        ...prev,
+        patient_id: "__none__",
+        patient_name: "",
+        patient_phone: "",
+      }));
     } else {
       const p = patients.find((x) => x.id === value);
       if (p) {
@@ -210,7 +234,7 @@ function CalendarContent() {
           ...prev,
           patient_id: p.id,
           patient_name: p.full_name,
-          patient_phone: p.phone ?? '',
+          patient_phone: p.phone ?? "",
         }));
       }
     }
@@ -225,17 +249,22 @@ function CalendarContent() {
   const handleComplete = async (a: Appointment) => {
     try {
       setActionLoadingId(a.id);
-      await healthcareService.updateAppointment(a.id, { status: 'completed' });
-      toast.success('Appointment completed');
+      await healthcareService.updateAppointment(a.id, { status: "completed" });
+      toast.success("Appointment completed");
       loadAppointments();
     } catch (e: unknown) {
       const msg =
-        e && typeof e === 'object' && 'response' in e && e.response && typeof e.response === 'object' && 'data' in e.response
+        e &&
+        typeof e === "object" &&
+        "response" in e &&
+        e.response &&
+        typeof e.response === "object" &&
+        "data" in e.response
           ? (e.response as { data?: { detail?: string } }).data?.detail
           : e instanceof Error
             ? e.message
-            : 'Update failed';
-      toast.error(typeof msg === 'string' ? msg : JSON.stringify(msg));
+            : "Update failed";
+      toast.error(typeof msg === "string" ? msg : JSON.stringify(msg));
     } finally {
       setActionLoadingId(null);
     }
@@ -254,7 +283,9 @@ function CalendarContent() {
   };
 
   const handleAdmitPatient = (a: Appointment) => {
-    toast.info(`Admit ${a.patient_name} – will appear in Admitted Patients. Full integration coming soon.`);
+    toast.info(
+      `Admit ${a.patient_name} – will appear in Admitted Patients. Full integration coming soon.`,
+    );
   };
 
   const handleFormChange = (field: keyof AppointmentCreate, value: string) => {
@@ -263,12 +294,13 @@ function CalendarContent() {
 
   const handleSubmit = async () => {
     if (!formData.doctor_id) {
-      toast.error('Select a doctor');
+      toast.error("Select a doctor");
       return;
     }
-    const usePatientId = formData.patient_id && formData.patient_id !== '__none__';
+    const usePatientId =
+      formData.patient_id && formData.patient_id !== "__none__";
     if (!usePatientId && !formData.patient_name?.trim()) {
-      toast.error('Select a patient or enter patient name');
+      toast.error("Select a patient or enter patient name");
       return;
     }
     try {
@@ -278,33 +310,41 @@ function CalendarContent() {
         appointment_date: formData.appointment_date,
         start_time: formData.start_time,
         end_time: formData.end_time,
-        status: formData.status || 'scheduled',
+        status: formData.status || "scheduled",
         notes: formData.notes || undefined,
       };
       if (usePatientId) {
         payload.patient_id = formData.patient_id;
       } else {
-        payload.patient_id = editingAppointment ? '' : undefined;
+        payload.patient_id = editingAppointment ? "" : undefined;
         payload.patient_name = formData.patient_name!.trim();
         payload.patient_phone = formData.patient_phone?.trim() || undefined;
       }
       if (editingAppointment) {
-        await healthcareService.updateAppointment(editingAppointment.id, payload);
-        toast.success('Appointment updated');
+        await healthcareService.updateAppointment(
+          editingAppointment.id,
+          payload,
+        );
+        toast.success("Appointment updated");
       } else {
         await healthcareService.createAppointment(payload);
-        toast.success('Appointment created');
+        toast.success("Appointment created");
       }
       setFormOpen(false);
       loadAppointments();
     } catch (e: unknown) {
       const msg =
-        e && typeof e === 'object' && 'response' in e && e.response && typeof e.response === 'object' && 'data' in e.response
+        e &&
+        typeof e === "object" &&
+        "response" in e &&
+        e.response &&
+        typeof e.response === "object" &&
+        "data" in e.response
           ? (e.response as { data?: { detail?: string } }).data?.detail
           : e instanceof Error
             ? e.message
-            : 'Request failed';
-      toast.error(typeof msg === 'string' ? msg : JSON.stringify(msg));
+            : "Request failed";
+      toast.error(typeof msg === "string" ? msg : JSON.stringify(msg));
     } finally {
       setSubmitLoading(false);
     }
@@ -315,28 +355,37 @@ function CalendarContent() {
     try {
       setDeleteLoading(true);
       await healthcareService.deleteAppointment(appointmentToDelete.id);
-      toast.success('Appointment deleted');
+      toast.success("Appointment deleted");
       setDeleteDialogOpen(false);
       setAppointmentToDelete(null);
       loadAppointments();
     } catch (e: unknown) {
       const msg =
-        e && typeof e === 'object' && 'response' in e && e.response && typeof e.response === 'object' && 'data' in e.response
+        e &&
+        typeof e === "object" &&
+        "response" in e &&
+        e.response &&
+        typeof e.response === "object" &&
+        "data" in e.response
           ? (e.response as { data?: { detail?: string } }).data?.detail
           : e instanceof Error
             ? e.message
-            : 'Delete failed';
-      toast.error(typeof msg === 'string' ? msg : JSON.stringify(msg));
+            : "Delete failed";
+      toast.error(typeof msg === "string" ? msg : JSON.stringify(msg));
     } finally {
       setDeleteLoading(false);
     }
   };
 
   const doctorName = (a: Appointment) =>
-    [a.doctor_first_name, a.doctor_last_name].filter(Boolean).join(' ') || '—';
+    [a.doctor_first_name, a.doctor_last_name].filter(Boolean).join(" ") || "—";
 
-  const selectedDateStr = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '';
-  const dayAppointments = selectedDateStr ? appointmentsByDate[selectedDateStr] ?? [] : [];
+  const selectedDateStr = selectedDate
+    ? format(selectedDate, "yyyy-MM-dd")
+    : "";
+  const dayAppointments = selectedDateStr
+    ? (appointmentsByDate[selectedDateStr] ?? [])
+    : [];
 
   return (
     <div className="container mx-auto px-6 py-8">
@@ -355,7 +404,9 @@ function CalendarContent() {
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-xl">{format(currentMonth, 'MMMM yyyy')}</CardTitle>
+          <CardTitle className="text-xl">
+            {format(currentMonth, "MMMM yyyy")}
+          </CardTitle>
           <div className="flex gap-2">
             <Button
               variant="outline"
@@ -387,7 +438,10 @@ function CalendarContent() {
             <>
               <div className="grid grid-cols-7 gap-px mb-2">
                 {weekDays.map((wd) => (
-                  <div key={wd} className="text-center text-sm font-medium text-gray-600 py-1">
+                  <div
+                    key={wd}
+                    className="text-center text-sm font-medium text-gray-600 py-1"
+                  >
                     {wd}
                   </div>
                 ))}
@@ -397,7 +451,7 @@ function CalendarContent() {
                   <div key={`blank-${i}`} className="min-h-[100px] bg-white" />
                 ))}
                 {days.map((d) => {
-                  const dateStr = format(d, 'yyyy-MM-dd');
+                  const dateStr = format(d, "yyyy-MM-dd");
                   const dayAppts = appointmentsByDate[dateStr] ?? [];
                   const isCurrentMonth = isSameMonth(d, currentMonth);
                   const isTodayDate = isToday(d);
@@ -405,7 +459,7 @@ function CalendarContent() {
                     <div
                       key={dateStr}
                       className={`min-h-[100px] bg-white p-1 flex flex-col ${
-                        !isCurrentMonth ? 'opacity-50' : ''
+                        !isCurrentMonth ? "opacity-50" : ""
                       }`}
                     >
                       <button
@@ -413,11 +467,11 @@ function CalendarContent() {
                         onClick={() => openDay(d)}
                         className={`w-8 h-8 rounded-full text-sm font-medium flex items-center justify-center ${
                           isTodayDate
-                            ? 'bg-blue-600 text-white'
-                            : 'hover:bg-gray-200'
+                            ? "bg-blue-600 text-white"
+                            : "hover:bg-gray-200"
                         }`}
                       >
-                        {format(d, 'd')}
+                        {format(d, "d")}
                       </button>
                       <div className="flex-1 overflow-y-auto space-y-0.5 mt-1">
                         {dayAppts.slice(0, 3).map((a) => (
@@ -430,7 +484,9 @@ function CalendarContent() {
                           </div>
                         ))}
                         {dayAppts.length > 3 && (
-                          <div className="text-xs text-gray-500">+{dayAppts.length - 3} more</div>
+                          <div className="text-xs text-gray-500">
+                            +{dayAppts.length - 3} more
+                          </div>
                         )}
                       </div>
                     </div>
@@ -446,7 +502,7 @@ function CalendarContent() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {selectedDate ? format(selectedDate, 'EEEE, MMM d, yyyy') : 'Day'}
+              {selectedDate ? format(selectedDate, "EEEE, MMM d, yyyy") : "Day"}
             </DialogTitle>
             <DialogDescription>
               Appointments on this day. Add new or edit existing.
@@ -462,9 +518,13 @@ function CalendarContent() {
                   className="flex items-center justify-between p-2 rounded border bg-gray-50"
                 >
                   <div>
-                    <span className="font-medium">{a.start_time} – {a.end_time}</span>
+                    <span className="font-medium">
+                      {a.start_time} – {a.end_time}
+                    </span>
                     <span className="ml-2">{a.patient_name}</span>
-                    <span className="block text-sm text-gray-600">{doctorName(a)} · {a.status}</span>
+                    <span className="block text-sm text-gray-600">
+                      {doctorName(a)} · {a.status}
+                    </span>
                   </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -481,11 +541,15 @@ function CalendarContent() {
                         <FileText className="w-4 h-4 mr-2" />
                         Assign prescription
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleViewPrescriptions(a)}>
+                      <DropdownMenuItem
+                        onClick={() => handleViewPrescriptions(a)}
+                      >
                         <FileText className="w-4 h-4 mr-2" />
                         View prescriptions
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleGenerateInvoice(a)}>
+                      <DropdownMenuItem
+                        onClick={() => handleGenerateInvoice(a)}
+                      >
                         <Receipt className="w-4 h-4 mr-2" />
                         Generate invoice
                       </DropdownMenuItem>
@@ -494,13 +558,15 @@ function CalendarContent() {
                         Admit patient
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      {a.status !== 'completed' && (
+                      {a.status !== "completed" && (
                         <DropdownMenuItem
                           onClick={() => handleComplete(a)}
                           disabled={actionLoadingId === a.id}
                         >
                           <CheckCircle className="w-4 h-4 mr-2 text-green-600" />
-                          {actionLoadingId === a.id ? 'Updating...' : 'Complete'}
+                          {actionLoadingId === a.id
+                            ? "Updating..."
+                            : "Complete"}
                         </DropdownMenuItem>
                       )}
                       <DropdownMenuItem onClick={() => openDelete(a)}>
@@ -533,7 +599,9 @@ function CalendarContent() {
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
         <DialogContent className="sm:max-w-[480px]">
           <DialogHeader>
-            <DialogTitle>{editingAppointment ? 'Edit Appointment' : 'Add Appointment'}</DialogTitle>
+            <DialogTitle>
+              {editingAppointment ? "Edit Appointment" : "Add Appointment"}
+            </DialogTitle>
             <DialogDescription>Patient and time details</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -541,7 +609,7 @@ function CalendarContent() {
               <Label>Doctor</Label>
               <Select
                 value={formData.doctor_id}
-                onValueChange={(v) => handleFormChange('doctor_id', v)}
+                onValueChange={(v) => handleFormChange("doctor_id", v)}
                 disabled={doctors.length === 0}
               >
                 <SelectTrigger>
@@ -551,7 +619,7 @@ function CalendarContent() {
                   {doctors.map((d) => (
                     <SelectItem key={d.id} value={d.id}>
                       {d.first_name} {d.last_name}
-                      {d.specialization ? ` (${d.specialization})` : ''}
+                      {d.specialization ? ` (${d.specialization})` : ""}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -560,52 +628,65 @@ function CalendarContent() {
             <div className="space-y-2">
               <Label>Patient</Label>
               <Select
-                value={formData.patient_id ?? '__none__'}
+                value={formData.patient_id ?? "__none__"}
                 onValueChange={onPatientSelect}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select patient" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__none__">Walk-in (enter name below)</SelectItem>
+                  <SelectItem value="__none__">
+                    Walk-in (enter name below)
+                  </SelectItem>
                   {patients.map((p) => (
                     <SelectItem key={p.id} value={p.id}>
                       {p.full_name}
-                      {p.phone ? ` – ${p.phone}` : ''}
+                      {p.phone ? ` – ${p.phone}` : ""}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            {(formData.patient_id === '__none__' || !formData.patient_id) && (
+            {(formData.patient_id === "__none__" || !formData.patient_id) && (
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Patient name</Label>
                   <Input
-                    value={formData.patient_name ?? ''}
-                    onChange={(e) => handleFormChange('patient_name', e.target.value)}
+                    value={formData.patient_name ?? ""}
+                    onChange={(e) =>
+                      handleFormChange("patient_name", e.target.value)
+                    }
                     placeholder="Full name"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Patient phone</Label>
                   <Input
-                    value={formData.patient_phone ?? ''}
-                    onChange={(e) => handleFormChange('patient_phone', e.target.value)}
+                    value={formData.patient_phone ?? ""}
+                    onChange={(e) =>
+                      handleFormChange("patient_phone", e.target.value)
+                    }
                     placeholder="Optional"
                   />
                 </div>
               </div>
             )}
-            {formData.patient_id && formData.patient_id !== '__none__' && formData.patient_name && (
-              <p className="text-sm text-gray-600">Patient: {formData.patient_name}{formData.patient_phone ? ` (${formData.patient_phone})` : ''}</p>
-            )}
+            {formData.patient_id &&
+              formData.patient_id !== "__none__" &&
+              formData.patient_name && (
+                <p className="text-sm text-gray-600">
+                  Patient: {formData.patient_name}
+                  {formData.patient_phone ? ` (${formData.patient_phone})` : ""}
+                </p>
+              )}
             <div className="space-y-2">
               <Label>Date</Label>
               <Input
                 type="date"
                 value={formData.appointment_date}
-                onChange={(e) => handleFormChange('appointment_date', e.target.value)}
+                onChange={(e) =>
+                  handleFormChange("appointment_date", e.target.value)
+                }
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -614,7 +695,9 @@ function CalendarContent() {
                 <Input
                   type="time"
                   value={formData.start_time}
-                  onChange={(e) => handleFormChange('start_time', e.target.value)}
+                  onChange={(e) =>
+                    handleFormChange("start_time", e.target.value)
+                  }
                 />
               </div>
               <div className="space-y-2">
@@ -622,13 +705,16 @@ function CalendarContent() {
                 <Input
                   type="time"
                   value={formData.end_time}
-                  onChange={(e) => handleFormChange('end_time', e.target.value)}
+                  onChange={(e) => handleFormChange("end_time", e.target.value)}
                 />
               </div>
             </div>
             <div className="space-y-2">
               <Label>Status</Label>
-              <Select value={formData.status} onValueChange={(v) => handleFormChange('status', v)}>
+              <Select
+                value={formData.status}
+                onValueChange={(v) => handleFormChange("status", v)}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -644,8 +730,8 @@ function CalendarContent() {
             <div className="space-y-2">
               <Label>Notes</Label>
               <Textarea
-                value={formData.notes ?? ''}
-                onChange={(e) => handleFormChange('notes', e.target.value)}
+                value={formData.notes ?? ""}
+                onChange={(e) => handleFormChange("notes", e.target.value)}
                 placeholder="Optional notes"
                 rows={2}
               />
@@ -656,7 +742,11 @@ function CalendarContent() {
               Cancel
             </Button>
             <Button onClick={handleSubmit} disabled={submitLoading}>
-              {submitLoading ? 'Saving...' : editingAppointment ? 'Update' : 'Create'}
+              {submitLoading
+                ? "Saving..."
+                : editingAppointment
+                  ? "Update"
+                  : "Create"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -667,17 +757,26 @@ function CalendarContent() {
           <DialogHeader>
             <DialogTitle>Delete Appointment</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete the appointment for{' '}
-              {appointmentToDelete ? `${appointmentToDelete.patient_name}` : 'this appointment'}
+              Are you sure you want to delete the appointment for{" "}
+              {appointmentToDelete
+                ? `${appointmentToDelete.patient_name}`
+                : "this appointment"}
               ? This cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+            >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDelete} disabled={deleteLoading}>
-              {deleteLoading ? 'Deleting...' : 'Delete'}
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={deleteLoading}
+            >
+              {deleteLoading ? "Deleting..." : "Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>

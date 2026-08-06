@@ -4,9 +4,9 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Badge } from '@/src/components/ui/badge';
+} from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { Badge } from "@/src/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -14,10 +14,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/src/components/ui/table';
-import { Edit, Trash2, Eye } from 'lucide-react';
-import CRMService from '@/src/services/CRMService';
-import { Lead } from '@/src/models/crm';
+} from "@/src/components/ui/table";
+import { Edit, Trash2, Eye } from "lucide-react";
+import CRMService from "@/src/services/CRMService";
+import { Lead } from "@/src/models/crm";
 
 type LeadsListCardProps = {
   leads: Lead[];
@@ -32,16 +32,14 @@ type LeadsListCardProps = {
 };
 
 function leadSourceLabel(lead: Lead): string {
-  const raw = (lead.leadSource ?? lead.source) ?? '';
-  if (!raw) return '—';
-  return raw
-    .replace(/_/g, ' ')
-    .replace(/\b\w/g, (c) => c.toUpperCase());
+  const raw = lead.leadSource ?? lead.source ?? "";
+  if (!raw) return "—";
+  return raw.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 function displayEmail(email?: string | null): string {
-  if (!email) return '—';
-  if (email.endsWith('@noemail.crm')) return '—';
+  if (!email) return "—";
+  if (email.endsWith("@noemail.crm")) return "—";
   return email;
 }
 
@@ -66,7 +64,7 @@ export function LeadsListCard({
       </CardHeader>
       <CardContent className="p-0 sm:p-6 pt-0 space-y-4">
         <div
-          className={`rounded-md border relative ${listLoading ? 'opacity-60 pointer-events-none' : ''}`}
+          className={`rounded-md border relative ${listLoading ? "opacity-60 pointer-events-none" : ""}`}
         >
           {listLoading && (
             <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-10">
@@ -105,25 +103,25 @@ export function LeadsListCard({
                     {lead.firstName} {lead.lastName}
                   </TableCell>
                   <TableCell className="max-w-[200px] truncate text-muted-foreground">
-                    {displayEmail(lead.email) || '—'}
+                    {displayEmail(lead.email) || "—"}
                   </TableCell>
                   <TableCell className="whitespace-nowrap text-muted-foreground">
-                    {lead.phone?.trim() || '—'}
+                    {lead.phone?.trim() || "—"}
                   </TableCell>
                   <TableCell className="max-w-[140px] truncate">
-                    {lead.company?.trim() || '—'}
+                    {lead.company?.trim() || "—"}
                   </TableCell>
                   <TableCell className="max-w-[120px] truncate text-muted-foreground">
-                    {lead.jobTitle?.trim() || '—'}
+                    {lead.jobTitle?.trim() || "—"}
                   </TableCell>
                   <TableCell>
                     <Badge
                       className={CRMService.getLeadStatusColor(
-                        lead.status ?? 'new',
+                        lead.status ?? "new",
                       )}
                     >
-                      {(lead.status ?? 'new').charAt(0).toUpperCase() +
-                        (lead.status ?? 'new').slice(1)}
+                      {(lead.status ?? "new").charAt(0).toUpperCase() +
+                        (lead.status ?? "new").slice(1)}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -132,7 +130,7 @@ export function LeadsListCard({
                     </Badge>
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {lead.score > 0 ? lead.score : '—'}
+                    {lead.score > 0 ? lead.score : "—"}
                   </TableCell>
                   <TableCell className="whitespace-nowrap text-muted-foreground text-sm">
                     {CRMService.formatDate(lead.createdAt)}

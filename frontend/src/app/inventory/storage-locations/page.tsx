@@ -1,24 +1,24 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { ModuleGuard } from '../../../components/guards/PermissionGuard';
+import React, { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { ModuleGuard } from "../../../components/guards/PermissionGuard";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from '../../../components/ui/card';
-import { Button } from '../../../components/ui/button';
-import { Badge } from '../../../components/ui/badge';
-import { Input } from '../../../components/ui/input';
+} from "../../../components/ui/card";
+import { Button } from "../../../components/ui/button";
+import { Badge } from "../../../components/ui/badge";
+import { Input } from "../../../components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../../components/ui/select';
+} from "../../../components/ui/select";
 import {
   Table,
   TableBody,
@@ -26,7 +26,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../../../components/ui/table';
+} from "../../../components/ui/table";
 import {
   MapPin,
   Plus,
@@ -36,17 +36,17 @@ import {
   Building2,
   Package,
   Layers,
-} from 'lucide-react';
-import { useAuth } from '../../../contexts/AuthContext';
-import { inventoryService } from '../../../services/InventoryService';
+} from "lucide-react";
+import { useAuth } from "../../../contexts/AuthContext";
+import { inventoryService } from "../../../services/InventoryService";
 import {
   StorageLocation,
   Warehouse,
   StorageLocationCreate,
   StorageLocationUpdate,
-} from '../../../models/inventory';
-import { DashboardLayout } from '../../../components/layout';
-import { formatDate } from '../../../lib/utils';
+} from "../../../models/inventory";
+import { DashboardLayout } from "../../../components/layout";
+import { formatDate } from "../../../lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -54,20 +54,23 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '../../../components/ui/dialog';
-import { Label } from '../../../components/ui/label';
-import { Textarea } from '../../../components/ui/textarea';
+} from "../../../components/ui/dialog";
+import { Label } from "../../../components/ui/label";
+import { Textarea } from "../../../components/ui/textarea";
 
 export default function StorageLocationsPage() {
   return (
-    <ModuleGuard module="inventory" fallback={<div>You don't have access to Inventory module</div>}>
+    <ModuleGuard
+      module="inventory"
+      fallback={<div>You don&apos;t have access to Inventory module</div>}
+    >
       <StorageLocationsContent />
     </ModuleGuard>
   );
 }
 
 function StorageLocationsContent() {
-  const { } = useAuth();
+  const {} = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [storageLocations, setStorageLocations] = useState<StorageLocation[]>(
@@ -75,36 +78,39 @@ function StorageLocationsContent() {
   );
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [warehouseFilter, setWarehouseFilter] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [warehouseFilter, setWarehouseFilter] = useState<string>("all");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false);
-  const [locationToDelete, setLocationToDelete] = useState<StorageLocation | null>(null);
-  const [locationToEdit, setLocationToEdit] = useState<StorageLocation | null>(null);
+  const [locationToDelete, setLocationToDelete] =
+    useState<StorageLocation | null>(null);
+  const [locationToEdit, setLocationToEdit] = useState<StorageLocation | null>(
+    null,
+  );
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newLocation, setNewLocation] = useState<StorageLocationCreate>({
-    warehouseId: '',
-    name: '',
-    code: '',
-    description: '',
-    locationType: 'shelf',
-    parentLocationId: '',
+    warehouseId: "",
+    name: "",
+    code: "",
+    description: "",
+    locationType: "shelf",
+    parentLocationId: "",
     capacity: undefined,
     usedCapacity: undefined,
     isActive: true,
   });
   const [editLocation, setEditLocation] = useState<StorageLocationUpdate>({
-    warehouseId: '',
-    name: '',
-    code: '',
-    description: '',
-    locationType: 'shelf',
-    parentLocationId: '',
+    warehouseId: "",
+    name: "",
+    code: "",
+    description: "",
+    locationType: "shelf",
+    parentLocationId: "",
     capacity: undefined,
     usedCapacity: undefined,
     isActive: true,
@@ -115,7 +121,7 @@ function StorageLocationsContent() {
   }, []);
 
   useEffect(() => {
-    const editId = searchParams.get('edit');
+    const editId = searchParams.get("edit");
     if (!editId || storageLocations.length === 0 || isEditModalOpen) return;
     const location = storageLocations.find((item) => item.id === editId);
     if (!location) return;
@@ -143,7 +149,7 @@ function StorageLocationsContent() {
         }));
       }
     } catch (error) {
-      } finally {
+    } finally {
       setLoading(false);
     }
   };
@@ -155,7 +161,7 @@ function StorageLocationsContent() {
       location.description?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesWarehouse =
-      warehouseFilter === 'all' ||
+      warehouseFilter === "all" ||
       !warehouseFilter ||
       location.warehouseId === warehouseFilter;
 
@@ -164,7 +170,7 @@ function StorageLocationsContent() {
 
   const getWarehouseName = (warehouseId: string) => {
     const warehouse = warehouses.find((w) => w.id === warehouseId);
-    return warehouse ? warehouse.name : 'Unknown Warehouse';
+    return warehouse ? warehouse.name : "Unknown Warehouse";
   };
 
   const openDeleteDialog = (location: StorageLocation) => {
@@ -178,9 +184,9 @@ function StorageLocationsContent() {
       warehouseId: location.warehouseId,
       name: location.name,
       code: location.code,
-      description: location.description || '',
+      description: location.description || "",
       locationType: location.locationType,
-      parentLocationId: location.parentLocationId || '',
+      parentLocationId: location.parentLocationId || "",
       capacity: location.capacity,
       usedCapacity: location.usedCapacity,
       isActive: location.isActive,
@@ -192,18 +198,18 @@ function StorageLocationsContent() {
     setIsEditModalOpen(false);
     setLocationToEdit(null);
     setEditLocation({
-      warehouseId: '',
-      name: '',
-      code: '',
-      description: '',
-      locationType: 'shelf',
-      parentLocationId: '',
+      warehouseId: "",
+      name: "",
+      code: "",
+      description: "",
+      locationType: "shelf",
+      parentLocationId: "",
       capacity: undefined,
       usedCapacity: undefined,
       isActive: true,
     });
-    if (searchParams.get('edit')) {
-      router.replace('/inventory/storage-locations');
+    if (searchParams.get("edit")) {
+      router.replace("/inventory/storage-locations");
     }
   };
 
@@ -214,14 +220,14 @@ function StorageLocationsContent() {
 
   const handleDelete = async () => {
     if (!locationToDelete) return;
-    
+
     try {
       setDeleteLoading(true);
       await inventoryService.deleteStorageLocation(locationToDelete.id);
       fetchData();
       closeDeleteDialog();
     } catch (error) {
-      setErrorMessage('Failed to delete storage location. Please try again.');
+      setErrorMessage("Failed to delete storage location. Please try again.");
       setIsErrorDialogOpen(true);
     } finally {
       setDeleteLoading(false);
@@ -230,12 +236,12 @@ function StorageLocationsContent() {
 
   const getLocationTypeBadge = (type: string) => {
     const typeConfig = {
-      shelf: { variant: 'default', label: 'Shelf' },
-      rack: { variant: 'secondary', label: 'Rack' },
-      bin: { variant: 'outline', label: 'Bin' },
-      area: { variant: 'outline', label: 'Area' },
-      zone: { variant: 'outline', label: 'Zone' },
-      room: { variant: 'outline', label: 'Room' },
+      shelf: { variant: "default", label: "Shelf" },
+      rack: { variant: "secondary", label: "Rack" },
+      bin: { variant: "outline", label: "Bin" },
+      area: { variant: "outline", label: "Area" },
+      zone: { variant: "outline", label: "Zone" },
+      room: { variant: "outline", label: "Room" },
     };
 
     const config =
@@ -250,7 +256,7 @@ function StorageLocationsContent() {
 
   const handleAddLocation = async () => {
     if (!newLocation.warehouseId || !newLocation.name || !newLocation.code) {
-      setErrorMessage('Please fill in all required fields');
+      setErrorMessage("Please fill in all required fields");
       setIsErrorDialogOpen(true);
       return;
     }
@@ -260,19 +266,19 @@ function StorageLocationsContent() {
       await inventoryService.createStorageLocation(newLocation);
       setIsAddModalOpen(false);
       setNewLocation({
-        warehouseId: warehouses.length > 0 ? warehouses[0].id : '',
-        name: '',
-        code: '',
-        description: '',
-        locationType: 'shelf',
-        parentLocationId: '',
+        warehouseId: warehouses.length > 0 ? warehouses[0].id : "",
+        name: "",
+        code: "",
+        description: "",
+        locationType: "shelf",
+        parentLocationId: "",
         capacity: undefined,
         usedCapacity: undefined,
         isActive: true,
       });
       fetchData();
     } catch (error) {
-      setErrorMessage('Failed to create storage location. Please try again.');
+      setErrorMessage("Failed to create storage location. Please try again.");
       setIsErrorDialogOpen(true);
     } finally {
       setIsSubmitting(false);
@@ -282,20 +288,23 @@ function StorageLocationsContent() {
   const handleEditLocation = async () => {
     if (!locationToEdit) return;
     if (!editLocation.warehouseId || !editLocation.name || !editLocation.code) {
-      setErrorMessage('Please fill in all required fields');
+      setErrorMessage("Please fill in all required fields");
       setIsErrorDialogOpen(true);
       return;
     }
     try {
       setEditLoading(true);
-      await inventoryService.updateStorageLocation(locationToEdit.id, editLocation);
+      await inventoryService.updateStorageLocation(
+        locationToEdit.id,
+        editLocation,
+      );
       closeEditModal();
       fetchData();
-      if (searchParams.get('edit')) {
-        router.replace('/inventory/storage-locations');
+      if (searchParams.get("edit")) {
+        router.replace("/inventory/storage-locations");
       }
     } catch {
-      setErrorMessage('Failed to update storage location. Please try again.');
+      setErrorMessage("Failed to update storage location. Please try again.");
       setIsErrorDialogOpen(true);
     } finally {
       setEditLoading(false);
@@ -304,12 +313,12 @@ function StorageLocationsContent() {
 
   const resetForm = () => {
     setNewLocation({
-      warehouseId: warehouses.length > 0 ? warehouses[0].id : '',
-      name: '',
-      code: '',
-      description: '',
-      locationType: 'shelf',
-      parentLocationId: '',
+      warehouseId: warehouses.length > 0 ? warehouses[0].id : "",
+      name: "",
+      code: "",
+      description: "",
+      locationType: "shelf",
+      parentLocationId: "",
       capacity: undefined,
       usedCapacity: undefined,
       isActive: true,
@@ -434,7 +443,7 @@ function StorageLocationsContent() {
                             <div className="flex items-center gap-2">
                               <Package className="h-4 w-4 text-muted-foreground" />
                               <span className="text-sm">
-                                {location.usedCapacity || 0} /{' '}
+                                {location.usedCapacity || 0} /{" "}
                                 {location.capacity} m³
                               </span>
                             </div>
@@ -453,9 +462,9 @@ function StorageLocationsContent() {
                       </TableCell>
                       <TableCell>
                         <Badge
-                          variant={location.isActive ? 'default' : 'secondary'}
+                          variant={location.isActive ? "default" : "secondary"}
                         >
-                          {location.isActive ? 'Active' : 'Inactive'}
+                          {location.isActive ? "Active" : "Inactive"}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -492,11 +501,11 @@ function StorageLocationsContent() {
                   No storage locations found
                 </h3>
                 <p className="text-muted-foreground mb-4">
-                  {searchTerm || warehouseFilter !== 'all'
-                    ? 'Try adjusting your search terms or filters'
-                    : 'Get started by adding your first storage location'}
+                  {searchTerm || warehouseFilter !== "all"
+                    ? "Try adjusting your search terms or filters"
+                    : "Get started by adding your first storage location"}
                 </p>
-                {!searchTerm && warehouseFilter === 'all' && (
+                {!searchTerm && warehouseFilter === "all" && (
                   <Button onClick={() => setIsAddModalOpen(true)}>
                     <Plus className="mr-2 h-4 w-4" />
                     Add Storage Location
@@ -666,7 +675,7 @@ function StorageLocationsContent() {
                 <Label htmlFor="description">Description</Label>
                 <Textarea
                   id="description"
-                  value={newLocation.description || ''}
+                  value={newLocation.description || ""}
                   onChange={(e) =>
                     setNewLocation((prev) => ({
                       ...prev,
@@ -685,7 +694,7 @@ function StorageLocationsContent() {
                     id="capacity"
                     type="number"
                     step="0.1"
-                    value={newLocation.capacity || ''}
+                    value={newLocation.capacity || ""}
                     onChange={(e) =>
                       setNewLocation((prev) => ({
                         ...prev,
@@ -703,7 +712,7 @@ function StorageLocationsContent() {
                     id="usedCapacity"
                     type="number"
                     step="0.1"
-                    value={newLocation.usedCapacity || ''}
+                    value={newLocation.usedCapacity || ""}
                     onChange={(e) =>
                       setNewLocation((prev) => ({
                         ...prev,
@@ -744,7 +753,7 @@ function StorageLocationsContent() {
                 Cancel
               </Button>
               <Button onClick={handleAddLocation} disabled={isSubmitting}>
-                {isSubmitting ? 'Creating...' : 'Create Location'}
+                {isSubmitting ? "Creating..." : "Create Location"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -769,7 +778,7 @@ function StorageLocationsContent() {
                 <div className="space-y-2">
                   <Label htmlFor="edit-warehouse">Warehouse *</Label>
                   <Select
-                    value={editLocation.warehouseId || ''}
+                    value={editLocation.warehouseId || ""}
                     onValueChange={(value) =>
                       setEditLocation((prev) => ({
                         ...prev,
@@ -792,7 +801,7 @@ function StorageLocationsContent() {
                 <div className="space-y-2">
                   <Label htmlFor="edit-locationType">Location Type *</Label>
                   <Select
-                    value={editLocation.locationType || 'shelf'}
+                    value={editLocation.locationType || "shelf"}
                     onValueChange={(value) =>
                       setEditLocation((prev) => ({
                         ...prev,
@@ -820,7 +829,7 @@ function StorageLocationsContent() {
                   <Label htmlFor="edit-name">Name *</Label>
                   <Input
                     id="edit-name"
-                    value={editLocation.name || ''}
+                    value={editLocation.name || ""}
                     onChange={(e) =>
                       setEditLocation((prev) => ({
                         ...prev,
@@ -834,7 +843,7 @@ function StorageLocationsContent() {
                   <Label htmlFor="edit-code">Code *</Label>
                   <Input
                     id="edit-code"
-                    value={editLocation.code || ''}
+                    value={editLocation.code || ""}
                     onChange={(e) =>
                       setEditLocation((prev) => ({
                         ...prev,
@@ -850,7 +859,7 @@ function StorageLocationsContent() {
                 <Label htmlFor="edit-description">Description</Label>
                 <Textarea
                   id="edit-description"
-                  value={editLocation.description || ''}
+                  value={editLocation.description || ""}
                   onChange={(e) =>
                     setEditLocation((prev) => ({
                       ...prev,
@@ -869,7 +878,7 @@ function StorageLocationsContent() {
                     id="edit-capacity"
                     type="number"
                     step="0.1"
-                    value={editLocation.capacity || ''}
+                    value={editLocation.capacity || ""}
                     onChange={(e) =>
                       setEditLocation((prev) => ({
                         ...prev,
@@ -887,7 +896,7 @@ function StorageLocationsContent() {
                     id="edit-usedCapacity"
                     type="number"
                     step="0.1"
-                    value={editLocation.usedCapacity || ''}
+                    value={editLocation.usedCapacity || ""}
                     onChange={(e) =>
                       setEditLocation((prev) => ({
                         ...prev,
@@ -926,7 +935,7 @@ function StorageLocationsContent() {
                 Cancel
               </Button>
               <Button onClick={handleEditLocation} disabled={editLoading}>
-                {editLoading ? 'Saving...' : 'Save Changes'}
+                {editLoading ? "Saving..." : "Save Changes"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -938,8 +947,9 @@ function StorageLocationsContent() {
             <DialogHeader>
               <DialogTitle>Delete Storage Location</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete{' '}
-                <strong>{locationToDelete?.name}</strong>? This action cannot be undone.
+                Are you sure you want to delete{" "}
+                <strong>{locationToDelete?.name}</strong>? This action cannot be
+                undone.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
@@ -955,7 +965,7 @@ function StorageLocationsContent() {
                 onClick={handleDelete}
                 disabled={deleteLoading}
               >
-                {deleteLoading ? 'Deleting...' : 'Delete'}
+                {deleteLoading ? "Deleting..." : "Delete"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -966,14 +976,10 @@ function StorageLocationsContent() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Error</DialogTitle>
-              <DialogDescription>
-                {errorMessage}
-              </DialogDescription>
+              <DialogDescription>{errorMessage}</DialogDescription>
             </DialogHeader>
             <DialogFooter>
-              <Button onClick={() => setIsErrorDialogOpen(false)}>
-                OK
-              </Button>
+              <Button onClick={() => setIsErrorDialogOpen(false)}>OK</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

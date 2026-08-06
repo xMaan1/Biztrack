@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { ModuleGuard } from '../../../components/guards/PermissionGuard';
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { ModuleGuard } from "../../../components/guards/PermissionGuard";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from '../../../components/ui/card';
-import { Button } from '../../../components/ui/button';
-import { Badge } from '../../../components/ui/badge';
+} from "../../../components/ui/card";
+import { Button } from "../../../components/ui/button";
+import { Badge } from "../../../components/ui/badge";
 import {
   AlertTriangle,
   Package,
@@ -21,13 +21,11 @@ import {
   ShoppingCart,
   AlertCircle,
   CheckCircle,
-} from 'lucide-react';
-import { useAuth } from '../../../contexts/AuthContext';
-import { inventoryService } from '../../../services/InventoryService';
-import {
-  InventoryDashboardStats,
-} from '../../../models/inventory';
-import { DashboardLayout } from '../../../components/layout';
+} from "lucide-react";
+import { useAuth } from "../../../contexts/AuthContext";
+import { inventoryService } from "../../../services/InventoryService";
+import { InventoryDashboardStats } from "../../../models/inventory";
+import { DashboardLayout } from "../../../components/layout";
 import {
   Dialog,
   DialogContent,
@@ -35,24 +33,27 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '../../../components/ui/dialog';
-import { Label } from '../../../components/ui/label';
+} from "../../../components/ui/dialog";
+import { Label } from "../../../components/ui/label";
 
 export default function AlertsPage() {
   return (
-    <ModuleGuard module="inventory" fallback={<div>You don't have access to Inventory module</div>}>
+    <ModuleGuard
+      module="inventory"
+      fallback={<div>You don&apos;t have access to Inventory module</div>}
+    >
       <AlertsContent />
     </ModuleGuard>
   );
 }
 
 function AlertsContent() {
-  const { } = useAuth();
+  const {} = useAuth();
   const router = useRouter();
   const [dashboardStats, setDashboardStats] =
     useState<InventoryDashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [filterType, setFilterType] = useState<string>('all');
+  const [filterType, setFilterType] = useState<string>("all");
   const [viewingAlert, setViewingAlert] = useState<any>(null);
 
   useEffect(() => {
@@ -65,7 +66,7 @@ function AlertsContent() {
       const statsResponse = await inventoryService.getInventoryDashboard();
       setDashboardStats(statsResponse);
     } catch (error) {
-      } finally {
+    } finally {
       setLoading(false);
     }
   };
@@ -74,13 +75,12 @@ function AlertsContent() {
     try {
       const stats = await inventoryService.getInventoryDashboard();
       setDashboardStats(stats);
-    } catch (error) {
-      }
+    } catch (error) {}
   };
 
   const filteredAlerts =
     dashboardStats?.lowStockAlerts?.filter((alert) => {
-      if (filterType === 'all') return true;
+      if (filterType === "all") return true;
       return alert.alertType === filterType;
     }) || [];
 
@@ -88,14 +88,13 @@ function AlertsContent() {
     setViewingAlert(alert);
   };
 
-
   const getAlertIcon = (alertType: string) => {
     switch (alertType) {
-      case 'out_of_stock':
+      case "out_of_stock":
         return <AlertTriangle className="h-5 w-5 text-red-500" />;
-      case 'low_stock':
+      case "low_stock":
         return <Package className="h-5 w-5 text-orange-500" />;
-      case 'expiry_warning':
+      case "expiry_warning":
         return <Clock className="h-5 w-5 text-yellow-500" />;
       default:
         return <AlertCircle className="h-5 w-5 text-gray-500" />;
@@ -104,9 +103,9 @@ function AlertsContent() {
 
   const getAlertBadge = (alertType: string) => {
     const badgeConfig = {
-      out_of_stock: { variant: 'destructive', label: 'Out of Stock' },
-      low_stock: { variant: 'secondary', label: 'Low Stock' },
-      expiry_warning: { variant: 'default', label: 'Expiry Warning' },
+      out_of_stock: { variant: "destructive", label: "Out of Stock" },
+      low_stock: { variant: "secondary", label: "Low Stock" },
+      expiry_warning: { variant: "default", label: "Expiry Warning" },
     };
 
     const config =
@@ -117,14 +116,14 @@ function AlertsContent() {
 
   const getPriorityColor = (alertType: string) => {
     switch (alertType) {
-      case 'out_of_stock':
-        return 'border-l-red-500 bg-red-50';
-      case 'low_stock':
-        return 'border-l-orange-500 bg-orange-50';
-      case 'expiry_warning':
-        return 'border-l-yellow-500 bg-yellow-50';
+      case "out_of_stock":
+        return "border-l-red-500 bg-red-50";
+      case "low_stock":
+        return "border-l-orange-500 bg-orange-50";
+      case "expiry_warning":
+        return "border-l-yellow-500 bg-yellow-50";
       default:
-        return 'border-l-gray-500 bg-gray-50';
+        return "border-l-gray-500 bg-gray-50";
     }
   };
 
@@ -228,20 +227,20 @@ function AlertsContent() {
           <CardContent>
             <div className="flex gap-4">
               <Button
-                variant={filterType === 'all' ? 'default' : 'outline'}
-                onClick={() => setFilterType('all')}
+                variant={filterType === "all" ? "default" : "outline"}
+                onClick={() => setFilterType("all")}
               >
                 All Alerts ({dashboardStats?.lowStockAlerts?.length || 0})
               </Button>
               <Button
-                variant={filterType === 'out_of_stock' ? 'default' : 'outline'}
-                onClick={() => setFilterType('out_of_stock')}
+                variant={filterType === "out_of_stock" ? "default" : "outline"}
+                onClick={() => setFilterType("out_of_stock")}
               >
                 Out of Stock ({dashboardStats?.outOfStockProducts || 0})
               </Button>
               <Button
-                variant={filterType === 'low_stock' ? 'default' : 'outline'}
-                onClick={() => setFilterType('low_stock')}
+                variant={filterType === "low_stock" ? "default" : "outline"}
+                onClick={() => setFilterType("low_stock")}
               >
                 Low Stock ({dashboardStats?.lowStockProducts || 0})
               </Button>
@@ -303,7 +302,9 @@ function AlertsContent() {
                         </Button>
                         <Button
                           size="sm"
-                          onClick={() => router.push('/inventory/purchase-orders')}
+                          onClick={() =>
+                            router.push("/inventory/purchase-orders")
+                          }
                         >
                           <ShoppingCart className="mr-2 h-4 w-4" />
                           Order
@@ -318,14 +319,14 @@ function AlertsContent() {
                 <CheckCircle className="h-12 w-12 mx-auto mb-4 text-green-500" />
                 <h3 className="text-lg font-medium mb-2">No alerts found</h3>
                 <p className="text-muted-foreground mb-4">
-                  {filterType === 'all'
-                    ? 'All inventory items are properly stocked'
-                    : `No ${filterType.replace('_', ' ')} alerts at the moment`}
+                  {filterType === "all"
+                    ? "All inventory items are properly stocked"
+                    : `No ${filterType.replace("_", " ")} alerts at the moment`}
                 </p>
-                {filterType !== 'all' && (
+                {filterType !== "all" && (
                   <Button
                     variant="outline"
-                    onClick={() => setFilterType('all')}
+                    onClick={() => setFilterType("all")}
                   >
                     View All Alerts
                   </Button>
@@ -345,7 +346,7 @@ function AlertsContent() {
               <Button
                 variant="outline"
                 className="h-20 flex-col gap-2"
-                onClick={() => router.push('/inventory/stock-movements')}
+                onClick={() => router.push("/inventory/stock-movements")}
               >
                 <Package className="h-6 w-6" />
                 <span>Record Stock Movement</span>
@@ -353,7 +354,7 @@ function AlertsContent() {
               <Button
                 variant="outline"
                 className="h-20 flex-col gap-2"
-                onClick={() => router.push('/inventory/products')}
+                onClick={() => router.push("/inventory/products")}
               >
                 <Eye className="h-6 w-6" />
                 <span>View All Products</span>
@@ -363,7 +364,10 @@ function AlertsContent() {
         </Card>
 
         {/* View Alert Modal */}
-        <Dialog open={!!viewingAlert} onOpenChange={() => setViewingAlert(null)}>
+        <Dialog
+          open={!!viewingAlert}
+          onOpenChange={() => setViewingAlert(null)}
+        >
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
@@ -379,46 +383,70 @@ function AlertsContent() {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-sm font-medium text-gray-600">Product Name</Label>
-                    <p className="text-lg font-semibold">{viewingAlert.productName}</p>
+                    <Label className="text-sm font-medium text-gray-600">
+                      Product Name
+                    </Label>
+                    <p className="text-lg font-semibold">
+                      {viewingAlert.productName}
+                    </p>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium text-gray-600">SKU</Label>
+                    <Label className="text-sm font-medium text-gray-600">
+                      SKU
+                    </Label>
                     <p className="text-lg font-mono">{viewingAlert.sku}</p>
                   </div>
                 </div>
 
                 <div>
-                  <Label className="text-sm font-medium text-gray-600">Alert Type</Label>
+                  <Label className="text-sm font-medium text-gray-600">
+                    Alert Type
+                  </Label>
                   <div className="mt-1">
                     {getAlertBadge(viewingAlert.alertType)}
                   </div>
                 </div>
 
                 <div>
-                  <Label className="text-sm font-medium text-gray-600">Alert Message</Label>
+                  <Label className="text-sm font-medium text-gray-600">
+                    Alert Message
+                  </Label>
                   <p className="text-gray-900 mt-1">{viewingAlert.message}</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-sm font-medium text-gray-600">Current Stock</Label>
-                    <p className="text-2xl font-bold text-red-600">{viewingAlert.currentStock}</p>
+                    <Label className="text-sm font-medium text-gray-600">
+                      Current Stock
+                    </Label>
+                    <p className="text-2xl font-bold text-red-600">
+                      {viewingAlert.currentStock}
+                    </p>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium text-gray-600">Minimum Stock Level</Label>
-                    <p className="text-2xl font-bold text-orange-600">{viewingAlert.minStockLevel}</p>
+                    <Label className="text-sm font-medium text-gray-600">
+                      Minimum Stock Level
+                    </Label>
+                    <p className="text-2xl font-bold text-orange-600">
+                      {viewingAlert.minStockLevel}
+                    </p>
                   </div>
                 </div>
 
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <AlertTriangle className="h-5 w-5 text-yellow-600" />
-                    <span className="font-medium text-yellow-800">Stock Level Warning</span>
+                    <span className="font-medium text-yellow-800">
+                      Stock Level Warning
+                    </span>
                   </div>
                   <p className="text-sm text-yellow-700">
-                    This product is {viewingAlert.currentStock < viewingAlert.minStockLevel ? 'below' : 'at'} the minimum stock level. 
-                    Consider placing a new order to replenish inventory.
+                    This product is{" "}
+                    {viewingAlert.currentStock < viewingAlert.minStockLevel
+                      ? "below"
+                      : "at"}{" "}
+                    the minimum stock level. Consider placing a new order to
+                    replenish inventory.
                   </p>
                 </div>
               </div>
@@ -428,14 +456,13 @@ function AlertsContent() {
               <Button variant="outline" onClick={() => setViewingAlert(null)}>
                 Close
               </Button>
-              <Button onClick={() => router.push('/inventory/purchase-orders')}>
+              <Button onClick={() => router.push("/inventory/purchase-orders")}>
                 <ShoppingCart className="h-4 w-4 mr-2" />
                 Create Purchase Order
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
-
       </div>
     </DashboardLayout>
   );

@@ -1,4 +1,4 @@
-import type { Product } from '@/src/models/pos';
+import type { Product } from "@/src/models/pos";
 
 export type ProductTableRow = {
   code: string;
@@ -14,24 +14,28 @@ export type ProductTableRow = {
 };
 
 export const PRODUCT_TABLE_COLUMNS = [
-  'Code',
-  'Name',
-  'Type',
-  'Pack',
-  'Company',
-  'Vendor',
-  'Category',
-  'Sale Price',
-  'Total Qty',
-  'Total Units',
+  "Code",
+  "Name",
+  "Type",
+  "Pack",
+  "Company",
+  "Vendor",
+  "Category",
+  "Sale Price",
+  "Total Qty",
+  "Total Units",
 ] as const;
 
 function formatUnitLabel(unit?: string): string {
-  if (!unit) return 'PIECE';
-  return unit.replace(/_/g, ' ').toUpperCase();
+  if (!unit) return "PIECE";
+  return unit.replace(/_/g, " ").toUpperCase();
 }
 
-function formatTotalUnits(stockQuantity: number, packSize: number, unit?: string): string {
+function formatTotalUnits(
+  stockQuantity: number,
+  packSize: number,
+  unit?: string,
+): string {
   const total = stockQuantity * packSize;
   return `${total} ${formatUnitLabel(unit)}`;
 }
@@ -40,16 +44,20 @@ export function productToTableRow(product: Product): ProductTableRow {
   const packSize = product.packSize ?? 1;
 
   return {
-    code: product.sku || '—',
-    name: product.name || '—',
-    type: product.productType || '—',
+    code: product.sku || "—",
+    name: product.name || "—",
+    type: product.productType || "—",
     pack: String(packSize),
-    company: product.brand || '—',
-    vendor: product.supplierName || '—',
-    category: product.category || '—',
+    company: product.brand || "—",
+    vendor: product.supplierName || "—",
+    category: product.category || "—",
     salePrice: product.salePrice ?? 0,
     totalQty: product.stockQuantity ?? 0,
-    totalUnits: formatTotalUnits(product.stockQuantity ?? 0, packSize, product.unitOfMeasure),
+    totalUnits: formatTotalUnits(
+      product.stockQuantity ?? 0,
+      packSize,
+      product.unitOfMeasure,
+    ),
   };
 }
 

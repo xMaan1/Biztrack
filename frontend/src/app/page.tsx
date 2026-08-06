@@ -1,32 +1,32 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "../components/ui/button";
+import { Badge } from "../components/ui/badge";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from '../components/ui/dialog';
-import { useAuth } from '../contexts/AuthContext';
-import { isTauriApp } from '@/src/lib/isTauriApp';
-import { useCurrency } from '@/src/contexts/CurrencyContext';
-import { apiService } from '../services/ApiService';
-import dynamic from 'next/dynamic';
-import { LandingNav } from '../components/landing/LandingNav';
-import { LazyLandingSection } from '../components/landing/LazyLandingSection';
-import { BizTrackLogo } from '../components/brand/BizTrackLogo';
-import { LandingFooter } from '../components/landing/LandingFooter';
-import type { LandingPlan } from '../components/landing/LandingPricingSection';
+} from "../components/ui/dialog";
+import { useAuth } from "../contexts/AuthContext";
+import { isTauriApp } from "@/src/lib/isTauriApp";
+import { useCurrency } from "@/src/contexts/CurrencyContext";
+import { apiService } from "../services/ApiService";
+import dynamic from "next/dynamic";
+import { LandingNav } from "../components/landing/LandingNav";
+import { LazyLandingSection } from "../components/landing/LazyLandingSection";
+import { BizTrackLogo } from "../components/brand/BizTrackLogo";
+import { LandingFooter } from "../components/landing/LandingFooter";
+import type { LandingPlan } from "../components/landing/LandingPricingSection";
 
 const ProductCrmOverviewSection = dynamic(
   () =>
-    import('../components/landing/ProductCrmOverviewSection').then((m) => ({
+    import("../components/landing/ProductCrmOverviewSection").then((m) => ({
       default: m.ProductCrmOverviewSection,
     })),
   { ssr: false },
@@ -34,7 +34,7 @@ const ProductCrmOverviewSection = dynamic(
 
 const FeaturesSection = dynamic(
   () =>
-    import('../components/landing/FeaturesSection').then((m) => ({
+    import("../components/landing/FeaturesSection").then((m) => ({
       default: m.FeaturesSection,
     })),
   { ssr: false },
@@ -42,7 +42,7 @@ const FeaturesSection = dynamic(
 
 const ReviewsReputationSection = dynamic(
   () =>
-    import('../components/landing/ReviewsReputationSection').then((m) => ({
+    import("../components/landing/ReviewsReputationSection").then((m) => ({
       default: m.ReviewsReputationSection,
     })),
   { ssr: false },
@@ -50,7 +50,7 @@ const ReviewsReputationSection = dynamic(
 
 const ImpactCommitmentSection = dynamic(
   () =>
-    import('../components/landing/ImpactCommitmentSection').then((m) => ({
+    import("../components/landing/ImpactCommitmentSection").then((m) => ({
       default: m.ImpactCommitmentSection,
     })),
   { ssr: false },
@@ -58,7 +58,7 @@ const ImpactCommitmentSection = dynamic(
 
 const CompanyVerificationSection = dynamic(
   () =>
-    import('../components/landing/CompanyVerificationSection').then((m) => ({
+    import("../components/landing/CompanyVerificationSection").then((m) => ({
       default: m.CompanyVerificationSection,
     })),
   { ssr: false },
@@ -66,7 +66,7 @@ const CompanyVerificationSection = dynamic(
 
 const LandingCtaSection = dynamic(
   () =>
-    import('../components/landing/LandingCtaSection').then((m) => ({
+    import("../components/landing/LandingCtaSection").then((m) => ({
       default: m.LandingCtaSection,
     })),
   { ssr: false },
@@ -74,7 +74,7 @@ const LandingCtaSection = dynamic(
 
 const LandingPricingSection = dynamic(
   () =>
-    import('../components/landing/LandingPricingSection').then((m) => ({
+    import("../components/landing/LandingPricingSection").then((m) => ({
       default: m.LandingPricingSection,
     })),
   { ssr: false },
@@ -82,13 +82,13 @@ const LandingPricingSection = dynamic(
 
 const LandingPlanModulesSection = dynamic(
   () =>
-    import('../components/landing/LandingPlanModulesSection').then((m) => ({
+    import("../components/landing/LandingPlanModulesSection").then((m) => ({
       default: m.LandingPlanModulesSection,
     })),
   { ssr: false },
 );
-import { extractErrorMessage } from '../utils/errorUtils';
-import { toast } from 'sonner';
+import { extractErrorMessage } from "../utils/errorUtils";
+import { toast } from "sonner";
 import {
   Star,
   Users,
@@ -96,7 +96,7 @@ import {
   ArrowRight,
   Loader2,
   CheckCircle,
-} from 'lucide-react';
+} from "lucide-react";
 
 interface Plan {
   id: string;
@@ -113,7 +113,7 @@ interface SubscriptionModalProps {
   plan: Plan | null;
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (tenantName: string, paymentMethod: 'stripe' | 'paypal') => void;
+  onSubmit: (tenantName: string, paymentMethod: "stripe" | "paypal") => void;
   loading: boolean;
 }
 
@@ -125,8 +125,10 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
   loading,
 }) => {
   const { getCurrencySymbol } = useCurrency();
-  const [tenantName, setTenantName] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'paypal'>('stripe');
+  const [tenantName, setTenantName] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<"stripe" | "paypal">(
+    "stripe",
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -163,7 +165,10 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
             <div className="p-3 bg-muted rounded-lg">
               <div className="flex items-center justify-between">
                 <span className="font-medium">{plan.name} Plan</span>
-                <Badge variant="secondary">{getCurrencySymbol()}{plan.price}/month</Badge>
+                <Badge variant="secondary">
+                  {getCurrencySymbol()}
+                  {plan.price}/month
+                </Badge>
               </div>
               <p className="text-sm text-muted-foreground mt-1">
                 {plan.maxProjects} projects • {plan.maxUsers} users
@@ -176,16 +181,16 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
             <div className="grid grid-cols-2 gap-2">
               <Button
                 type="button"
-                variant={paymentMethod === 'stripe' ? 'default' : 'outline'}
-                onClick={() => setPaymentMethod('stripe')}
+                variant={paymentMethod === "stripe" ? "default" : "outline"}
+                onClick={() => setPaymentMethod("stripe")}
                 className="w-full"
               >
                 Card (Stripe)
               </Button>
               <Button
                 type="button"
-                variant={paymentMethod === 'paypal' ? 'default' : 'outline'}
-                onClick={() => setPaymentMethod('paypal')}
+                variant={paymentMethod === "paypal" ? "default" : "outline"}
+                onClick={() => setPaymentMethod("paypal")}
                 className="w-full"
               >
                 PayPal
@@ -239,7 +244,7 @@ export default function LandingPage() {
 
   useEffect(() => {
     if (!desktopApp || authLoading) return;
-    router.replace(isAuthenticated ? '/dashboard' : '/login');
+    router.replace(isAuthenticated ? "/dashboard" : "/login");
   }, [desktopApp, authLoading, isAuthenticated, router]);
 
   useEffect(() => {
@@ -251,16 +256,16 @@ export default function LandingPage() {
   useEffect(() => {
     if (isAuthenticated) {
       // Check localStorage for selected plan (for new signups)
-      const storedPlan = localStorage.getItem('selectedPlanForSignup');
+      const storedPlan = localStorage.getItem("selectedPlanForSignup");
       if (storedPlan) {
         try {
           const plan = JSON.parse(storedPlan);
           // Check if user already has tenants before showing workspace creation
           checkExistingTenantsAndHandlePlan(plan);
           // Clear the stored plan
-          localStorage.removeItem('selectedPlanForSignup');
+          localStorage.removeItem("selectedPlanForSignup");
         } catch (error) {
-          localStorage.removeItem('selectedPlanForSignup');
+          localStorage.removeItem("selectedPlanForSignup");
         }
       }
     }
@@ -273,8 +278,10 @@ export default function LandingPage() {
 
       if (existingTenants && existingTenants.length > 0) {
         // User already has tenants - show message and redirect to dashboard
-        toast.info('You already have a workspace. Redirecting to your dashboard.');
-        router.push('/dashboard');
+        toast.info(
+          "You already have a workspace. Redirecting to your dashboard.",
+        );
+        router.push("/dashboard");
         return;
       }
 
@@ -288,7 +295,7 @@ export default function LandingPage() {
 
   const fetchPlans = async () => {
     try {
-      const response = await apiService.get('/public/plans');
+      const response = await apiService.get("/public/plans");
       setPlans(response.plans || []);
     } catch (error) {
       // Plans fetch failed, continue without plans
@@ -298,8 +305,8 @@ export default function LandingPage() {
   const handleSubscribe = (plan: Plan) => {
     if (!isAuthenticated) {
       // Store the selected plan in localStorage and redirect to signup
-      localStorage.setItem('selectedPlanForSignup', JSON.stringify(plan));
-      router.push('/signup');
+      localStorage.setItem("selectedPlanForSignup", JSON.stringify(plan));
+      router.push("/signup");
       return;
     }
 
@@ -307,7 +314,10 @@ export default function LandingPage() {
     checkExistingTenantsAndHandlePlan(plan);
   };
 
-  const handleCreateTenant = async (tenantName: string, paymentMethod: 'stripe' | 'paypal' = 'stripe') => {
+  const handleCreateTenant = async (
+    tenantName: string,
+    paymentMethod: "stripe" | "paypal" = "stripe",
+  ) => {
     if (!subscriptionModal.plan) return;
 
     try {
@@ -315,7 +325,7 @@ export default function LandingPage() {
       const response = await apiService.createTenantFromLanding({
         planId: subscriptionModal.plan.id,
         tenantName,
-        domain: tenantName.toLowerCase().replace(/\s+/g, '-'),
+        domain: tenantName.toLowerCase().replace(/\s+/g, "-"),
         paymentMethod,
       });
 
@@ -324,8 +334,10 @@ export default function LandingPage() {
         try {
           window.location.href = response.checkout_url;
         } catch (redirectError) {
-          console.error('Failed to redirect to checkout:', redirectError);
-          toast.error('Workspace created but failed to redirect to payment. Please contact support.');
+          console.error("Failed to redirect to checkout:", redirectError);
+          toast.error(
+            "Workspace created but failed to redirect to payment. Please contact support.",
+          );
         }
       } else if (response.success && response.tenant) {
         setSubscriptionModal({ isOpen: false, plan: null });
@@ -337,21 +349,27 @@ export default function LandingPage() {
           if (newTenant) {
             apiService.setTenantId(newTenant.id);
             await new Promise((resolve) => setTimeout(resolve, 100));
-            router.push('/dashboard');
+            router.push("/dashboard");
           } else {
-            throw new Error('Tenant was not found after creation');
+            throw new Error("Tenant was not found after creation");
           }
         } catch (error) {
-          console.error('Error setting up tenant:', error);
-          toast.error('Workspace created but there was an issue setting it up. Please refresh the page and try again.');
+          console.error("Error setting up tenant:", error);
+          toast.error(
+            "Workspace created but there was an issue setting it up. Please refresh the page and try again.",
+          );
         }
       } else {
-        const errorMessage = response.error || response.message || 'Unknown error';
+        const errorMessage =
+          response.error || response.message || "Unknown error";
         throw new Error(`Tenant creation failed: ${errorMessage}`);
       }
     } catch (error: any) {
-      console.error('Failed to create workspace:', error);
-      const errorMessage = extractErrorMessage(error, 'Failed to create workspace. Please try again.');
+      console.error("Failed to create workspace:", error);
+      const errorMessage = extractErrorMessage(
+        error,
+        "Failed to create workspace. Please try again.",
+      );
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -359,10 +377,10 @@ export default function LandingPage() {
   };
 
   const stats = [
-    { label: 'Active Users', value: '10,000+', icon: Users },
-    { label: 'Projects Managed', value: '50,000+', icon: FolderOpen },
-    { label: 'Uptime', value: '99.9%', icon: CheckCircle },
-    { label: 'Customer Satisfaction', value: '4.9/5', icon: Star },
+    { label: "Active Users", value: "10,000+", icon: Users },
+    { label: "Projects Managed", value: "50,000+", icon: FolderOpen },
+    { label: "Uptime", value: "99.9%", icon: CheckCircle },
+    { label: "Customer Satisfaction", value: "4.9/5", icon: Star },
   ];
 
   if (desktopApp) {
@@ -419,7 +437,7 @@ export default function LandingPage() {
               <Button
                 size="lg"
                 className="text-base sm:text-lg px-8 py-6 h-auto bg-blue-600 hover:bg-blue-700"
-                onClick={() => router.push('/signup')}
+                onClick={() => router.push("/signup")}
               >
                 Start Free Trial
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -430,8 +448,8 @@ export default function LandingPage() {
                 className="text-base sm:text-lg px-8 py-6 h-auto border-blue-200 text-blue-800 hover:bg-blue-50"
                 onClick={() =>
                   document
-                    .getElementById('overview')
-                    ?.scrollIntoView({ behavior: 'smooth' })
+                    .getElementById("overview")
+                    ?.scrollIntoView({ behavior: "smooth" })
                 }
               >
                 See How It Works

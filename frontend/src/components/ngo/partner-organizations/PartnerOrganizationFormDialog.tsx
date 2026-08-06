@@ -1,30 +1,30 @@
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
-import { Label } from '@/src/components/ui/label';
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
+import { Label } from "@/src/components/ui/label";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/src/components/ui/dialog';
+} from "@/src/components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
+} from "@/src/components/ui/select";
 import type {
   PartnerOrganizationCreate,
   PartnerSector,
   PartnerSize,
   PartnerStatus,
-} from '@/src/models/ngo';
+} from "@/src/models/ngo";
 import {
   PARTNER_SECTOR_OPTIONS,
   PARTNER_SIZE_OPTIONS,
-} from '@/src/utils/ngo/partnerOrganizationUtils';
+} from "@/src/utils/ngo/partnerOrganizationUtils";
 
 type PartnerOrganizationFormDialogProps = {
   open: boolean;
@@ -53,13 +53,16 @@ export function PartnerOrganizationFormDialog({
       <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {editing ? 'Edit Partner Organization' : 'Add Partner Organization'}
+            {editing ? "Edit Partner Organization" : "Add Partner Organization"}
           </DialogTitle>
         </DialogHeader>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="space-y-2 md:col-span-2">
             <Label>Organization Name *</Label>
-            <Input value={formData.name} onChange={(e) => patch({ name: e.target.value })} />
+            <Input
+              value={formData.name}
+              onChange={(e) => patch({ name: e.target.value })}
+            />
           </div>
           <div className="space-y-2 md:col-span-2">
             <Label>Email *</Label>
@@ -91,7 +94,9 @@ export function PartnerOrganizationFormDialog({
             <Label>Organization Size *</Label>
             <Select
               value={formData.organization_size}
-              onValueChange={(v) => patch({ organization_size: v as PartnerSize })}
+              onValueChange={(v) =>
+                patch({ organization_size: v as PartnerSize })
+              }
             >
               <SelectTrigger>
                 <SelectValue />
@@ -108,7 +113,7 @@ export function PartnerOrganizationFormDialog({
           <div className="space-y-2">
             <Label>Website</Label>
             <Input
-              value={formData.website ?? ''}
+              value={formData.website ?? ""}
               onChange={(e) => patch({ website: e.target.value })}
               placeholder="www.example.org"
             />
@@ -116,7 +121,7 @@ export function PartnerOrganizationFormDialog({
           <div className="space-y-2">
             <Label>Location</Label>
             <Input
-              value={formData.location ?? ''}
+              value={formData.location ?? ""}
               onChange={(e) => patch({ location: e.target.value })}
               placeholder="City, Country"
             />
@@ -146,7 +151,7 @@ export function PartnerOrganizationFormDialog({
             disabled={submitLoading}
             className="bg-emerald-600 hover:bg-emerald-700"
           >
-            {submitLoading ? 'Saving...' : editing ? 'Update' : 'Create'}
+            {submitLoading ? "Saving..." : editing ? "Update" : "Create"}
           </Button>
         </DialogFooter>
       </DialogContent>

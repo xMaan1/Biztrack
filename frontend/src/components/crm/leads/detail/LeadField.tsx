@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Input } from '@/src/components/ui/input';
+import { useState, useEffect } from "react";
+import { Input } from "@/src/components/ui/input";
 
 type Props = {
   label: string;

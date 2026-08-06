@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { Button } from '@/src/components/ui/button';
+import Link from "next/link";
+import { Button } from "@/src/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/src/components/ui/card';
-import { NGO_QUICK_LINKS } from './ngoDashboardConfig';
+} from "@/src/components/ui/card";
+import { NGO_QUICK_LINKS } from "./ngoDashboardConfig";
 
 export function NgoQuickLinksCard() {
   return (

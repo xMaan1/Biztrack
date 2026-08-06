@@ -3,60 +3,63 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
+} from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
-import { Filter, Search } from 'lucide-react';
+} from "@/src/components/ui/select";
+import { Filter, Search } from "lucide-react";
 import {
   ContactType,
   CRMContactFilters,
   ContactDateField,
   ContactDateQuickFilter,
   Industry,
-} from '@/src/models/crm';
-import { User } from '@/src/models';
+} from "@/src/models/crm";
+import { User } from "@/src/models";
 
 function assigneeLabel(u: User): string {
-  const name = [u.firstName, u.lastName].filter(Boolean).join(' ').trim();
+  const name = [u.firstName, u.lastName].filter(Boolean).join(" ").trim();
   if (name) return name;
-  return u.userName || u.email || (u.id || u.userId || '');
+  return u.userName || u.email || u.id || u.userId || "";
 }
 
 const DATE_FIELDS: { value: ContactDateField; label: string }[] = [
-  { value: 'created', label: 'Created Date' },
-  { value: 'updated', label: 'Updated Date' },
-  { value: 'last_contacted', label: 'Last Contacted Date' },
+  { value: "created", label: "Created Date" },
+  { value: "updated", label: "Updated Date" },
+  { value: "last_contacted", label: "Last Contacted Date" },
 ];
 
-const QUICK_FILTERS: { value: ContactDateQuickFilter | 'all'; label: string }[] = [
-  { value: 'all', label: 'Any time' },
-  { value: 'today', label: 'Today' },
-  { value: '7d', label: 'Last 7 Days' },
-  { value: '30d', label: 'Last 30 Days' },
-  { value: '90d', label: 'Last 90 Days' },
+const QUICK_FILTERS: {
+  value: ContactDateQuickFilter | "all";
+  label: string;
+}[] = [
+  { value: "all", label: "Any time" },
+  { value: "today", label: "Today" },
+  { value: "7d", label: "Last 7 Days" },
+  { value: "30d", label: "Last 30 Days" },
+  { value: "90d", label: "Last 90 Days" },
 ];
 
 const MONTHS = [
-  { value: 'all', label: 'Any month' },
-  { value: '1', label: 'January' },
-  { value: '2', label: 'February' },
-  { value: '3', label: 'March' },
-  { value: '4', label: 'April' },
-  { value: '5', label: 'May' },
-  { value: '6', label: 'June' },
-  { value: '7', label: 'July' },
-  { value: '8', label: 'August' },
-  { value: '9', label: 'September' },
-  { value: '10', label: 'October' },
-  { value: '11', label: 'November' },
-  { value: '12', label: 'December' },
+  { value: "all", label: "Any month" },
+  { value: "1", label: "January" },
+  { value: "2", label: "February" },
+  { value: "3", label: "March" },
+  { value: "4", label: "April" },
+  { value: "5", label: "May" },
+  { value: "6", label: "June" },
+  { value: "7", label: "July" },
+  { value: "8", label: "August" },
+  { value: "9", label: "September" },
+  { value: "10", label: "October" },
+  { value: "11", label: "November" },
+  { value: "12", label: "December" },
 ];
 
 type ContactsFiltersCardProps = {
@@ -95,7 +98,7 @@ export function ContactsFiltersCard({
                 placeholder="Search contacts..."
                 value={search}
                 onChange={(e) => onSearchChange(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && onSearchSubmit()}
+                onKeyDown={(e) => e.key === "Enter" && onSearchSubmit()}
               />
               <Button type="button" onClick={onSearchSubmit}>
                 <Search className="w-4 h-4" />
@@ -105,11 +108,11 @@ export function ContactsFiltersCard({
           <div>
             <label className="text-sm font-medium">Category</label>
             <Select
-              value={filters.type || 'all'}
+              value={filters.type || "all"}
               onValueChange={(value) =>
                 setFilters((prev: CRMContactFilters) => ({
                   ...prev,
-                  type: value === 'all' ? undefined : (value as ContactType),
+                  type: value === "all" ? undefined : (value as ContactType),
                 }))
               }
             >
@@ -129,11 +132,11 @@ export function ContactsFiltersCard({
           <div>
             <label className="text-sm font-medium">Industry</label>
             <Select
-              value={filters.industry || 'all'}
+              value={filters.industry || "all"}
               onValueChange={(value) =>
                 setFilters((prev: CRMContactFilters) => ({
                   ...prev,
-                  industry: value === 'all' ? undefined : (value as Industry),
+                  industry: value === "all" ? undefined : (value as Industry),
                 }))
               }
             >
@@ -145,12 +148,12 @@ export function ContactsFiltersCard({
                 {Object.values(Industry).map((ind) => (
                   <SelectItem key={ind} value={ind}>
                     {ind
-                      .split('_')
+                      .split("_")
                       .map(
                         (w) =>
                           w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(),
                       )
-                      .join(' ')}
+                      .join(" ")}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -160,7 +163,7 @@ export function ContactsFiltersCard({
             <label className="text-sm font-medium">Website contains</label>
             <Input
               placeholder="Filter by website URL..."
-              value={filters.website || ''}
+              value={filters.website || ""}
               onChange={(e) =>
                 setFilters((prev: CRMContactFilters) => ({
                   ...prev,
@@ -175,13 +178,13 @@ export function ContactsFiltersCard({
               value={
                 filters.birthdayMonth != null
                   ? String(filters.birthdayMonth)
-                  : 'all'
+                  : "all"
               }
               onValueChange={(value) =>
                 setFilters((prev: CRMContactFilters) => ({
                   ...prev,
                   birthdayMonth:
-                    value === 'all' ? undefined : parseInt(value, 10),
+                    value === "all" ? undefined : parseInt(value, 10),
                 }))
               }
             >
@@ -201,7 +204,7 @@ export function ContactsFiltersCard({
             <label className="text-sm font-medium">Country</label>
             <Input
               placeholder="Address country..."
-              value={filters.country || ''}
+              value={filters.country || ""}
               onChange={(e) =>
                 setFilters((prev: CRMContactFilters) => ({
                   ...prev,
@@ -213,7 +216,7 @@ export function ContactsFiltersCard({
           <div>
             <label className="text-sm font-medium">Date filter type</label>
             <Select
-              value={filters.dateField || 'created'}
+              value={filters.dateField || "created"}
               onValueChange={(value) =>
                 setFilters((prev: CRMContactFilters) => ({
                   ...prev,
@@ -236,14 +239,16 @@ export function ContactsFiltersCard({
           <div>
             <label className="text-sm font-medium">Quick date range</label>
             <Select
-              value={filters.quickFilter || 'all'}
+              value={filters.quickFilter || "all"}
               onValueChange={(value) =>
                 setFilters((prev: CRMContactFilters) => ({
                   ...prev,
                   quickFilter:
-                    value === 'all' ? undefined : (value as ContactDateQuickFilter),
-                  dateFrom: value === 'all' ? undefined : prev.dateFrom,
-                  dateTo: value === 'all' ? undefined : prev.dateTo,
+                    value === "all"
+                      ? undefined
+                      : (value as ContactDateQuickFilter),
+                  dateFrom: value === "all" ? undefined : prev.dateFrom,
+                  dateTo: value === "all" ? undefined : prev.dateTo,
                 }))
               }
             >
@@ -263,7 +268,7 @@ export function ContactsFiltersCard({
             <label className="text-sm font-medium">From</label>
             <Input
               type="date"
-              value={filters.dateFrom?.slice(0, 10) || ''}
+              value={filters.dateFrom?.slice(0, 10) || ""}
               disabled={!!filters.quickFilter}
               onChange={(e) =>
                 setFilters((prev: CRMContactFilters) => ({
@@ -278,7 +283,7 @@ export function ContactsFiltersCard({
             <label className="text-sm font-medium">To</label>
             <Input
               type="date"
-              value={filters.dateTo?.slice(0, 10) || ''}
+              value={filters.dateTo?.slice(0, 10) || ""}
               disabled={!!filters.quickFilter}
               onChange={(e) =>
                 setFilters((prev: CRMContactFilters) => ({
@@ -292,11 +297,11 @@ export function ContactsFiltersCard({
           <div>
             <label className="text-sm font-medium">Assignee</label>
             <Select
-              value={filters.assignedTo || 'all'}
+              value={filters.assignedTo || "all"}
               onValueChange={(value) =>
                 setFilters((prev: CRMContactFilters) => ({
                   ...prev,
-                  assignedTo: value === 'all' ? undefined : value,
+                  assignedTo: value === "all" ? undefined : value,
                 }))
               }
             >

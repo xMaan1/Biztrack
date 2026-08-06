@@ -1,9 +1,23 @@
-'use client';
+"use client";
 
-import { Building2, Edit, Globe, Mail, Phone, Plus, Trash2, Users } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Badge } from '@/src/components/ui/badge';
+import {
+  Building2,
+  Edit,
+  Globe,
+  Mail,
+  Phone,
+  Plus,
+  Trash2,
+  Users,
+} from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { Badge } from "@/src/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -11,9 +25,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/src/components/ui/table';
-import { formatDate } from '@/src/lib/utils';
-import type { SuppliersListCardProps } from './types';
+} from "@/src/components/ui/table";
+import { formatDate } from "@/src/lib/utils";
+import type { SuppliersListCardProps } from "./types";
 
 export function SuppliersListCard({
   suppliers,
@@ -64,7 +78,9 @@ export function SuppliersListCard({
                   <TableCell>
                     <div className="space-y-1">
                       {supplier.contactPerson && (
-                        <div className="text-sm font-medium">{supplier.contactPerson}</div>
+                        <div className="text-sm font-medium">
+                          {supplier.contactPerson}
+                        </div>
                       )}
                       {supplier.phone && (
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -88,13 +104,17 @@ export function SuppliersListCard({
                         </div>
                       )}
                       {supplier.country && (
-                        <div className="text-muted-foreground">{supplier.country}</div>
+                        <div className="text-muted-foreground">
+                          {supplier.country}
+                        </div>
                       )}
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={supplier.isActive ? 'default' : 'secondary'}>
-                      {supplier.isActive ? 'Active' : 'Inactive'}
+                    <Badge
+                      variant={supplier.isActive ? "default" : "secondary"}
+                    >
+                      {supplier.isActive ? "Active" : "Inactive"}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -104,10 +124,18 @@ export function SuppliersListCard({
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => onEdit(supplier)}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onEdit(supplier)}
+                      >
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="outline" size="sm" onClick={() => onDelete(supplier)}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onDelete(supplier)}
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -122,8 +150,8 @@ export function SuppliersListCard({
             <h3 className="mb-2 text-lg font-medium">No suppliers found</h3>
             <p className="mb-4 text-muted-foreground">
               {searchTerm
-                ? 'Try adjusting your search terms'
-                : 'Get started by adding your first supplier'}
+                ? "Try adjusting your search terms"
+                : "Get started by adding your first supplier"}
             </p>
             {!searchTerm && (
               <Button onClick={onAddSupplier}>

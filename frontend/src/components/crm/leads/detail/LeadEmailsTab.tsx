@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
-import { Textarea } from '@/src/components/ui/textarea';
-import { Badge } from '@/src/components/ui/badge';
-import { Plus, Mail } from 'lucide-react';
-import { Lead, LeadEmailItem } from '@/src/models/crm';
-import CRMService from '@/src/services/CRMService';
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
+import { Textarea } from "@/src/components/ui/textarea";
+import { Badge } from "@/src/components/ui/badge";
+import { Plus, Mail } from "lucide-react";
+import { Lead, LeadEmailItem } from "@/src/models/crm";
+import CRMService from "@/src/services/CRMService";
 
 type Props = {
   lead: Lead;
   leadId: string;
   emails: LeadEmailItem[];
-  emailDir: 'outgoing' | 'incoming';
-  setEmailDir: (v: 'outgoing' | 'incoming') => void;
+  emailDir: "outgoing" | "incoming";
+  setEmailDir: (v: "outgoing" | "incoming") => void;
   emailSubject: string;
   setEmailSubject: (v: string) => void;
   emailBody: string;
@@ -45,21 +45,21 @@ export function LeadEmailsTab({
         <div className="flex gap-4 text-sm">
           <button
             className={
-              emailDir === 'outgoing'
-                ? 'text-primary border-b-2 border-primary pb-2'
-                : 'text-muted-foreground'
+              emailDir === "outgoing"
+                ? "text-primary border-b-2 border-primary pb-2"
+                : "text-muted-foreground"
             }
-            onClick={() => setEmailDir('outgoing')}
+            onClick={() => setEmailDir("outgoing")}
           >
             Outgoing
           </button>
           <button
             className={
-              emailDir === 'incoming'
-                ? 'text-primary border-b-2 border-primary pb-2'
-                : 'text-muted-foreground'
+              emailDir === "incoming"
+                ? "text-primary border-b-2 border-primary pb-2"
+                : "text-muted-foreground"
             }
-            onClick={() => setEmailDir('incoming')}
+            onClick={() => setEmailDir("incoming")}
           >
             Incoming
           </button>
@@ -76,8 +76,8 @@ export function LeadEmailsTab({
         <div className="space-y-2 border rounded p-3">
           {!lead.integrations?.smtpConfigured && (
             <p className="text-xs text-amber-600">
-              SMTP is not configured. Email will be queued until SMTP_* env
-              vars are set.
+              SMTP is not configured. Email will be queued until SMTP_* env vars
+              are set.
             </p>
           )}
           <Input
@@ -97,8 +97,8 @@ export function LeadEmailsTab({
                 subject: emailSubject,
                 body: emailBody,
               });
-              setEmailSubject('');
-              setEmailBody('');
+              setEmailSubject("");
+              setEmailBody("");
               setShowCompose(false);
               loadTabData();
               reload();
@@ -119,19 +119,21 @@ export function LeadEmailsTab({
                 <Mail className="h-4 w-4 text-primary" />
                 {e.subject}
               </div>
-              <div className="text-xs text-muted-foreground">To: {e.toEmail}</div>
+              <div className="text-xs text-muted-foreground">
+                To: {e.toEmail}
+              </div>
             </div>
             <div className="text-right text-xs">
               <Badge variant="secondary" className="mb-1">
                 {e.status}
-                {e.openedAt ? ' · opened' : ''}
+                {e.openedAt ? " · opened" : ""}
               </Badge>
               <div>
                 {e.sentAt
                   ? new Date(e.sentAt).toLocaleString()
                   : e.createdAt
                     ? new Date(e.createdAt).toLocaleString()
-                    : ''}
+                    : ""}
               </div>
             </div>
           </div>

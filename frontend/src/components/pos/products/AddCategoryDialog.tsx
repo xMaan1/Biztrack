@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   Dialog,
@@ -7,10 +7,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/src/components/ui/dialog';
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
-import { Label } from '@/src/components/ui/label';
+} from "@/src/components/ui/dialog";
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
+import { Label } from "@/src/components/ui/label";
 
 type AddCategoryDialogProps = {
   open: boolean;
@@ -35,7 +35,8 @@ export function AddCategoryDialog({
         <DialogHeader>
           <DialogTitle>Add Category</DialogTitle>
           <DialogDescription>
-            Add a new category for your products. It will be available only for your tenant.
+            Add a new category for your products. It will be available only for
+            your tenant.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
@@ -46,7 +47,7 @@ export function AddCategoryDialog({
               value={categoryName}
               onChange={(e) => onCategoryNameChange(e.target.value)}
               placeholder="e.g. Snacks"
-              onKeyDown={(e) => e.key === 'Enter' && onSubmit()}
+              onKeyDown={(e) => e.key === "Enter" && onSubmit()}
             />
           </div>
         </div>
@@ -56,13 +57,17 @@ export function AddCategoryDialog({
             variant="outline"
             onClick={() => {
               onOpenChange(false);
-              onCategoryNameChange('');
+              onCategoryNameChange("");
             }}
           >
             Cancel
           </Button>
-          <Button type="button" onClick={onSubmit} disabled={!categoryName.trim() || loading}>
-            {loading ? 'Adding...' : 'Add Category'}
+          <Button
+            type="button"
+            onClick={onSubmit}
+            disabled={!categoryName.trim() || loading}
+          >
+            {loading ? "Adding..." : "Add Category"}
           </Button>
         </DialogFooter>
       </DialogContent>

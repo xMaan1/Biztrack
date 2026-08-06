@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { Input } from '@/src/components/ui/input';
-import { Label } from '@/src/components/ui/label';
-import { Button } from '@/src/components/ui/button';
-import type { MotWizardVehicle } from '../wizardTypes';
+import { Input } from "@/src/components/ui/input";
+import { Label } from "@/src/components/ui/label";
+import { Button } from "@/src/components/ui/button";
+import type { MotWizardVehicle } from "../wizardTypes";
 
 type Step1VehicleDetailsProps = {
   vehicle: MotWizardVehicle;
@@ -21,29 +21,40 @@ export function Step1VehicleDetails({
   return (
     <div className="space-y-8">
       <div>
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Step 01</p>
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">
+          Step 01
+        </p>
         <h2 className="mt-2 text-3xl font-bold tracking-tight">Your Vehicle</h2>
         <p className="mt-2 text-muted-foreground">
-          Tell us about your vehicle. All fields are mandatory unless otherwise stated.
+          Tell us about your vehicle. All fields are mandatory unless otherwise
+          stated.
         </p>
       </div>
 
       <div className="grid gap-5 sm:grid-cols-2">
         <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor="registration" className="text-sm font-semibold uppercase tracking-wide">
+          <Label
+            htmlFor="registration"
+            className="text-sm font-semibold uppercase tracking-wide"
+          >
             Car Registration
           </Label>
           <Input
             id="registration"
             value={vehicle.registration}
-            onChange={(e) => onChange({ registration: e.target.value.toUpperCase() })}
+            onChange={(e) =>
+              onChange({ registration: e.target.value.toUpperCase() })
+            }
             placeholder="e.g. AB12 CDE"
             className="h-12 rounded-xl border-2 text-base uppercase"
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="mileage" className="text-sm font-semibold uppercase tracking-wide">
+          <Label
+            htmlFor="mileage"
+            className="text-sm font-semibold uppercase tracking-wide"
+          >
             Mileage
           </Label>
           <Input
@@ -56,7 +67,10 @@ export function Step1VehicleDetails({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="make" className="text-sm font-semibold uppercase tracking-wide">
+          <Label
+            htmlFor="make"
+            className="text-sm font-semibold uppercase tracking-wide"
+          >
             Vehicle Make
           </Label>
           <Input
@@ -69,7 +83,10 @@ export function Step1VehicleDetails({
         </div>
 
         <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor="year" className="text-sm font-semibold uppercase tracking-wide">
+          <Label
+            htmlFor="year"
+            className="text-sm font-semibold uppercase tracking-wide"
+          >
             Vehicle Year
           </Label>
           <Input

@@ -1,16 +1,18 @@
-'use client';
+"use client";
 
-import { Input } from '@/src/components/ui/input';
-import { useCurrency } from '@/src/contexts/CurrencyContext';
-import type { InvoiceFormTotals } from '@/src/types/sales/invoiceForm';
-import { COMMERCE_INPUT_CLS } from '../commerce-invoice/constants';
-import { InlineField } from '../commerce-invoice/InlineField';
+import { Input } from "@/src/components/ui/input";
+import { useCurrency } from "@/src/contexts/CurrencyContext";
+import type { InvoiceFormTotals } from "@/src/types/sales/invoiceForm";
+import { COMMERCE_INPUT_CLS } from "../commerce-invoice/constants";
+import { InlineField } from "../commerce-invoice/InlineField";
 
 type InvoiceFormTotalsSummaryProps = {
   totals: InvoiceFormTotals;
 };
 
-export function InvoiceFormTotalsSummary({ totals }: InvoiceFormTotalsSummaryProps) {
+export function InvoiceFormTotalsSummary({
+  totals,
+}: InvoiceFormTotalsSummaryProps) {
   const { formatCurrency } = useCurrency();
 
   return (

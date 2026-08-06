@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { ModuleGuard } from '@/src/components/guards/PermissionGuard';
+import React, { useEffect, useState } from "react";
+import { ModuleGuard } from "@/src/components/guards/PermissionGuard";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Badge } from '@/src/components/ui/badge';
-import { Input } from '@/src/components/ui/input';
+} from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { Badge } from "@/src/components/ui/badge";
+import { Input } from "@/src/components/ui/input";
 import {
   Table,
   TableBody,
@@ -18,7 +18,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/src/components/ui/table';
+} from "@/src/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -26,14 +26,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/src/components/ui/dialog';
+} from "@/src/components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
+} from "@/src/components/ui/select";
 import {
   TrendingUp,
   Plus,
@@ -45,11 +45,11 @@ import {
   Clock,
   CheckCircle,
   Trash2,
-} from 'lucide-react';
-import { useAuth } from '@/src/contexts/AuthContext';
-import { bankingService } from '@/src/services/BankingService';
-import { useCurrency } from '@/src/contexts/CurrencyContext';
-import { formatDate } from '@/src/lib/utils';
+} from "lucide-react";
+import { useAuth } from "@/src/contexts/AuthContext";
+import { bankingService } from "@/src/services/BankingService";
+import { useCurrency } from "@/src/contexts/CurrencyContext";
+import { formatDate } from "@/src/lib/utils";
 import {
   BankTransaction,
   BankAccount,
@@ -59,97 +59,103 @@ import {
   getTransactionTypeLabel,
   getTransactionStatusLabel,
   getPaymentMethodLabel,
-} from '@/src/models/banking';
-import { DashboardLayout } from '@/src/components/layout';
-import { Label } from '@/src/components/ui/label';
-import { Textarea } from '@/src/components/ui/textarea';
-import { toast } from 'sonner';
-import { extractErrorMessage } from '@/src/utils/errorUtils';
+} from "@/src/models/banking";
+import { DashboardLayout } from "@/src/components/layout";
+import { Label } from "@/src/components/ui/label";
+import { Textarea } from "@/src/components/ui/textarea";
+import { toast } from "sonner";
+import { extractErrorMessage } from "@/src/utils/errorUtils";
 
 export default function BankTransactionsPage() {
   return (
-    <ModuleGuard module="banking" fallback={<div>You don't have access to Banking module</div>}>
+    <ModuleGuard
+      module="banking"
+      fallback={<div>You don&apos;t have access to Banking module</div>}
+    >
       <BankTransactionsContent />
     </ModuleGuard>
   );
 }
 
 function BankTransactionsContent() {
-  const { } = useAuth();
+  const {} = useAuth();
   const { formatCurrency } = useCurrency();
-  
+
   const [transactions, setTransactions] = useState<BankTransaction[]>([]);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedAccount, setSelectedAccount] = useState<string>('all');
-  const [selectedType, setSelectedType] = useState<string>('all');
-  const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedAccount, setSelectedAccount] = useState<string>("all");
+  const [selectedType, setSelectedType] = useState<string>("all");
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [viewingTransaction, setViewingTransaction] = useState<BankTransaction | null>(null);
-  const [editingTransaction, setEditingTransaction] = useState<BankTransaction | null>(null);
+  const [viewingTransaction, setViewingTransaction] =
+    useState<BankTransaction | null>(null);
+  const [editingTransaction, setEditingTransaction] =
+    useState<BankTransaction | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [deletingTransaction, setDeletingTransaction] = useState<BankTransaction | null>(null);
+  const [deletingTransaction, setDeletingTransaction] =
+    useState<BankTransaction | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
-    bank_account_id: '',
-    transaction_date: new Date().toISOString().split('T')[0],
-    value_date: '',
+    bank_account_id: "",
+    transaction_date: new Date().toISOString().split("T")[0],
+    value_date: "",
     transaction_type: TransactionType.DEPOSIT,
     status: TransactionStatus.PENDING,
     amount: 0,
-    currency: 'USD',
+    currency: "USD",
     exchange_rate: 1.0,
     base_amount: 0,
     payment_method: PaymentMethod.CASH,
-    reference_number: '',
-    external_reference: '',
-    check_number: '',
-    description: '',
-    memo: '',
-    category: '',
-    counterparty_name: '',
-    counterparty_account: '',
-    counterparty_bank: '',
+    reference_number: "",
+    external_reference: "",
+    check_number: "",
+    description: "",
+    memo: "",
+    category: "",
+    counterparty_name: "",
+    counterparty_account: "",
+    counterparty_bank: "",
     is_reconciled: false,
-    related_invoice_id: '',
-    related_purchase_order_id: '',
-    related_expense_id: '',
+    related_invoice_id: "",
+    related_purchase_order_id: "",
+    related_expense_id: "",
     tags: [] as string[],
-    notes: '',
+    notes: "",
   });
 
   // Edit form state
   const [editFormData, setEditFormData] = useState({
-    bank_account_id: '',
-    transaction_date: '',
-    value_date: '',
+    bank_account_id: "",
+    transaction_date: "",
+    value_date: "",
     transaction_type: TransactionType.DEPOSIT,
     status: TransactionStatus.PENDING,
     amount: 0,
-    currency: 'USD',
+    currency: "USD",
     exchange_rate: 1.0,
     base_amount: 0,
     payment_method: PaymentMethod.CASH,
-    reference_number: '',
-    external_reference: '',
-    check_number: '',
-    description: '',
-    memo: '',
-    category: '',
-    counterparty_name: '',
-    counterparty_account: '',
-    counterparty_bank: '',
+    reference_number: "",
+    external_reference: "",
+    check_number: "",
+    description: "",
+    memo: "",
+    category: "",
+    counterparty_name: "",
+    counterparty_account: "",
+    counterparty_bank: "",
     is_reconciled: false,
-    related_invoice_id: '',
-    related_purchase_order_id: '',
-    related_expense_id: '',
+    related_invoice_id: "",
+    related_purchase_order_id: "",
+    related_expense_id: "",
     tags: [] as string[],
-    notes: '',
+    notes: "",
   });
 
   useEffect(() => {
@@ -161,13 +167,13 @@ function BankTransactionsContent() {
       setLoading(true);
       const [transactionsData, accountsData] = await Promise.all([
         bankingService.getBankTransactions(),
-        bankingService.getBankAccounts(true)
+        bankingService.getBankAccounts(true),
       ]);
-      
+
       setTransactions(transactionsData || []);
       setBankAccounts(accountsData || []);
     } catch (error) {
-      toast.error(extractErrorMessage(error, 'Failed to load transactions'));
+      toast.error(extractErrorMessage(error, "Failed to load transactions"));
     } finally {
       setLoading(false);
     }
@@ -176,29 +182,31 @@ function BankTransactionsContent() {
   const handleCreateTransaction = async () => {
     try {
       setIsSubmitting(true);
-      
+
       // Validate required fields
       if (!formData.bank_account_id) {
-        toast.error('Please select a bank account');
+        toast.error("Please select a bank account");
         return;
       }
       if (!formData.transaction_date) {
-        toast.error('Please select a transaction date');
+        toast.error("Please select a transaction date");
         return;
       }
       if (!formData.description.trim()) {
-        toast.error('Please enter a description');
+        toast.error("Please enter a description");
         return;
       }
       if (formData.amount <= 0) {
-        toast.error('Please enter a valid amount');
+        toast.error("Please enter a valid amount");
         return;
       }
-      
+
       const transactionData = {
         bankAccountId: formData.bank_account_id,
         transactionDate: new Date(formData.transaction_date).toISOString(),
-        valueDate: formData.value_date ? new Date(formData.value_date).toISOString() : undefined,
+        valueDate: formData.value_date
+          ? new Date(formData.value_date).toISOString()
+          : undefined,
         transactionType: formData.transaction_type,
         status: formData.status,
         amount: formData.amount,
@@ -222,14 +230,14 @@ function BankTransactionsContent() {
         tags: formData.tags,
         notes: formData.notes || undefined,
       };
-      
+
       await bankingService.createBankTransaction(transactionData);
-      toast.success('Transaction created successfully');
+      toast.success("Transaction created successfully");
       setIsCreateModalOpen(false);
       resetForm();
       loadData();
     } catch (error) {
-      toast.error(extractErrorMessage(error, 'Failed to create transaction'));
+      toast.error(extractErrorMessage(error, "Failed to create transaction"));
     } finally {
       setIsSubmitting(false);
     }
@@ -237,31 +245,31 @@ function BankTransactionsContent() {
 
   const resetForm = () => {
     setFormData({
-      bank_account_id: '',
-      transaction_date: new Date().toISOString().split('T')[0],
-      value_date: '',
+      bank_account_id: "",
+      transaction_date: new Date().toISOString().split("T")[0],
+      value_date: "",
       transaction_type: TransactionType.DEPOSIT,
       status: TransactionStatus.PENDING,
       amount: 0,
-      currency: 'USD',
+      currency: "USD",
       exchange_rate: 1.0,
       base_amount: 0,
       payment_method: PaymentMethod.CASH,
-      reference_number: '',
-      external_reference: '',
-      check_number: '',
-      description: '',
-      memo: '',
-      category: '',
-      counterparty_name: '',
-      counterparty_account: '',
-    counterparty_bank: '',
-    is_reconciled: false,
-    related_invoice_id: '',
-    related_purchase_order_id: '',
-    related_expense_id: '',
-    tags: [],
-    notes: '',
+      reference_number: "",
+      external_reference: "",
+      check_number: "",
+      description: "",
+      memo: "",
+      category: "",
+      counterparty_name: "",
+      counterparty_account: "",
+      counterparty_bank: "",
+      is_reconciled: false,
+      related_invoice_id: "",
+      related_purchase_order_id: "",
+      related_expense_id: "",
+      tags: [],
+      notes: "",
     });
   };
 
@@ -269,8 +277,12 @@ function BankTransactionsContent() {
     setEditingTransaction(transaction);
     setEditFormData({
       bank_account_id: transaction.bankAccountId,
-      transaction_date: new Date(transaction.transactionDate).toISOString().split('T')[0],
-      value_date: transaction.valueDate ? new Date(transaction.valueDate).toISOString().split('T')[0] : '',
+      transaction_date: new Date(transaction.transactionDate)
+        .toISOString()
+        .split("T")[0],
+      value_date: transaction.valueDate
+        ? new Date(transaction.valueDate).toISOString().split("T")[0]
+        : "",
       transaction_type: transaction.transactionType,
       status: transaction.status,
       amount: transaction.amount,
@@ -278,21 +290,21 @@ function BankTransactionsContent() {
       exchange_rate: transaction.exchangeRate,
       base_amount: transaction.baseAmount,
       payment_method: transaction.paymentMethod || PaymentMethod.CASH,
-      reference_number: transaction.referenceNumber || '',
-      external_reference: transaction.externalReference || '',
-      check_number: transaction.checkNumber || '',
+      reference_number: transaction.referenceNumber || "",
+      external_reference: transaction.externalReference || "",
+      check_number: transaction.checkNumber || "",
       description: transaction.description,
-      memo: transaction.memo || '',
-      category: transaction.category || '',
-      counterparty_name: transaction.counterpartyName || '',
-      counterparty_account: transaction.counterpartyAccount || '',
-      counterparty_bank: transaction.counterpartyBank || '',
+      memo: transaction.memo || "",
+      category: transaction.category || "",
+      counterparty_name: transaction.counterpartyName || "",
+      counterparty_account: transaction.counterpartyAccount || "",
+      counterparty_bank: transaction.counterpartyBank || "",
       is_reconciled: transaction.isReconciled,
-      related_invoice_id: transaction.relatedInvoiceId || '',
-      related_purchase_order_id: transaction.relatedPurchaseOrderId || '',
-      related_expense_id: transaction.relatedExpenseId || '',
+      related_invoice_id: transaction.relatedInvoiceId || "",
+      related_purchase_order_id: transaction.relatedPurchaseOrderId || "",
+      related_expense_id: transaction.relatedExpenseId || "",
       tags: transaction.tags || [],
-      notes: transaction.notes || '',
+      notes: transaction.notes || "",
     });
     setIsEditModalOpen(true);
   };
@@ -302,29 +314,31 @@ function BankTransactionsContent() {
 
     try {
       setIsSubmitting(true);
-      
+
       // Validate required fields
       if (!editFormData.bank_account_id) {
-        toast.error('Please select a bank account');
+        toast.error("Please select a bank account");
         return;
       }
       if (!editFormData.transaction_date) {
-        toast.error('Please select a transaction date');
+        toast.error("Please select a transaction date");
         return;
       }
       if (!editFormData.description.trim()) {
-        toast.error('Please enter a description');
+        toast.error("Please enter a description");
         return;
       }
       if (editFormData.amount <= 0) {
-        toast.error('Please enter a valid amount');
+        toast.error("Please enter a valid amount");
         return;
       }
-      
+
       const transactionData = {
         bankAccountId: editFormData.bank_account_id,
         transactionDate: new Date(editFormData.transaction_date).toISOString(),
-        valueDate: editFormData.value_date ? new Date(editFormData.value_date).toISOString() : undefined,
+        valueDate: editFormData.value_date
+          ? new Date(editFormData.value_date).toISOString()
+          : undefined,
         transactionType: editFormData.transaction_type,
         status: editFormData.status,
         amount: editFormData.amount,
@@ -343,19 +357,23 @@ function BankTransactionsContent() {
         counterpartyBank: editFormData.counterparty_bank || undefined,
         isReconciled: editFormData.is_reconciled,
         relatedInvoiceId: editFormData.related_invoice_id || undefined,
-        relatedPurchaseOrderId: editFormData.related_purchase_order_id || undefined,
+        relatedPurchaseOrderId:
+          editFormData.related_purchase_order_id || undefined,
         relatedExpenseId: editFormData.related_expense_id || undefined,
         tags: editFormData.tags,
         notes: editFormData.notes || undefined,
       };
-      
-      await bankingService.updateBankTransaction(editingTransaction.id, transactionData);
-      toast.success('Transaction updated successfully');
+
+      await bankingService.updateBankTransaction(
+        editingTransaction.id,
+        transactionData,
+      );
+      toast.success("Transaction updated successfully");
       setIsEditModalOpen(false);
       setEditingTransaction(null);
       loadData();
     } catch (error) {
-      toast.error(extractErrorMessage(error, 'Failed to update transaction'));
+      toast.error(extractErrorMessage(error, "Failed to update transaction"));
     } finally {
       setIsSubmitting(false);
     }
@@ -372,12 +390,12 @@ function BankTransactionsContent() {
     try {
       setIsDeleting(true);
       await bankingService.deleteBankTransaction(deletingTransaction.id);
-      toast.success('Transaction deleted successfully');
+      toast.success("Transaction deleted successfully");
       setIsDeleteModalOpen(false);
       setDeletingTransaction(null);
       loadData();
     } catch (error) {
-      toast.error(extractErrorMessage(error, 'Failed to delete transaction'));
+      toast.error(extractErrorMessage(error, "Failed to delete transaction"));
     } finally {
       setIsDeleting(false);
     }
@@ -385,41 +403,52 @@ function BankTransactionsContent() {
 
   const handleReconcileTransaction = async (transactionId: string) => {
     try {
-      await bankingService.reconcileTransactionSimple(transactionId, 'Reconciled from transactions page');
-      toast.success('Transaction reconciled successfully');
+      await bankingService.reconcileTransactionSimple(
+        transactionId,
+        "Reconciled from transactions page",
+      );
+      toast.success("Transaction reconciled successfully");
       loadData();
     } catch (error) {
-      toast.error(extractErrorMessage(error, 'Failed to reconcile transaction'));
+      toast.error(
+        extractErrorMessage(error, "Failed to reconcile transaction"),
+      );
     }
   };
 
   const handleUnreconcileTransaction = async (transactionId: string) => {
     try {
       await bankingService.unreconcileTransaction(transactionId);
-      toast.success('Transaction unreconciled successfully');
+      toast.success("Transaction unreconciled successfully");
       loadData();
     } catch (error) {
-      toast.error(extractErrorMessage(error, 'Failed to unreconcile transaction'));
+      toast.error(
+        extractErrorMessage(error, "Failed to unreconcile transaction"),
+      );
     }
   };
 
   const getBankAccountDisplay = (accountId: string) => {
     const acc = bankAccounts.find((a) => a.id === accountId);
-    if (!acc) return accountId ? 'Unknown account' : '—';
+    if (!acc) return accountId ? "Unknown account" : "—";
     return `${acc.accountName} · ${acc.bankName}`;
   };
 
   const getStatusBadge = (status: TransactionStatus) => {
     const statusConfig = {
-      [TransactionStatus.PENDING]: { variant: 'secondary', label: 'Pending' },
-      [TransactionStatus.PROCESSING]: { variant: 'default', label: 'Processing' },
-      [TransactionStatus.COMPLETED]: { variant: 'default', label: 'Completed' },
-      [TransactionStatus.FAILED]: { variant: 'destructive', label: 'Failed' },
-      [TransactionStatus.CANCELLED]: { variant: 'outline', label: 'Cancelled' },
-      [TransactionStatus.REVERSED]: { variant: 'outline', label: 'Reversed' },
+      [TransactionStatus.PENDING]: { variant: "secondary", label: "Pending" },
+      [TransactionStatus.PROCESSING]: {
+        variant: "default",
+        label: "Processing",
+      },
+      [TransactionStatus.COMPLETED]: { variant: "default", label: "Completed" },
+      [TransactionStatus.FAILED]: { variant: "destructive", label: "Failed" },
+      [TransactionStatus.CANCELLED]: { variant: "outline", label: "Cancelled" },
+      [TransactionStatus.REVERSED]: { variant: "outline", label: "Reversed" },
     };
 
-    const config = statusConfig[status] || statusConfig[TransactionStatus.PENDING];
+    const config =
+      statusConfig[status] || statusConfig[TransactionStatus.PENDING];
     return <Badge variant={config.variant as any}>{config.label}</Badge>;
   };
 
@@ -440,17 +469,28 @@ function BankTransactionsContent() {
     }
   };
 
-  const filteredTransactions = (transactions || []).filter(transaction => {
-    const accountLabel = getBankAccountDisplay(transaction.bankAccountId).toLowerCase();
-    const matchesSearch = transaction.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         transaction.counterpartyName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         transaction.referenceNumber?.includes(searchTerm) ||
-                         transaction.transactionNumber.includes(searchTerm) ||
-                         accountLabel.includes(searchTerm.toLowerCase());
-    
-    const matchesAccount = selectedAccount === 'all' || transaction.bankAccountId === selectedAccount;
-    const matchesType = selectedType === 'all' || transaction.transactionType === selectedType;
-    const matchesStatus = selectedStatus === 'all' || transaction.status === selectedStatus;
+  const filteredTransactions = (transactions || []).filter((transaction) => {
+    const accountLabel = getBankAccountDisplay(
+      transaction.bankAccountId,
+    ).toLowerCase();
+    const matchesSearch =
+      transaction.description
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      transaction.counterpartyName
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      transaction.referenceNumber?.includes(searchTerm) ||
+      transaction.transactionNumber.includes(searchTerm) ||
+      accountLabel.includes(searchTerm.toLowerCase());
+
+    const matchesAccount =
+      selectedAccount === "all" ||
+      transaction.bankAccountId === selectedAccount;
+    const matchesType =
+      selectedType === "all" || transaction.transactionType === selectedType;
+    const matchesStatus =
+      selectedStatus === "all" || transaction.status === selectedStatus;
 
     return matchesSearch && matchesAccount && matchesType && matchesStatus;
   });
@@ -505,7 +545,10 @@ function BankTransactionsContent() {
 
               <div className="space-y-2">
                 <Label>Account</Label>
-                <Select value={selectedAccount} onValueChange={setSelectedAccount}>
+                <Select
+                  value={selectedAccount}
+                  onValueChange={setSelectedAccount}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -539,7 +582,10 @@ function BankTransactionsContent() {
 
               <div className="space-y-2">
                 <Label>Status</Label>
-                <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                <Select
+                  value={selectedStatus}
+                  onValueChange={setSelectedStatus}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -593,14 +639,19 @@ function BankTransactionsContent() {
                       </div>
                     </TableCell>
                     <TableCell className="max-w-[14rem]">
-                      <div className="truncate text-sm" title={getBankAccountDisplay(transaction.bankAccountId)}>
+                      <div
+                        className="truncate text-sm"
+                        title={getBankAccountDisplay(transaction.bankAccountId)}
+                      >
                         {getBankAccountDisplay(transaction.bankAccountId)}
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2">
                         {getTransactionIcon(transaction.transactionType)}
-                        <span>{getTransactionTypeLabel(transaction.transactionType)}</span>
+                        <span>
+                          {getTransactionTypeLabel(transaction.transactionType)}
+                        </span>
                       </div>
                       {transaction.paymentMethod && (
                         <div className="text-sm text-muted-foreground">
@@ -635,26 +686,33 @@ function BankTransactionsContent() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <div className={`font-medium ${
-                        transaction.transactionType === TransactionType.DEPOSIT ||
-                        transaction.transactionType === TransactionType.TRANSFER_IN ||
-                        transaction.transactionType === TransactionType.REFUND ||
+                      <div
+                        className={`font-medium ${
+                          transaction.transactionType ===
+                            TransactionType.DEPOSIT ||
+                          transaction.transactionType ===
+                            TransactionType.TRANSFER_IN ||
+                          transaction.transactionType ===
+                            TransactionType.REFUND ||
+                          transaction.transactionType ===
+                            TransactionType.INTEREST
+                            ? "text-green-600"
+                            : "text-red-600"
+                        }`}
+                      >
+                        {transaction.transactionType ===
+                          TransactionType.DEPOSIT ||
+                        transaction.transactionType ===
+                          TransactionType.TRANSFER_IN ||
+                        transaction.transactionType ===
+                          TransactionType.REFUND ||
                         transaction.transactionType === TransactionType.INTEREST
-                          ? 'text-green-600'
-                          : 'text-red-600'
-                      }`}>
-                        {transaction.transactionType === TransactionType.DEPOSIT ||
-                         transaction.transactionType === TransactionType.TRANSFER_IN ||
-                         transaction.transactionType === TransactionType.REFUND ||
-                         transaction.transactionType === TransactionType.INTEREST
-                          ? '+'
-                          : '-'
-                        }{formatCurrency(transaction.baseAmount)}
+                          ? "+"
+                          : "-"}
+                        {formatCurrency(transaction.baseAmount)}
                       </div>
                     </TableCell>
-                    <TableCell>
-                      {getStatusBadge(transaction.status)}
-                    </TableCell>
+                    <TableCell>{getStatusBadge(transaction.status)}</TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2">
                         {transaction.isReconciled ? (
@@ -663,7 +721,7 @@ function BankTransactionsContent() {
                           <Clock className="h-4 w-4 text-yellow-600" />
                         )}
                         <span className="text-sm">
-                          {transaction.isReconciled ? 'Yes' : 'No'}
+                          {transaction.isReconciled ? "Yes" : "No"}
                         </span>
                       </div>
                     </TableCell>
@@ -687,7 +745,9 @@ function BankTransactionsContent() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleUnreconcileTransaction(transaction.id)}
+                            onClick={() =>
+                              handleUnreconcileTransaction(transaction.id)
+                            }
                             className="text-orange-600 hover:text-orange-700"
                             title="Unreconcile"
                           >
@@ -697,7 +757,9 @@ function BankTransactionsContent() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleReconcileTransaction(transaction.id)}
+                            onClick={() =>
+                              handleReconcileTransaction(transaction.id)
+                            }
                             className="text-green-600 hover:text-green-700"
                             title="Reconcile"
                           >
@@ -737,7 +799,12 @@ function BankTransactionsContent() {
                   <Label htmlFor="bankAccountId">Bank Account *</Label>
                   <Select
                     value={formData.bank_account_id}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, bank_account_id: value }))}
+                    onValueChange={(value) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        bank_account_id: value,
+                      }))
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select account" />
@@ -757,7 +824,12 @@ function BankTransactionsContent() {
                     id="transactionDate"
                     type="date"
                     value={formData.transaction_date}
-                    onChange={(e) => setFormData(prev => ({ ...prev, transaction_date: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        transaction_date: e.target.value,
+                      }))
+                    }
                   />
                 </div>
               </div>
@@ -767,7 +839,12 @@ function BankTransactionsContent() {
                   <Label htmlFor="transactionType">Transaction Type *</Label>
                   <Select
                     value={formData.transaction_type}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, transaction_type: value as TransactionType }))}
+                    onValueChange={(value) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        transaction_type: value as TransactionType,
+                      }))
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -785,7 +862,12 @@ function BankTransactionsContent() {
                   <Label htmlFor="status">Status</Label>
                   <Select
                     value={formData.status}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, status: value as TransactionStatus }))}
+                    onValueChange={(value) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        status: value as TransactionStatus,
+                      }))
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -811,10 +893,10 @@ function BankTransactionsContent() {
                     value={formData.amount}
                     onChange={(e) => {
                       const amount = parseFloat(e.target.value) || 0;
-                      setFormData(prev => ({ 
-                        ...prev, 
+                      setFormData((prev) => ({
+                        ...prev,
                         amount,
-                        base_amount: amount * prev.exchange_rate
+                        base_amount: amount * prev.exchange_rate,
                       }));
                     }}
                     placeholder="0.00"
@@ -824,7 +906,9 @@ function BankTransactionsContent() {
                   <Label htmlFor="currency">Currency</Label>
                   <Select
                     value={formData.currency}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}
+                    onValueChange={(value) =>
+                      setFormData((prev) => ({ ...prev, currency: value }))
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -844,7 +928,12 @@ function BankTransactionsContent() {
                 <Input
                   id="description"
                   value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
+                  }
                   placeholder="Transaction description"
                 />
               </div>
@@ -855,7 +944,12 @@ function BankTransactionsContent() {
                   <Input
                     id="counterpartyName"
                     value={formData.counterparty_name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, counterparty_name: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        counterparty_name: e.target.value,
+                      }))
+                    }
                     placeholder="Who is this transaction with?"
                   />
                 </div>
@@ -864,7 +958,12 @@ function BankTransactionsContent() {
                   <Input
                     id="referenceNumber"
                     value={formData.reference_number}
-                    onChange={(e) => setFormData(prev => ({ ...prev, reference_number: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        reference_number: e.target.value,
+                      }))
+                    }
                     placeholder="Transaction reference"
                   />
                 </div>
@@ -875,25 +974,33 @@ function BankTransactionsContent() {
                 <Textarea
                   id="memo"
                   value={formData.memo}
-                  onChange={(e) => setFormData(prev => ({ ...prev, memo: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, memo: e.target.value }))
+                  }
                   placeholder="Additional notes"
                   rows={3}
                 />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setIsCreateModalOpen(false)}
+              >
                 Cancel
               </Button>
               <Button onClick={handleCreateTransaction} disabled={isSubmitting}>
-                {isSubmitting ? 'Creating...' : 'Create Transaction'}
+                {isSubmitting ? "Creating..." : "Create Transaction"}
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
 
         {/* View Transaction Modal */}
-        <Dialog open={!!viewingTransaction} onOpenChange={() => setViewingTransaction(null)}>
+        <Dialog
+          open={!!viewingTransaction}
+          onOpenChange={() => setViewingTransaction(null)}
+        >
           <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Transaction Details</DialogTitle>
@@ -906,11 +1013,17 @@ function BankTransactionsContent() {
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-sm font-medium text-muted-foreground">Transaction Number</Label>
-                    <p className="text-sm font-medium">{viewingTransaction.transactionNumber}</p>
+                    <Label className="text-sm font-medium text-muted-foreground">
+                      Transaction Number
+                    </Label>
+                    <p className="text-sm font-medium">
+                      {viewingTransaction.transactionNumber}
+                    </p>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium text-muted-foreground">Status</Label>
+                    <Label className="text-sm font-medium text-muted-foreground">
+                      Status
+                    </Label>
                     <div className="mt-1">
                       {getStatusBadge(viewingTransaction.status)}
                     </div>
@@ -918,7 +1031,9 @@ function BankTransactionsContent() {
                 </div>
 
                 <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Bank Account</Label>
+                  <Label className="text-sm font-medium text-muted-foreground">
+                    Bank Account
+                  </Label>
                   <p className="text-sm font-medium mt-1">
                     {getBankAccountDisplay(viewingTransaction.bankAccountId)}
                   </p>
@@ -926,71 +1041,121 @@ function BankTransactionsContent() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-sm font-medium text-muted-foreground">Transaction Date</Label>
-                    <p className="text-sm">{formatDate(viewingTransaction.transactionDate)}</p>
+                    <Label className="text-sm font-medium text-muted-foreground">
+                      Transaction Date
+                    </Label>
+                    <p className="text-sm">
+                      {formatDate(viewingTransaction.transactionDate)}
+                    </p>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium text-muted-foreground">Value Date</Label>
-                    <p className="text-sm">{viewingTransaction.valueDate ? formatDate(viewingTransaction.valueDate) : 'N/A'}</p>
+                    <Label className="text-sm font-medium text-muted-foreground">
+                      Value Date
+                    </Label>
+                    <p className="text-sm">
+                      {viewingTransaction.valueDate
+                        ? formatDate(viewingTransaction.valueDate)
+                        : "N/A"}
+                    </p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-sm font-medium text-muted-foreground">Type</Label>
+                    <Label className="text-sm font-medium text-muted-foreground">
+                      Type
+                    </Label>
                     <div className="flex items-center space-x-2 mt-1">
                       {getTransactionIcon(viewingTransaction.transactionType)}
-                      <span className="text-sm">{getTransactionTypeLabel(viewingTransaction.transactionType)}</span>
+                      <span className="text-sm">
+                        {getTransactionTypeLabel(
+                          viewingTransaction.transactionType,
+                        )}
+                      </span>
                     </div>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium text-muted-foreground">Payment Method</Label>
-                    <p className="text-sm">{viewingTransaction.paymentMethod ? getPaymentMethodLabel(viewingTransaction.paymentMethod) : 'N/A'}</p>
+                    <Label className="text-sm font-medium text-muted-foreground">
+                      Payment Method
+                    </Label>
+                    <p className="text-sm">
+                      {viewingTransaction.paymentMethod
+                        ? getPaymentMethodLabel(
+                            viewingTransaction.paymentMethod,
+                          )
+                        : "N/A"}
+                    </p>
                   </div>
                 </div>
 
                 <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Description</Label>
+                  <Label className="text-sm font-medium text-muted-foreground">
+                    Description
+                  </Label>
                   <p className="text-sm">{viewingTransaction.description}</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-sm font-medium text-muted-foreground">Amount</Label>
-                    <p className={`text-sm font-medium ${
-                      viewingTransaction.transactionType === TransactionType.DEPOSIT ||
-                      viewingTransaction.transactionType === TransactionType.TRANSFER_IN ||
-                      viewingTransaction.transactionType === TransactionType.REFUND ||
-                      viewingTransaction.transactionType === TransactionType.INTEREST
-                        ? 'text-green-600'
-                        : 'text-red-600'
-                    }`}>
-                      {viewingTransaction.transactionType === TransactionType.DEPOSIT ||
-                       viewingTransaction.transactionType === TransactionType.TRANSFER_IN ||
-                       viewingTransaction.transactionType === TransactionType.REFUND ||
-                       viewingTransaction.transactionType === TransactionType.INTEREST
-                         ? '+'
-                         : '-'
-                      }{formatCurrency(viewingTransaction.baseAmount)} {viewingTransaction.currency}
+                    <Label className="text-sm font-medium text-muted-foreground">
+                      Amount
+                    </Label>
+                    <p
+                      className={`text-sm font-medium ${
+                        viewingTransaction.transactionType ===
+                          TransactionType.DEPOSIT ||
+                        viewingTransaction.transactionType ===
+                          TransactionType.TRANSFER_IN ||
+                        viewingTransaction.transactionType ===
+                          TransactionType.REFUND ||
+                        viewingTransaction.transactionType ===
+                          TransactionType.INTEREST
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
+                    >
+                      {viewingTransaction.transactionType ===
+                        TransactionType.DEPOSIT ||
+                      viewingTransaction.transactionType ===
+                        TransactionType.TRANSFER_IN ||
+                      viewingTransaction.transactionType ===
+                        TransactionType.REFUND ||
+                      viewingTransaction.transactionType ===
+                        TransactionType.INTEREST
+                        ? "+"
+                        : "-"}
+                      {formatCurrency(viewingTransaction.baseAmount)}{" "}
+                      {viewingTransaction.currency}
                     </p>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium text-muted-foreground">Base Amount</Label>
-                    <p className="text-sm">{formatCurrency(viewingTransaction.baseAmount)}</p>
+                    <Label className="text-sm font-medium text-muted-foreground">
+                      Base Amount
+                    </Label>
+                    <p className="text-sm">
+                      {formatCurrency(viewingTransaction.baseAmount)}
+                    </p>
                   </div>
                 </div>
 
-
                 {viewingTransaction.counterpartyName && (
                   <div>
-                    <Label className="text-sm font-medium text-muted-foreground">Counterparty</Label>
+                    <Label className="text-sm font-medium text-muted-foreground">
+                      Counterparty
+                    </Label>
                     <div>
-                      <p className="text-sm font-medium">{viewingTransaction.counterpartyName}</p>
+                      <p className="text-sm font-medium">
+                        {viewingTransaction.counterpartyName}
+                      </p>
                       {viewingTransaction.counterpartyAccount && (
-                        <p className="text-sm text-muted-foreground">{viewingTransaction.counterpartyAccount}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {viewingTransaction.counterpartyAccount}
+                        </p>
                       )}
                       {viewingTransaction.counterpartyBank && (
-                        <p className="text-sm text-muted-foreground">{viewingTransaction.counterpartyBank}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {viewingTransaction.counterpartyBank}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -998,21 +1163,29 @@ function BankTransactionsContent() {
 
                 {viewingTransaction.referenceNumber && (
                   <div>
-                    <Label className="text-sm font-medium text-muted-foreground">Reference Number</Label>
-                    <p className="text-sm">{viewingTransaction.referenceNumber}</p>
+                    <Label className="text-sm font-medium text-muted-foreground">
+                      Reference Number
+                    </Label>
+                    <p className="text-sm">
+                      {viewingTransaction.referenceNumber}
+                    </p>
                   </div>
                 )}
 
                 {viewingTransaction.memo && (
                   <div>
-                    <Label className="text-sm font-medium text-muted-foreground">Memo</Label>
+                    <Label className="text-sm font-medium text-muted-foreground">
+                      Memo
+                    </Label>
                     <p className="text-sm">{viewingTransaction.memo}</p>
                   </div>
                 )}
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-sm font-medium text-muted-foreground">Reconciled</Label>
+                    <Label className="text-sm font-medium text-muted-foreground">
+                      Reconciled
+                    </Label>
                     <div className="flex items-center space-x-2 mt-1">
                       {viewingTransaction.isReconciled ? (
                         <CheckCircle className="h-4 w-4 text-green-600" />
@@ -1020,7 +1193,7 @@ function BankTransactionsContent() {
                         <Clock className="h-4 w-4 text-yellow-600" />
                       )}
                       <span className="text-sm">
-                        {viewingTransaction.isReconciled ? 'Yes' : 'No'}
+                        {viewingTransaction.isReconciled ? "Yes" : "No"}
                       </span>
                     </div>
                   </div>
@@ -1028,27 +1201,40 @@ function BankTransactionsContent() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-sm font-medium text-muted-foreground">Created</Label>
-                    <p className="text-sm">{formatDate(viewingTransaction.createdAt)}</p>
+                    <Label className="text-sm font-medium text-muted-foreground">
+                      Created
+                    </Label>
+                    <p className="text-sm">
+                      {formatDate(viewingTransaction.createdAt)}
+                    </p>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium text-muted-foreground">Last Updated</Label>
-                    <p className="text-sm">{formatDate(viewingTransaction.updatedAt)}</p>
+                    <Label className="text-sm font-medium text-muted-foreground">
+                      Last Updated
+                    </Label>
+                    <p className="text-sm">
+                      {formatDate(viewingTransaction.updatedAt)}
+                    </p>
                   </div>
                 </div>
               </div>
             )}
 
             <DialogFooter>
-              <Button variant="outline" onClick={() => setViewingTransaction(null)}>
+              <Button
+                variant="outline"
+                onClick={() => setViewingTransaction(null)}
+              >
                 Close
               </Button>
-              <Button onClick={() => {
-                if (viewingTransaction) {
-                  setViewingTransaction(null);
-                  openEditModal(viewingTransaction);
-                }
-              }}>
+              <Button
+                onClick={() => {
+                  if (viewingTransaction) {
+                    setViewingTransaction(null);
+                    openEditModal(viewingTransaction);
+                  }
+                }}
+              >
                 Edit Transaction
               </Button>
             </DialogFooter>
@@ -1071,7 +1257,12 @@ function BankTransactionsContent() {
                   <Label htmlFor="edit-bankAccountId">Bank Account *</Label>
                   <Select
                     value={editFormData.bank_account_id}
-                    onValueChange={(value) => setEditFormData(prev => ({ ...prev, bank_account_id: value }))}
+                    onValueChange={(value) =>
+                      setEditFormData((prev) => ({
+                        ...prev,
+                        bank_account_id: value,
+                      }))
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select account" />
@@ -1086,22 +1277,36 @@ function BankTransactionsContent() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="edit-transactionDate">Transaction Date *</Label>
+                  <Label htmlFor="edit-transactionDate">
+                    Transaction Date *
+                  </Label>
                   <Input
                     id="edit-transactionDate"
                     type="date"
                     value={editFormData.transaction_date}
-                    onChange={(e) => setEditFormData(prev => ({ ...prev, transaction_date: e.target.value }))}
+                    onChange={(e) =>
+                      setEditFormData((prev) => ({
+                        ...prev,
+                        transaction_date: e.target.value,
+                      }))
+                    }
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="edit-transactionType">Transaction Type *</Label>
+                  <Label htmlFor="edit-transactionType">
+                    Transaction Type *
+                  </Label>
                   <Select
                     value={editFormData.transaction_type}
-                    onValueChange={(value) => setEditFormData(prev => ({ ...prev, transaction_type: value as TransactionType }))}
+                    onValueChange={(value) =>
+                      setEditFormData((prev) => ({
+                        ...prev,
+                        transaction_type: value as TransactionType,
+                      }))
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -1119,7 +1324,12 @@ function BankTransactionsContent() {
                   <Label htmlFor="edit-status">Status</Label>
                   <Select
                     value={editFormData.status}
-                    onValueChange={(value) => setEditFormData(prev => ({ ...prev, status: value as TransactionStatus }))}
+                    onValueChange={(value) =>
+                      setEditFormData((prev) => ({
+                        ...prev,
+                        status: value as TransactionStatus,
+                      }))
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -1145,10 +1355,10 @@ function BankTransactionsContent() {
                     value={editFormData.amount}
                     onChange={(e) => {
                       const amount = parseFloat(e.target.value) || 0;
-                      setEditFormData(prev => ({
+                      setEditFormData((prev) => ({
                         ...prev,
                         amount,
-                        base_amount: amount * prev.exchange_rate
+                        base_amount: amount * prev.exchange_rate,
                       }));
                     }}
                     placeholder="0.00"
@@ -1158,7 +1368,9 @@ function BankTransactionsContent() {
                   <Label htmlFor="edit-currency">Currency</Label>
                   <Select
                     value={editFormData.currency}
-                    onValueChange={(value) => setEditFormData(prev => ({ ...prev, currency: value }))}
+                    onValueChange={(value) =>
+                      setEditFormData((prev) => ({ ...prev, currency: value }))
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -1178,18 +1390,30 @@ function BankTransactionsContent() {
                 <Input
                   id="edit-description"
                   value={editFormData.description}
-                  onChange={(e) => setEditFormData(prev => ({ ...prev, description: e.target.value }))}
+                  onChange={(e) =>
+                    setEditFormData((prev) => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
+                  }
                   placeholder="Transaction description"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="edit-counterpartyName">Counterparty Name</Label>
+                  <Label htmlFor="edit-counterpartyName">
+                    Counterparty Name
+                  </Label>
                   <Input
                     id="edit-counterpartyName"
                     value={editFormData.counterparty_name}
-                    onChange={(e) => setEditFormData(prev => ({ ...prev, counterparty_name: e.target.value }))}
+                    onChange={(e) =>
+                      setEditFormData((prev) => ({
+                        ...prev,
+                        counterparty_name: e.target.value,
+                      }))
+                    }
                     placeholder="Who is this transaction with?"
                   />
                 </div>
@@ -1198,7 +1422,12 @@ function BankTransactionsContent() {
                   <Input
                     id="edit-referenceNumber"
                     value={editFormData.reference_number}
-                    onChange={(e) => setEditFormData(prev => ({ ...prev, reference_number: e.target.value }))}
+                    onChange={(e) =>
+                      setEditFormData((prev) => ({
+                        ...prev,
+                        reference_number: e.target.value,
+                      }))
+                    }
                     placeholder="Transaction reference"
                   />
                 </div>
@@ -1209,7 +1438,12 @@ function BankTransactionsContent() {
                 <Textarea
                   id="edit-memo"
                   value={editFormData.memo}
-                  onChange={(e) => setEditFormData(prev => ({ ...prev, memo: e.target.value }))}
+                  onChange={(e) =>
+                    setEditFormData((prev) => ({
+                      ...prev,
+                      memo: e.target.value,
+                    }))
+                  }
                   placeholder="Additional notes"
                   rows={3}
                 />
@@ -1217,11 +1451,14 @@ function BankTransactionsContent() {
             </div>
 
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setIsEditModalOpen(false)}
+              >
                 Cancel
               </Button>
               <Button onClick={handleUpdateTransaction} disabled={isSubmitting}>
-                {isSubmitting ? 'Updating...' : 'Update Transaction'}
+                {isSubmitting ? "Updating..." : "Update Transaction"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -1233,7 +1470,8 @@ function BankTransactionsContent() {
             <DialogHeader>
               <DialogTitle>Delete Transaction</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete this transaction? This action cannot be undone.
+                Are you sure you want to delete this transaction? This action
+                cannot be undone.
               </DialogDescription>
             </DialogHeader>
 
@@ -1243,23 +1481,32 @@ function BankTransactionsContent() {
                   <div className="space-y-2">
                     <div>
                       <span className="font-medium">Description:</span>
-                      <p className="text-sm text-gray-600">{deletingTransaction.description}</p>
+                      <p className="text-sm text-gray-600">
+                        {deletingTransaction.description}
+                      </p>
                     </div>
                     <div>
                       <span className="font-medium">Amount:</span>
                       <p className="text-sm text-gray-600">
-                        {deletingTransaction.transactionType === TransactionType.DEPOSIT ||
-                         deletingTransaction.transactionType === TransactionType.TRANSFER_IN ||
-                         deletingTransaction.transactionType === TransactionType.REFUND ||
-                         deletingTransaction.transactionType === TransactionType.INTEREST
-                           ? '+'
-                           : '-'
-                        }{formatCurrency(deletingTransaction.baseAmount)} {deletingTransaction.currency}
+                        {deletingTransaction.transactionType ===
+                          TransactionType.DEPOSIT ||
+                        deletingTransaction.transactionType ===
+                          TransactionType.TRANSFER_IN ||
+                        deletingTransaction.transactionType ===
+                          TransactionType.REFUND ||
+                        deletingTransaction.transactionType ===
+                          TransactionType.INTEREST
+                          ? "+"
+                          : "-"}
+                        {formatCurrency(deletingTransaction.baseAmount)}{" "}
+                        {deletingTransaction.currency}
                       </p>
                     </div>
                     <div>
                       <span className="font-medium">Date:</span>
-                      <p className="text-sm text-gray-600">{formatDate(deletingTransaction.transactionDate)}</p>
+                      <p className="text-sm text-gray-600">
+                        {formatDate(deletingTransaction.transactionDate)}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -1267,8 +1514,8 @@ function BankTransactionsContent() {
             )}
 
             <DialogFooter>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => {
                   setIsDeleteModalOpen(false);
                   setDeletingTransaction(null);
@@ -1277,12 +1524,12 @@ function BankTransactionsContent() {
               >
                 Cancel
               </Button>
-              <Button 
-                variant="destructive" 
+              <Button
+                variant="destructive"
                 onClick={handleDeleteTransaction}
                 disabled={isDeleting}
               >
-                {isDeleting ? 'Deleting...' : 'Delete Transaction'}
+                {isDeleting ? "Deleting..." : "Delete Transaction"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -1291,5 +1538,3 @@ function BankTransactionsContent() {
     </DashboardLayout>
   );
 }
-
-

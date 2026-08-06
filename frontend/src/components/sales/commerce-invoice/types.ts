@@ -1,6 +1,6 @@
-import type { Customer } from '@/src/services/CustomerService';
-import type { Product } from '@/src/models/pos';
-import type { InvoiceCreate, InvoiceItemCreate } from '@/src/models/sales';
+import type { Customer } from "@/src/services/CustomerService";
+import type { Product } from "@/src/models/pos";
+import type { InvoiceCreate, InvoiceItemCreate } from "@/src/models/sales";
 
 export interface CommerceInvoiceTotals {
   subtotal: number;
@@ -9,7 +9,7 @@ export interface CommerceInvoiceTotals {
 }
 
 export interface CommerceInvoiceFormProps {
-  mode: 'create' | 'edit';
+  mode: "create" | "edit";
   formData: InvoiceCreate;
   errors: Record<string, string>;
   items: InvoiceItemCreate[];

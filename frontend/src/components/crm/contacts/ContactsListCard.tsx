@@ -4,9 +4,9 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Badge } from '@/src/components/ui/badge';
+} from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { Badge } from "@/src/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -14,16 +14,16 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/src/components/ui/table';
-import { Edit, Trash2, Eye, ExternalLink } from 'lucide-react';
-import CRMService from '@/src/services/CRMService';
-import { Company, Contact } from '@/src/models/crm';
-import { useCurrency } from '@/src/contexts/CurrencyContext';
+} from "@/src/components/ui/table";
+import { Edit, Trash2, Eye, ExternalLink } from "lucide-react";
+import CRMService from "@/src/services/CRMService";
+import { Company, Contact } from "@/src/models/crm";
+import { useCurrency } from "@/src/contexts/CurrencyContext";
 import {
   contactAddressCountriesDisplay,
   contactTypeDisplayLabel,
   industryLabel,
-} from './contactUtils';
+} from "./contactUtils";
 
 type ContactsListCardProps = {
   contacts: Contact[];
@@ -40,15 +40,15 @@ type ContactsListCardProps = {
 
 function primaryEmail(contact: Contact): string {
   const ev = (contact.emails || []).filter((e) => e.value.trim());
-  if (ev.length > 0) return ev.map((e) => e.value).join(', ');
-  return contact.email?.trim() || '';
+  if (ev.length > 0) return ev.map((e) => e.value).join(", ");
+  return contact.email?.trim() || "";
 }
 
 function birthdayShort(contact: Contact): string {
-  if (!contact.birthday) return '—';
+  if (!contact.birthday) return "—";
   const d = String(contact.birthday).slice(0, 10);
   if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
-    const [, month, day] = d.split('-');
+    const [, month, day] = d.split("-");
     return `${month}/${day}`;
   }
   return CRMService.formatDate(contact.birthday);
@@ -70,7 +70,7 @@ export function ContactsListCard({
   const companyById = new Map(companies.map((c) => [c.id, c]));
 
   function money(value?: number): string {
-    if (value == null || Number.isNaN(value)) return '—';
+    if (value == null || Number.isNaN(value)) return "—";
     return formatCurrency(value);
   }
 
@@ -83,7 +83,9 @@ export function ContactsListCard({
         </CardDescription>
       </CardHeader>
       <CardContent className="p-0 sm:p-6 pt-0 space-y-4">
-        <div className={`rounded-md border relative ${listLoading ? 'opacity-60 pointer-events-none' : ''}`}>
+        <div
+          className={`rounded-md border relative ${listLoading ? "opacity-60 pointer-events-none" : ""}`}
+        >
           {listLoading && (
             <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-10">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
@@ -111,7 +113,10 @@ export function ContactsListCard({
             <TableBody>
               {!listLoading && contacts.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={14} className="text-center text-muted-foreground py-8">
+                  <TableCell
+                    colSpan={14}
+                    className="text-center text-muted-foreground py-8"
+                  >
                     No contacts found
                   </TableCell>
                 </TableRow>
@@ -127,13 +132,13 @@ export function ContactsListCard({
                       {contact.firstName} {contact.lastName}
                     </TableCell>
                     <TableCell className="max-w-[200px] truncate text-muted-foreground">
-                      {primaryEmail(contact) || '—'}
+                      {primaryEmail(contact) || "—"}
                     </TableCell>
                     <TableCell className="max-w-[140px] truncate">
-                      {co?.name || '—'}
+                      {co?.name || "—"}
                     </TableCell>
                     <TableCell className="whitespace-nowrap text-muted-foreground">
-                      {co?.industry ? industryLabel(co.industry) : '—'}
+                      {co?.industry ? industryLabel(co.industry) : "—"}
                     </TableCell>
                     <TableCell className="max-w-[160px]">
                       {site ? (
@@ -152,7 +157,7 @@ export function ContactsListCard({
                           <ExternalLink className="w-3 h-3 shrink-0" />
                         </a>
                       ) : (
-                        '—'
+                        "—"
                       )}
                     </TableCell>
                     <TableCell>
@@ -164,13 +169,13 @@ export function ContactsListCard({
                       {birthdayShort(contact)}
                     </TableCell>
                     <TableCell className="max-w-[120px] truncate text-muted-foreground">
-                      {contactAddressCountriesDisplay(contact) || '—'}
+                      {contactAddressCountriesDisplay(contact) || "—"}
                     </TableCell>
                     <TableCell>
                       <Badge
-                        variant={contact.isActive ? 'default' : 'secondary'}
+                        variant={contact.isActive ? "default" : "secondary"}
                       >
-                        {contact.isActive ? 'Active' : 'Inactive'}
+                        {contact.isActive ? "Active" : "Inactive"}
                       </Badge>
                     </TableCell>
                     <TableCell className="whitespace-nowrap text-muted-foreground">

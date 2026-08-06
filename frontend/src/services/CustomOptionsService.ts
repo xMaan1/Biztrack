@@ -1,4 +1,4 @@
-import { ApiService } from './ApiService';
+import { ApiService } from "./ApiService";
 
 export interface CustomOption {
   id: string;
@@ -9,7 +9,7 @@ export interface CustomOption {
 
 function asList(response: unknown): CustomOption[] {
   if (Array.isArray(response)) return response;
-  if (response && typeof response === 'object') {
+  if (response && typeof response === "object") {
     const data = (response as { data?: unknown }).data;
     if (Array.isArray(data)) return data;
   }
@@ -17,12 +17,12 @@ function asList(response: unknown): CustomOption[] {
 }
 
 function asItem(response: unknown): CustomOption {
-  if (response && typeof response === 'object') {
+  if (response && typeof response === "object") {
     const data = (response as { data?: unknown }).data;
-    if (data && typeof data === 'object' && !Array.isArray(data)) {
+    if (data && typeof data === "object" && !Array.isArray(data)) {
       return data as CustomOption;
     }
-    if ('id' in (response as object)) {
+    if ("id" in (response as object)) {
       return response as CustomOption;
     }
   }
@@ -40,7 +40,7 @@ export class CustomOptionsService {
     name: string,
     description?: string,
   ): Promise<CustomOption> {
-    const response = await this.apiService.post('/custom-options/event-types', {
+    const response = await this.apiService.post("/custom-options/event-types", {
       name,
       description,
     });
@@ -48,7 +48,7 @@ export class CustomOptionsService {
   }
 
   async getCustomEventTypes(): Promise<CustomOption[]> {
-    return asList(await this.apiService.get('/custom-options/event-types'));
+    return asList(await this.apiService.get("/custom-options/event-types"));
   }
 
   async createCustomDepartment(
@@ -56,7 +56,7 @@ export class CustomOptionsService {
     description?: string,
   ): Promise<CustomOption> {
     const params = new URLSearchParams({ name });
-    if (description?.trim()) params.append('description', description.trim());
+    if (description?.trim()) params.append("description", description.trim());
     return asItem(
       await this.apiService.post(
         `/custom-options/departments?${params.toString()}`,
@@ -65,14 +65,14 @@ export class CustomOptionsService {
   }
 
   async getCustomDepartments(): Promise<CustomOption[]> {
-    return asList(await this.apiService.get('/custom-options/departments'));
+    return asList(await this.apiService.get("/custom-options/departments"));
   }
 
   async createCustomLeaveType(
     name: string,
     description?: string,
   ): Promise<CustomOption> {
-    const response = await this.apiService.post('/custom-options/leave-types', {
+    const response = await this.apiService.post("/custom-options/leave-types", {
       name,
       description,
     });
@@ -80,7 +80,7 @@ export class CustomOptionsService {
   }
 
   async getCustomLeaveTypes(): Promise<CustomOption[]> {
-    return asList(await this.apiService.get('/custom-options/leave-types'));
+    return asList(await this.apiService.get("/custom-options/leave-types"));
   }
 
   async createCustomLeadSource(
@@ -88,7 +88,7 @@ export class CustomOptionsService {
     description?: string,
   ): Promise<CustomOption> {
     const response = await this.apiService.post(
-      '/custom-options/lead-sources',
+      "/custom-options/lead-sources",
       {
         name,
         description,
@@ -98,7 +98,7 @@ export class CustomOptionsService {
   }
 
   async getCustomLeadSources(): Promise<CustomOption[]> {
-    return asList(await this.apiService.get('/custom-options/lead-sources'));
+    return asList(await this.apiService.get("/custom-options/lead-sources"));
   }
 
   async createCustomContactSource(
@@ -106,7 +106,7 @@ export class CustomOptionsService {
     description?: string,
   ): Promise<CustomOption> {
     const response = await this.apiService.post(
-      '/custom-options/contact-sources',
+      "/custom-options/contact-sources",
       {
         name,
         description,
@@ -116,9 +116,7 @@ export class CustomOptionsService {
   }
 
   async getCustomContactSources(): Promise<CustomOption[]> {
-    return asList(
-      await this.apiService.get('/custom-options/contact-sources'),
-    );
+    return asList(await this.apiService.get("/custom-options/contact-sources"));
   }
 
   async createCustomCompanyIndustry(
@@ -126,7 +124,7 @@ export class CustomOptionsService {
     description?: string,
   ): Promise<CustomOption> {
     const response = await this.apiService.post(
-      '/custom-options/company-industries',
+      "/custom-options/company-industries",
       {
         name,
         description,
@@ -137,7 +135,7 @@ export class CustomOptionsService {
 
   async getCustomCompanyIndustries(): Promise<CustomOption[]> {
     return asList(
-      await this.apiService.get('/custom-options/company-industries'),
+      await this.apiService.get("/custom-options/company-industries"),
     );
   }
 
@@ -146,7 +144,7 @@ export class CustomOptionsService {
     description?: string,
   ): Promise<CustomOption> {
     const response = await this.apiService.post(
-      '/custom-options/contact-types',
+      "/custom-options/contact-types",
       {
         name,
         description,
@@ -156,14 +154,14 @@ export class CustomOptionsService {
   }
 
   async getCustomContactTypes(): Promise<CustomOption[]> {
-    return asList(await this.apiService.get('/custom-options/contact-types'));
+    return asList(await this.apiService.get("/custom-options/contact-types"));
   }
 
   async createCustomIndustry(
     name: string,
     description?: string,
   ): Promise<CustomOption> {
-    const response = await this.apiService.post('/custom-options/industries', {
+    const response = await this.apiService.post("/custom-options/industries", {
       name,
       description,
     });
@@ -171,6 +169,6 @@ export class CustomOptionsService {
   }
 
   async getCustomIndustries(): Promise<CustomOption[]> {
-    return asList(await this.apiService.get('/custom-options/industries'));
+    return asList(await this.apiService.get("/custom-options/industries"));
   }
 }

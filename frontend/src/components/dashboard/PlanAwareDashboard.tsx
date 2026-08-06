@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import React from 'react';
-import WorkshopDashboard from './WorkshopDashboard';
-import CommerceDashboard from './CommerceDashboard';
-import AgencyDashboard, { type AgencyStats } from './AgencyDashboard';
+import React from "react";
+import WorkshopDashboard from "./WorkshopDashboard";
+import CommerceDashboard from "./CommerceDashboard";
+import AgencyDashboard, { type AgencyStats } from "./AgencyDashboard";
 
 interface PlanAwareDashboardProps {
   planType: string;
@@ -16,25 +16,27 @@ export default function PlanAwareDashboard({
   stats,
   onNavigate,
 }: PlanAwareDashboardProps) {
-
   // Use real stats passed from parent, no fake data generation
   const enhancedStats = { ...stats };
 
   // Render appropriate dashboard based on plan type
   switch (planType) {
-    case 'workshop':
+    case "workshop":
       return (
         <WorkshopDashboard stats={enhancedStats} onNavigate={onNavigate} />
       );
 
-    case 'commerce':
+    case "commerce":
       return (
         <CommerceDashboard stats={enhancedStats} onNavigate={onNavigate} />
       );
 
-    case 'agency':
+    case "agency":
       return (
-        <AgencyDashboard stats={enhancedStats as AgencyStats} onNavigate={onNavigate} />
+        <AgencyDashboard
+          stats={enhancedStats as AgencyStats}
+          onNavigate={onNavigate}
+        />
       );
 
     default:
@@ -46,7 +48,7 @@ export default function PlanAwareDashboard({
               Welcome to Your Dashboard
             </h1>
             <p className="text-gray-600 text-lg">
-              Plan type: {planType || 'Unknown'}
+              Plan type: {planType || "Unknown"}
             </p>
             <p className="text-gray-500 mt-2">
               This is a generic dashboard view. Please contact support to

@@ -1,17 +1,19 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { useNotifications } from '../../contexts/NotificationContext';
+import React from "react";
+import { useNotifications } from "../../contexts/NotificationContext";
 import {
   Notification,
+  getCategoryDisplayName,
+  getCategoryIcon,
+  getNotificationTargetHref,
   getNotificationTypeColor,
   getNotificationTypeIcon,
-  getCategoryDisplayName,
-  getCategoryIcon
-} from '../../models/notifications';
-import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
-import { Card, CardContent } from '../ui/card';
+  resolveNotificationActionPath,
+} from "../../models/notifications";
+import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
+import { Card, CardContent } from "../ui/card";
 import {
   Check,
   X,
@@ -24,13 +26,9 @@ import {
   Settings,
   Bell,
   FolderOpen,
-} from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
-import { useRouter } from 'next/navigation';
-import {
-  getNotificationTargetHref,
-  resolveNotificationActionPath,
-} from '../../models/notifications';
+} from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { useRouter } from "next/navigation";
 
 interface NotificationItemProps {
   notification: Notification;
@@ -48,10 +46,10 @@ const iconMap = {
   FolderOpen,
 };
 
-export default function NotificationItem({ 
-  notification, 
-  compact = false, 
-  onAction 
+export default function NotificationItem({
+  notification,
+  compact = false,
+  onAction,
 }: NotificationItemProps) {
   const router = useRouter();
   const { markAsRead, markAsUnread, deleteNotification } = useNotifications();
@@ -63,15 +61,13 @@ export default function NotificationItem({
       } else {
         await markAsRead(notification.id);
       }
-    } catch (error) {
-    }
+    } catch (error) {}
   };
 
   const handleDelete = async () => {
     try {
       await deleteNotification(notification.id);
-    } catch (error) {
-    }
+    } catch (error) {}
   };
 
   const handleActionClick = () => {
@@ -87,15 +83,16 @@ export default function NotificationItem({
           if (u.origin === window.location.origin) {
             router.push(u.pathname + u.search + u.hash);
           } else {
-            window.open(resolvedPath, '_blank', 'noopener,noreferrer');
+            window.open(resolvedPath, "_blank", "noopener,noreferrer");
           }
         } else {
-          const path =
-            resolvedPath.startsWith('/') ? resolvedPath : `/${resolvedPath}`;
+          const path = resolvedPath.startsWith("/")
+            ? resolvedPath
+            : `/${resolvedPath}`;
           router.push(path);
         }
       } catch {
-        window.open(rawHref, '_blank', 'noopener,noreferrer');
+        window.open(rawHref, "_blank", "noopener,noreferrer");
       }
       onAction?.();
     };
@@ -112,18 +109,23 @@ export default function NotificationItem({
   const typeIconName = getNotificationTypeIcon(notification.type);
   const categoryIconName = getCategoryIcon(notification.category);
   const TypeIcon = iconMap[typeIconName as keyof typeof iconMap] || Bell;
-  const CategoryIcon = iconMap[categoryIconName as keyof typeof iconMap] || Bell;
+  const CategoryIcon =
+    iconMap[categoryIconName as keyof typeof iconMap] || Bell;
 
-  const timeAgo = formatDistanceToNow(new Date(notification.created_at), { addSuffix: true });
+  const timeAgo = formatDistanceToNow(new Date(notification.created_at), {
+    addSuffix: true,
+  });
 
   if (compact) {
     return (
-      <div className={`p-3 hover:bg-gray-50 transition-colors ${!notification.is_read ? 'bg-blue-50' : ''}`}>
+      <div
+        className={`p-3 hover:bg-gray-50 transition-colors ${!notification.is_read ? "bg-blue-50" : ""}`}
+      >
         <div className="flex items-start space-x-3">
           <div className={`p-1.5 rounded-full ${typeColor}`}>
             <TypeIcon className="h-3 w-3" />
           </div>
-          
+
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-gray-900 truncate">
@@ -147,11 +149,11 @@ export default function NotificationItem({
                 </Button>
               </div>
             </div>
-            
+
             <p className="text-xs text-gray-600 mt-1 line-clamp-2">
               {notification.message}
             </p>
-            
+
             <div className="flex items-center justify-between mt-2">
               <div className="flex items-center space-x-2">
                 <Badge variant="outline" className="text-xs">
@@ -160,7 +162,7 @@ export default function NotificationItem({
                 </Badge>
                 <span className="text-xs text-gray-400">{timeAgo}</span>
               </div>
-              
+
               {detailHref && (
                 <Button
                   variant="ghost"
@@ -179,13 +181,15 @@ export default function NotificationItem({
   }
 
   return (
-    <Card className={`${!notification.is_read ? 'border-blue-200 bg-blue-50' : ''}`}>
+    <Card
+      className={`${!notification.is_read ? "border-blue-200 bg-blue-50" : ""}`}
+    >
       <CardContent className="p-4">
         <div className="flex items-start space-x-3">
           <div className={`p-2 rounded-full ${typeColor}`}>
             <TypeIcon className="h-4 w-4" />
           </div>
-          
+
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between">
               <div className="flex-1">
@@ -195,7 +199,7 @@ export default function NotificationItem({
                 <p className="text-sm text-gray-700 mb-3">
                   {notification.message}
                 </p>
-                
+
                 <div className="flex items-center space-x-4 text-xs text-gray-500">
                   <div className="flex items-center space-x-1">
                     <CategoryIcon className="h-3 w-3" />
@@ -208,12 +212,17 @@ export default function NotificationItem({
                   {notification.read_at && (
                     <div className="flex items-center space-x-1">
                       <Check className="h-3 w-3" />
-                      <span>Read {formatDistanceToNow(new Date(notification.read_at), { addSuffix: true })}</span>
+                      <span>
+                        Read{" "}
+                        {formatDistanceToNow(new Date(notification.read_at), {
+                          addSuffix: true,
+                        })}
+                      </span>
                     </div>
                   )}
                 </div>
               </div>
-              
+
               <div className="flex items-center space-x-1 ml-4">
                 {!notification.is_read && (
                   <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
@@ -240,7 +249,7 @@ export default function NotificationItem({
                 </Button>
               </div>
             </div>
-            
+
             {detailHref && (
               <div className="mt-3 pt-3 border-t border-gray-200">
                 <Button

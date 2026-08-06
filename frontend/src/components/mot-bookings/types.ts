@@ -1,9 +1,12 @@
-import type { MotBookingStatus, MotTestType } from '@/src/models/mot/MotBooking';
+import type {
+  MotBookingStatus,
+  MotTestType,
+} from "@/src/models/mot/MotBooking";
 
 export type MotBookingFiltersState = {
   searchTerm: string;
-  status: MotBookingStatus | 'all';
-  testType: MotTestType | 'all';
+  status: MotBookingStatus | "all";
+  testType: MotTestType | "all";
   dateFrom: string;
   dateTo: string;
 };

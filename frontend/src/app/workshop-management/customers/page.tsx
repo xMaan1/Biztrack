@@ -1,3 +1,3 @@
-'use client';
+"use client";
 
-export { default } from '../../crm/customers/page';
+export { default } from "../../crm/customers/page";

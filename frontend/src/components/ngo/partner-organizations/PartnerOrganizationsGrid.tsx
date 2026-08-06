@@ -1,7 +1,7 @@
-import { Building2 } from 'lucide-react';
-import { Button } from '@/src/components/ui/button';
-import type { PartnerOrganization } from '@/src/models/ngo';
-import { PartnerOrganizationCard } from './PartnerOrganizationCard';
+import { Building2 } from "lucide-react";
+import { Button } from "@/src/components/ui/button";
+import type { PartnerOrganization } from "@/src/models/ngo";
+import { PartnerOrganizationCard } from "./PartnerOrganizationCard";
 
 type PartnerOrganizationsGridProps = {
   organizations: PartnerOrganization[];
@@ -38,9 +38,13 @@ export function PartnerOrganizationsGrid({
         </h2>
       </div>
       {loading ? (
-        <div className="py-16 text-center text-muted-foreground">Loading partner organizations...</div>
+        <div className="py-16 text-center text-muted-foreground">
+          Loading partner organizations...
+        </div>
       ) : organizations.length === 0 ? (
-        <div className="py-16 text-center text-muted-foreground">No partner organizations found</div>
+        <div className="py-16 text-center text-muted-foreground">
+          No partner organizations found
+        </div>
       ) : (
         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {organizations.map((org) => (

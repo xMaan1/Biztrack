@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React from 'react';
+import React from "react";
 
 type InlineFieldProps = {
   label: string;
@@ -11,7 +11,7 @@ type InlineFieldProps = {
 
 export function InlineField({
   label,
-  labelClassName = 'text-muted-foreground',
+  labelClassName = "text-muted-foreground",
   required,
   children,
 }: InlineFieldProps) {
@@ -21,7 +21,7 @@ export function InlineField({
         className={`w-[108px] shrink-0 text-right text-sm font-medium ${labelClassName}`}
       >
         {label}
-        {required ? ' *' : ''}
+        {required ? " *" : ""}
       </span>
       <div className="min-w-0 flex-1">{children}</div>
     </div>

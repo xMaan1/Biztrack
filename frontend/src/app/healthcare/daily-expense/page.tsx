@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { DashboardLayout } from '@/src/components/layout';
+import React, { useState, useEffect, useCallback } from "react";
+import { DashboardLayout } from "@/src/components/layout";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
-import { Label } from '@/src/components/ui/label';
-import { Textarea } from '@/src/components/ui/textarea';
+} from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
+import { Label } from "@/src/components/ui/label";
+import { Textarea } from "@/src/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +20,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/src/components/ui/dialog';
+} from "@/src/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -28,16 +28,16 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/src/components/ui/table';
+} from "@/src/components/ui/table";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
-import { Plus, Edit, Trash2, Receipt, FolderOpen } from 'lucide-react';
-import healthcareService from '@/src/services/HealthcareService';
+} from "@/src/components/ui/select";
+import { Plus, Edit, Trash2, Receipt, FolderOpen } from "lucide-react";
+import healthcareService from "@/src/services/HealthcareService";
 import type {
   ExpenseCategory,
   ExpenseCategoryCreate,
@@ -45,8 +45,8 @@ import type {
   DailyExpense,
   DailyExpenseCreate,
   DailyExpenseUpdate,
-} from '@/src/models/healthcare';
-import { toast } from 'sonner';
+} from "@/src/models/healthcare";
+import { toast } from "sonner";
 
 export default function HealthcareDailyExpensePage() {
   return (
@@ -63,27 +63,35 @@ function DailyExpenseContent() {
   const [expenses, setExpenses] = useState<DailyExpense[]>([]);
   const [expensesTotal, setExpensesTotal] = useState(0);
   const [expensesLoading, setExpensesLoading] = useState(true);
-  const [categoryFilter, setCategoryFilter] = useState<string>('');
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState<string>("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [categoryFormOpen, setCategoryFormOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<ExpenseCategory | null>(null);
-  const [categoryFormData, setCategoryFormData] = useState<ExpenseCategoryCreate>({ name: '', description: '' });
+  const [editingCategory, setEditingCategory] =
+    useState<ExpenseCategory | null>(null);
+  const [categoryFormData, setCategoryFormData] =
+    useState<ExpenseCategoryCreate>({ name: "", description: "" });
   const [categorySubmitLoading, setCategorySubmitLoading] = useState(false);
-  const [categoryDeleteDialogOpen, setCategoryDeleteDialogOpen] = useState(false);
-  const [categoryToDelete, setCategoryToDelete] = useState<ExpenseCategory | null>(null);
+  const [categoryDeleteDialogOpen, setCategoryDeleteDialogOpen] =
+    useState(false);
+  const [categoryToDelete, setCategoryToDelete] =
+    useState<ExpenseCategory | null>(null);
   const [categoryDeleteLoading, setCategoryDeleteLoading] = useState(false);
   const [expenseFormOpen, setExpenseFormOpen] = useState(false);
-  const [editingExpense, setEditingExpense] = useState<DailyExpense | null>(null);
+  const [editingExpense, setEditingExpense] = useState<DailyExpense | null>(
+    null,
+  );
   const [expenseFormData, setExpenseFormData] = useState<DailyExpenseCreate>({
-    category_id: '',
+    category_id: "",
     expense_date: new Date().toISOString().slice(0, 10),
     amount: 0,
-    description: '',
+    description: "",
   });
   const [expenseSubmitLoading, setExpenseSubmitLoading] = useState(false);
   const [expenseDeleteDialogOpen, setExpenseDeleteDialogOpen] = useState(false);
-  const [expenseToDelete, setExpenseToDelete] = useState<DailyExpense | null>(null);
+  const [expenseToDelete, setExpenseToDelete] = useState<DailyExpense | null>(
+    null,
+  );
   const [expenseDeleteLoading, setExpenseDeleteLoading] = useState(false);
 
   const loadCategories = useCallback(async () => {
@@ -93,7 +101,7 @@ function DailyExpenseContent() {
       setCategories(res.categories);
       setCategoriesTotal(res.total);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Failed to load categories');
+      toast.error(e instanceof Error ? e.message : "Failed to load categories");
     } finally {
       setCategoriesLoading(false);
     }
@@ -111,7 +119,7 @@ function DailyExpenseContent() {
       setExpenses(res.expenses);
       setExpensesTotal(res.total);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Failed to load expenses');
+      toast.error(e instanceof Error ? e.message : "Failed to load expenses");
     } finally {
       setExpensesLoading(false);
     }
@@ -127,13 +135,13 @@ function DailyExpenseContent() {
 
   const openAddCategory = () => {
     setEditingCategory(null);
-    setCategoryFormData({ name: '', description: '' });
+    setCategoryFormData({ name: "", description: "" });
     setCategoryFormOpen(true);
   };
 
   const openEditCategory = (c: ExpenseCategory) => {
     setEditingCategory(c);
-    setCategoryFormData({ name: c.name, description: c.description ?? '' });
+    setCategoryFormData({ name: c.name, description: c.description ?? "" });
     setCategoryFormOpen(true);
   };
 
@@ -144,7 +152,7 @@ function DailyExpenseContent() {
 
   const handleCategorySubmit = async () => {
     if (!categoryFormData.name.trim()) {
-      toast.error('Category name is required');
+      toast.error("Category name is required");
       return;
     }
     try {
@@ -154,21 +162,24 @@ function DailyExpenseContent() {
           name: categoryFormData.name.trim(),
           description: categoryFormData.description?.trim() || undefined,
         };
-        await healthcareService.updateExpenseCategory(editingCategory.id, payload);
-        toast.success('Category updated');
+        await healthcareService.updateExpenseCategory(
+          editingCategory.id,
+          payload,
+        );
+        toast.success("Category updated");
       } else {
         await healthcareService.createExpenseCategory({
           name: categoryFormData.name.trim(),
           description: categoryFormData.description?.trim() || undefined,
         });
-        toast.success('Category created');
+        toast.success("Category created");
       }
       setCategoryFormOpen(false);
       loadCategories();
       loadExpenses();
     } catch (e: any) {
-      const msg = e?.response?.data?.detail || e?.message || 'Request failed';
-      toast.error(typeof msg === 'string' ? msg : JSON.stringify(msg));
+      const msg = e?.response?.data?.detail || e?.message || "Request failed";
+      toast.error(typeof msg === "string" ? msg : JSON.stringify(msg));
     } finally {
       setCategorySubmitLoading(false);
     }
@@ -179,14 +190,14 @@ function DailyExpenseContent() {
     try {
       setCategoryDeleteLoading(true);
       await healthcareService.deleteExpenseCategory(categoryToDelete.id);
-      toast.success('Category deleted');
+      toast.success("Category deleted");
       setCategoryDeleteDialogOpen(false);
       setCategoryToDelete(null);
       loadCategories();
       loadExpenses();
     } catch (e: any) {
-      const msg = e?.response?.data?.detail || e?.message || 'Delete failed';
-      toast.error(typeof msg === 'string' ? msg : JSON.stringify(msg));
+      const msg = e?.response?.data?.detail || e?.message || "Delete failed";
+      toast.error(typeof msg === "string" ? msg : JSON.stringify(msg));
     } finally {
       setCategoryDeleteLoading(false);
     }
@@ -195,10 +206,10 @@ function DailyExpenseContent() {
   const openAddExpense = () => {
     setEditingExpense(null);
     setExpenseFormData({
-      category_id: categories[0]?.id ?? '',
+      category_id: categories[0]?.id ?? "",
       expense_date: new Date().toISOString().slice(0, 10),
       amount: 0,
-      description: '',
+      description: "",
     });
     setExpenseFormOpen(true);
   };
@@ -209,7 +220,7 @@ function DailyExpenseContent() {
       category_id: e.category_id,
       expense_date: e.expense_date,
       amount: e.amount,
-      description: e.description ?? '',
+      description: e.description ?? "",
     });
     setExpenseFormOpen(true);
   };
@@ -221,15 +232,15 @@ function DailyExpenseContent() {
 
   const handleExpenseSubmit = async () => {
     if (!expenseFormData.category_id) {
-      toast.error('Category is required');
+      toast.error("Category is required");
       return;
     }
     if (!expenseFormData.expense_date) {
-      toast.error('Date is required');
+      toast.error("Date is required");
       return;
     }
     if (expenseFormData.amount == null || expenseFormData.amount < 0) {
-      toast.error('Amount must be 0 or greater');
+      toast.error("Amount must be 0 or greater");
       return;
     }
     try {
@@ -242,7 +253,7 @@ function DailyExpenseContent() {
           description: expenseFormData.description?.trim() || undefined,
         };
         await healthcareService.updateDailyExpense(editingExpense.id, payload);
-        toast.success('Expense updated');
+        toast.success("Expense updated");
       } else {
         await healthcareService.createDailyExpense({
           category_id: expenseFormData.category_id,
@@ -250,13 +261,13 @@ function DailyExpenseContent() {
           amount: Number(expenseFormData.amount),
           description: expenseFormData.description?.trim() || undefined,
         });
-        toast.success('Expense added');
+        toast.success("Expense added");
       }
       setExpenseFormOpen(false);
       loadExpenses();
     } catch (e: any) {
-      const msg = e?.response?.data?.detail || e?.message || 'Request failed';
-      toast.error(typeof msg === 'string' ? msg : JSON.stringify(msg));
+      const msg = e?.response?.data?.detail || e?.message || "Request failed";
+      toast.error(typeof msg === "string" ? msg : JSON.stringify(msg));
     } finally {
       setExpenseSubmitLoading(false);
     }
@@ -267,27 +278,33 @@ function DailyExpenseContent() {
     try {
       setExpenseDeleteLoading(true);
       await healthcareService.deleteDailyExpense(expenseToDelete.id);
-      toast.success('Expense deleted');
+      toast.success("Expense deleted");
       setExpenseDeleteDialogOpen(false);
       setExpenseToDelete(null);
       loadExpenses();
     } catch (e: any) {
-      const msg = e?.response?.data?.detail || e?.message || 'Delete failed';
-      toast.error(typeof msg === 'string' ? msg : JSON.stringify(msg));
+      const msg = e?.response?.data?.detail || e?.message || "Delete failed";
+      toast.error(typeof msg === "string" ? msg : JSON.stringify(msg));
     } finally {
       setExpenseDeleteLoading(false);
     }
   };
 
   const formatCurrency = (n: number) =>
-    new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
-  const formatDate = (d: string) => (d ? new Date(d).toLocaleDateString() : '—');
+    new Intl.NumberFormat(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(n);
+  const formatDate = (d: string) =>
+    d ? new Date(d).toLocaleDateString() : "—";
 
   return (
     <div className="container mx-auto px-6 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Daily Expense</h1>
-        <p className="text-gray-600">Manage expense categories and daily expenses in one place.</p>
+        <p className="text-gray-600">
+          Manage expense categories and daily expenses in one place.
+        </p>
       </div>
 
       <Card className="mb-8">
@@ -311,7 +328,8 @@ function DailyExpenseContent() {
             <div className="py-8 text-center text-gray-500">Loading...</div>
           ) : categories.length === 0 ? (
             <div className="py-8 text-center text-gray-500">
-              No categories yet. Click &quot;Create expense category&quot; to add one.
+              No categories yet. Click &quot;Create expense category&quot; to
+              add one.
             </div>
           ) : (
             <Table>
@@ -326,9 +344,15 @@ function DailyExpenseContent() {
                 {categories.map((c) => (
                   <TableRow key={c.id}>
                     <TableCell className="font-medium">{c.name}</TableCell>
-                    <TableCell className="text-gray-600">{c.description || '—'}</TableCell>
+                    <TableCell className="text-gray-600">
+                      {c.description || "—"}
+                    </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" onClick={() => openEditCategory(c)}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openEditCategory(c)}
+                      >
                         <Edit className="w-4 h-4 mr-1" />
                         Edit
                       </Button>
@@ -358,7 +382,8 @@ function DailyExpenseContent() {
               Expenses
             </CardTitle>
             <CardDescription>
-              {expensesTotal} expense{expensesTotal !== 1 ? 's' : ''} total. Filter by category and date.
+              {expensesTotal} expense{expensesTotal !== 1 ? "s" : ""} total.
+              Filter by category and date.
             </CardDescription>
           </div>
           <Button onClick={openAddExpense} disabled={categories.length === 0}>
@@ -376,7 +401,12 @@ function DailyExpenseContent() {
               <div className="flex flex-wrap gap-4 mb-4">
                 <div className="flex flex-col gap-1">
                   <Label className="text-xs">Category</Label>
-                  <Select value={categoryFilter || 'all'} onValueChange={(v) => setCategoryFilter(v === 'all' ? '' : v)}>
+                  <Select
+                    value={categoryFilter || "all"}
+                    onValueChange={(v) =>
+                      setCategoryFilter(v === "all" ? "" : v)
+                    }
+                  >
                     <SelectTrigger className="w-[180px]">
                       <SelectValue placeholder="All categories" />
                     </SelectTrigger>
@@ -412,7 +442,9 @@ function DailyExpenseContent() {
               {expensesLoading ? (
                 <div className="py-8 text-center text-gray-500">Loading...</div>
               ) : expenses.length === 0 ? (
-                <div className="py-8 text-center text-gray-500">No expenses yet. Click &quot;Add expense&quot; to add one.</div>
+                <div className="py-8 text-center text-gray-500">
+                  No expenses yet. Click &quot;Add expense&quot; to add one.
+                </div>
               ) : (
                 <Table>
                   <TableHeader>
@@ -428,11 +460,19 @@ function DailyExpenseContent() {
                     {expenses.map((e) => (
                       <TableRow key={e.id}>
                         <TableCell>{formatDate(e.expense_date)}</TableCell>
-                        <TableCell>{e.category_name ?? '—'}</TableCell>
-                        <TableCell className="text-right font-medium">{formatCurrency(e.amount)}</TableCell>
-                        <TableCell className="max-w-[200px] truncate text-gray-600">{e.description || '—'}</TableCell>
+                        <TableCell>{e.category_name ?? "—"}</TableCell>
+                        <TableCell className="text-right font-medium">
+                          {formatCurrency(e.amount)}
+                        </TableCell>
+                        <TableCell className="max-w-[200px] truncate text-gray-600">
+                          {e.description || "—"}
+                        </TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="sm" onClick={() => openEditExpense(e)}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openEditExpense(e)}
+                          >
                             <Edit className="w-4 h-4 mr-1" />
                             Edit
                           </Button>
@@ -459,53 +499,85 @@ function DailyExpenseContent() {
       <Dialog open={categoryFormOpen} onOpenChange={setCategoryFormOpen}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
-            <DialogTitle>{editingCategory ? 'Edit category' : 'Create expense category'}</DialogTitle>
-            <DialogDescription>Categories group your daily expenses.</DialogDescription>
+            <DialogTitle>
+              {editingCategory ? "Edit category" : "Create expense category"}
+            </DialogTitle>
+            <DialogDescription>
+              Categories group your daily expenses.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>Name</Label>
               <Input
                 value={categoryFormData.name}
-                onChange={(e) => setCategoryFormData((p) => ({ ...p, name: e.target.value }))}
+                onChange={(e) =>
+                  setCategoryFormData((p) => ({ ...p, name: e.target.value }))
+                }
                 placeholder="e.g. Utilities, Supplies"
               />
             </div>
             <div className="space-y-2">
               <Label>Description (optional)</Label>
               <Textarea
-                value={categoryFormData.description ?? ''}
-                onChange={(e) => setCategoryFormData((p) => ({ ...p, description: e.target.value }))}
+                value={categoryFormData.description ?? ""}
+                onChange={(e) =>
+                  setCategoryFormData((p) => ({
+                    ...p,
+                    description: e.target.value,
+                  }))
+                }
                 placeholder="Optional description"
                 rows={2}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCategoryFormOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setCategoryFormOpen(false)}
+            >
               Cancel
             </Button>
-            <Button onClick={handleCategorySubmit} disabled={categorySubmitLoading}>
-              {categorySubmitLoading ? 'Saving...' : editingCategory ? 'Update' : 'Create'}
+            <Button
+              onClick={handleCategorySubmit}
+              disabled={categorySubmitLoading}
+            >
+              {categorySubmitLoading
+                ? "Saving..."
+                : editingCategory
+                  ? "Update"
+                  : "Create"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={categoryDeleteDialogOpen} onOpenChange={setCategoryDeleteDialogOpen}>
+      <Dialog
+        open={categoryDeleteDialogOpen}
+        onOpenChange={setCategoryDeleteDialogOpen}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete category</DialogTitle>
             <DialogDescription>
-              Delete &quot;{categoryToDelete?.name}&quot;? Expenses in this category will need to be reassigned or removed first.
+              Delete &quot;{categoryToDelete?.name}&quot;? Expenses in this
+              category will need to be reassigned or removed first.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCategoryDeleteDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setCategoryDeleteDialogOpen(false)}
+            >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleCategoryDelete} disabled={categoryDeleteLoading}>
-              {categoryDeleteLoading ? 'Deleting...' : 'Delete'}
+            <Button
+              variant="destructive"
+              onClick={handleCategoryDelete}
+              disabled={categoryDeleteLoading}
+            >
+              {categoryDeleteLoading ? "Deleting..." : "Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -514,15 +586,21 @@ function DailyExpenseContent() {
       <Dialog open={expenseFormOpen} onOpenChange={setExpenseFormOpen}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
-            <DialogTitle>{editingExpense ? 'Edit expense' : 'Add expense'}</DialogTitle>
-            <DialogDescription>Record a daily expense and assign a category.</DialogDescription>
+            <DialogTitle>
+              {editingExpense ? "Edit expense" : "Add expense"}
+            </DialogTitle>
+            <DialogDescription>
+              Record a daily expense and assign a category.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>Category</Label>
               <Select
                 value={expenseFormData.category_id}
-                onValueChange={(v) => setExpenseFormData((p) => ({ ...p, category_id: v }))}
+                onValueChange={(v) =>
+                  setExpenseFormData((p) => ({ ...p, category_id: v }))
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select category" />
@@ -541,7 +619,12 @@ function DailyExpenseContent() {
               <Input
                 type="date"
                 value={expenseFormData.expense_date}
-                onChange={(e) => setExpenseFormData((p) => ({ ...p, expense_date: e.target.value }))}
+                onChange={(e) =>
+                  setExpenseFormData((p) => ({
+                    ...p,
+                    expense_date: e.target.value,
+                  }))
+                }
               />
             </div>
             <div className="space-y-2">
@@ -550,9 +633,17 @@ function DailyExpenseContent() {
                 type="number"
                 min={0}
                 step={0.01}
-                value={expenseFormData.amount === 0 ? '' : expenseFormData.amount}
+                value={
+                  expenseFormData.amount === 0 ? "" : expenseFormData.amount
+                }
                 onChange={(e) =>
-                  setExpenseFormData((p) => ({ ...p, amount: e.target.value === '' ? 0 : parseFloat(e.target.value) || 0 }))
+                  setExpenseFormData((p) => ({
+                    ...p,
+                    amount:
+                      e.target.value === ""
+                        ? 0
+                        : parseFloat(e.target.value) || 0,
+                  }))
                 }
                 placeholder="0.00"
               />
@@ -560,8 +651,13 @@ function DailyExpenseContent() {
             <div className="space-y-2">
               <Label>Description (optional)</Label>
               <Textarea
-                value={expenseFormData.description ?? ''}
-                onChange={(e) => setExpenseFormData((p) => ({ ...p, description: e.target.value }))}
+                value={expenseFormData.description ?? ""}
+                onChange={(e) =>
+                  setExpenseFormData((p) => ({
+                    ...p,
+                    description: e.target.value,
+                  }))
+                }
                 placeholder="Optional notes"
                 rows={2}
               />
@@ -571,28 +667,47 @@ function DailyExpenseContent() {
             <Button variant="outline" onClick={() => setExpenseFormOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleExpenseSubmit} disabled={expenseSubmitLoading}>
-              {expenseSubmitLoading ? 'Saving...' : editingExpense ? 'Update' : 'Add'}
+            <Button
+              onClick={handleExpenseSubmit}
+              disabled={expenseSubmitLoading}
+            >
+              {expenseSubmitLoading
+                ? "Saving..."
+                : editingExpense
+                  ? "Update"
+                  : "Add"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={expenseDeleteDialogOpen} onOpenChange={setExpenseDeleteDialogOpen}>
+      <Dialog
+        open={expenseDeleteDialogOpen}
+        onOpenChange={setExpenseDeleteDialogOpen}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete expense</DialogTitle>
             <DialogDescription>
-              Delete this expense ({expenseToDelete ? formatCurrency(expenseToDelete.amount) : ''} on{' '}
-              {expenseToDelete ? formatDate(expenseToDelete.expense_date) : ''})?
+              Delete this expense (
+              {expenseToDelete ? formatCurrency(expenseToDelete.amount) : ""} on{" "}
+              {expenseToDelete ? formatDate(expenseToDelete.expense_date) : ""}
+              )?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setExpenseDeleteDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setExpenseDeleteDialogOpen(false)}
+            >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleExpenseDelete} disabled={expenseDeleteLoading}>
-              {expenseDeleteLoading ? 'Deleting...' : 'Delete'}
+            <Button
+              variant="destructive"
+              onClick={handleExpenseDelete}
+              disabled={expenseDeleteLoading}
+            >
+              {expenseDeleteLoading ? "Deleting..." : "Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>

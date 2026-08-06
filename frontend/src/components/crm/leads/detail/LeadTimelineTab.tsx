@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { PIPELINE_LABELS, LeadPipelineHistoryItem } from '@/src/models/crm';
+import { PIPELINE_LABELS, LeadPipelineHistoryItem } from "@/src/models/crm";
 
 type Props = {
   timeline: LeadPipelineHistoryItem[];
@@ -22,7 +22,7 @@ export function LeadTimelineTab({ timeline }: Props) {
               {PIPELINE_LABELS[t.pipelineStage] || t.pipelineStage}
             </td>
             <td className="py-2">
-              {t.changedAt ? new Date(t.changedAt).toLocaleString() : '—'}
+              {t.changedAt ? new Date(t.changedAt).toLocaleString() : "—"}
             </td>
           </tr>
         ))}

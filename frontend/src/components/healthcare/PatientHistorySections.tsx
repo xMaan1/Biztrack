@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Link from 'next/link';
+import React from "react";
+import Link from "next/link";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
+} from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
 import {
   Table,
   TableBody,
@@ -17,14 +17,14 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/src/components/ui/table';
-import { Calendar, FileText, Download } from 'lucide-react';
+} from "@/src/components/ui/table";
+import { Calendar, FileText, Download } from "lucide-react";
 import type {
   PatientHistoryResponse,
   Appointment,
   Prescription,
   PrescriptionItem,
-} from '@/src/models/healthcare';
+} from "@/src/models/healthcare";
 
 type Props = {
   loading: boolean;
@@ -33,34 +33,36 @@ type Props = {
   onDownloadPrescription: (prescriptionId: string) => void | Promise<void>;
 };
 
-const formatDate = (d: string) => (d ? new Date(d).toLocaleDateString() : '—');
+const formatDate = (d: string) => (d ? new Date(d).toLocaleDateString() : "—");
 
 const doctorName = (a: Appointment) =>
-  [a.doctor_first_name, a.doctor_last_name].filter(Boolean).join(' ') || '—';
+  [a.doctor_first_name, a.doctor_last_name].filter(Boolean).join(" ") || "—";
 
 const prescriptionItemsSummary = (items: PrescriptionItem[] | undefined) => {
-  if (!items?.length) return '—';
+  if (!items?.length) return "—";
   const parts = items
     .slice(0, 3)
     .map((i) => {
-      if (i.type === 'medicine' && i.medicine_name) return i.medicine_name;
-      if (i.type === 'vitals' && i.vital_name) return i.vital_name;
-      if (i.type === 'test' && i.test_name) return i.test_name;
+      if (i.type === "medicine" && i.medicine_name) return i.medicine_name;
+      if (i.type === "vitals" && i.vital_name) return i.vital_name;
+      if (i.type === "test" && i.test_name) return i.test_name;
       return null;
     })
     .filter(Boolean);
-  return parts.join(', ') + (items.length > 3 ? '...' : '');
+  return parts.join(", ") + (items.length > 3 ? "..." : "");
 };
 
 export function PatientHistorySections({
   loading,
   data,
-  emptyLabel = 'Patient not found.',
+  emptyLabel = "Patient not found.",
   onDownloadPrescription,
 }: Props) {
   if (loading) {
     return (
-      <div className="py-12 text-center text-gray-500">Loading patient history...</div>
+      <div className="py-12 text-center text-gray-500">
+        Loading patient history...
+      </div>
     );
   }
   if (!data) {
@@ -81,21 +83,23 @@ export function PatientHistorySections({
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Phone</p>
-            <p className="text-gray-900">{data.patient.phone || '—'}</p>
+            <p className="text-gray-900">{data.patient.phone || "—"}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Email</p>
-            <p className="text-gray-900">{data.patient.email || '—'}</p>
+            <p className="text-gray-900">{data.patient.email || "—"}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Date of birth</p>
             <p className="text-gray-900">
-              {data.patient.date_of_birth ? formatDate(data.patient.date_of_birth) : '—'}
+              {data.patient.date_of_birth
+                ? formatDate(data.patient.date_of_birth)
+                : "—"}
             </p>
           </div>
           <div className="sm:col-span-2">
             <p className="text-sm font-medium text-gray-500">Address</p>
-            <p className="text-gray-900">{data.patient.address || '—'}</p>
+            <p className="text-gray-900">{data.patient.address || "—"}</p>
           </div>
           {data.patient.notes && (
             <div className="sm:col-span-2">
@@ -115,7 +119,7 @@ export function PatientHistorySections({
             </CardTitle>
             <CardDescription>
               {data.appointments.length} appointment
-              {data.appointments.length !== 1 ? 's' : ''} for this patient
+              {data.appointments.length !== 1 ? "s" : ""} for this patient
             </CardDescription>
           </div>
           <Button asChild>
@@ -124,7 +128,9 @@ export function PatientHistorySections({
         </CardHeader>
         <CardContent>
           {data.appointments.length === 0 ? (
-            <p className="py-6 text-center text-gray-500">No appointments yet.</p>
+            <p className="py-6 text-center text-gray-500">
+              No appointments yet.
+            </p>
           ) : (
             <Table>
               <TableHeader>
@@ -146,7 +152,7 @@ export function PatientHistorySections({
                     <TableCell>{doctorName(a)}</TableCell>
                     <TableCell>{a.status}</TableCell>
                     <TableCell className="max-w-[200px] truncate text-gray-600">
-                      {a.notes || '—'}
+                      {a.notes || "—"}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -165,13 +171,15 @@ export function PatientHistorySections({
             </CardTitle>
             <CardDescription>
               {data.prescriptions.length} prescription
-              {data.prescriptions.length !== 1 ? 's' : ''} for this patient
+              {data.prescriptions.length !== 1 ? "s" : ""} for this patient
             </CardDescription>
           </div>
         </CardHeader>
         <CardContent>
           {data.prescriptions.length === 0 ? (
-            <p className="py-6 text-center text-gray-500">No prescriptions yet.</p>
+            <p className="py-6 text-center text-gray-500">
+              No prescriptions yet.
+            </p>
           ) : (
             <Table>
               <TableHeader>
@@ -188,11 +196,14 @@ export function PatientHistorySections({
                   <TableRow key={rx.id}>
                     <TableCell>{formatDate(rx.prescription_date)}</TableCell>
                     <TableCell>
-                      {[rx.doctor_first_name, rx.doctor_last_name].filter(Boolean).join(' ') ||
-                        '—'}
+                      {[rx.doctor_first_name, rx.doctor_last_name]
+                        .filter(Boolean)
+                        .join(" ") || "—"}
                     </TableCell>
                     <TableCell>
-                      {rx.appointment_date ? formatDate(rx.appointment_date) : '—'}
+                      {rx.appointment_date
+                        ? formatDate(rx.appointment_date)
+                        : "—"}
                     </TableCell>
                     <TableCell className="max-w-[240px] truncate text-gray-600">
                       {prescriptionItemsSummary(rx.items)}

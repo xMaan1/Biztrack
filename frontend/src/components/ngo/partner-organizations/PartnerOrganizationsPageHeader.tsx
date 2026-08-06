@@ -1,11 +1,13 @@
-import { Plus } from 'lucide-react';
-import { Button } from '@/src/components/ui/button';
+import { Plus } from "lucide-react";
+import { Button } from "@/src/components/ui/button";
 
 type PartnerOrganizationsPageHeaderProps = {
   onAdd: () => void;
 };
 
-export function PartnerOrganizationsPageHeader({ onAdd }: PartnerOrganizationsPageHeaderProps) {
+export function PartnerOrganizationsPageHeader({
+  onAdd,
+}: PartnerOrganizationsPageHeaderProps) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-4">
       <div>

@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { Suspense, useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
-import { ClipboardCheck } from 'lucide-react';
-import { MotPublicLayout } from '@/src/components/mot/MotPublicLayout';
-import { MotBookingWizardShell } from '@/src/components/mot/MotBookingWizardShell';
-import { useMotBookingWizard } from '@/src/hooks/useMotBookingWizard';
-import motBookingService from '@/src/services/MotBookingService';
+import { Suspense, useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import { ClipboardCheck } from "lucide-react";
+import { MotPublicLayout } from "@/src/components/mot/MotPublicLayout";
+import { MotBookingWizardShell } from "@/src/components/mot/MotBookingWizardShell";
+import { useMotBookingWizard } from "@/src/hooks/useMotBookingWizard";
+import motBookingService from "@/src/services/MotBookingService";
 
 function TenantMotBookContent({ tenantDomain }: { tenantDomain: string }) {
   const [available, setAvailable] = useState<boolean | null>(null);

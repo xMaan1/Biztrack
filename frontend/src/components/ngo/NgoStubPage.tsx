@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { DashboardLayout } from '@/src/components/layout';
+import { DashboardLayout } from "@/src/components/layout";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/src/components/ui/card';
-import { Construction } from 'lucide-react';
+} from "@/src/components/ui/card";
+import { Construction } from "lucide-react";
 
 type NgoStubPageProps = {
   title: string;
@@ -27,12 +27,13 @@ export function NgoStubPage({ title, description }: NgoStubPageProps) {
             </CardTitle>
             <CardDescription>
               {description ??
-                'This page is part of the NGO module. Live data and workflows will connect here soon.'}
+                "This page is part of the NGO module. Live data and workflows will connect here soon."}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              Mock navigation is ready. Backend integration is planned for a later release.
+              Mock navigation is ready. Backend integration is planned for a
+              later release.
             </p>
           </CardContent>
         </Card>

@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { Input } from '@/src/components/ui/input';
+import { Input } from "@/src/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
-import { COMMERCE_INPUT_CLS } from './constants';
+} from "@/src/components/ui/select";
+import { COMMERCE_INPUT_CLS } from "./constants";
 
 type CommerceInvoiceInstallmentSectionProps = {
   createInstallmentPlan: boolean;
@@ -48,7 +48,10 @@ export function CommerceInvoiceInstallmentSection({
             onChange={(e) => setCreateInstallmentPlan(e.target.checked)}
             className="rounded border-input text-primary focus:ring-ring"
           />
-          <label htmlFor="createInstallmentPlan" className="text-sm font-medium">
+          <label
+            htmlFor="createInstallmentPlan"
+            className="text-sm font-medium"
+          >
             Enable installments
           </label>
         </div>
@@ -64,13 +67,20 @@ export function CommerceInvoiceInstallmentSection({
               min={1}
               max={60}
               value={installmentCount}
-              onChange={(e) => setInstallmentCount(parseInt(e.target.value, 10) || 1)}
+              onChange={(e) =>
+                setInstallmentCount(parseInt(e.target.value, 10) || 1)
+              }
               className={COMMERCE_INPUT_CLS}
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-medium text-muted-foreground">Frequency</label>
-            <Select value={installmentFrequency} onValueChange={setInstallmentFrequency}>
+            <label className="text-xs font-medium text-muted-foreground">
+              Frequency
+            </label>
+            <Select
+              value={installmentFrequency}
+              onValueChange={setInstallmentFrequency}
+            >
               <SelectTrigger className={COMMERCE_INPUT_CLS}>
                 <SelectValue />
               </SelectTrigger>
@@ -82,7 +92,9 @@ export function CommerceInvoiceInstallmentSection({
             </Select>
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-medium text-muted-foreground">First due date</label>
+            <label className="text-xs font-medium text-muted-foreground">
+              First due date
+            </label>
             <Input
               type="date"
               value={installmentFirstDueDate}

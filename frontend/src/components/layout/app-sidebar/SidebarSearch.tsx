@@ -1,4 +1,4 @@
-import { Search, X } from 'lucide-react';
+import { Search, X } from "lucide-react";
 
 interface SidebarSearchProps {
   value: string;
@@ -6,7 +6,11 @@ interface SidebarSearchProps {
   onClear: () => void;
 }
 
-export function SidebarSearch({ value, onChange, onClear }: SidebarSearchProps) {
+export function SidebarSearch({
+  value,
+  onChange,
+  onClear,
+}: SidebarSearchProps) {
   return (
     <div className="p-4 border-b border-gray-200">
       <div className="relative">
@@ -32,7 +36,9 @@ export function SidebarSearch({ value, onChange, onClear }: SidebarSearchProps) 
         )}
       </div>
       {value && (
-        <div className="mt-2 text-xs text-gray-500">Searching modules and pages...</div>
+        <div className="mt-2 text-xs text-gray-500">
+          Searching modules and pages...
+        </div>
       )}
     </div>
   );

@@ -1,10 +1,15 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { ModuleGuard } from '../../../components/guards/PermissionGuard';
-import { DashboardLayout } from '../../../components/layout';
-import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
-import { Button } from '../../../components/ui/button';
+import React, { useState, useEffect } from "react";
+import { ModuleGuard } from "../../../components/guards/PermissionGuard";
+import { DashboardLayout } from "../../../components/layout";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../../components/ui/card";
+import { Button } from "../../../components/ui/button";
 import {
   BarChart3,
   TrendingUp,
@@ -17,24 +22,30 @@ import {
   Calendar,
   Filter,
   Printer,
-} from 'lucide-react';
-import { LedgerService } from '../../../services/ledgerService';
+} from "lucide-react";
+import { LedgerService } from "../../../services/ledgerService";
 import {
   TrialBalanceResponse,
   TrialBalanceAccount,
   IncomeStatementResponse,
   AccountType,
   getAccountTypeLabel,
-} from '../../../models/ledger';
-import { useCurrency } from '../../../contexts/CurrencyContext';
-import { useCachedApi } from '../../../hooks/useCachedApi';
-import { DEFAULT_CHART_OF_ACCOUNTS, getTotalBalanceByType } from '../../../constants/chartOfAccounts';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
+} from "../../../models/ledger";
+import { useCurrency } from "../../../contexts/CurrencyContext";
+import { useCachedApi } from "../../../hooks/useCachedApi";
+import {
+  DEFAULT_CHART_OF_ACCOUNTS,
+  getTotalBalanceByType,
+} from "../../../constants/chartOfAccounts";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 export default function FinancialReportsPage() {
   return (
-    <ModuleGuard module="ledger" fallback={<div>You don't have access to Ledger module</div>}>
+    <ModuleGuard
+      module="ledger"
+      fallback={<div>You don&apos;t have access to Ledger module</div>}
+    >
       <FinancialReportsContent />
     </ModuleGuard>
   );
@@ -42,28 +53,33 @@ export default function FinancialReportsPage() {
 
 function FinancialReportsContent() {
   const { formatCurrency } = useCurrency();
-  const [dateRange, setDateRange] = useState<{ startDate: Date | null; endDate: Date | null }>({
+  const [dateRange, setDateRange] = useState<{
+    startDate: Date | null;
+    endDate: Date | null;
+  }>({
     startDate: null,
-    endDate: null
+    endDate: null,
   });
-  const [selectedReport, setSelectedReport] = useState<string>('overview');
+  const [selectedReport, setSelectedReport] = useState<string>("overview");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Use constants for chart of accounts
   const chartOfAccounts = DEFAULT_CHART_OF_ACCOUNTS;
-  
-  const { data: trialBalance, loading: trialBalanceLoading } = useCachedApi<TrialBalanceResponse>(
-    'ledger_trial_balance',
-    () => LedgerService.getTrialBalance(),
-    { ttl: 300000 }
-  );
-  
-  const { data: incomeStatement, loading: incomeStatementLoading } = useCachedApi<IncomeStatementResponse>(
-    'ledger_income_statement',
-    () => LedgerService.getIncomeStatement(),
-    { ttl: 300000 }
-  );
+
+  const { data: trialBalance, loading: trialBalanceLoading } =
+    useCachedApi<TrialBalanceResponse>(
+      "ledger_trial_balance",
+      () => LedgerService.getTrialBalance(),
+      { ttl: 300000 },
+    );
+
+  const { data: incomeStatement, loading: incomeStatementLoading } =
+    useCachedApi<IncomeStatementResponse>(
+      "ledger_income_statement",
+      () => LedgerService.getIncomeStatement(),
+      { ttl: 300000 },
+    );
 
   const [totalAssets, setTotalAssets] = useState(0);
   const [totalLiabilities, setTotalLiabilities] = useState(0);
@@ -74,13 +90,13 @@ function FinancialReportsContent() {
 
   useEffect(() => {
     // Calculate totals from constants
-    const assets = getTotalBalanceByType('asset');
-    const liabilities = getTotalBalanceByType('liability');
-    const equity = getTotalBalanceByType('equity');
-    const revenue = getTotalBalanceByType('revenue');
-    const expenses = getTotalBalanceByType('expense');
+    const assets = getTotalBalanceByType("asset");
+    const liabilities = getTotalBalanceByType("liability");
+    const equity = getTotalBalanceByType("equity");
+    const revenue = getTotalBalanceByType("revenue");
+    const expenses = getTotalBalanceByType("expense");
     const netIncome = revenue - expenses;
-    
+
     setTotalAssets(assets);
     setTotalLiabilities(liabilities);
     setTotalEquity(equity);
@@ -92,56 +108,67 @@ function FinancialReportsContent() {
   const handleExport = async (reportType: string) => {
     try {
       setLoading(true);
-      
+
       const params = new URLSearchParams();
-      params.append('report_type', reportType);
-      params.append('format', 'json');
-      
+      params.append("report_type", reportType);
+      params.append("format", "json");
+
       if (dateRange.startDate) {
-        params.append('start_date', dateRange.startDate.toISOString().split('T')[0]);
+        params.append(
+          "start_date",
+          dateRange.startDate.toISOString().split("T")[0],
+        );
       }
       if (dateRange.endDate) {
-        params.append('end_date', dateRange.endDate.toISOString().split('T')[0]);
+        params.append(
+          "end_date",
+          dateRange.endDate.toISOString().split("T")[0],
+        );
       }
-      
+
       // For now, we'll create a simple JSON export
       let reportData;
       switch (reportType) {
-        case 'trial-balance':
+        case "trial-balance":
           reportData = trialBalance;
           break;
-        case 'income-statement':
+        case "income-statement":
           reportData = incomeStatement;
           break;
-        case 'balance-sheet':
+        case "balance-sheet":
           reportData = {
             assets: { total: totalAssets },
             liabilities: { total: totalLiabilities },
-            equity: { total: totalEquity }
+            equity: { total: totalEquity },
           };
           break;
         default:
-          reportData = { message: 'Report data not available' };
+          reportData = { message: "Report data not available" };
       }
-      
+
       // Create filename with date range
-      const startDateStr = dateRange.startDate ? dateRange.startDate.toISOString().split('T')[0] : 'all';
-      const endDateStr = dateRange.endDate ? dateRange.endDate.toISOString().split('T')[0] : 'all';
+      const startDateStr = dateRange.startDate
+        ? dateRange.startDate.toISOString().split("T")[0]
+        : "all";
+      const endDateStr = dateRange.endDate
+        ? dateRange.endDate.toISOString().split("T")[0]
+        : "all";
       const filename = `financial-${reportType}-${startDateStr}-to-${endDateStr}.json`;
-      
+
       // Create and download file
-      const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
+      const blob = new Blob([JSON.stringify(reportData, null, 2)], {
+        type: "application/json",
+      });
       const url_blob = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url_blob;
       link.download = filename;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url_blob);
-      
     } catch (error) {
-      setError('Failed to export report');
+      setError("Failed to export report");
     } finally {
       setLoading(false);
     }
@@ -151,9 +178,10 @@ function FinancialReportsContent() {
     window.print();
   };
 
-
   const getAccountTypeCount = (type: AccountType) => {
-    return chartOfAccounts.filter(acc => acc.account_type.toLowerCase() === type.toLowerCase()).length;
+    return chartOfAccounts.filter(
+      (acc) => acc.account_type.toLowerCase() === type.toLowerCase(),
+    ).length;
   };
 
   if (trialBalanceLoading || incomeStatementLoading) {
@@ -203,10 +231,7 @@ function FinancialReportsContent() {
               <Filter className="h-4 w-4" />
               Filters
             </Button>
-            <Button 
-              className="flex items-center gap-2"
-              onClick={handlePrint}
-            >
+            <Button className="flex items-center gap-2" onClick={handlePrint}>
               <Printer className="h-4 w-4" />
               Print
             </Button>
@@ -218,32 +243,38 @@ function FinancialReportsContent() {
           <CardContent className="p-6">
             <div className="flex gap-4">
               <Button
-                variant={selectedReport === 'overview' ? 'default' : 'outline'}
-                onClick={() => setSelectedReport('overview')}
+                variant={selectedReport === "overview" ? "default" : "outline"}
+                onClick={() => setSelectedReport("overview")}
                 className="flex items-center gap-2"
               >
                 <BarChart3 className="h-4 w-4" />
                 Overview
               </Button>
               <Button
-                variant={selectedReport === 'trial-balance' ? 'default' : 'outline'}
-                onClick={() => setSelectedReport('trial-balance')}
+                variant={
+                  selectedReport === "trial-balance" ? "default" : "outline"
+                }
+                onClick={() => setSelectedReport("trial-balance")}
                 className="flex items-center gap-2"
               >
                 <Calculator className="h-4 w-4" />
                 Trial Balance
               </Button>
               <Button
-                variant={selectedReport === 'income-statement' ? 'default' : 'outline'}
-                onClick={() => setSelectedReport('income-statement')}
+                variant={
+                  selectedReport === "income-statement" ? "default" : "outline"
+                }
+                onClick={() => setSelectedReport("income-statement")}
                 className="flex items-center gap-2"
               >
                 <TrendingUp className="h-4 w-4" />
                 Income Statement
               </Button>
               <Button
-                variant={selectedReport === 'balance-sheet' ? 'default' : 'outline'}
-                onClick={() => setSelectedReport('balance-sheet')}
+                variant={
+                  selectedReport === "balance-sheet" ? "default" : "outline"
+                }
+                onClick={() => setSelectedReport("balance-sheet")}
                 className="flex items-center gap-2"
               >
                 <BookOpen className="h-4 w-4" />
@@ -254,13 +285,15 @@ function FinancialReportsContent() {
         </Card>
 
         {/* Overview Report */}
-        {selectedReport === 'overview' && (
+        {selectedReport === "overview" && (
           <>
             {/* Key Financial Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card className="modern-card">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Assets</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Total Assets
+                  </CardTitle>
                   <TrendingUp className="h-4 w-4 text-green-600" />
                 </CardHeader>
                 <CardContent>
@@ -275,7 +308,9 @@ function FinancialReportsContent() {
 
               <Card className="modern-card">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Liabilities</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Total Liabilities
+                  </CardTitle>
                   <TrendingDown className="h-4 w-4 text-red-600" />
                 </CardHeader>
                 <CardContent>
@@ -283,31 +318,37 @@ function FinancialReportsContent() {
                     {formatCurrency(totalLiabilities)}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {getAccountTypeCount(AccountType.LIABILITY)} liability accounts
+                    {getAccountTypeCount(AccountType.LIABILITY)} liability
+                    accounts
                   </p>
                 </CardContent>
               </Card>
 
               <Card className="modern-card">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Net Income</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Net Income
+                  </CardTitle>
                   <PieChart className="h-4 w-4 text-blue-600" />
                 </CardHeader>
                 <CardContent>
                   <div
-                    className={`text-2xl font-bold ${netIncome >= 0 ? 'text-green-600' : 'text-red-600'}`}
+                    className={`text-2xl font-bold ${netIncome >= 0 ? "text-green-600" : "text-red-600"}`}
                   >
                     {formatCurrency(netIncome)}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Revenue: {formatCurrency(totalRevenue)} | Expenses: {formatCurrency(totalExpenses)}
+                    Revenue: {formatCurrency(totalRevenue)} | Expenses:{" "}
+                    {formatCurrency(totalExpenses)}
                   </p>
                 </CardContent>
               </Card>
 
               <Card className="modern-card">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Equity</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Total Equity
+                  </CardTitle>
                   <Calculator className="h-4 w-4 text-blue-600" />
                 </CardHeader>
                 <CardContent>
@@ -334,13 +375,12 @@ function FinancialReportsContent() {
                   {Object.values(AccountType).map((type: AccountType) => {
                     const count = getAccountTypeCount(type);
                     const total = chartOfAccounts.length;
-                    const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : '0';
+                    const percentage =
+                      total > 0 ? ((count / total) * 100).toFixed(1) : "0";
 
                     return (
                       <div key={String(type)} className="text-center">
-                        <div className="text-2xl font-bold mb-2">
-                          {count}
-                        </div>
+                        <div className="text-2xl font-bold mb-2">{count}</div>
                         <div className="text-sm text-gray-600 mb-1">
                           {getAccountTypeLabel(type)}
                         </div>
@@ -357,7 +397,7 @@ function FinancialReportsContent() {
         )}
 
         {/* Trial Balance Report */}
-        {selectedReport === 'trial-balance' && (
+        {selectedReport === "trial-balance" && (
           <Card className="modern-card">
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
@@ -368,7 +408,7 @@ function FinancialReportsContent() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleExport('trial-balance')}
+                  onClick={() => handleExport("trial-balance")}
                   disabled={loading}
                 >
                   <Download className="h-4 w-4 mr-2" />
@@ -380,21 +420,32 @@ function FinancialReportsContent() {
               {trialBalance ? (
                 <div className="space-y-4">
                   <div className="text-sm text-gray-600">
-                    As of: {new Date(trialBalance.as_of_date).toLocaleDateString()}
+                    As of:{" "}
+                    {new Date(trialBalance.as_of_date).toLocaleDateString()}
                   </div>
                   <div className="grid grid-cols-2 gap-4 text-lg font-bold">
                     <div>
-                      Total Debits: {formatCurrency(
+                      Total Debits:{" "}
+                      {formatCurrency(
                         Array.isArray(trialBalance.accounts)
-                          ? trialBalance.accounts.reduce((sum: number, acc: TrialBalanceAccount) => sum + (acc.debit_balance || 0), 0)
-                          : 0
+                          ? trialBalance.accounts.reduce(
+                              (sum: number, acc: TrialBalanceAccount) =>
+                                sum + (acc.debit_balance || 0),
+                              0,
+                            )
+                          : 0,
                       )}
                     </div>
                     <div>
-                      Total Credits: {formatCurrency(
+                      Total Credits:{" "}
+                      {formatCurrency(
                         Array.isArray(trialBalance.accounts)
-                          ? trialBalance.accounts.reduce((sum: number, acc: TrialBalanceAccount) => sum + (acc.credit_balance || 0), 0)
-                          : 0
+                          ? trialBalance.accounts.reduce(
+                              (sum: number, acc: TrialBalanceAccount) =>
+                                sum + (acc.credit_balance || 0),
+                              0,
+                            )
+                          : 0,
                       )}
                     </div>
                   </div>
@@ -412,7 +463,7 @@ function FinancialReportsContent() {
         )}
 
         {/* Income Statement Report */}
-        {selectedReport === 'income-statement' && (
+        {selectedReport === "income-statement" && (
           <Card className="modern-card">
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
@@ -423,7 +474,7 @@ function FinancialReportsContent() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleExport('income-statement')}
+                  onClick={() => handleExport("income-statement")}
                   disabled={loading}
                 >
                   <Download className="h-4 w-4 mr-2" />
@@ -451,7 +502,9 @@ function FinancialReportsContent() {
                   <hr />
                   <div className="flex justify-between items-center">
                     <div className="text-lg font-bold">Net Income</div>
-                    <div className={`text-lg font-bold ${incomeStatement.net_income >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    <div
+                      className={`text-lg font-bold ${incomeStatement.net_income >= 0 ? "text-green-600" : "text-red-600"}`}
+                    >
                       {formatCurrency(incomeStatement.net_income)}
                     </div>
                   </div>
@@ -466,7 +519,7 @@ function FinancialReportsContent() {
         )}
 
         {/* Balance Sheet Report */}
-        {selectedReport === 'balance-sheet' && (
+        {selectedReport === "balance-sheet" && (
           <Card className="modern-card">
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
@@ -477,7 +530,7 @@ function FinancialReportsContent() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleExport('balance-sheet')}
+                  onClick={() => handleExport("balance-sheet")}
                   disabled={loading}
                 >
                   <Download className="h-4 w-4 mr-2" />
@@ -493,23 +546,23 @@ function FinancialReportsContent() {
                     {formatCurrency(totalAssets)}
                   </div>
                 </div>
-                
+
                 <div>
                   <h3 className="text-lg font-semibold mb-3">Liabilities</h3>
                   <div className="text-2xl font-bold text-red-600">
                     {formatCurrency(totalLiabilities)}
                   </div>
                 </div>
-                
+
                 <div>
                   <h3 className="text-lg font-semibold mb-3">Equity</h3>
                   <div className="text-2xl font-bold text-blue-600">
                     {formatCurrency(totalEquity)}
                   </div>
                 </div>
-                
+
                 <hr />
-                
+
                 <div className="flex justify-between items-center">
                   <div className="text-lg font-bold">Total Assets</div>
                   <div className="text-lg font-bold">
@@ -517,14 +570,20 @@ function FinancialReportsContent() {
                   </div>
                 </div>
                 <div className="flex justify-between items-center">
-                  <div className="text-lg font-bold">Total Liabilities + Equity</div>
+                  <div className="text-lg font-bold">
+                    Total Liabilities + Equity
+                  </div>
                   <div className="text-lg font-bold">
                     {formatCurrency(totalLiabilities + totalEquity)}
                   </div>
                 </div>
-                
-                <div className={`text-sm ${totalAssets === (totalLiabilities + totalEquity) ? 'text-green-600' : 'text-red-600'}`}>
-                  {totalAssets === (totalLiabilities + totalEquity) ? '✓ Balance sheet is balanced' : '⚠ Balance sheet is not balanced'}
+
+                <div
+                  className={`text-sm ${totalAssets === totalLiabilities + totalEquity ? "text-green-600" : "text-red-600"}`}
+                >
+                  {totalAssets === totalLiabilities + totalEquity
+                    ? "✓ Balance sheet is balanced"
+                    : "⚠ Balance sheet is not balanced"}
                 </div>
               </div>
             </CardContent>

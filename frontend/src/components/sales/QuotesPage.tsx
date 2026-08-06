@@ -1,24 +1,24 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../ui/card';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { Textarea } from '../ui/textarea';
+} from "../ui/card";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { Textarea } from "../ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../ui/select';
+} from "../ui/select";
 import {
   Dialog,
   DialogContent,
@@ -26,7 +26,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '../ui/dialog';
+} from "../ui/dialog";
 import {
   Table,
   TableBody,
@@ -34,9 +34,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../ui/table';
-import { Badge } from '../ui/badge';
-import { useCurrency } from '@/src/contexts/CurrencyContext';
+} from "../ui/table";
+import { Badge } from "../ui/badge";
+import { useCurrency } from "@/src/contexts/CurrencyContext";
 import {
   FileText,
   Plus,
@@ -45,14 +45,13 @@ import {
   Eye,
   Edit,
   Trash2,
-} from 'lucide-react';
-import { toast } from 'sonner';
-import { useConfirm } from '@/src/contexts/ConfirmContext';
-import apiService from '../../services/ApiService';
-import { QuoteStatus } from '../../models/sales';
-import { Quote } from '../../models/sales';
-import { Opportunity, Contact } from '../../models/crm';
-import { DashboardLayout } from '../layout';
+} from "lucide-react";
+import { toast } from "sonner";
+import { useConfirm } from "@/src/contexts/ConfirmContext";
+import apiService from "../../services/ApiService";
+import { Quote, QuoteStatus } from "../../models/sales";
+import { Opportunity, Contact } from "../../models/crm";
+import { DashboardLayout } from "../layout";
 
 export default function QuotesPage() {
   const confirm = useConfirm();
@@ -70,14 +69,14 @@ export default function QuotesPage() {
   );
 
   const [newQuote, setNewQuote] = useState({
-    quoteNumber: '',
-    opportunityId: '',
-    contactId: '',
-    title: '',
-    description: '',
-    amount: '',
-    validUntil: '',
-    terms: '',
+    quoteNumber: "",
+    opportunityId: "",
+    contactId: "",
+    title: "",
+    description: "",
+    amount: "",
+    validUntil: "",
+    terms: "",
     items: [] as any[],
   });
 
@@ -92,12 +91,14 @@ export default function QuotesPage() {
         apiService.getOpportunities({ page: 1, limit: 100 }),
         apiService.getContacts({ page: 1, limit: 100 }),
       ]);
-      setQuotes(Array.isArray(quotesData) ? quotesData : quotesData.quotes || []);
+      setQuotes(
+        Array.isArray(quotesData) ? quotesData : quotesData.quotes || [],
+      );
       setOpportunities(opportunitiesData.opportunities || []);
       setContacts(contactsData.contacts || []);
     } catch (error) {
-      toast.error('Failed to fetch data');
-      } finally {
+      toast.error("Failed to fetch data");
+    } finally {
       setLoading(false);
     }
   };
@@ -110,52 +111,52 @@ export default function QuotesPage() {
         valid_until: new Date(newQuote.validUntil).toISOString(),
       };
       await apiService.createQuote(quoteData);
-      toast.success('Quote created successfully');
+      toast.success("Quote created successfully");
       setIsCreateDialogOpen(false);
       setNewQuote({
-        quoteNumber: '',
-        opportunityId: '',
-        contactId: '',
-        title: '',
-        description: '',
-        amount: '',
-        validUntil: '',
-        terms: '',
+        quoteNumber: "",
+        opportunityId: "",
+        contactId: "",
+        title: "",
+        description: "",
+        amount: "",
+        validUntil: "",
+        terms: "",
         items: [],
       });
       fetchData();
     } catch (error) {
-      toast.error('Failed to create quote');
-      }
+      toast.error("Failed to create quote");
+    }
   };
 
   const handleUpdateQuote = async () => {
     if (!selectedQuote) return;
     try {
       await apiService.updateQuote(selectedQuote.id, selectedQuote);
-      toast.success('Quote updated successfully');
+      toast.success("Quote updated successfully");
       setIsEditDialogOpen(false);
       setSelectedQuote(null);
       fetchData();
     } catch (error) {
-      toast.error('Failed to update quote');
-      }
+      toast.error("Failed to update quote");
+    }
   };
 
   const handleDeleteQuote = async (id: string) => {
     const ok = await confirm({
-      description: 'Are you sure you want to delete this quote?',
+      description: "Are you sure you want to delete this quote?",
       destructive: true,
-      confirmLabel: 'Delete',
+      confirmLabel: "Delete",
     });
     if (!ok) return;
     try {
       await apiService.deleteQuote(id);
-      toast.success('Quote deleted successfully');
+      toast.success("Quote deleted successfully");
       fetchData();
     } catch (error) {
-      toast.error('Failed to delete quote');
-      }
+      toast.error("Failed to delete quote");
+    }
   };
 
   const handleViewQuote = (quote: Quote) => {
@@ -167,19 +168,19 @@ export default function QuotesPage() {
     try {
       setDownloadingQuoteId(quote.id);
       const blob = await apiService.get(`/sales/quotes/${quote.id}/download`, {
-        responseType: 'blob',
+        responseType: "blob",
       });
       const url = window.URL.createObjectURL(blob as Blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `quote-${quote.quoteNumber || quote.id}.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      toast.success('Quote downloaded successfully');
+      toast.success("Quote downloaded successfully");
     } catch (error) {
-      toast.error('Failed to download quote');
+      toast.error("Failed to download quote");
     } finally {
       setDownloadingQuoteId(null);
     }
@@ -187,24 +188,24 @@ export default function QuotesPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'draft':
-        return 'bg-gray-100 text-gray-800';
-      case 'sent':
-        return 'bg-blue-100 text-blue-800';
-      case 'accepted':
-        return 'bg-green-100 text-green-800';
-      case 'rejected':
-        return 'bg-red-100 text-red-800';
-      case 'expired':
-        return 'bg-yellow-100 text-yellow-800';
+      case "draft":
+        return "bg-gray-100 text-gray-800";
+      case "sent":
+        return "bg-blue-100 text-blue-800";
+      case "accepted":
+        return "bg-green-100 text-green-800";
+      case "rejected":
+        return "bg-red-100 text-red-800";
+      case "expired":
+        return "bg-yellow-100 text-yellow-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const normalizeId = (value: unknown) => {
     if (value === null || value === undefined) {
-      return '';
+      return "";
     }
     return String(value).trim().toLowerCase();
   };
@@ -216,7 +217,7 @@ export default function QuotesPage() {
         return normalized;
       }
     }
-    return '';
+    return "";
   };
 
   const getQuoteOpportunityId = (quote: Quote) =>
@@ -240,12 +241,14 @@ export default function QuotesPage() {
   const getOpportunityName = (quote: Quote) => {
     const opportunityId = getQuoteOpportunityId(quote);
     if (!opportunityId) {
-      return 'Unknown Opportunity';
+      return "Unknown Opportunity";
     }
     const opportunity = opportunities.find(
       (o) => normalizeId(o.id) === opportunityId,
     );
-    return opportunity?.title || (opportunity as any)?.name || 'Unknown Opportunity';
+    return (
+      opportunity?.title || (opportunity as any)?.name || "Unknown Opportunity"
+    );
   };
 
   const getContactName = (quote: Quote) => {
@@ -260,20 +263,27 @@ export default function QuotesPage() {
       );
     }
     if (!contactId) {
-      const inlineContactName = `${(quote as any)?.contact?.firstName || ''} ${(quote as any)?.contact?.lastName || ''}`.trim();
+      const inlineContactName =
+        `${(quote as any)?.contact?.firstName || ""} ${(quote as any)?.contact?.lastName || ""}`.trim();
       return (
         inlineContactName ||
         (quote as any)?.contact_name ||
         (quote as any)?.contactName ||
-        'Unknown Contact'
+        "Unknown Contact"
       );
     }
     const contact = contacts.find((c) =>
-      [normalizeId(c.id), normalizeId((c as any).contactId), normalizeId((c as any).contact_id)].includes(contactId),
+      [
+        normalizeId(c.id),
+        normalizeId((c as any).contactId),
+        normalizeId((c as any).contact_id),
+      ].includes(contactId),
     );
     return contact
-      ? `${contact.firstName || ''} ${contact.lastName || ''}`.trim() || contact.email || 'Unknown Contact'
-      : 'Unknown Contact';
+      ? `${contact.firstName || ""} ${contact.lastName || ""}`.trim() ||
+          contact.email ||
+          "Unknown Contact"
+      : "Unknown Contact";
   };
 
   if (loading) {
@@ -480,7 +490,7 @@ export default function QuotesPage() {
             <CardContent>
               <div className="text-2xl font-bold">
                 {formatCurrency(
-                  quotes.reduce((sum, quote) => sum + (quote.amount || 0), 0)
+                  quotes.reduce((sum, quote) => sum + (quote.amount || 0), 0),
                 )}
               </div>
             </CardContent>
@@ -492,7 +502,7 @@ export default function QuotesPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {quotes.filter((quote) => quote.status === 'accepted').length}
+                {quotes.filter((quote) => quote.status === "accepted").length}
               </div>
             </CardContent>
           </Card>
@@ -503,7 +513,7 @@ export default function QuotesPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {quotes.filter((quote) => quote.status === 'sent').length}
+                {quotes.filter((quote) => quote.status === "sent").length}
               </div>
             </CardContent>
           </Card>
@@ -541,7 +551,8 @@ export default function QuotesPage() {
                     <TableCell>{getOpportunityName(quote)}</TableCell>
                     <TableCell>{getContactName(quote)}</TableCell>
                     <TableCell>
-                      {getCurrencySymbol()}{(quote.amount || 0).toLocaleString()}
+                      {getCurrencySymbol()}
+                      {(quote.amount || 0).toLocaleString()}
                     </TableCell>
                     <TableCell>
                       <Badge className={getStatusColor(quote.status)}>
@@ -551,7 +562,7 @@ export default function QuotesPage() {
                     <TableCell>
                       {quote.validUntil
                         ? new Date(quote.validUntil).toLocaleDateString()
-                        : '-'}
+                        : "-"}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2">
@@ -634,7 +645,7 @@ export default function QuotesPage() {
                   <Input
                     id="edit_amount"
                     type="number"
-                    value={selectedQuote.amount?.toString() || ''}
+                    value={selectedQuote.amount?.toString() || ""}
                     onChange={(
                       e: React.ChangeEvent<
                         HTMLInputElement | HTMLTextAreaElement
@@ -679,8 +690,8 @@ export default function QuotesPage() {
                       selectedQuote.validUntil
                         ? new Date(selectedQuote.validUntil)
                             .toISOString()
-                            .split('T')[0]
-                        : ''
+                            .split("T")[0]
+                        : ""
                     }
                     onChange={(
                       e: React.ChangeEvent<
@@ -698,7 +709,7 @@ export default function QuotesPage() {
                   <Label htmlFor="edit_description">Description</Label>
                   <Textarea
                     id="edit_description"
-                    value={selectedQuote.description || ''}
+                    value={selectedQuote.description || ""}
                     onChange={(
                       e: React.ChangeEvent<
                         HTMLInputElement | HTMLTextAreaElement
@@ -736,7 +747,7 @@ export default function QuotesPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label>Quote Number</Label>
-                  <p>{selectedQuote.quoteNumber || '-'}</p>
+                  <p>{selectedQuote.quoteNumber || "-"}</p>
                 </div>
                 <div>
                   <Label>Status</Label>
@@ -744,11 +755,11 @@ export default function QuotesPage() {
                 </div>
                 <div className="md:col-span-2">
                   <Label>Title</Label>
-                  <p>{selectedQuote.title || '-'}</p>
+                  <p>{selectedQuote.title || "-"}</p>
                 </div>
                 <div className="md:col-span-2">
                   <Label>Description</Label>
-                  <p>{selectedQuote.description || '-'}</p>
+                  <p>{selectedQuote.description || "-"}</p>
                 </div>
                 <div>
                   <Label>Opportunity</Label>
@@ -770,12 +781,12 @@ export default function QuotesPage() {
                   <p>
                     {selectedQuote.validUntil
                       ? new Date(selectedQuote.validUntil).toLocaleDateString()
-                      : '-'}
+                      : "-"}
                   </p>
                 </div>
                 <div className="md:col-span-2">
                   <Label>Terms</Label>
-                  <p>{selectedQuote.terms || '-'}</p>
+                  <p>{selectedQuote.terms || "-"}</p>
                 </div>
               </div>
             )}

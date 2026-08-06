@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,21 +8,21 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '../ui/dialog';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
+} from "../ui/dialog";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../ui/select';
-import { Alert, AlertDescription } from '../ui/alert';
-import { Loader2, UserPlus, Mail } from 'lucide-react';
-import { apiService } from '../../services/ApiService';
-import { extractErrorMessage } from '../../utils/errorUtils';
+} from "../ui/select";
+import { Alert, AlertDescription } from "../ui/alert";
+import { Loader2, UserPlus, Mail } from "lucide-react";
+import { apiService } from "../../services/ApiService";
+import { extractErrorMessage } from "../../utils/errorUtils";
 
 interface AddMemberModalProps {
   open: boolean;
@@ -51,10 +51,10 @@ export default function AddMemberModal({
   onSuccess,
 }: AddMemberModalProps) {
   const [formData, setFormData] = useState<MemberData>({
-    email: '',
-    roleId: '',
-    firstName: '',
-    lastName: '',
+    email: "",
+    roleId: "",
+    firstName: "",
+    lastName: "",
   });
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(false);
@@ -65,10 +65,10 @@ export default function AddMemberModal({
     if (open) {
       fetchRoles();
       setFormData({
-        email: '',
-        roleId: '',
-        firstName: '',
-        lastName: '',
+        email: "",
+        roleId: "",
+        firstName: "",
+        lastName: "",
       });
       setError(null);
     }
@@ -77,19 +77,21 @@ export default function AddMemberModal({
   const fetchRoles = async () => {
     try {
       setLoadingRoles(true);
-      const response = await apiService.get('/rbac/roles');
+      const response = await apiService.get("/rbac/roles");
       const rolesList = response.roles || [];
       const activeRoles = rolesList.filter((r: Role) => r.isActive);
       setRoles(activeRoles);
-      
+
       if (activeRoles.length > 0) {
-        const defaultRole = activeRoles.find((r: Role) => r.name === 'team_member') || activeRoles[0];
+        const defaultRole =
+          activeRoles.find((r: Role) => r.name === "team_member") ||
+          activeRoles[0];
         if (defaultRole) {
-          setFormData(prev => ({ ...prev, roleId: defaultRole.id }));
+          setFormData((prev) => ({ ...prev, roleId: defaultRole.id }));
         }
       }
     } catch (error) {
-      setError('Failed to load roles. Please try again.');
+      setError("Failed to load roles. Please try again.");
     } finally {
       setLoadingRoles(false);
     }
@@ -98,12 +100,12 @@ export default function AddMemberModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.email.trim()) {
-      setError('Email is required');
+      setError("Email is required");
       return;
     }
 
     if (!formData.roleId) {
-      setError('Please select a role');
+      setError("Please select a role");
       return;
     }
 
@@ -111,18 +113,18 @@ export default function AddMemberModal({
       setLoading(true);
       setError(null);
 
-      const baseUsername = formData.email.split('@')[0];
+      const baseUsername = formData.email.split("@")[0];
       const timestamp = Date.now().toString().slice(-4);
       const uniqueUsername = `${baseUsername}_${timestamp}`;
 
       const userData = {
         userName: uniqueUsername,
         email: formData.email,
-        firstName: formData.firstName || '',
-        lastName: formData.lastName || '',
-        password: 'TempPassword123!',
+        firstName: formData.firstName || "",
+        lastName: formData.lastName || "",
+        password: "TempPassword123!",
       };
-      
+
       await apiService.post(
         `/rbac/create-user?role_id=${formData.roleId}`,
         userData,
@@ -132,14 +134,17 @@ export default function AddMemberModal({
       onSuccess();
       onClose();
     } catch (err: any) {
-      const errorMessage = extractErrorMessage(err, 'Failed to create team member');
+      const errorMessage = extractErrorMessage(
+        err,
+        "Failed to create team member",
+      );
       const timedOut =
         err?.isTimeout === true ||
-        err?.code === 'ECONNABORTED' ||
-        errorMessage.toLowerCase().includes('timeout');
+        err?.code === "ECONNABORTED" ||
+        errorMessage.toLowerCase().includes("timeout");
       if (timedOut) {
         try {
-          const response = await apiService.get('/rbac/tenant-users');
+          const response = await apiService.get("/rbac/tenant-users");
           const users = Array.isArray(response)
             ? response
             : response?.success && Array.isArray(response.data)
@@ -156,8 +161,7 @@ export default function AddMemberModal({
             onClose();
             return;
           }
-        } catch {
-        }
+        } catch {}
       }
       setError(errorMessage);
     } finally {
@@ -191,7 +195,7 @@ export default function AddMemberModal({
                 id="email"
                 type="email"
                 value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
+                onChange={(e) => handleInputChange("email", e.target.value)}
                 placeholder="member@example.com"
                 className="pl-10"
                 required
@@ -205,7 +209,7 @@ export default function AddMemberModal({
               <Input
                 id="firstName"
                 value={formData.firstName}
-                onChange={(e) => handleInputChange('firstName', e.target.value)}
+                onChange={(e) => handleInputChange("firstName", e.target.value)}
                 placeholder="John"
               />
             </div>
@@ -214,7 +218,7 @@ export default function AddMemberModal({
               <Input
                 id="lastName"
                 value={formData.lastName}
-                onChange={(e) => handleInputChange('lastName', e.target.value)}
+                onChange={(e) => handleInputChange("lastName", e.target.value)}
                 placeholder="Doe"
               />
             </div>
@@ -224,11 +228,15 @@ export default function AddMemberModal({
             <Label>Role *</Label>
             <Select
               value={formData.roleId}
-              onValueChange={(value) => handleInputChange('roleId', value)}
+              onValueChange={(value) => handleInputChange("roleId", value)}
               disabled={loadingRoles}
             >
               <SelectTrigger>
-                <SelectValue placeholder={loadingRoles ? "Loading roles..." : "Select a role"} />
+                <SelectValue
+                  placeholder={
+                    loadingRoles ? "Loading roles..." : "Select a role"
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
                 {roles.map((role) => (

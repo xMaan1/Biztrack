@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { ChevronRight, ChevronDown } from 'lucide-react';
+import { ChevronRight, ChevronDown } from "lucide-react";
 
 type CollapsibleFormSectionProps = {
   title: string;

@@ -1,20 +1,27 @@
-import type { Invoice, InvoiceCreate, InvoiceItemCreate } from '@/src/models/sales';
-import type { Customer } from '@/src/services/CustomerService';
-import type { InvoiceFormErrors, InvoiceFormTotals } from '@/src/types/sales/invoiceForm';
-import type { JobCard } from '@/src/models/workshop';
+import type {
+  Invoice,
+  InvoiceCreate,
+  InvoiceItemCreate,
+} from "@/src/models/sales";
+import type { Customer } from "@/src/services/CustomerService";
+import type {
+  InvoiceFormErrors,
+  InvoiceFormTotals,
+} from "@/src/types/sales/invoiceForm";
+import type { JobCard } from "@/src/models/workshop";
 
 export const EMPTY_NEW_ITEM: InvoiceItemCreate = {
-  description: '',
+  description: "",
   quantity: 1,
   salePrice: 0,
   discount: 0,
   taxRate: 0,
-  productId: '',
-  unit: 'piece',
+  productId: "",
+  unit: "piece",
 };
 
 function pad2(value: number): string {
-  return String(value).padStart(2, '0');
+  return String(value).padStart(2, "0");
 }
 
 export function toLocalDateInputValue(date: Date = new Date()): string {
@@ -49,22 +56,22 @@ export function defaultOrderTime(): string {
 
 export function emptyInvoiceForm(): InvoiceCreate {
   return {
-    customerId: '',
-    customerName: '',
-    customerEmail: '',
-    shippingAddress: '',
+    customerId: "",
+    customerName: "",
+    customerEmail: "",
+    shippingAddress: "",
     issueDate: toLocalDateInputValue(),
     dueDate: defaultDueDate(),
-    orderNumber: '',
+    orderNumber: "",
     orderTime: defaultOrderTime(),
     labourCost: 0,
-    terms: '',
+    terms: "",
     items: [],
-    opportunityId: '',
-    quoteId: '',
-    projectId: '',
-    vehicleReg: '',
-    jobCardId: '',
+    opportunityId: "",
+    quoteId: "",
+    projectId: "",
+    vehicleReg: "",
+    jobCardId: "",
   };
 }
 
@@ -73,22 +80,22 @@ export function invoiceFormDataFromInvoice(invoice: Invoice): InvoiceCreate {
     customerId: invoice.customerId,
     customerName: invoice.customerName,
     customerEmail: invoice.customerEmail,
-    customerPhone: invoice.customerPhone || '',
-    shippingAddress: invoice.shippingAddress || '',
+    customerPhone: invoice.customerPhone || "",
+    shippingAddress: invoice.shippingAddress || "",
     issueDate: invoice.issueDate,
     dueDate: invoice.dueDate,
-    orderNumber: invoice.orderNumber || '',
+    orderNumber: invoice.orderNumber || "",
     orderTime: invoice.orderTime
       ? parseToLocalDateTimeInputValue(String(invoice.orderTime))
       : defaultOrderTime(),
     labourCost: invoice.labourCost || 0,
-    terms: invoice.terms || '',
+    terms: invoice.terms || "",
     items: [],
-    opportunityId: invoice.opportunityId || '',
-    quoteId: invoice.quoteId || '',
-    projectId: invoice.projectId || '',
-    vehicleReg: invoice.vehicleReg || '',
-    jobCardId: invoice.jobCardId || '',
+    opportunityId: invoice.opportunityId || "",
+    quoteId: invoice.quoteId || "",
+    projectId: invoice.projectId || "",
+    vehicleReg: invoice.vehicleReg || "",
+    jobCardId: invoice.jobCardId || "",
   };
 }
 
@@ -111,20 +118,29 @@ export function invoiceItemsFromJobCard(jc: JobCard): InvoiceItemCreate[] {
   const mapped: InvoiceItemCreate[] = [];
   for (const it of rawItems) {
     const r = it as unknown as Record<string, unknown>;
-    const description = String(r.description ?? r.part_description ?? r.part_no ?? r.partNo ?? '');
-    const quantityRaw = typeof r.quantity === 'number' ? r.quantity : parseFloat(String(r.qty ?? r.quantity ?? 1));
-    const quantity = Number.isFinite(quantityRaw) && quantityRaw > 0 ? quantityRaw : 1;
-    const salePriceRaw = typeof r.unitPrice === 'number' ? r.unitPrice : parseFloat(String(r.unit_price ?? r.unitPrice ?? 0));
+    const description = String(
+      r.description ?? r.part_description ?? r.part_no ?? r.partNo ?? "",
+    );
+    const quantityRaw =
+      typeof r.quantity === "number"
+        ? r.quantity
+        : parseFloat(String(r.qty ?? r.quantity ?? 1));
+    const quantity =
+      Number.isFinite(quantityRaw) && quantityRaw > 0 ? quantityRaw : 1;
+    const salePriceRaw =
+      typeof r.unitPrice === "number"
+        ? r.unitPrice
+        : parseFloat(String(r.unit_price ?? r.unitPrice ?? 0));
     const salePrice = Number.isFinite(salePriceRaw) ? salePriceRaw : 0;
-    const productId = r.productId ? String(r.productId) : '';
+    const productId = r.productId ? String(r.productId) : "";
     if (!description && !salePrice && !productId) continue;
     mapped.push({
-      description: description || 'Item',
+      description: description || "Item",
       quantity,
       salePrice,
       discount: 0,
       taxRate: 0,
-      unit: String(r.unit ?? 'piece'),
+      unit: String(r.unit ?? "piece"),
       productId,
     });
   }
@@ -135,15 +151,15 @@ export function customerFallbackFromInvoice(invoice: Invoice): Customer {
   return {
     id: invoice.customerId,
     customerId: invoice.customerId,
-    firstName: invoice.customerName.split(' ')[0] || '',
-    lastName: invoice.customerName.split(' ').slice(1).join(' ') || '',
+    firstName: invoice.customerName.split(" ")[0] || "",
+    lastName: invoice.customerName.split(" ").slice(1).join(" ") || "",
     email: invoice.customerEmail,
-    phone: invoice.customerPhone || '',
-    customerType: 'individual',
-    customerStatus: 'active',
+    phone: invoice.customerPhone || "",
+    customerType: "individual",
+    customerStatus: "active",
     creditLimit: 0,
     currentBalance: 0,
-    paymentTerms: 'Cash',
+    paymentTerms: "Cash",
     tags: [],
     isActive: true,
     createdAt: new Date().toISOString(),
@@ -181,27 +197,27 @@ export function validateInvoiceForm(
   const newErrors: InvoiceFormErrors = {};
 
   if (!hasCustomer) {
-    newErrors.customer = 'Please select a customer';
+    newErrors.customer = "Please select a customer";
   }
   if (!formData.issueDate) {
-    newErrors.issueDate = 'Issue date is required';
+    newErrors.issueDate = "Issue date is required";
   }
   if (!formData.dueDate) {
-    newErrors.dueDate = 'Due date is required';
+    newErrors.dueDate = "Due date is required";
   }
   if (items.length === 0) {
-    newErrors.items = 'At least one item is required';
+    newErrors.items = "At least one item is required";
   }
 
   items.forEach((item, index) => {
     if (!item.description.trim()) {
-      newErrors[`item_${index}_description`] = 'Item description is required';
+      newErrors[`item_${index}_description`] = "Item description is required";
     }
     if (item.quantity <= 0) {
-      newErrors[`item_${index}_quantity`] = 'Quantity must be greater than 0';
+      newErrors[`item_${index}_quantity`] = "Quantity must be greater than 0";
     }
     if (item.salePrice < 0) {
-      newErrors[`item_${index}_salePrice`] = 'Sale price cannot be negative';
+      newErrors[`item_${index}_salePrice`] = "Sale price cannot be negative";
     }
   });
 
@@ -214,16 +230,16 @@ export function validateNewItem(
 ): InvoiceFormErrors {
   const itemErrors: InvoiceFormErrors = {};
   if (requireProduct && !newItem.productId) {
-    itemErrors.newItemProduct = 'Please select a product';
+    itemErrors.newItemProduct = "Please select a product";
   }
   if (!newItem.description.trim()) {
-    itemErrors.newItemDescription = 'Description is required';
+    itemErrors.newItemDescription = "Description is required";
   }
   if (newItem.quantity <= 0) {
-    itemErrors.newItemQuantity = 'Quantity must be greater than 0';
+    itemErrors.newItemQuantity = "Quantity must be greater than 0";
   }
   if (newItem.salePrice < 0) {
-    itemErrors.newItemSalePrice = 'Sale price cannot be negative';
+    itemErrors.newItemSalePrice = "Sale price cannot be negative";
   }
   return itemErrors;
 }
@@ -235,12 +251,12 @@ export function getInvoiceDialogContentClassName(
 ): string {
   if (!isView) {
     return inline
-      ? 'w-full min-w-0 max-w-full overflow-x-auto p-2 sm:p-3'
-      : 'max-h-[96vh] w-[99vw] max-w-[1600px] overflow-y-auto p-2 sm:p-3';
+      ? "w-full min-w-0 max-w-full overflow-x-auto p-2 sm:p-3"
+      : "max-h-[96vh] w-[99vw] max-w-[1600px] overflow-y-auto p-2 sm:p-3";
   }
   return inline
-    ? 'w-full min-w-0 max-w-full overflow-y-auto p-4'
-    : 'max-w-4xl max-h-[90vh] overflow-y-auto';
+    ? "w-full min-w-0 max-w-full overflow-y-auto p-4"
+    : "max-w-4xl max-h-[90vh] overflow-y-auto";
 }
 
 export function lineItemTotal(item: InvoiceItemCreate): number {

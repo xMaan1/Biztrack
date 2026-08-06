@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import Image from 'next/image';
-import Link from 'next/link';
-import { cn } from '@/src/lib/utils';
+import Image from "next/image";
+import Link from "next/link";
+import { cn } from "@/src/lib/utils";
 
 const LOGO_FRAME_CLASS =
-  'flex h-28 w-full items-center justify-center rounded-lg bg-white px-3 shadow-sm ring-1 ring-slate-200/90';
+  "flex h-28 w-full items-center justify-center rounded-lg bg-white px-3 shadow-sm ring-1 ring-slate-200/90";
 
 const TILE_CLASS =
-  'flex w-full flex-col items-center gap-3 rounded-xl border border-border/60 bg-white px-4 py-4 transition-colors hover:border-primary/40 hover:shadow-md';
+  "flex w-full flex-col items-center gap-3 rounded-xl border border-border/60 bg-white px-4 py-4 transition-colors hover:border-primary/40 hover:shadow-md";
 
 export type CharityPartner = {
   name: string;
@@ -28,7 +28,10 @@ type CharityPartnerCardProps = {
   className?: string;
 };
 
-export function CharityPartnerCard({ partner, className }: CharityPartnerCardProps) {
+export function CharityPartnerCard({
+  partner,
+  className,
+}: CharityPartnerCardProps) {
   return (
     <Link
       href={partner.href}
@@ -45,9 +48,9 @@ export function CharityPartnerCard({ partner, className }: CharityPartnerCardPro
           quality={partner.imageQuality ?? 90}
           unoptimized={partner.unoptimized}
           className={cn(
-            'max-h-[5.25rem] w-auto max-w-full object-contain',
+            "max-h-[5.25rem] w-auto max-w-full object-contain",
             partner.unoptimized &&
-              'drop-shadow-[0_1px_2px_rgba(15,23,42,0.12)]',
+              "drop-shadow-[0_1px_2px_rgba(15,23,42,0.12)]",
             partner.logoClassName,
           )}
         />

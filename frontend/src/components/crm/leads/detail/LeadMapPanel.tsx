@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { MapPin } from 'lucide-react';
-import { Lead } from '@/src/models/crm';
-import { mapUrl } from '@/src/components/crm/leads/leadUtils';
+import { MapPin } from "lucide-react";
+import { Lead } from "@/src/models/crm";
+import { mapUrl } from "@/src/components/crm/leads/leadUtils";
 
 type Props = {
   lead: Lead;

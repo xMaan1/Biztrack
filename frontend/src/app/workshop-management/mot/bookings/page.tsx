@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
-import { useRouter } from 'next/navigation';
-import { DashboardLayout } from '@/src/components/layout';
-import { useCurrency } from '@/src/contexts/CurrencyContext';
-import { useAuth } from '@/src/contexts/AuthContext';
-import { getTenantMotBookingUrl } from '@/src/models/mot/MotSettings';
-import { useMotBookingsPage } from '@/src/hooks/useMotBookingsPage';
-import { MotBookingsLoadingState } from '@/src/components/mot-bookings/MotBookingsLoadingState';
-import { MotBookingsPageHeader } from '@/src/components/mot-bookings/MotBookingsPageHeader';
-import { MotSettingsCard } from '@/src/components/mot-bookings/MotSettingsCard';
-import { MotBookingsStatsCard } from '@/src/components/mot-bookings/MotBookingsStatsCard';
-import { MotBookingsFiltersCard } from '@/src/components/mot-bookings/MotBookingsFiltersCard';
-import { MotBookingsListCard } from '@/src/components/mot-bookings/MotBookingsListCard';
-import { MotBookingFormDialog } from '@/src/components/mot-bookings/MotBookingFormDialog';
-import { MotBookingViewDialog } from '@/src/components/mot-bookings/MotBookingViewDialog';
-import { MotBookingDeleteDialog } from '@/src/components/mot-bookings/MotBookingDeleteDialog';
+import { useRouter } from "next/navigation";
+import { DashboardLayout } from "@/src/components/layout";
+import { useCurrency } from "@/src/contexts/CurrencyContext";
+import { useAuth } from "@/src/contexts/AuthContext";
+import { getTenantMotBookingUrl } from "@/src/models/mot/MotSettings";
+import { useMotBookingsPage } from "@/src/hooks/useMotBookingsPage";
+import { MotBookingsLoadingState } from "@/src/components/mot-bookings/MotBookingsLoadingState";
+import { MotBookingsPageHeader } from "@/src/components/mot-bookings/MotBookingsPageHeader";
+import { MotSettingsCard } from "@/src/components/mot-bookings/MotSettingsCard";
+import { MotBookingsStatsCard } from "@/src/components/mot-bookings/MotBookingsStatsCard";
+import { MotBookingsFiltersCard } from "@/src/components/mot-bookings/MotBookingsFiltersCard";
+import { MotBookingsListCard } from "@/src/components/mot-bookings/MotBookingsListCard";
+import { MotBookingFormDialog } from "@/src/components/mot-bookings/MotBookingFormDialog";
+import { MotBookingViewDialog } from "@/src/components/mot-bookings/MotBookingViewDialog";
+import { MotBookingDeleteDialog } from "@/src/components/mot-bookings/MotBookingDeleteDialog";
 
 function MotManageBookingsContent() {
   const router = useRouter();
@@ -40,7 +40,9 @@ function MotManageBookingsContent() {
 
         <MotBookingsFiltersCard
           filters={page.filters}
-          onFiltersChange={(patch) => page.setFilters((prev) => ({ ...prev, ...patch }))}
+          onFiltersChange={(patch) =>
+            page.setFilters((prev) => ({ ...prev, ...patch }))
+          }
           onClear={page.clearFilters}
         />
 
@@ -64,7 +66,9 @@ function MotManageBookingsContent() {
           formData={page.formData}
           saving={page.saving}
           onOpenChange={page.handleDialogClose}
-          onFormChange={(patch) => page.setFormData((prev) => ({ ...prev, ...patch }))}
+          onFormChange={(patch) =>
+            page.setFormData((prev) => ({ ...prev, ...patch }))
+          }
           onTimeSlotChange={page.handleTimeSlotChange}
           onSubmit={page.handleSubmit}
         />

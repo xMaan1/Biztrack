@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState } from "react";
 import {
   Check,
   Download,
@@ -10,7 +10,7 @@ import {
   Sparkles,
   User,
   Wrench,
-} from 'lucide-react';
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -18,15 +18,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/src/components/ui/dialog';
-import { Button } from '@/src/components/ui/button';
-import { Badge } from '@/src/components/ui/badge';
-import { useCurrency } from '@/src/contexts/CurrencyContext';
-import InvoiceService from '@/src/services/InvoiceService';
-import { extractErrorMessage } from '@/src/utils/errorUtils';
-import { formatDate } from '@/src/lib/utils';
-import { toast } from 'sonner';
-import type { Invoice } from '@/src/models/sales';
+} from "@/src/components/ui/dialog";
+import { Button } from "@/src/components/ui/button";
+import { Badge } from "@/src/components/ui/badge";
+import { useCurrency } from "@/src/contexts/CurrencyContext";
+import InvoiceService from "@/src/services/InvoiceService";
+import { extractErrorMessage } from "@/src/utils/errorUtils";
+import { formatDate } from "@/src/lib/utils";
+import { toast } from "sonner";
+import type { Invoice } from "@/src/models/sales";
 
 interface InvoiceCreatedDialogProps {
   invoice: Invoice | null;
@@ -46,21 +46,21 @@ export function InvoiceCreatedDialog({
       setDownloading(true);
       const blob = await InvoiceService.downloadInvoice(invoice.id);
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `invoice-${invoice.invoiceNumber || invoice.id}.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      toast.success('Invoice downloaded successfully!');
+      toast.success("Invoice downloaded successfully!");
     } catch (error: any) {
       if (error.response?.status === 400) {
         const errorMessage = extractErrorMessage(
           error,
-          'Error downloading invoice',
+          "Error downloading invoice",
         );
-        if (errorMessage.includes('customization is required')) {
+        if (errorMessage.includes("customization is required")) {
           toast.error(
             "Please customize your invoice template first using the 'Customize Invoice' button.",
             { duration: 5000 },
@@ -69,7 +69,7 @@ export function InvoiceCreatedDialog({
           toast.error(errorMessage);
         }
       } else {
-        toast.error('Error downloading invoice');
+        toast.error("Error downloading invoice");
       }
     } finally {
       setDownloading(false);
@@ -81,10 +81,10 @@ export function InvoiceCreatedDialog({
       <DialogContent className="max-w-md overflow-hidden p-0">
         <div
           className={[
-            'relative overflow-hidden',
-            'bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700',
-            'px-6 pb-16 pt-8 text-center',
-          ].join(' ')}
+            "relative overflow-hidden",
+            "bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700",
+            "px-6 pb-16 pt-8 text-center",
+          ].join(" ")}
         >
           <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-white/10 blur-sm" />
           <div className="absolute -bottom-14 -left-12 h-44 w-44 rounded-full bg-white/5 blur-sm" />
@@ -99,17 +99,17 @@ export function InvoiceCreatedDialog({
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/30" />
             <span
               className={[
-                'absolute inset-0 rounded-full',
-                'bg-gradient-to-br from-emerald-400 to-teal-500',
-                'shadow-lg shadow-teal-900/40',
-              ].join(' ')}
+                "absolute inset-0 rounded-full",
+                "bg-gradient-to-br from-emerald-400 to-teal-500",
+                "shadow-lg shadow-teal-900/40",
+              ].join(" ")}
             />
             <span
               className={[
-                'relative flex h-16 w-16 items-center justify-center',
-                'rounded-full bg-gradient-to-br from-emerald-400 to-teal-500',
-                'ring-4 ring-white/40',
-              ].join(' ')}
+                "relative flex h-16 w-16 items-center justify-center",
+                "rounded-full bg-gradient-to-br from-emerald-400 to-teal-500",
+                "ring-4 ring-white/40",
+              ].join(" ")}
             >
               <Check className="h-9 w-9 text-white" strokeWidth={3} />
             </span>
@@ -133,8 +133,11 @@ export function InvoiceCreatedDialog({
                   <FileText className="h-3.5 w-3.5" />
                   Invoice Summary
                 </span>
-                <Badge variant="outline" className="border-blue-200 bg-blue-50 text-blue-700">
-                  {invoice.status ? invoice.status.replace(/_/g, ' ') : 'Draft'}
+                <Badge
+                  variant="outline"
+                  className="border-blue-200 bg-blue-50 text-blue-700"
+                >
+                  {invoice.status ? invoice.status.replace(/_/g, " ") : "Draft"}
                 </Badge>
               </div>
 
@@ -145,7 +148,7 @@ export function InvoiceCreatedDialog({
                     Invoice No.
                   </span>
                   <span className="font-semibold text-gray-900">
-                    {invoice.invoiceNumber || '—'}
+                    {invoice.invoiceNumber || "—"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -154,7 +157,7 @@ export function InvoiceCreatedDialog({
                     Customer
                   </span>
                   <span className="max-w-[180px] truncate font-medium text-gray-900">
-                    {invoice.customerName || '—'}
+                    {invoice.customerName || "—"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">

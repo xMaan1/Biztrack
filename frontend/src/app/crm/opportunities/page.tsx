@@ -1,24 +1,24 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { ModuleGuard } from '../../../components/guards/PermissionGuard';
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { ModuleGuard } from "../../../components/guards/PermissionGuard";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Badge } from '@/src/components/ui/badge';
-import { Input } from '@/src/components/ui/input';
+} from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { Badge } from "@/src/components/ui/badge";
+import { Input } from "@/src/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
+} from "@/src/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -26,14 +26,14 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/src/components/ui/dialog';
-import { Label } from '@/src/components/ui/label';
-import { Textarea } from '@/src/components/ui/textarea';
+} from "@/src/components/ui/dialog";
+import { Label } from "@/src/components/ui/label";
+import { Textarea } from "@/src/components/ui/textarea";
 import {
   UserSearch,
   type UserSearchItem,
-} from '@/src/components/ui/user-search';
-import { Alert, AlertDescription } from '@/src/components/ui/alert';
+} from "@/src/components/ui/user-search";
+import { Alert, AlertDescription } from "@/src/components/ui/alert";
 import {
   Target,
   Plus,
@@ -43,22 +43,25 @@ import {
   Trash2,
   Eye,
   Calendar,
-} from 'lucide-react';
-import CRMService from '@/src/services/CRMService';
+} from "lucide-react";
+import CRMService from "@/src/services/CRMService";
 import {
   Opportunity,
   OpportunityStage,
   CRMOpportunityFilters,
   OpportunityCreate,
-} from '@/src/models/crm';
-import { User } from '@/src/models';
-import { apiService } from '@/src/services/ApiService';
-import { DashboardLayout } from '../../../components/layout';
-import { useCurrency } from '../../../contexts/CurrencyContext';
+} from "@/src/models/crm";
+import { User } from "@/src/models";
+import { apiService } from "@/src/services/ApiService";
+import { DashboardLayout } from "../../../components/layout";
+import { useCurrency } from "../../../contexts/CurrencyContext";
 
 export default function CRMOpportunitiesPage() {
   return (
-    <ModuleGuard module="crm" fallback={<div>You don't have access to CRM module</div>}>
+    <ModuleGuard
+      module="crm"
+      fallback={<div>You don&apos;t have access to CRM module</div>}
+    >
       <CRMOpportunitiesContent />
     </ModuleGuard>
   );
@@ -69,7 +72,7 @@ function CRMOpportunitiesContent() {
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<CRMOpportunityFilters>({});
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingOpportunity, setEditingOpportunity] =
     useState<Opportunity | null>(null);
@@ -83,51 +86,54 @@ function CRMOpportunitiesContent() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [formErrorMessage, setFormErrorMessage] = useState<string | null>(null);
   const [formData, setFormData] = useState<OpportunityCreate>({
-    title: '',
-    description: '',
+    title: "",
+    description: "",
     stage: OpportunityStage.PROSPECTING,
     amount: undefined,
     probability: 50,
-    expectedCloseDate: '',
-    leadId: '',
-    contactId: '',
-    companyId: '',
-    assignedTo: '',
-    notes: '',
+    expectedCloseDate: "",
+    leadId: "",
+    contactId: "",
+    companyId: "",
+    assignedTo: "",
+    notes: "",
     tags: [],
   });
-  const [companies, setCompanies] = useState<{ id: string; name: string }[]>([]);
+  const [companies, setCompanies] = useState<{ id: string; name: string }[]>(
+    [],
+  );
   const [users, setUsers] = useState<User[]>([]);
 
   const fetchUsers = useCallback(async () => {
     try {
       let tenantId: string | null = null;
-      const selectedTenant = localStorage.getItem('selectedTenant');
+      const selectedTenant = localStorage.getItem("selectedTenant");
       if (selectedTenant) {
         try {
           const parsed = JSON.parse(selectedTenant);
           tenantId = parsed.id || parsed.tenantId;
-        } catch {
-        }
+        } catch {}
       }
       if (!tenantId) {
-        tenantId = localStorage.getItem('currentTenantId');
+        tenantId = localStorage.getItem("currentTenantId");
       }
       if (tenantId) {
         const response = await apiService.getTenantUsers(tenantId);
-        const uniqueUsers = (response.users || []).reduce((acc: User[], user: User) => {
-          const existing = acc.find(
-            (u) => u.userId === user.userId || u.id === user.userId,
-          );
-          if (!existing) acc.push(user);
-          return acc;
-        }, []);
+        const uniqueUsers = (response.users || []).reduce(
+          (acc: User[], user: User) => {
+            const existing = acc.find(
+              (u) => u.userId === user.userId || u.id === user.userId,
+            );
+            if (!existing) acc.push(user);
+            return acc;
+          },
+          [],
+        );
         setUsers(uniqueUsers);
       } else {
         setUsers([]);
       }
-    } catch {
-    }
+    } catch {}
   }, []);
 
   useEffect(() => {
@@ -140,15 +146,15 @@ function CRMOpportunitiesContent() {
 
   useEffect(() => {
     if (showCreateDialog) {
-      CRMService.getCompanies({}, 1, 100).then((r) => setCompanies(r.companies || [])).catch(() => setCompanies([]));
+      CRMService.getCompanies({}, 1, 100)
+        .then((r) => setCompanies(r.companies || []))
+        .catch(() => setCompanies([]));
     }
   }, [showCreateDialog]);
 
   const selectedAssignee = useMemo((): UserSearchItem | null => {
     if (!formData.assignedTo) return null;
-    const found = users.find(
-      (u) => (u.id || u.userId) === formData.assignedTo,
-    );
+    const found = users.find((u) => (u.id || u.userId) === formData.assignedTo);
     if (found) return found;
     return {
       id: formData.assignedTo,
@@ -165,7 +171,7 @@ function CRMOpportunitiesContent() {
       );
       if (u) {
         if (u.firstName || u.lastName) {
-          return [u.firstName, u.lastName].filter(Boolean).join(' ').trim();
+          return [u.firstName, u.lastName].filter(Boolean).join(" ").trim();
         }
         return u.userName || u.email || opportunity.assignedTo;
       }
@@ -185,8 +191,8 @@ function CRMOpportunitiesContent() {
       const response = await CRMService.getOpportunities(filters, 1, 100);
       setOpportunities(response.opportunities);
     } catch (err) {
-      setErrorMessage('Failed to load opportunities');
-      } finally {
+      setErrorMessage("Failed to load opportunities");
+    } finally {
       setLoading(false);
     }
   }, [filters]);
@@ -197,22 +203,22 @@ function CRMOpportunitiesContent() {
 
   const resetFilters = () => {
     setFilters({});
-    setSearch('');
+    setSearch("");
   };
 
   const resetForm = () => {
     setFormData({
-      title: '',
-      description: '',
+      title: "",
+      description: "",
       stage: OpportunityStage.PROSPECTING,
       amount: undefined,
       probability: 50,
-      expectedCloseDate: '',
-      leadId: '',
-      contactId: '',
-      companyId: '',
-      assignedTo: '',
-      notes: '',
+      expectedCloseDate: "",
+      leadId: "",
+      contactId: "",
+      companyId: "",
+      assignedTo: "",
+      notes: "",
       tags: [],
     });
     setEditingOpportunity(null);
@@ -221,20 +227,20 @@ function CRMOpportunitiesContent() {
   };
 
   const handleSubmit = async () => {
-    const title = (formData.title || '').trim();
+    const title = (formData.title || "").trim();
     if (!title) {
-      setFormErrorMessage('Title is required.');
+      setFormErrorMessage("Title is required.");
       return;
     }
     if (formData.amount !== undefined && formData.amount < 0) {
-      setFormErrorMessage('Amount cannot be negative.');
+      setFormErrorMessage("Amount cannot be negative.");
       return;
     }
     if (
       formData.probability !== undefined &&
       (formData.probability < 0 || formData.probability > 100)
     ) {
-      setFormErrorMessage('Probability must be between 0 and 100.');
+      setFormErrorMessage("Probability must be between 0 and 100.");
       return;
     }
     try {
@@ -248,18 +254,18 @@ function CRMOpportunitiesContent() {
 
       if (editingOpportunity) {
         await CRMService.updateOpportunity(editingOpportunity.id, payload);
-        setSuccessMessage('Opportunity updated successfully!');
+        setSuccessMessage("Opportunity updated successfully!");
       } else {
         await CRMService.createOpportunity(payload);
-        setSuccessMessage('Opportunity created successfully!');
+        setSuccessMessage("Opportunity created successfully!");
       }
 
       setShowCreateDialog(false);
       resetForm();
       loadOpportunities();
     } catch (err) {
-      setErrorMessage('Failed to save opportunity. Please try again.');
-      } finally {
+      setErrorMessage("Failed to save opportunity. Please try again.");
+    } finally {
       setSubmitting(false);
     }
   };
@@ -268,16 +274,16 @@ function CRMOpportunitiesContent() {
     setEditingOpportunity(opportunity);
     setFormData({
       title: opportunity.title,
-      description: opportunity.description || '',
+      description: opportunity.description || "",
       stage: opportunity.stage,
       amount: opportunity.amount,
       probability: opportunity.probability,
-      expectedCloseDate: opportunity.expectedCloseDate || '',
-      leadId: opportunity.leadId || '',
-      contactId: opportunity.contactId || '',
-      companyId: opportunity.companyId || '',
-      assignedTo: opportunity.assignedTo || '',
-      notes: opportunity.notes || '',
+      expectedCloseDate: opportunity.expectedCloseDate || "",
+      leadId: opportunity.leadId || "",
+      contactId: opportunity.contactId || "",
+      companyId: opportunity.companyId || "",
+      assignedTo: opportunity.assignedTo || "",
+      notes: opportunity.notes || "",
       tags: opportunity.tags || [],
     });
     setShowCreateDialog(true);
@@ -297,12 +303,12 @@ function CRMOpportunitiesContent() {
     try {
       setDeleting(true);
       await CRMService.deleteOpportunity(deletingOpportunity.id);
-      setSuccessMessage('Opportunity deleted successfully!');
+      setSuccessMessage("Opportunity deleted successfully!");
       setDeletingOpportunity(null);
       loadOpportunities();
     } catch (err) {
-      setErrorMessage('Failed to delete opportunity. Please try again.');
-      } finally {
+      setErrorMessage("Failed to delete opportunity. Please try again.");
+    } finally {
       setDeleting(false);
     }
   };
@@ -387,7 +393,7 @@ function CRMOpportunitiesContent() {
                     placeholder="Search opportunities..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                    onKeyPress={(e) => e.key === "Enter" && handleSearch()}
                   />
                   <Button onClick={handleSearch}>
                     <Search className="w-4 h-4" />
@@ -397,12 +403,12 @@ function CRMOpportunitiesContent() {
               <div>
                 <label className="text-sm font-medium">Stage</label>
                 <Select
-                  value={filters.stage || 'all'}
+                  value={filters.stage || "all"}
                   onValueChange={(value) =>
                     setFilters((prev: CRMOpportunityFilters) => ({
                       ...prev,
                       stage:
-                        value === 'all'
+                        value === "all"
                           ? undefined
                           : (value as OpportunityStage),
                     }))
@@ -415,8 +421,8 @@ function CRMOpportunitiesContent() {
                     <SelectItem value="all">All Stages</SelectItem>
                     {Object.values(OpportunityStage).map((stage) => (
                       <SelectItem key={stage} value={stage}>
-                        {stage.replace('_', ' ').charAt(0).toUpperCase() +
-                          stage.replace('_', ' ').slice(1)}
+                        {stage.replace("_", " ").charAt(0).toUpperCase() +
+                          stage.replace("_", " ").slice(1)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -445,103 +451,106 @@ function CRMOpportunitiesContent() {
               {opportunities.map((opportunity) => {
                 const assignedLabel = assigneeDisplay(opportunity);
                 return (
-                <div
-                  key={opportunity.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3">
-                      <div className="flex items-center space-x-2">
-                        <Target className="w-5 h-5 text-gray-500" />
-                        <div>
-                          <div className="font-medium">{opportunity.title}</div>
-                          <div className="text-sm text-gray-500">
-                            {opportunity.description &&
-                            opportunity.description.length > 100
-                              ? `${opportunity.description.substring(0, 100)}...`
-                              : opportunity.description}
+                  <div
+                    key={opportunity.id}
+                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3">
+                        <div className="flex items-center space-x-2">
+                          <Target className="w-5 h-5 text-gray-500" />
+                          <div>
+                            <div className="font-medium">
+                              {opportunity.title}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {opportunity.description &&
+                              opportunity.description.length > 100
+                                ? `${opportunity.description.substring(0, 100)}...`
+                                : opportunity.description}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      {opportunity.amount && (
-                        <div className="flex items-center space-x-1 text-sm text-gray-500">
-                          <Target className="w-4 h-4" />
-                          <span className="font-medium">
-                            {formatCurrency(opportunity.amount)}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex items-center space-x-2 mt-2">
-                      <Badge
-                        className={CRMService.getOpportunityStageColor(
-                          opportunity.stage,
+                        {opportunity.amount && (
+                          <div className="flex items-center space-x-1 text-sm text-gray-500">
+                            <Target className="w-4 h-4" />
+                            <span className="font-medium">
+                              {formatCurrency(opportunity.amount)}
+                            </span>
+                          </div>
                         )}
+                      </div>
+                      <div className="flex items-center space-x-2 mt-2">
+                        <Badge
+                          className={CRMService.getOpportunityStageColor(
+                            opportunity.stage,
+                          )}
+                        >
+                          {opportunity.stage
+                            .replace("_", " ")
+                            .charAt(0)
+                            .toUpperCase() +
+                            opportunity.stage.replace("_", " ").slice(1)}
+                        </Badge>
+                        <Badge variant="outline">
+                          {opportunity.probability}% probability
+                        </Badge>
+                        {opportunity.expectedCloseDate && (
+                          <div className="flex items-center space-x-1 text-sm text-gray-500">
+                            <Calendar className="w-4 h-4" />
+                            <span>
+                              Closes:{" "}
+                              {CRMService.formatDate(
+                                opportunity.expectedCloseDate,
+                              )}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
+                        <span>
+                          Created:{" "}
+                          {CRMService.formatDate(opportunity.createdAt)}
+                        </span>
+                        {opportunity.leadId && (
+                          <span>Lead ID: {opportunity.leadId}</span>
+                        )}
+                        {opportunity.contactId && (
+                          <span>Contact ID: {opportunity.contactId}</span>
+                        )}
+                        {opportunity.companyId && (
+                          <span>Company ID: {opportunity.companyId}</span>
+                        )}
+                        {assignedLabel && (
+                          <span>Assigned: {assignedLabel}</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleView(opportunity)}
                       >
-                        {opportunity.stage
-                          .replace('_', ' ')
-                          .charAt(0)
-                          .toUpperCase() +
-                          opportunity.stage.replace('_', ' ').slice(1)}
-                      </Badge>
-                      <Badge variant="outline">
-                        {opportunity.probability}% probability
-                      </Badge>
-                      {opportunity.expectedCloseDate && (
-                        <div className="flex items-center space-x-1 text-sm text-gray-500">
-                          <Calendar className="w-4 h-4" />
-                          <span>
-                            Closes:{' '}
-                            {CRMService.formatDate(
-                              opportunity.expectedCloseDate,
-                            )}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
-                      <span>
-                        Created: {CRMService.formatDate(opportunity.createdAt)}
-                      </span>
-                      {opportunity.leadId && (
-                        <span>Lead ID: {opportunity.leadId}</span>
-                      )}
-                      {opportunity.contactId && (
-                        <span>Contact ID: {opportunity.contactId}</span>
-                      )}
-                      {opportunity.companyId && (
-                        <span>Company ID: {opportunity.companyId}</span>
-                      )}
-                      {assignedLabel && (
-                        <span>Assigned: {assignedLabel}</span>
-                      )}
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEdit(opportunity)}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDelete(opportunity)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleView(opportunity)}
-                    >
-                      <Eye className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEdit(opportunity)}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDelete(opportunity)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              );
+                );
               })}
             </div>
           </CardContent>
@@ -572,7 +581,7 @@ function CRMOpportunitiesContent() {
                     className="text-center p-3 border rounded-lg"
                   >
                     <div className="text-sm font-medium text-gray-600 capitalize">
-                      {stage.replace('_', ' ')}
+                      {stage.replace("_", " ")}
                     </div>
                     <div className="text-2xl font-bold text-gray-900">
                       {stageOpportunities.length}
@@ -593,12 +602,12 @@ function CRMOpportunitiesContent() {
             <div className="shrink-0 border-b px-6 pb-4 pt-6 pr-14">
               <DialogHeader>
                 <DialogTitle>
-                  {editingOpportunity ? 'Edit Opportunity' : 'New Opportunity'}
+                  {editingOpportunity ? "Edit Opportunity" : "New Opportunity"}
                 </DialogTitle>
                 <DialogDescription>
                   {editingOpportunity
-                    ? 'Update opportunity information'
-                    : 'Create a new sales opportunity'}
+                    ? "Update opportunity information"
+                    : "Create a new sales opportunity"}
                 </DialogDescription>
               </DialogHeader>
             </div>
@@ -612,193 +621,202 @@ function CRMOpportunitiesContent() {
             )}
 
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-4">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="col-span-full sm:col-span-2">
-                <Label htmlFor="title">Title *</Label>
-                <Input
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, title: e.target.value }))
-                  }
-                  onBlur={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      title: e.target.value.trim(),
-                    }))
-                  }
-                  placeholder="Opportunity title"
-                />
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="col-span-full sm:col-span-2">
+                  <Label htmlFor="title">Title *</Label>
+                  <Input
+                    id="title"
+                    value={formData.title}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        title: e.target.value,
+                      }))
+                    }
+                    onBlur={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        title: e.target.value.trim(),
+                      }))
+                    }
+                    placeholder="Opportunity title"
+                  />
+                </div>
+                <div className="col-span-full sm:col-span-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        description: e.target.value,
+                      }))
+                    }
+                    placeholder="Opportunity description"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="stage">Stage *</Label>
+                  <Select
+                    value={formData.stage}
+                    onValueChange={(value) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        stage: value as OpportunityStage,
+                      }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.values(OpportunityStage).map((stage) => (
+                        <SelectItem key={stage} value={stage}>
+                          {stage.replace("_", " ").charAt(0).toUpperCase() +
+                            stage.replace("_", " ").slice(1)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="amount">Amount</Label>
+                  <Input
+                    id="amount"
+                    type="number"
+                    min="0"
+                    value={formData.amount || ""}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        amount: e.target.value
+                          ? parseFloat(e.target.value)
+                          : undefined,
+                      }))
+                    }
+                    placeholder="0.00"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="probability">Probability (%)</Label>
+                  <Input
+                    id="probability"
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={formData.probability}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        probability: Math.max(
+                          0,
+                          Math.min(100, parseInt(e.target.value) || 0),
+                        ),
+                      }))
+                    }
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="expectedCloseDate">Expected Close Date</Label>
+                  <Input
+                    id="expectedCloseDate"
+                    type="date"
+                    value={formData.expectedCloseDate}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        expectedCloseDate: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="leadId">Lead ID</Label>
+                  <Input
+                    id="leadId"
+                    value={formData.leadId}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        leadId: e.target.value,
+                      }))
+                    }
+                    placeholder="Optional"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="contactId">Contact ID</Label>
+                  <Input
+                    id="contactId"
+                    value={formData.contactId}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        contactId: e.target.value,
+                      }))
+                    }
+                    placeholder="Optional"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="companyId">Company</Label>
+                  <Select
+                    value={formData.companyId || "none"}
+                    onValueChange={(value) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        companyId: value === "none" ? "" : value,
+                      }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select company (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {companies.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <UserSearch
+                    users={users}
+                    value={selectedAssignee}
+                    onSelect={(user) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        assignedTo: user ? user.id || user.userId || "" : "",
+                      }))
+                    }
+                    placeholder="Search by name or email..."
+                    label="Assigned To"
+                  />
+                </div>
+                <div className="col-span-full sm:col-span-2">
+                  <Label htmlFor="notes">Notes</Label>
+                  <Textarea
+                    id="notes"
+                    value={formData.notes}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        notes: e.target.value,
+                      }))
+                    }
+                    placeholder="Additional notes"
+                  />
+                </div>
               </div>
-              <div className="col-span-full sm:col-span-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      description: e.target.value,
-                    }))
-                  }
-                  placeholder="Opportunity description"
-                />
-              </div>
-              <div>
-                <Label htmlFor="stage">Stage *</Label>
-                <Select
-                  value={formData.stage}
-                  onValueChange={(value) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      stage: value as OpportunityStage,
-                    }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.values(OpportunityStage).map((stage) => (
-                      <SelectItem key={stage} value={stage}>
-                        {stage.replace('_', ' ').charAt(0).toUpperCase() +
-                          stage.replace('_', ' ').slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="amount">Amount</Label>
-                <Input
-                  id="amount"
-                  type="number"
-                  min="0"
-                  value={formData.amount || ''}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      amount: e.target.value
-                        ? parseFloat(e.target.value)
-                        : undefined,
-                    }))
-                  }
-                  placeholder="0.00"
-                />
-              </div>
-              <div>
-                <Label htmlFor="probability">Probability (%)</Label>
-                <Input
-                  id="probability"
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={formData.probability}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      probability: Math.max(
-                        0,
-                        Math.min(100, parseInt(e.target.value) || 0),
-                      ),
-                    }))
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="expectedCloseDate">Expected Close Date</Label>
-                <Input
-                  id="expectedCloseDate"
-                  type="date"
-                  value={formData.expectedCloseDate}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      expectedCloseDate: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="leadId">Lead ID</Label>
-                <Input
-                  id="leadId"
-                  value={formData.leadId}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, leadId: e.target.value }))
-                  }
-                  placeholder="Optional"
-                />
-              </div>
-              <div>
-                <Label htmlFor="contactId">Contact ID</Label>
-                <Input
-                  id="contactId"
-                  value={formData.contactId}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      contactId: e.target.value,
-                    }))
-                  }
-                  placeholder="Optional"
-                />
-              </div>
-              <div>
-                <Label htmlFor="companyId">Company</Label>
-                <Select
-                  value={formData.companyId || 'none'}
-                  onValueChange={(value) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      companyId: value === 'none' ? '' : value,
-                    }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select company (optional)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    {companies.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <UserSearch
-                  users={users}
-                  value={selectedAssignee}
-                  onSelect={(user) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      assignedTo: user ? user.id || user.userId || '' : '',
-                    }))
-                  }
-                  placeholder="Search by name or email..."
-                  label="Assigned To"
-                />
-              </div>
-              <div className="col-span-full sm:col-span-2">
-                <Label htmlFor="notes">Notes</Label>
-                <Textarea
-                  id="notes"
-                  value={formData.notes}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, notes: e.target.value }))
-                  }
-                  placeholder="Additional notes"
-                />
-              </div>
-            </div>
-            {formErrorMessage && (
-              <Alert variant="destructive" className="mt-4">
-                <AlertDescription>{formErrorMessage}</AlertDescription>
-              </Alert>
-            )}
+              {formErrorMessage && (
+                <Alert variant="destructive" className="mt-4">
+                  <AlertDescription>{formErrorMessage}</AlertDescription>
+                </Alert>
+              )}
             </div>
 
             <DialogFooter className="shrink-0 gap-2 border-t bg-background px-6 py-4">
@@ -810,10 +828,10 @@ function CRMOpportunitiesContent() {
               </Button>
               <Button onClick={handleSubmit} disabled={submitting}>
                 {submitting
-                  ? 'Saving...'
+                  ? "Saving..."
                   : editingOpportunity
-                    ? 'Update Opportunity'
-                    : 'Create Opportunity'}
+                    ? "Update Opportunity"
+                    : "Create Opportunity"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -863,10 +881,10 @@ function CRMOpportunitiesContent() {
                       )}
                     >
                       {viewingOpportunity.stage
-                        .replace('_', ' ')
+                        .replace("_", " ")
                         .charAt(0)
                         .toUpperCase() +
-                        viewingOpportunity.stage.replace('_', ' ').slice(1)}
+                        viewingOpportunity.stage.replace("_", " ").slice(1)}
                     </Badge>
                   </div>
                   <div>
@@ -904,9 +922,7 @@ function CRMOpportunitiesContent() {
                       <Label className="text-sm font-medium text-gray-600">
                         Assigned To
                       </Label>
-                      <p className="text-gray-900">
-                        {viewingAssigneeLabel}
-                      </p>
+                      <p className="text-gray-900">{viewingAssigneeLabel}</p>
                     </div>
                   )}
                 </div>
@@ -983,7 +999,7 @@ function CRMOpportunitiesContent() {
                 onClick={confirmDelete}
                 disabled={deleting}
               >
-                {deleting ? 'Deleting...' : 'Delete Opportunity'}
+                {deleting ? "Deleting..." : "Delete Opportunity"}
               </Button>
             </DialogFooter>
           </DialogContent>

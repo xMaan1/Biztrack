@@ -1,22 +1,22 @@
-'use client';
+"use client";
 
-import { Label } from '@/src/components/ui/label';
-import { Input } from '@/src/components/ui/input';
-import { Textarea } from '@/src/components/ui/textarea';
+import { Label } from "@/src/components/ui/label";
+import { Input } from "@/src/components/ui/input";
+import { Textarea } from "@/src/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
+} from "@/src/components/ui/select";
 import {
   MOT_BOOKING_STATUSES,
   MOT_TEST_TYPES,
   MOT_TIME_SLOTS,
-} from '@/src/models/mot/MotBooking';
-import type { MotBookingFormData } from './types';
-import { timeSlotKey } from './motBookingUtils';
+} from "@/src/models/mot/MotBooking";
+import type { MotBookingFormData } from "./types";
+import { timeSlotKey } from "./motBookingUtils";
 
 type MotBookingFormFieldsProps = {
   formData: MotBookingFormData;
@@ -68,7 +68,9 @@ export function MotBookingFormFields({
           <Input
             id="vehicleRegistration"
             value={formData.vehicleRegistration}
-            onChange={(e) => onChange({ vehicleRegistration: e.target.value.toUpperCase() })}
+            onChange={(e) =>
+              onChange({ vehicleRegistration: e.target.value.toUpperCase() })
+            }
             placeholder="AB12 CDE"
           />
         </div>
@@ -113,13 +115,19 @@ export function MotBookingFormFields({
         </div>
         <div className="space-y-2">
           <Label>Time slot</Label>
-          <Select value={timeSlotKey(formData)} onValueChange={onTimeSlotChange}>
+          <Select
+            value={timeSlotKey(formData)}
+            onValueChange={onTimeSlotChange}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Select time slot" />
             </SelectTrigger>
             <SelectContent>
               {MOT_TIME_SLOTS.map((slot) => (
-                <SelectItem key={`${slot.start}-${slot.end}`} value={`${slot.start}-${slot.end}`}>
+                <SelectItem
+                  key={`${slot.start}-${slot.end}`}
+                  value={`${slot.start}-${slot.end}`}
+                >
                   {slot.start} – {slot.end}
                 </SelectItem>
               ))}
@@ -130,7 +138,9 @@ export function MotBookingFormFields({
           <Label>Test type</Label>
           <Select
             value={formData.testType}
-            onValueChange={(value) => onChange({ testType: value as MotBookingFormData['testType'] })}
+            onValueChange={(value) =>
+              onChange({ testType: value as MotBookingFormData["testType"] })
+            }
           >
             <SelectTrigger>
               <SelectValue />
@@ -148,7 +158,9 @@ export function MotBookingFormFields({
           <Label>Status</Label>
           <Select
             value={formData.status}
-            onValueChange={(value) => onChange({ status: value as MotBookingFormData['status'] })}
+            onValueChange={(value) =>
+              onChange({ status: value as MotBookingFormData["status"] })
+            }
           >
             <SelectTrigger>
               <SelectValue />

@@ -1,4 +1,4 @@
-import type { Project } from '@/src/models';
+import type { Project } from "@/src/models";
 
 export function filterProjects(
   projects: Project[],
@@ -10,8 +10,10 @@ export function filterProjects(
     const matchesSearch =
       project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       project.description?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || project.status === statusFilter;
-    const matchesPriority = priorityFilter === 'all' || project.priority === priorityFilter;
+    const matchesStatus =
+      statusFilter === "all" || project.status === statusFilter;
+    const matchesPriority =
+      priorityFilter === "all" || project.priority === priorityFilter;
     return matchesSearch && matchesStatus && matchesPriority;
   });
 }
@@ -21,5 +23,7 @@ export function hasActiveFilters(
   statusFilter: string,
   priorityFilter: string,
 ): boolean {
-  return Boolean(searchTerm) || statusFilter !== 'all' || priorityFilter !== 'all';
+  return (
+    Boolean(searchTerm) || statusFilter !== "all" || priorityFilter !== "all"
+  );
 }

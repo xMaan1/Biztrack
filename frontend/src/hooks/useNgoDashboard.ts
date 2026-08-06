@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useDashboard } from '@/src/hooks/useDashboard';
-import { CustomerService } from '@/src/services/CustomerService';
-import { NGO_ANNUAL_TARGET, type NgoSnapshot } from '@/src/types/ngoDashboard';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useDashboard } from "@/src/hooks/useDashboard";
+import { CustomerService } from "@/src/services/CustomerService";
+import { NGO_ANNUAL_TARGET, type NgoSnapshot } from "@/src/types/ngoDashboard";
 
 export function useNgoDashboard() {
   const {

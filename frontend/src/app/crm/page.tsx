@@ -1,23 +1,23 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { ModuleGuard } from '@/src/components/guards/PermissionGuard';
+import React from "react";
+import { ModuleGuard } from "@/src/components/guards/PermissionGuard";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Badge } from '@/src/components/ui/badge';
-import { Progress } from '@/src/components/ui/progress';
+} from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { Badge } from "@/src/components/ui/badge";
+import { Progress } from "@/src/components/ui/progress";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '@/src/components/ui/tabs';
+} from "@/src/components/ui/tabs";
 import {
   Users,
   Building2,
@@ -28,19 +28,20 @@ import {
   Mail,
   Plus,
   BarChart3,
-} from 'lucide-react';
-import CRMService from '@/src/services/CRMService';
-import {
-  CRMDashboard,
-} from '@/src/models/crm';
-import Link from 'next/link';
-import { DashboardLayout } from '../../components/layout';
-import { useCachedApi } from '../../hooks/useCachedApi';
-import { useCurrency } from '../../contexts/CurrencyContext';
+} from "lucide-react";
+import CRMService from "@/src/services/CRMService";
+import { CRMDashboard } from "@/src/models/crm";
+import Link from "next/link";
+import { DashboardLayout } from "../../components/layout";
+import { useCachedApi } from "../../hooks/useCachedApi";
+import { useCurrency } from "../../contexts/CurrencyContext";
 
 export default function CRMDashboardPage() {
   return (
-    <ModuleGuard module="crm" fallback={<div>You don't have access to CRM module</div>}>
+    <ModuleGuard
+      module="crm"
+      fallback={<div>You don&apos;t have access to CRM module</div>}
+    >
       <CRMDashboardContent />
     </ModuleGuard>
   );
@@ -48,10 +49,15 @@ export default function CRMDashboardPage() {
 
 function CRMDashboardContent() {
   const { formatCurrency } = useCurrency();
-  const { data: dashboard, loading, error, refetch } = useCachedApi<CRMDashboard>(
-    'crm_dashboard',
+  const {
+    data: dashboard,
+    loading,
+    error,
+    refetch,
+  } = useCachedApi<CRMDashboard>(
+    "crm_dashboard",
     () => CRMService.getDashboard(),
-    { ttl: 30000 }
+    { ttl: 30000 },
   );
 
   if (loading) {
@@ -70,7 +76,7 @@ function CRMDashboardContent() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <p className="text-red-500 text-lg mb-4">
-            {error || 'Dashboard not available'}
+            {error || "Dashboard not available"}
           </p>
           <Button onClick={refetch}>Retry</Button>
         </div>
@@ -149,8 +155,7 @@ function CRMDashboardContent() {
                 {formatCurrency(dashboard.metrics.totalRevenue)}
               </div>
               <p className="text-xs text-muted-foreground">
-                {formatCurrency(dashboard.metrics.projectedRevenue)}{' '}
-                projected
+                {formatCurrency(dashboard.metrics.projectedRevenue)} projected
               </p>
             </CardContent>
           </Card>
@@ -196,7 +201,7 @@ function CRMDashboardContent() {
                       <div className="flex justify-between items-center">
                         <div className="flex items-center space-x-2">
                           <Badge variant="outline" className="capitalize">
-                            {stage.stage.replace('_', ' ')}
+                            {stage.stage.replace("_", " ")}
                           </Badge>
                           <span className="text-sm text-gray-600">
                             {stage.count} opportunities
@@ -250,19 +255,19 @@ function CRMDashboardContent() {
                       <div
                         className={`p-2 rounded-full ${CRMService.getActivityTypeColor(activity.type)}`}
                       >
-                        {activity.type === 'call' && (
+                        {activity.type === "call" && (
                           <Phone className="w-4 h-4" />
                         )}
-                        {activity.type === 'email' && (
+                        {activity.type === "email" && (
                           <Mail className="w-4 h-4" />
                         )}
-                        {activity.type === 'meeting' && (
+                        {activity.type === "meeting" && (
                           <Calendar className="w-4 h-4" />
                         )}
-                        {activity.type === 'task' && (
+                        {activity.type === "task" && (
                           <Target className="w-4 h-4" />
                         )}
-                        {activity.type === 'note' && (
+                        {activity.type === "note" && (
                           <BarChart3 className="w-4 h-4" />
                         )}
                       </div>
@@ -276,9 +281,9 @@ function CRMDashboardContent() {
                         </div>
                       </div>
                       <Badge
-                        variant={activity.completed ? 'default' : 'secondary'}
+                        variant={activity.completed ? "default" : "secondary"}
                       >
-                        {activity.completed ? 'Completed' : 'Pending'}
+                        {activity.completed ? "Completed" : "Pending"}
                       </Badge>
                     </div>
                   ))}
@@ -314,7 +319,7 @@ function CRMDashboardContent() {
                               opportunity.stage,
                             )}
                           >
-                            {opportunity.stage.replace('_', ' ')}
+                            {opportunity.stage.replace("_", " ")}
                           </Badge>
                           <span className="text-sm text-gray-500">
                             {opportunity.probability}% probability
@@ -325,7 +330,7 @@ function CRMDashboardContent() {
                         <div className="font-semibold text-lg">
                           {opportunity.amount
                             ? formatCurrency(opportunity.amount)
-                            : 'N/A'}
+                            : "N/A"}
                         </div>
                         <div className="text-sm text-gray-500">
                           {opportunity.expectedCloseDate &&

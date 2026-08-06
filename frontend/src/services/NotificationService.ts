@@ -1,18 +1,18 @@
-import { apiService } from './ApiService';
+import { apiService } from "./ApiService";
 import {
   Notification,
   NotificationListResponse,
   NotificationPreferencesResponse,
   NotificationPreferenceUpdate,
   UnreadCountResponse,
-  NotificationFilters
-} from '../models/notifications';
+  NotificationFilters,
+} from "../models/notifications";
 
 function normalizeNotification(raw: Record<string, unknown>): Notification {
   const action_url =
-    (typeof raw.action_url === 'string'
+    (typeof raw.action_url === "string"
       ? raw.action_url
-      : typeof raw.actionUrl === 'string'
+      : typeof raw.actionUrl === "string"
         ? raw.actionUrl
         : undefined) ?? undefined;
   const notification_data =
@@ -29,16 +29,19 @@ function normalizeNotification(raw: Record<string, unknown>): Notification {
 }
 
 class NotificationService {
-  private baseUrl = '/notifications';
+  private baseUrl = "/notifications";
 
-  async getNotifications(filters: NotificationFilters = {}): Promise<NotificationListResponse> {
+  async getNotifications(
+    filters: NotificationFilters = {},
+  ): Promise<NotificationListResponse> {
     const params = new URLSearchParams();
-    
-    if (filters.page) params.append('page', filters.page.toString());
-    if (filters.limit) params.append('limit', filters.limit.toString());
-    if (filters.is_read !== undefined) params.append('is_read', filters.is_read.toString());
-    if (filters.category) params.append('category', filters.category);
-    if (filters.type) params.append('type', filters.type);
+
+    if (filters.page) params.append("page", filters.page.toString());
+    if (filters.limit) params.append("limit", filters.limit.toString());
+    if (filters.is_read !== undefined)
+      params.append("is_read", filters.is_read.toString());
+    if (filters.category) params.append("category", filters.category);
+    if (filters.type) params.append("type", filters.type);
 
     const queryString = params.toString();
     const url = queryString ? `${this.baseUrl}?${queryString}` : this.baseUrl;
@@ -68,7 +71,9 @@ class NotificationService {
     return apiService.post(`${this.baseUrl}/mark-all-read`);
   }
 
-  async deleteNotification(notificationId: string): Promise<{ message: string }> {
+  async deleteNotification(
+    notificationId: string,
+  ): Promise<{ message: string }> {
     return apiService.delete(`${this.baseUrl}/${notificationId}`);
   }
 
@@ -76,11 +81,15 @@ class NotificationService {
     return apiService.get(`${this.baseUrl}/preferences`);
   }
 
-  async updateNotificationPreference(preference: NotificationPreferenceUpdate): Promise<{ message: string }> {
+  async updateNotificationPreference(
+    preference: NotificationPreferenceUpdate,
+  ): Promise<{ message: string }> {
     return apiService.put(`${this.baseUrl}/preferences`, preference);
   }
 
-  async cleanupOldNotifications(daysOld: number = 30): Promise<{ message: string }> {
+  async cleanupOldNotifications(
+    daysOld: number = 30,
+  ): Promise<{ message: string }> {
     return apiService.post(`${this.baseUrl}/cleanup?days_old=${daysOld}`);
   }
 
@@ -89,16 +98,19 @@ class NotificationService {
     const response = await this.getNotifications({
       is_read: false,
       limit,
-      page: 1
+      page: 1,
     });
     return response.notifications;
   }
 
-  async getNotificationsByCategory(category: string, limit: number = 50): Promise<Notification[]> {
+  async getNotificationsByCategory(
+    category: string,
+    limit: number = 50,
+  ): Promise<Notification[]> {
     const response = await this.getNotifications({
       category: category as any,
       limit,
-      page: 1
+      page: 1,
     });
     return response.notifications;
   }
@@ -106,7 +118,7 @@ class NotificationService {
   async getRecentNotifications(limit: number = 20): Promise<Notification[]> {
     const response = await this.getNotifications({
       limit,
-      page: 1
+      page: 1,
     });
     return response.notifications;
   }

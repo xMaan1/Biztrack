@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Input } from './input';
-import { Label } from './label';
-import { Button } from './button';
-import { Card, CardContent } from './card';
-import { Search, User, X } from 'lucide-react';
-import type { Patient } from '../../models/healthcare';
-import healthcareService from '../../services/HealthcareService';
+import React, { useState, useEffect, useRef } from "react";
+import { Input } from "./input";
+import { Label } from "./label";
+import { Button } from "./button";
+import { Card, CardContent } from "./card";
+import { Search, User, X } from "lucide-react";
+import type { Patient } from "../../models/healthcare";
+import healthcareService from "../../services/HealthcareService";
 
 interface PatientSearchProps {
   value?: Patient | null;
@@ -22,27 +22,32 @@ interface PatientSearchProps {
 export function PatientSearch({
   value,
   onSelect,
-  placeholder = 'Search patients by name, phone...',
-  label = 'Patient',
+  placeholder = "Search patients by name, phone...",
+  label = "Patient",
   required = false,
   error,
-  className = '',
+  className = "",
 }: PatientSearchProps) {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [patients, setPatients] = useState<Patient[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(value || null);
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(
+    value || null,
+  );
   const searchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   useEffect(() => {
@@ -53,7 +58,10 @@ export function PatientSearch({
     const t = setTimeout(async () => {
       setLoading(true);
       try {
-        const res = await healthcareService.getPatients({ search: searchQuery.trim(), limit: 10 });
+        const res = await healthcareService.getPatients({
+          search: searchQuery.trim(),
+          limit: 10,
+        });
         setPatients(res.patients);
       } catch {
         setPatients([]);
@@ -70,14 +78,14 @@ export function PatientSearch({
 
   const handleSelect = (patient: Patient) => {
     setSelectedPatient(patient);
-    setSearchQuery('');
+    setSearchQuery("");
     setIsOpen(false);
     onSelect(patient);
   };
 
   const handleClear = () => {
     setSelectedPatient(null);
-    setSearchQuery('');
+    setSearchQuery("");
     onSelect(null);
   };
 
@@ -90,7 +98,12 @@ export function PatientSearch({
 
   return (
     <div className={`relative ${className}`} ref={searchRef}>
-      <Label htmlFor="patient-search" className={required ? 'after:content-[\'*\'] after:text-red-500 after:ml-1' : ''}>
+      <Label
+        htmlFor="patient-search"
+        className={
+          required ? "after:content-['*'] after:text-red-500 after:ml-1" : ""
+        }
+      >
         {label}
       </Label>
       <div className="relative">
@@ -102,8 +115,8 @@ export function PatientSearch({
             value={selectedPatient ? selectedPatient.full_name : searchQuery}
             onChange={handleInputChange}
             onFocus={handleFocus}
-            placeholder={selectedPatient ? '' : placeholder}
-            className={`pl-10 pr-10 ${error ? 'border-red-500' : ''}`}
+            placeholder={selectedPatient ? "" : placeholder}
+            className={`pl-10 pr-10 ${error ? "border-red-500" : ""}`}
             disabled={!!selectedPatient}
           />
           {selectedPatient && (
@@ -137,18 +150,32 @@ export function PatientSearch({
                       <div className="flex items-center gap-3">
                         <User className="h-4 w-4 text-gray-400 shrink-0" />
                         <div className="min-w-0">
-                          <div className="font-medium text-gray-900">{p.full_name}</div>
-                          {p.phone && <div className="text-sm text-gray-500">{p.phone}</div>}
-                          {p.email && <div className="text-sm text-gray-500">{p.email}</div>}
+                          <div className="font-medium text-gray-900">
+                            {p.full_name}
+                          </div>
+                          {p.phone && (
+                            <div className="text-sm text-gray-500">
+                              {p.phone}
+                            </div>
+                          )}
+                          {p.email && (
+                            <div className="text-sm text-gray-500">
+                              {p.email}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : searchQuery.trim().length >= 2 ? (
-                <div className="p-4 text-center text-gray-500">No patients found for &quot;{searchQuery}&quot;</div>
+                <div className="p-4 text-center text-gray-500">
+                  No patients found for &quot;{searchQuery}&quot;
+                </div>
               ) : (
-                <div className="p-4 text-center text-gray-500">Type at least 2 characters to search</div>
+                <div className="p-4 text-center text-gray-500">
+                  Type at least 2 characters to search
+                </div>
               )}
             </CardContent>
           </Card>
@@ -160,9 +187,19 @@ export function PatientSearch({
           <div className="flex items-center gap-3">
             <User className="h-4 w-4 text-gray-400 shrink-0" />
             <div>
-              <div className="font-medium text-gray-900">{selectedPatient.full_name}</div>
-              {selectedPatient.phone && <div className="text-sm text-gray-600">{selectedPatient.phone}</div>}
-              {selectedPatient.email && <div className="text-sm text-gray-600">{selectedPatient.email}</div>}
+              <div className="font-medium text-gray-900">
+                {selectedPatient.full_name}
+              </div>
+              {selectedPatient.phone && (
+                <div className="text-sm text-gray-600">
+                  {selectedPatient.phone}
+                </div>
+              )}
+              {selectedPatient.email && (
+                <div className="text-sm text-gray-600">
+                  {selectedPatient.email}
+                </div>
+              )}
             </div>
           </div>
         </div>

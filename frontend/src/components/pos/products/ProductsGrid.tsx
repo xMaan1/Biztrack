@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { Package, Plus } from 'lucide-react';
-import { Button } from '@/src/components/ui/button';
-import type { Product } from '@/src/models/pos';
-import type { ProductFiltersState } from './types';
-import { ProductCard } from './ProductCard';
+import { Package, Plus } from "lucide-react";
+import { Button } from "@/src/components/ui/button";
+import type { Product } from "@/src/models/pos";
+import type { ProductFiltersState } from "./types";
+import { ProductCard } from "./ProductCard";
 
 type ProductsGridProps = {
   products: Product[];
@@ -26,7 +26,9 @@ export function ProductsGrid({
   onDelete,
 }: ProductsGridProps) {
   const hasActiveFilters =
-    filters.searchTerm || filters.selectedCategory !== 'all' || filters.showLowStock;
+    filters.searchTerm ||
+    filters.selectedCategory !== "all" ||
+    filters.showLowStock;
 
   if (products.length === 0) {
     return (
@@ -35,8 +37,8 @@ export function ProductsGrid({
         <h3 className="mt-4 text-lg font-semibold">No products found</h3>
         <p className="mt-2 text-muted-foreground">
           {hasActiveFilters
-            ? 'Try adjusting your filters or search terms.'
-            : 'Get started by adding your first product.'}
+            ? "Try adjusting your filters or search terms."
+            : "Get started by adding your first product."}
         </p>
         {!hasActiveFilters && (
           <Button onClick={onAddProduct} className="mt-4">

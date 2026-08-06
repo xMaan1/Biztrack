@@ -1,6 +1,6 @@
-export type PartnerSector = 'relief' | 'medical' | 'education' | 'food';
-export type PartnerSize = 'small' | 'medium' | 'large';
-export type PartnerStatus = 'active' | 'inactive';
+export type PartnerSector = "relief" | "medical" | "education" | "food";
+export type PartnerSize = "small" | "medium" | "large";
+export type PartnerStatus = "active" | "inactive";
 
 export interface PartnerOrganization {
   id: string;

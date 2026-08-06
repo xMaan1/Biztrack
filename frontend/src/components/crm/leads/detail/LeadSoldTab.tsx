@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
-import { Plus } from 'lucide-react';
-import { LeadSaleItem } from '@/src/models/crm';
-import CRMService from '@/src/services/CRMService';
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
+import { Plus } from "lucide-react";
+import { LeadSaleItem } from "@/src/models/crm";
+import CRMService from "@/src/services/CRMService";
 
 type Props = {
   leadId: string;
@@ -41,17 +41,17 @@ export function LeadSoldTab({
           variant="outline"
           onClick={async () => {
             await CRMService.createLeadSale(leadId, {
-              agentRole: saleRole || 'Listing Agent',
+              agentRole: saleRole || "Listing Agent",
               mlsNumber: saleMls || undefined,
               sellingPrice: salePrice ? Number(salePrice) : undefined,
               closingDate: saleDate
                 ? new Date(saleDate).toISOString()
                 : undefined,
             });
-            setSaleRole('');
-            setSaleMls('');
-            setSalePrice('');
-            setSaleDate('');
+            setSaleRole("");
+            setSaleMls("");
+            setSalePrice("");
+            setSaleDate("");
             loadTabData();
           }}
         >
@@ -106,13 +106,13 @@ export function LeadSoldTab({
                 <td className="py-2">
                   {s.closingDate
                     ? new Date(s.closingDate).toLocaleDateString()
-                    : '—'}
+                    : "—"}
                 </td>
-                <td className="py-2">{s.mlsNumber || '—'}</td>
+                <td className="py-2">{s.mlsNumber || "—"}</td>
                 <td className="py-2">
                   {s.sellingPrice != null
                     ? `$${s.sellingPrice.toLocaleString()}`
-                    : '—'}
+                    : "—"}
                 </td>
               </tr>
             ))

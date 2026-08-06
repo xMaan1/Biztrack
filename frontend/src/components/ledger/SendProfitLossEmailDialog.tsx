@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,13 +8,16 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '../ui/dialog';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { Textarea } from '../ui/textarea';
-import { Mail, Loader2 } from 'lucide-react';
-import { ProfitLossPeriod, getProfitLossPeriodLabel } from '@/src/models/ledger';
+} from "../ui/dialog";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { Textarea } from "../ui/textarea";
+import { Mail, Loader2 } from "lucide-react";
+import {
+  ProfitLossPeriod,
+  getProfitLossPeriodLabel,
+} from "@/src/models/ledger";
 
 interface SendProfitLossEmailDialogProps {
   open: boolean;
@@ -22,10 +25,7 @@ interface SendProfitLossEmailDialogProps {
   period: ProfitLossPeriod;
   startDate?: string;
   endDate?: string;
-  onSend: (
-    toEmail: string,
-    message?: string
-  ) => Promise<void>;
+  onSend: (toEmail: string, message?: string) => Promise<void>;
 }
 
 export function SendProfitLossEmailDialog({
@@ -36,15 +36,15 @@ export function SendProfitLossEmailDialog({
   endDate,
   onSend,
 }: SendProfitLossEmailDialogProps) {
-  const [email, setEmail] = useState('');
-  const [message, setMessage] = useState('');
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
-      setEmail('');
-      setMessage('');
+      setEmail("");
+      setMessage("");
       setError(null);
     }
   }, [open]);
@@ -53,13 +53,13 @@ export function SendProfitLossEmailDialog({
     e.preventDefault();
 
     if (!email || !email.trim()) {
-      setError('Email address is required');
+      setError("Email address is required");
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email.trim())) {
-      setError('Please enter a valid email address');
+      setError("Please enter a valid email address");
       return;
     }
 
@@ -69,15 +69,16 @@ export function SendProfitLossEmailDialog({
       await onSend(email.trim(), message.trim() || undefined);
       onOpenChange(false);
     } catch (err: any) {
-      setError(err.message || 'Failed to send email');
+      setError(err.message || "Failed to send email");
     } finally {
       setSending(false);
     }
   };
 
-  const periodLabel = startDate && endDate 
-    ? `${startDate} to ${endDate}` 
-    : getProfitLossPeriodLabel(period);
+  const periodLabel =
+    startDate && endDate
+      ? `${startDate} to ${endDate}`
+      : getProfitLossPeriodLabel(period);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -124,7 +125,8 @@ export function SendProfitLossEmailDialog({
               disabled={sending}
             />
             <p className="text-xs text-gray-500">
-              This message will be included in the email body along with the report details.
+              This message will be included in the email body along with the
+              report details.
             </p>
           </div>
 
@@ -162,4 +164,3 @@ export function SendProfitLossEmailDialog({
     </Dialog>
   );
 }
-

@@ -1,4 +1,4 @@
-import { DashboardLayout } from '@/src/components/layout';
+import { DashboardLayout } from "@/src/components/layout";
 
 export function SuppliersLoadingState() {
   return (

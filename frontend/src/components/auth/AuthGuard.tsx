@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import React, { useEffect, useMemo } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import { useAuth } from '@/src/contexts/AuthContext';
-import { usePermissions } from '@/src/hooks/usePermissions';
-import { getDefaultLandingPath } from '@/src/utils/getDefaultLandingPath';
-import { isTenantMotPublicRoute } from '@/src/constants/tenantPublicRoutes';
-import { isTauriApp } from '@/src/lib/isTauriApp';
+import React, { useEffect, useMemo } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { useAuth } from "@/src/contexts/AuthContext";
+import { usePermissions } from "@/src/hooks/usePermissions";
+import { getDefaultLandingPath } from "@/src/utils/getDefaultLandingPath";
+import { isTenantMotPublicRoute } from "@/src/constants/tenantPublicRoutes";
+import { isTauriApp } from "@/src/lib/isTauriApp";
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -20,40 +20,46 @@ export default function AuthGuard({ children }: AuthGuardProps) {
 
   // List of public routes that don't require authentication
   const publicRoutes = [
-    '/',
-    '/about',
-    '/contact',
-    '/login',
-    '/signup',
-    '/client-portal',
-    '/api',
-    '/_next',
-    '/favicon.ico',
-    '/manifest.json',
+    "/",
+    "/about",
+    "/contact",
+    "/login",
+    "/signup",
+    "/client-portal",
+    "/api",
+    "/_next",
+    "/favicon.ico",
+    "/manifest.json",
   ];
 
-  const isMotPublicRoute = useMemo(() => isTenantMotPublicRoute(pathname), [pathname]);
+  const isMotPublicRoute = useMemo(
+    () => isTenantMotPublicRoute(pathname),
+    [pathname],
+  );
 
   const isPublicRoute = useMemo(() => {
-    return isMotPublicRoute || publicRoutes.some((route) => pathname?.startsWith(route));
+    return (
+      isMotPublicRoute ||
+      publicRoutes.some((route) => pathname?.startsWith(route))
+    );
   }, [pathname, isMotPublicRoute]);
 
   const protectedRoutes = [
-    '/dashboard',
-    '/inventory',
-    '/pos',
-    '/crm',
-    '/sales',
-    '/time-tracking',
-    '/team',
-    '/projects',
-    '/events',
-    '/tasks',
-    '/users',
-    '/workspace',
-    '/reports',
-    '/hrm',
-    '/workshop-management',
+    "/dashboard",
+    "/inventory",
+    "/pos",
+    "/crm",
+    "/sales",
+    "/time-tracking",
+    "/team",
+    "/projects",
+    "/events",
+    "/tasks",
+    "/users",
+    "/workspace",
+    "/reports",
+    "/hrm",
+    "/workshop-management",
   ];
 
   const isProtectedRoute = useMemo(() => {
@@ -62,19 +68,19 @@ export default function AuthGuard({ children }: AuthGuardProps) {
 
   useEffect(() => {
     if (!loading) {
-      if (isTauriApp() && pathname === '/signup') {
-        router.replace('/login');
+      if (isTauriApp() && pathname === "/signup") {
+        router.replace("/login");
         return;
       }
 
       if (!isAuthenticated && isProtectedRoute) {
-        router.push('/login');
+        router.push("/login");
         return;
       }
 
       if (
         isAuthenticated &&
-        (pathname === '/login' || pathname === '/signup')
+        (pathname === "/login" || pathname === "/signup")
       ) {
         if (!rbacInitializing && userPermissions) {
           router.push(
@@ -90,7 +96,16 @@ export default function AuthGuard({ children }: AuthGuardProps) {
         return;
       }
     }
-  }, [isAuthenticated, loading, pathname, router, isProtectedRoute, rbacInitializing, userPermissions, user?.userRole]);
+  }, [
+    isAuthenticated,
+    loading,
+    pathname,
+    router,
+    isProtectedRoute,
+    rbacInitializing,
+    userPermissions,
+    user?.userRole,
+  ]);
 
   // Show loading spinner while checking authentication
   if (loading) {

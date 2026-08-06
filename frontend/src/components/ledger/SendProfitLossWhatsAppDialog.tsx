@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,12 +8,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '../ui/dialog';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { MessageCircle, Loader2 } from 'lucide-react';
-import { ProfitLossPeriod, getProfitLossPeriodLabel } from '@/src/models/ledger';
+} from "../ui/dialog";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { MessageCircle, Loader2 } from "lucide-react";
+import {
+  ProfitLossPeriod,
+  getProfitLossPeriodLabel,
+} from "@/src/models/ledger";
 
 interface SendProfitLossWhatsAppDialogProps {
   open: boolean;
@@ -32,13 +35,13 @@ export function SendProfitLossWhatsAppDialog({
   endDate,
   onSend,
 }: SendProfitLossWhatsAppDialogProps) {
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
-      setPhoneNumber('');
+      setPhoneNumber("");
       setError(null);
     }
   }, [open]);
@@ -47,13 +50,13 @@ export function SendProfitLossWhatsAppDialog({
     e.preventDefault();
 
     if (!phoneNumber || !phoneNumber.trim()) {
-      setError('Phone number is required');
+      setError("Phone number is required");
       return;
     }
 
-    const cleanedPhone = phoneNumber.trim().replace(/\s+/g, '');
+    const cleanedPhone = phoneNumber.trim().replace(/\s+/g, "");
     if (cleanedPhone.length < 10) {
-      setError('Please enter a valid phone number');
+      setError("Please enter a valid phone number");
       return;
     }
 
@@ -63,15 +66,16 @@ export function SendProfitLossWhatsAppDialog({
       await onSend(cleanedPhone);
       onOpenChange(false);
     } catch (err: any) {
-      setError(err.message || 'Failed to generate WhatsApp link');
+      setError(err.message || "Failed to generate WhatsApp link");
     } finally {
       setSending(false);
     }
   };
 
-  const periodLabel = startDate && endDate 
-    ? `${startDate} to ${endDate}` 
-    : getProfitLossPeriodLabel(period);
+  const periodLabel =
+    startDate && endDate
+      ? `${startDate} to ${endDate}`
+      : getProfitLossPeriodLabel(period);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -144,4 +148,3 @@ export function SendProfitLossWhatsAppDialog({
     </Dialog>
   );
 }
-

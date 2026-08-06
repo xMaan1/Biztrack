@@ -1,8 +1,13 @@
-'use client';
+"use client";
 
-import { Building2, Globe, Users } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
-import type { SuppliersStatsCardsProps } from './types';
+import { Building2, Globe, Users } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/src/components/ui/card";
+import type { SuppliersStatsCardsProps } from "./types";
 
 export function SuppliersStatsCards({ stats }: SuppliersStatsCardsProps) {
   return (
@@ -20,7 +25,9 @@ export function SuppliersStatsCards({ stats }: SuppliersStatsCardsProps) {
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Active Suppliers</CardTitle>
+          <CardTitle className="text-sm font-medium">
+            Active Suppliers
+          </CardTitle>
           <Building2 className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
