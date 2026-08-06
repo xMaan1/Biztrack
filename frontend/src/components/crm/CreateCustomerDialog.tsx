@@ -275,7 +275,7 @@ export function CreateCustomerDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create New Customer</DialogTitle>
             <DialogDescription>
@@ -319,25 +319,29 @@ export function CreateCustomerDialog({
               </Button>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <CustomerTypeNameFields
-              customerType={formData.customerType || 'individual'}
-              firstName={formData.firstName}
-              lastName={formData.lastName}
-              onCustomerTypeChange={handleCustomerTypeChange}
-              onFirstNameChange={(firstName) =>
-                setFormData((prev) => ({ ...prev, firstName }))
-              }
-              onLastNameChange={(lastName) =>
-                setFormData((prev) => ({ ...prev, lastName }))
-              }
-            />
-            <LabeledContactFields
-              emails={formData.emails || [{ value: '', label: 'personal' }]}
-              phones={formData.phones || [{ value: '', label: 'work' }]}
-              onEmailsChange={(emails) => setFormData((prev) => ({ ...prev, emails }))}
-              onPhonesChange={(phones) => setFormData((prev) => ({ ...prev, phones }))}
-            />
+          <div className="grid grid-cols-4 gap-4">
+            <div className="col-span-2">
+              <CustomerTypeNameFields
+                customerType={formData.customerType || 'individual'}
+                firstName={formData.firstName}
+                lastName={formData.lastName}
+                onCustomerTypeChange={handleCustomerTypeChange}
+                onFirstNameChange={(firstName) =>
+                  setFormData((prev) => ({ ...prev, firstName }))
+                }
+                onLastNameChange={(lastName) =>
+                  setFormData((prev) => ({ ...prev, lastName }))
+                }
+              />
+            </div>
+            <div className="col-span-2">
+              <LabeledContactFields
+                emails={formData.emails || [{ value: '', label: 'personal' }]}
+                phones={formData.phones || [{ value: '', label: 'work' }]}
+                onEmailsChange={(emails) => setFormData((prev) => ({ ...prev, emails }))}
+                onPhonesChange={(phones) => setFormData((prev) => ({ ...prev, phones }))}
+              />
+            </div>
             <div>
               <Label htmlFor="cnic">CNIC</Label>
               <Input
@@ -410,7 +414,7 @@ export function CreateCustomerDialog({
                 </SelectContent>
               </Select>
             </div>
-            <div className="col-span-2">
+            <div className="col-span-4">
               <Label htmlFor="address">Billing Address</Label>
               <Input
                 id="address"
@@ -463,7 +467,7 @@ export function CreateCustomerDialog({
                 placeholder="75000"
               />
             </div>
-            <div className="col-span-2">
+            <div className="col-span-4">
               <Label htmlFor="tags">Tags (comma separated)</Label>
               <Input
                 id="tags"
@@ -480,7 +484,7 @@ export function CreateCustomerDialog({
                 placeholder="vip, regular, premium"
               />
             </div>
-            <div className="col-span-2">
+            <div className="col-span-4">
               <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
@@ -493,7 +497,7 @@ export function CreateCustomerDialog({
                 className="resize-y min-h-[80px]"
               />
             </div>
-            <div className="col-span-2 space-y-2">
+            <div className="col-span-4 space-y-2">
               <Label>Attachments</Label>
               <input
                 ref={attachmentFileInputRef}
