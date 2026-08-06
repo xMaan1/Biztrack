@@ -1,5 +1,6 @@
+from datetime import datetime
+from typing import List, Dict, Any, Optional
 from pydantic import BaseModel
-from typing import List, Dict, Any
 from ..items.schemas import Invoice
 
 
@@ -9,9 +10,21 @@ class InvoiceMetrics(BaseModel):
     overdueInvoices: int
     draftInvoices: int
     totalRevenue: float
+    purchaseOrderTotal: float
+    netRevenue: float
     outstandingAmount: float
     overdueAmount: float
     averagePaymentTime: float
+
+
+class PurchaseOrderSummary(BaseModel):
+    id: str
+    orderNumber: str
+    supplierName: str
+    orderDate: Optional[str] = None
+    status: str
+    totalAmount: float
+    createdAt: Optional[datetime] = None
 
 
 class InvoiceDashboard(BaseModel):
@@ -20,3 +33,4 @@ class InvoiceDashboard(BaseModel):
     overdueInvoices: List[Invoice]
     topCustomers: List[Dict[str, Any]]
     monthlyRevenue: List[Dict[str, Any]]
+    recentPurchaseOrders: List[PurchaseOrderSummary]

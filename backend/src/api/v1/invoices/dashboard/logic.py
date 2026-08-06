@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
-from typing import Any, Dict
+from typing import Any, Dict, List
+from uuid import UUID
 
 from fastapi import HTTPException
 from sqlalchemy import and_, func, desc, case
@@ -7,10 +8,41 @@ from sqlalchemy.orm import Session
 
 from .....config.database import User
 from .....core.cache import cached_sync
+from .....config.hrm_models import Supplier
+from .....config.inventory_models import PurchaseOrder
 from .....models.invoices import Invoice
 from ..items.schemas import InvoiceStatus
 from ..shared import transform_invoice_to_pydantic
-from .schemas import InvoiceDashboard, InvoiceMetrics
+from .schemas import InvoiceDashboard, InvoiceMetrics, PurchaseOrderSummary
+
+# Purchase order statuses that represent committed spend (money going out)
+COMMITTED_PO_STATUSES = [
+    "submitted",
+    "approved",
+    "ordered",
+    "arrived",
+    "partially_received",
+    "received",
+]
+
+
+def _get_supplier_name_map(db: Session, tenant_id: str, supplier_ids: List[str]) -> Dict[str, str]:
+    valid_ids = []
+    for supplier_id in supplier_ids:
+        try:
+            valid_ids.append(UUID(str(supplier_id)))
+        except (ValueError, TypeError):
+            continue
+
+    if not valid_ids:
+        return {}
+
+    supplier_rows = db.query(Supplier.id, Supplier.name).filter(
+        Supplier.tenant_id == tenant_id,
+        Supplier.id.in_(valid_ids)
+    ).all()
+
+    return {str(supplier_id): name for supplier_id, name in supplier_rows}
 
 
 @cached_sync(ttl=60, key_prefix="invoice_dashboard_")
@@ -84,6 +116,35 @@ def get_invoice_dashboard_endpoint(db: Session, current_user: User, tenant_conte
             and_(Invoice.tenant_id == tenant_id, Invoice.status == InvoiceStatus.OVERDUE)
         ).scalar() or 0
 
+        purchase_order_total = db.query(func.sum(PurchaseOrder.totalAmount)).filter(
+            and_(
+                PurchaseOrder.tenant_id == tenant_id,
+                PurchaseOrder.status.in_(COMMITTED_PO_STATUSES),
+            )
+        ).scalar() or 0
+
+        net_revenue = float(total_revenue) - float(purchase_order_total)
+
+        recent_purchase_orders_db = db.query(PurchaseOrder).filter(
+            PurchaseOrder.tenant_id == tenant_id
+        ).order_by(desc(PurchaseOrder.createdAt)).limit(5).all()
+
+        supplier_ids = [str(po.supplierId) for po in recent_purchase_orders_db if po.supplierId]
+        supplier_name_map = _get_supplier_name_map(db, tenant_id, supplier_ids)
+
+        recent_purchase_orders = [
+            PurchaseOrderSummary(
+                id=str(po.id),
+                orderNumber=po.poNumber or "",
+                supplierName=supplier_name_map.get(str(po.supplierId), ""),
+                orderDate=po.orderDate.isoformat() if po.orderDate else None,
+                status=po.status or "draft",
+                totalAmount=float(po.totalAmount or 0),
+                createdAt=po.createdAt,
+            )
+            for po in recent_purchase_orders_db
+        ]
+
         recent_invoices = db.query(Invoice).filter(
             Invoice.tenant_id == tenant_id
         ).order_by(desc(Invoice.createdAt)).limit(5).all()
@@ -126,6 +187,8 @@ def get_invoice_dashboard_endpoint(db: Session, current_user: User, tenant_conte
             overdueInvoices=overdue_invoices,
             draftInvoices=draft_invoices,
             totalRevenue=float(total_revenue),
+            purchaseOrderTotal=float(purchase_order_total),
+            netRevenue=net_revenue,
             outstandingAmount=float(outstanding_amount),
             overdueAmount=float(overdue_amount),
             averagePaymentTime=30.0,
@@ -140,6 +203,7 @@ def get_invoice_dashboard_endpoint(db: Session, current_user: User, tenant_conte
                 for c in top_customers
             ],
             monthlyRevenue=monthly_revenue,
+            recentPurchaseOrders=recent_purchase_orders,
         )
 
     except Exception as e:
