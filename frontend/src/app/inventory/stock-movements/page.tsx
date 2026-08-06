@@ -1,23 +1,23 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { ModuleGuard } from '../../../components/guards/PermissionGuard';
+import React, { useEffect, useState } from "react";
+import { ModuleGuard } from "../../../components/guards/PermissionGuard";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from '../../../components/ui/card';
-import { Button } from '../../../components/ui/button';
-import { Badge } from '../../../components/ui/badge';
-import { Input } from '../../../components/ui/input';
+} from "../../../components/ui/card";
+import { Button } from "../../../components/ui/button";
+import { Badge } from "../../../components/ui/badge";
+import { Input } from "../../../components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../../components/ui/select';
+} from "../../../components/ui/select";
 import {
   Table,
   TableBody,
@@ -25,7 +25,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../../../components/ui/table';
+} from "../../../components/ui/table";
 import {
   Truck,
   Plus,
@@ -36,20 +36,20 @@ import {
   Building2,
   Package,
   MapPin,
-} from 'lucide-react';
-import { useAuth } from '../../../contexts/AuthContext';
-import { useCurrency } from '../../../contexts/CurrencyContext';
-import { inventoryService } from '../../../services/InventoryService';
+} from "lucide-react";
+import { useAuth } from "../../../contexts/AuthContext";
+import { useCurrency } from "../../../contexts/CurrencyContext";
+import { inventoryService } from "../../../services/InventoryService";
 import {
   StockMovement,
   StockMovementCreate,
   StockMovementType,
   Warehouse,
-} from '../../../models/inventory';
-import { Product } from '../../../models/pos';
-import { DashboardLayout } from '../../../components/layout';
-import { toast } from 'sonner';
-import { formatDate } from '../../../lib/utils';
+} from "../../../models/inventory";
+import { Product } from "../../../models/pos";
+import { DashboardLayout } from "../../../components/layout";
+import { toast } from "sonner";
+import { formatDate } from "../../../lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -57,63 +57,68 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '../../../components/ui/dialog';
-import { Label } from '../../../components/ui/label';
-import { Textarea } from '../../../components/ui/textarea';
-import { apiService } from '../../../services/ApiService';
+} from "../../../components/ui/dialog";
+import { Label } from "../../../components/ui/label";
+import { Textarea } from "../../../components/ui/textarea";
+import { apiService } from "../../../services/ApiService";
 
 export default function StockMovementsPage() {
   return (
-    <ModuleGuard module="inventory" fallback={<div>You don't have access to Inventory module</div>}>
+    <ModuleGuard
+      module="inventory"
+      fallback={<div>You don't have access to Inventory module</div>}
+    >
       <StockMovementsContent />
     </ModuleGuard>
   );
 }
 
 function StockMovementsContent() {
-  const { } = useAuth();
+  const {} = useAuth();
   const { getCurrencySymbol } = useCurrency();
   const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedMovement, setSelectedMovement] = useState<StockMovement | null>(null);
-  const [movementToDelete, setMovementToDelete] = useState<StockMovement | null>(null);
+  const [selectedMovement, setSelectedMovement] =
+    useState<StockMovement | null>(null);
+  const [movementToDelete, setMovementToDelete] =
+    useState<StockMovement | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [editMovement, setEditMovement] = useState<StockMovementCreate>({
-    productId: '',
-    warehouseId: '',
-    locationId: '',
+    productId: "",
+    warehouseId: "",
+    locationId: "",
     movementType: StockMovementType.INBOUND,
     quantity: 0,
     unitCost: 0,
-    referenceNumber: '',
-    referenceType: '',
-    notes: '',
-    batchNumber: '',
-    serialNumber: '',
-    expiryDate: '',
+    referenceNumber: "",
+    referenceType: "",
+    notes: "",
+    batchNumber: "",
+    serialNumber: "",
+    expiryDate: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newMovement, setNewMovement] = useState<StockMovementCreate>({
-    productId: '',
-    warehouseId: '',
-    locationId: '',
+    productId: "",
+    warehouseId: "",
+    locationId: "",
     movementType: StockMovementType.INBOUND,
     quantity: 0,
     unitCost: 0,
-    referenceNumber: '',
-    referenceType: '',
-    notes: '',
-    batchNumber: '',
-    serialNumber: '',
-    expiryDate: '',
+    referenceNumber: "",
+    referenceType: "",
+    notes: "",
+    batchNumber: "",
+    serialNumber: "",
+    expiryDate: "",
   });
 
   useEffect(() => {
@@ -123,11 +128,12 @@ function StockMovementsContent() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [stockMovementsResponse, warehousesResponse, productsResponse] = await Promise.all([
-        inventoryService.getStockMovements(),
-        inventoryService.getWarehouses(),
-        apiService.get('/pos/products'),
-      ]);
+      const [stockMovementsResponse, warehousesResponse, productsResponse] =
+        await Promise.all([
+          inventoryService.getStockMovements(),
+          inventoryService.getWarehouses(),
+          apiService.get("/pos/products"),
+        ]);
       setStockMovements(stockMovementsResponse.stockMovements);
       setWarehouses(warehousesResponse.warehouses);
       setProducts(productsResponse.products || []);
@@ -143,7 +149,10 @@ function StockMovementsContent() {
         }));
       }
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to load stock movements';
+      const errorMessage =
+        error?.response?.data?.detail ||
+        error?.message ||
+        "Failed to load stock movements";
       toast.error(`Load Error: ${errorMessage}`);
     } finally {
       setLoading(false);
@@ -158,7 +167,7 @@ function StockMovementsContent() {
       movement.notes?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesType =
-      typeFilter === 'all' ||
+      typeFilter === "all" ||
       !typeFilter ||
       movement.movementType === typeFilter;
 
@@ -167,20 +176,22 @@ function StockMovementsContent() {
 
   const handleDelete = async () => {
     if (!movementToDelete) return;
-    
+
     try {
       setDeleteLoading(true);
       await inventoryService.deleteStockMovement(movementToDelete.id);
       fetchData();
       closeDeleteDialog();
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to delete stock movement';
+      const errorMessage =
+        error?.response?.data?.detail ||
+        error?.message ||
+        "Failed to delete stock movement";
       toast.error(`Delete Error: ${errorMessage}`);
     } finally {
       setDeleteLoading(false);
     }
   };
-
 
   const handleAddMovement = async () => {
     if (
@@ -189,7 +200,7 @@ function StockMovementsContent() {
       !newMovement.referenceNumber ||
       newMovement.quantity <= 0
     ) {
-      toast.error('Please fill in all required fields');
+      toast.error("Please fill in all required fields");
       return;
     }
 
@@ -200,7 +211,10 @@ function StockMovementsContent() {
       resetForm();
       fetchData();
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to create stock movement';
+      const errorMessage =
+        error?.response?.data?.detail ||
+        error?.message ||
+        "Failed to create stock movement";
       toast.error(`Create Error: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
@@ -209,18 +223,18 @@ function StockMovementsContent() {
 
   const resetForm = () => {
     setNewMovement({
-      productId: '',
-      warehouseId: warehouses.length > 0 ? warehouses[0].id : '',
-      locationId: '',
+      productId: "",
+      warehouseId: warehouses.length > 0 ? warehouses[0].id : "",
+      locationId: "",
       movementType: StockMovementType.INBOUND,
       quantity: 0,
       unitCost: 0,
-      referenceNumber: '',
-      referenceType: '',
-      notes: '',
-      batchNumber: '',
-      serialNumber: '',
-      expiryDate: '',
+      referenceNumber: "",
+      referenceType: "",
+      notes: "",
+      batchNumber: "",
+      serialNumber: "",
+      expiryDate: "",
     });
   };
 
@@ -244,40 +258,48 @@ function StockMovementsContent() {
     setEditMovement({
       productId: movement.productId,
       warehouseId: movement.warehouseId,
-      locationId: movement.locationId || '',
+      locationId: movement.locationId || "",
       movementType: movement.movementType,
       quantity: movement.quantity,
       unitCost: movement.unitCost,
-      referenceNumber: movement.referenceNumber || '',
-      referenceType: movement.referenceType || '',
-      notes: movement.notes || '',
-      batchNumber: movement.batchNumber || '',
-      serialNumber: movement.serialNumber || '',
-      expiryDate: movement.expiryDate ? new Date(movement.expiryDate).toISOString().split('T')[0] : '',
+      referenceNumber: movement.referenceNumber || "",
+      referenceType: movement.referenceType || "",
+      notes: movement.notes || "",
+      batchNumber: movement.batchNumber || "",
+      serialNumber: movement.serialNumber || "",
+      expiryDate: movement.expiryDate
+        ? new Date(movement.expiryDate).toISOString().split("T")[0]
+        : "",
     });
     setIsEditModalOpen(true);
   };
 
   const handleUpdateMovement = async () => {
     if (!selectedMovement) return;
-    
+
     if (
       !editMovement.productId ||
       !editMovement.warehouseId ||
       !editMovement.referenceNumber ||
       editMovement.quantity <= 0
     ) {
-      toast.error('Please fill in all required fields');
+      toast.error("Please fill in all required fields");
       return;
     }
 
     try {
       setIsSubmitting(true);
-      await inventoryService.updateStockMovement(selectedMovement.id, editMovement);
+      await inventoryService.updateStockMovement(
+        selectedMovement.id,
+        editMovement,
+      );
       setIsEditModalOpen(false);
       fetchData();
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to update stock movement';
+      const errorMessage =
+        error?.response?.data?.detail ||
+        error?.message ||
+        "Failed to update stock movement";
       toast.error(`Update Error: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
@@ -286,26 +308,26 @@ function StockMovementsContent() {
 
   const getTypeBadge = (type: StockMovementType) => {
     const typeConfig = {
-      [StockMovementType.INBOUND]: { variant: 'default', label: 'Inbound' },
+      [StockMovementType.INBOUND]: { variant: "default", label: "Inbound" },
       [StockMovementType.OUTBOUND]: {
-        variant: 'destructive',
-        label: 'Outbound',
+        variant: "destructive",
+        label: "Outbound",
       },
-      [StockMovementType.TRANSFER]: { variant: 'secondary', label: 'Transfer' },
+      [StockMovementType.TRANSFER]: { variant: "secondary", label: "Transfer" },
       [StockMovementType.ADJUSTMENT]: {
-        variant: 'outline',
-        label: 'Adjustment',
+        variant: "outline",
+        label: "Adjustment",
       },
-      [StockMovementType.RETURN]: { variant: 'default', label: 'Return' },
-      [StockMovementType.DAMAGE]: { variant: 'destructive', label: 'Damage' },
-      [StockMovementType.EXPIRY]: { variant: 'destructive', label: 'Expiry' },
+      [StockMovementType.RETURN]: { variant: "default", label: "Return" },
+      [StockMovementType.DAMAGE]: { variant: "destructive", label: "Damage" },
+      [StockMovementType.EXPIRY]: { variant: "destructive", label: "Expiry" },
       [StockMovementType.CYCLE_COUNT]: {
-        variant: 'secondary',
-        label: 'Cycle Count',
+        variant: "secondary",
+        label: "Cycle Count",
       },
       [StockMovementType.INSTOCK]: {
-        variant: 'default',
-        label: 'In Stock',
+        variant: "default",
+        label: "In Stock",
       },
     };
 
@@ -315,11 +337,11 @@ function StockMovementsContent() {
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      pending: { variant: 'secondary', label: 'Pending' },
-      in_progress: { variant: 'default', label: 'In Progress' },
-      completed: { variant: 'default', label: 'Completed' },
-      cancelled: { variant: 'destructive', label: 'Cancelled' },
-      failed: { variant: 'destructive', label: 'Failed' },
+      pending: { variant: "secondary", label: "Pending" },
+      in_progress: { variant: "default", label: "In Progress" },
+      completed: { variant: "default", label: "Completed" },
+      cancelled: { variant: "destructive", label: "Cancelled" },
+      failed: { variant: "destructive", label: "Failed" },
     };
 
     const config =
@@ -451,7 +473,7 @@ function StockMovementsContent() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <MapPin className="h-4 w-4 text-muted-foreground" />
-                          <span>{movement.locationId || 'N/A'}</span>
+                          <span>{movement.locationId || "N/A"}</span>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -459,12 +481,13 @@ function StockMovementsContent() {
                       </TableCell>
                       <TableCell>
                         <div className="text-sm text-muted-foreground">
-                          {getCurrencySymbol()}{movement.unitCost}
+                          {getCurrencySymbol()}
+                          {movement.unitCost}
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="max-w-32 truncate">
-                          {movement.referenceNumber || 'N/A'}
+                          {movement.referenceNumber || "N/A"}
                         </div>
                       </TableCell>
                       <TableCell>{getStatusBadge(movement.status)}</TableCell>
@@ -509,11 +532,11 @@ function StockMovementsContent() {
                   No stock movements found
                 </h3>
                 <p className="text-muted-foreground mb-4">
-                  {searchTerm || typeFilter !== 'all'
-                    ? 'Try adjusting your search terms or filters'
-                    : 'Get started by recording your first stock movement'}
+                  {searchTerm || typeFilter !== "all"
+                    ? "Try adjusting your search terms or filters"
+                    : "Get started by recording your first stock movement"}
                 </p>
-                {!searchTerm && typeFilter === 'all' && (
+                {!searchTerm && typeFilter === "all" && (
                   <Button onClick={() => setIsAddModalOpen(true)}>
                     <Plus className="mr-2 h-4 w-4" />
                     Record Movement
@@ -610,7 +633,7 @@ function StockMovementsContent() {
 
         {/* Add Stock Movement Modal */}
         <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Record Stock Movement</DialogTitle>
             </DialogHeader>
@@ -832,35 +855,36 @@ function StockMovementsContent() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="expiryDate">Expiry Date</Label>
-                <Input
-                  id="expiryDate"
-                  type="date"
-                  value={newMovement.expiryDate}
-                  onChange={(e) =>
-                    setNewMovement((prev) => ({
-                      ...prev,
-                      expiryDate: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="notes">Notes</Label>
-                <Textarea
-                  id="notes"
-                  value={newMovement.notes}
-                  onChange={(e) =>
-                    setNewMovement((prev) => ({
-                      ...prev,
-                      notes: e.target.value,
-                    }))
-                  }
-                  placeholder="Enter movement notes"
-                  rows={3}
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="expiryDate">Expiry Date</Label>
+                  <Input
+                    id="expiryDate"
+                    type="date"
+                    value={newMovement.expiryDate}
+                    onChange={(e) =>
+                      setNewMovement((prev) => ({
+                        ...prev,
+                        expiryDate: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="notes">Notes</Label>
+                  <Textarea
+                    id="notes"
+                    value={newMovement.notes}
+                    onChange={(e) =>
+                      setNewMovement((prev) => ({
+                        ...prev,
+                        notes: e.target.value,
+                      }))
+                    }
+                    placeholder="Enter movement notes"
+                    rows={2}
+                  />
+                </div>
               </div>
             </div>
             <DialogFooter>
@@ -882,7 +906,7 @@ function StockMovementsContent() {
                   newMovement.quantity <= 0
                 }
               >
-                {isSubmitting ? 'Recording...' : 'Record Movement'}
+                {isSubmitting ? "Recording..." : "Record Movement"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -921,7 +945,7 @@ function StockMovementsContent() {
                   <div className="space-y-2">
                     <Label className="text-sm font-medium">Location ID</Label>
                     <div className="text-sm text-muted-foreground">
-                      {selectedMovement.locationId || 'N/A'}
+                      {selectedMovement.locationId || "N/A"}
                     </div>
                   </div>
                 </div>
@@ -936,22 +960,27 @@ function StockMovementsContent() {
                   <div className="space-y-2">
                     <Label className="text-sm font-medium">Unit Cost</Label>
                     <div className="text-sm text-muted-foreground">
-                      {getCurrencySymbol()}{selectedMovement.unitCost}
+                      {getCurrencySymbol()}
+                      {selectedMovement.unitCost}
                     </div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-sm font-medium">Reference Number</Label>
+                    <Label className="text-sm font-medium">
+                      Reference Number
+                    </Label>
                     <div className="text-sm text-muted-foreground">
-                      {selectedMovement.referenceNumber || 'N/A'}
+                      {selectedMovement.referenceNumber || "N/A"}
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-sm font-medium">Reference Type</Label>
+                    <Label className="text-sm font-medium">
+                      Reference Type
+                    </Label>
                     <div className="text-sm text-muted-foreground">
-                      {selectedMovement.referenceType || 'N/A'}
+                      {selectedMovement.referenceType || "N/A"}
                     </div>
                   </div>
                 </div>
@@ -960,13 +989,13 @@ function StockMovementsContent() {
                   <div className="space-y-2">
                     <Label className="text-sm font-medium">Batch Number</Label>
                     <div className="text-sm text-muted-foreground">
-                      {selectedMovement.batchNumber || 'N/A'}
+                      {selectedMovement.batchNumber || "N/A"}
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label className="text-sm font-medium">Serial Number</Label>
                     <div className="text-sm text-muted-foreground">
-                      {selectedMovement.serialNumber || 'N/A'}
+                      {selectedMovement.serialNumber || "N/A"}
                     </div>
                   </div>
                 </div>
@@ -974,14 +1003,16 @@ function StockMovementsContent() {
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Expiry Date</Label>
                   <div className="text-sm text-muted-foreground">
-                    {selectedMovement.expiryDate ? formatDate(selectedMovement.expiryDate) : 'N/A'}
+                    {selectedMovement.expiryDate
+                      ? formatDate(selectedMovement.expiryDate)
+                      : "N/A"}
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Notes</Label>
                   <div className="text-sm text-muted-foreground">
-                    {selectedMovement.notes || 'No notes'}
+                    {selectedMovement.notes || "No notes"}
                   </div>
                 </div>
 
@@ -1006,7 +1037,7 @@ function StockMovementsContent() {
 
         {/* Edit Stock Movement Modal */}
         <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Edit Stock Movement</DialogTitle>
             </DialogHeader>
@@ -1027,15 +1058,33 @@ function StockMovementsContent() {
                       <SelectValue placeholder="Select movement type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={StockMovementType.INBOUND}>Inbound</SelectItem>
-                      <SelectItem value={StockMovementType.OUTBOUND}>Outbound</SelectItem>
-                      <SelectItem value={StockMovementType.TRANSFER}>Transfer</SelectItem>
-                      <SelectItem value={StockMovementType.ADJUSTMENT}>Adjustment</SelectItem>
-                      <SelectItem value={StockMovementType.RETURN}>Return</SelectItem>
-                      <SelectItem value={StockMovementType.DAMAGE}>Damage</SelectItem>
-                      <SelectItem value={StockMovementType.EXPIRY}>Expiry</SelectItem>
-                      <SelectItem value={StockMovementType.CYCLE_COUNT}>Cycle Count</SelectItem>
-                      <SelectItem value={StockMovementType.INSTOCK}>In Stock</SelectItem>
+                      <SelectItem value={StockMovementType.INBOUND}>
+                        Inbound
+                      </SelectItem>
+                      <SelectItem value={StockMovementType.OUTBOUND}>
+                        Outbound
+                      </SelectItem>
+                      <SelectItem value={StockMovementType.TRANSFER}>
+                        Transfer
+                      </SelectItem>
+                      <SelectItem value={StockMovementType.ADJUSTMENT}>
+                        Adjustment
+                      </SelectItem>
+                      <SelectItem value={StockMovementType.RETURN}>
+                        Return
+                      </SelectItem>
+                      <SelectItem value={StockMovementType.DAMAGE}>
+                        Damage
+                      </SelectItem>
+                      <SelectItem value={StockMovementType.EXPIRY}>
+                        Expiry
+                      </SelectItem>
+                      <SelectItem value={StockMovementType.CYCLE_COUNT}>
+                        Cycle Count
+                      </SelectItem>
+                      <SelectItem value={StockMovementType.INSTOCK}>
+                        In Stock
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -1150,7 +1199,9 @@ function StockMovementsContent() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="edit-referenceNumber">Reference Number *</Label>
+                  <Label htmlFor="edit-referenceNumber">
+                    Reference Number *
+                  </Label>
                   <Input
                     id="edit-referenceNumber"
                     value={editMovement.referenceNumber}
@@ -1210,35 +1261,36 @@ function StockMovementsContent() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="edit-expiryDate">Expiry Date</Label>
-                <Input
-                  id="edit-expiryDate"
-                  type="date"
-                  value={editMovement.expiryDate}
-                  onChange={(e) =>
-                    setEditMovement((prev) => ({
-                      ...prev,
-                      expiryDate: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="edit-notes">Notes</Label>
-                <Textarea
-                  id="edit-notes"
-                  value={editMovement.notes}
-                  onChange={(e) =>
-                    setEditMovement((prev) => ({
-                      ...prev,
-                      notes: e.target.value,
-                    }))
-                  }
-                  placeholder="Enter notes"
-                  rows={3}
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-expiryDate">Expiry Date</Label>
+                  <Input
+                    id="edit-expiryDate"
+                    type="date"
+                    value={editMovement.expiryDate}
+                    onChange={(e) =>
+                      setEditMovement((prev) => ({
+                        ...prev,
+                        expiryDate: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-notes">Notes</Label>
+                  <Textarea
+                    id="edit-notes"
+                    value={editMovement.notes}
+                    onChange={(e) =>
+                      setEditMovement((prev) => ({
+                        ...prev,
+                        notes: e.target.value,
+                      }))
+                    }
+                    placeholder="Enter notes"
+                    rows={2}
+                  />
+                </div>
               </div>
             </div>
             <DialogFooter>
@@ -1254,7 +1306,7 @@ function StockMovementsContent() {
                 onClick={handleUpdateMovement}
                 disabled={isSubmitting}
               >
-                {isSubmitting ? 'Updating...' : 'Update Movement'}
+                {isSubmitting ? "Updating..." : "Update Movement"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -1266,7 +1318,8 @@ function StockMovementsContent() {
             <DialogHeader>
               <DialogTitle>Delete Stock Movement</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete this stock movement? This action cannot be undone.
+                Are you sure you want to delete this stock movement? This action
+                cannot be undone.
               </DialogDescription>
             </DialogHeader>
             {movementToDelete && (
@@ -1275,19 +1328,28 @@ function StockMovementsContent() {
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <span className="font-medium">Product ID:</span>
-                      <p className="text-muted-foreground">{movementToDelete.productId}</p>
+                      <p className="text-muted-foreground">
+                        {movementToDelete.productId}
+                      </p>
                     </div>
                     <div>
                       <span className="font-medium">Quantity:</span>
-                      <p className="text-muted-foreground">{movementToDelete.quantity}</p>
+                      <p className="text-muted-foreground">
+                        {movementToDelete.quantity}
+                      </p>
                     </div>
                     <div>
                       <span className="font-medium">Type:</span>
-                      <p className="text-muted-foreground">{movementToDelete.movementType}</p>
+                      <p className="text-muted-foreground">
+                        {movementToDelete.movementType}
+                      </p>
                     </div>
                     <div>
                       <span className="font-medium">Unit Cost:</span>
-                      <p className="text-muted-foreground">{getCurrencySymbol()}{movementToDelete.unitCost}</p>
+                      <p className="text-muted-foreground">
+                        {getCurrencySymbol()}
+                        {movementToDelete.unitCost}
+                      </p>
                     </div>
                   </div>
                 </div>
