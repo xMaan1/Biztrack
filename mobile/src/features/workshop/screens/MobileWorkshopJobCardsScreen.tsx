@@ -372,7 +372,7 @@ export function MobileWorkshopJobCardsScreen() {
       >
         <WorkshopFieldLabel>Title *</WorkshopFieldLabel>
         <WorkshopTextInput value={form.title} onChangeText={(v) => setForm((f) => ({ ...f, title: v }))} />
-        <WorkshopFieldLabel>Description (Defected reports)</WorkshopFieldLabel>
+        <WorkshopFieldLabel>Description (Reported defect)</WorkshopFieldLabel>
         <WorkshopTextInput value={form.description} onChangeText={(v) => setForm((f) => ({ ...f, description: v }))} multiline />
         <WorkshopPickerField
           label="Assign to"

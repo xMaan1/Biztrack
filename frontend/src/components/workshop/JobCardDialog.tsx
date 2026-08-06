@@ -405,17 +405,6 @@ export default function JobCardDialog({
                     />
                   </div>
                 </div>
-
-                <div>
-                  <Label>Description (Defected reports)</Label>
-                  <Textarea
-                    value={formData.description}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
-                    rows={3}
-                  />
-                </div>
               </div>
 
               <div className="space-y-3">
@@ -555,21 +544,33 @@ export default function JobCardDialog({
                     />
                   </div>
                 </div>
-
-                {isWorkshop && (
-                  <WorkshopDocumentLinks
-                    dense
-                    excludeType="job_card"
-                    value={documentLinks}
-                    onChange={setDocumentLinks}
-                    purchaseOrderInitialData={
-                      mode === "edit" && jobCard?.id
-                        ? { jobCardId: jobCard.id }
-                        : undefined
-                    }
-                  />
-                )}
               </div>
+            </div>
+
+            <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
+              <div>
+                <Label>Description (Reported defect)</Label>
+                <Textarea
+                  value={formData.description}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
+                  rows={3}
+                />
+              </div>
+              {isWorkshop && (
+                <WorkshopDocumentLinks
+                  dense
+                  excludeType="job_card"
+                  value={documentLinks}
+                  onChange={setDocumentLinks}
+                  purchaseOrderInitialData={
+                    mode === "edit" && jobCard?.id
+                      ? { jobCardId: jobCard.id }
+                      : undefined
+                  }
+                />
+              )}
             </div>
 
             <div className="mt-4 space-y-3 rounded-lg border p-3">
