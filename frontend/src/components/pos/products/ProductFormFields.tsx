@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
-import { FolderPlus, UserPlus } from 'lucide-react';
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
-import { Label } from '@/src/components/ui/label';
+import { FolderPlus, UserPlus } from "lucide-react";
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
+import { Label } from "@/src/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
-import { ProductCategory, UnitOfMeasure } from '@/src/models/pos';
-import type { Supplier } from '@/src/models/hrm/supplier';
-import type { ProductFormData } from './types';
-import { formatCategoryLabel } from './productUtils';
+} from "@/src/components/ui/select";
+import { ProductCategory, UnitOfMeasure } from "@/src/models/pos";
+import type { Supplier } from "@/src/models/hrm/supplier";
+import type { ProductFormData } from "./types";
+import { formatCategoryLabel } from "./productUtils";
 
 type ProductFormFieldsProps = {
   formData: ProductFormData;
@@ -33,12 +33,14 @@ export function ProductFormFields({
   onAddCategoryClick,
   onAddSupplierClick,
 }: ProductFormFieldsProps) {
-  const categoryOptions = categories.length ? categories : Object.values(ProductCategory);
+  const categoryOptions = categories.length
+    ? categories
+    : Object.values(ProductCategory);
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
+      <div className="grid grid-cols-4 gap-4">
+        <div className="col-span-2 space-y-2">
           <Label htmlFor="name">Product Name *</Label>
           <Input
             id="name"
@@ -56,16 +58,15 @@ export function ProductFormFields({
             required
           />
         </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
-        <Input
-          id="description"
-          value={formData.description}
-          onChange={(e) => onChange({ description: e.target.value })}
-          placeholder="Product description..."
-        />
+        <div className="space-y-2">
+          <Label htmlFor="productType">Type</Label>
+          <Input
+            id="productType"
+            value={formData.productType}
+            onChange={(e) => onChange({ productType: e.target.value })}
+            placeholder="e.g. Accessories"
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -73,7 +74,10 @@ export function ProductFormFields({
           <div className="flex items-end gap-2">
             <div className="flex-1 space-y-2">
               <Label htmlFor="category">Category *</Label>
-              <Select value={formData.category} onValueChange={(value) => onChange({ category: value })}>
+              <Select
+                value={formData.category}
+                onValueChange={(value) => onChange({ category: value })}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
@@ -86,7 +90,13 @@ export function ProductFormFields({
                 </SelectContent>
               </Select>
             </div>
-            <Button type="button" variant="outline" size="icon" onClick={onAddCategoryClick} title="Add category">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={onAddCategoryClick}
+              title="Add category"
+            >
               <FolderPlus className="h-4 w-4" />
             </Button>
           </div>
@@ -96,8 +106,10 @@ export function ProductFormFields({
             <div className="flex-1 space-y-2">
               <Label htmlFor="supplierId">Supplier</Label>
               <Select
-                value={formData.supplierId || 'none'}
-                onValueChange={(value) => onChange({ supplierId: value === 'none' ? '' : value })}
+                value={formData.supplierId || "none"}
+                onValueChange={(value) =>
+                  onChange({ supplierId: value === "none" ? "" : value })
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select supplier" />
@@ -112,21 +124,27 @@ export function ProductFormFields({
                 </SelectContent>
               </Select>
             </div>
-            <Button type="button" variant="outline" size="icon" onClick={onAddSupplierClick} title="Add supplier">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={onAddSupplierClick}
+              title="Add supplier"
+            >
               <UserPlus className="h-4 w-4" />
             </Button>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="productType">Type</Label>
+      <div className="grid grid-cols-4 gap-4">
+        <div className="col-span-2 space-y-2">
+          <Label htmlFor="brand">Company</Label>
           <Input
-            id="productType"
-            value={formData.productType}
-            onChange={(e) => onChange({ productType: e.target.value })}
-            placeholder="e.g. Accessories"
+            id="brand"
+            value={formData.brand}
+            onChange={(e) => onChange({ brand: e.target.value })}
+            placeholder="e.g. Logitech"
           />
         </div>
         <div className="space-y-2">
@@ -136,22 +154,23 @@ export function ProductFormFields({
             type="number"
             min="1"
             value={formData.packSize}
-            onChange={(e) => onChange({ packSize: parseInt(e.target.value, 10) || 1 })}
+            onChange={(e) =>
+              onChange({ packSize: parseInt(e.target.value, 10) || 1 })
+            }
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="barcode">Barcode</Label>
+          <Input
+            id="barcode"
+            value={formData.barcode}
+            onChange={(e) => onChange({ barcode: e.target.value })}
+            placeholder="Product barcode..."
           />
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="brand">Company</Label>
-        <Input
-          id="brand"
-          value={formData.brand}
-          onChange={(e) => onChange({ brand: e.target.value })}
-          placeholder="e.g. Logitech"
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-4 gap-4">
         <div className="space-y-2">
           <Label htmlFor="salePrice">Sale Price *</Label>
           <Input
@@ -160,7 +179,9 @@ export function ProductFormFields({
             step="0.01"
             min="0"
             value={formData.salePrice}
-            onChange={(e) => onChange({ salePrice: parseFloat(e.target.value) || 0 })}
+            onChange={(e) =>
+              onChange({ salePrice: parseFloat(e.target.value) || 0 })
+            }
             required
           />
         </div>
@@ -172,13 +193,12 @@ export function ProductFormFields({
             step="0.01"
             min="0"
             value={formData.costPerUnitPrice}
-            onChange={(e) => onChange({ costPerUnitPrice: parseFloat(e.target.value) || 0 })}
+            onChange={(e) =>
+              onChange({ costPerUnitPrice: parseFloat(e.target.value) || 0 })
+            }
             required
           />
         </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="stockQuantity">Stock Quantity *</Label>
           <Input
@@ -186,7 +206,9 @@ export function ProductFormFields({
             type="number"
             min="0"
             value={formData.stockQuantity}
-            onChange={(e) => onChange({ stockQuantity: parseInt(e.target.value, 10) || 0 })}
+            onChange={(e) =>
+              onChange({ stockQuantity: parseInt(e.target.value, 10) || 0 })
+            }
             required
           />
         </div>
@@ -194,7 +216,9 @@ export function ProductFormFields({
           <Label htmlFor="unitOfMeasure">Unit of Measure *</Label>
           <Select
             value={formData.unitOfMeasure}
-            onValueChange={(value) => onChange({ unitOfMeasure: value as UnitOfMeasure })}
+            onValueChange={(value) =>
+              onChange({ unitOfMeasure: value as UnitOfMeasure })
+            }
           >
             <SelectTrigger>
               <SelectValue placeholder="Select unit" />
@@ -210,7 +234,7 @@ export function ProductFormFields({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-4 gap-4">
         <div className="space-y-2">
           <Label htmlFor="minStockLevel">Low Stock Threshold</Label>
           <Input
@@ -218,21 +242,11 @@ export function ProductFormFields({
             type="number"
             min="0"
             value={formData.minStockLevel}
-            onChange={(e) => onChange({ minStockLevel: parseInt(e.target.value, 10) || 0 })}
+            onChange={(e) =>
+              onChange({ minStockLevel: parseInt(e.target.value, 10) || 0 })
+            }
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="barcode">Barcode</Label>
-          <Input
-            id="barcode"
-            value={formData.barcode}
-            onChange={(e) => onChange({ barcode: e.target.value })}
-            placeholder="Product barcode..."
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="expiryDate">Expiry Date</Label>
           <Input
@@ -251,9 +265,6 @@ export function ProductFormFields({
             placeholder="Batch number..."
           />
         </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="serialNumber">Serial Number</Label>
           <Input
@@ -263,7 +274,10 @@ export function ProductFormFields({
             placeholder="Serial number..."
           />
         </div>
-        <div className="space-y-2">
+      </div>
+
+      <div className="grid grid-cols-4 gap-4">
+        <div className="col-span-2 space-y-2">
           <Label htmlFor="modelNo">Model No.</Label>
           <Input
             id="modelNo"
@@ -272,9 +286,6 @@ export function ProductFormFields({
             placeholder="Model number..."
           />
         </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="mfgDate">Mfg. Date</Label>
           <Input
@@ -293,6 +304,16 @@ export function ProductFormFields({
             onChange={(e) => onChange({ dateOfPurchase: e.target.value })}
           />
         </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="description">Description</Label>
+        <Input
+          id="description"
+          value={formData.description}
+          onChange={(e) => onChange({ description: e.target.value })}
+          placeholder="Product description..."
+        />
       </div>
     </div>
   );

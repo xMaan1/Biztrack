@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   Dialog,
@@ -7,15 +7,20 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/src/components/ui/dialog';
-import { Button } from '@/src/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/src/components/ui/tabs';
-import type { Product } from '@/src/models/pos';
-import type { Supplier } from '@/src/models/hrm/supplier';
-import type { ProductFormData } from './types';
-import type { ProductEntryMode } from './productCodeUtils';
-import { ProductFormFields } from './ProductFormFields';
-import { ProductCodeScanner } from './ProductCodeScanner';
+} from "@/src/components/ui/dialog";
+import { Button } from "@/src/components/ui/button";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/src/components/ui/tabs";
+import type { Product } from "@/src/models/pos";
+import type { Supplier } from "@/src/models/hrm/supplier";
+import type { ProductFormData } from "./types";
+import type { ProductEntryMode } from "./productCodeUtils";
+import { ProductFormFields } from "./ProductFormFields";
+import { ProductCodeScanner } from "./ProductCodeScanner";
 
 type ProductFormDialogProps = {
   open: boolean;
@@ -54,19 +59,26 @@ export function ProductFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-6xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isEditing ? 'Edit Product' : 'Add New Product'}</DialogTitle>
+          <DialogTitle>
+            {isEditing ? "Edit Product" : "Add New Product"}
+          </DialogTitle>
           <DialogDescription>
             {isEditing
-              ? 'Update the product information below.'
-              : 'Add product details manually or scan a QR code / barcode to auto-fill the form.'}
+              ? "Update the product information below."
+              : "Add product details manually or scan a QR code / barcode to auto-fill the form."}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={onSubmit} className="space-y-4">
           {!isEditing ? (
-            <Tabs value={entryMode} onValueChange={(value) => onEntryModeChange(value as ProductEntryMode)}>
+            <Tabs
+              value={entryMode}
+              onValueChange={(value) =>
+                onEntryModeChange(value as ProductEntryMode)
+              }
+            >
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="manual">Manual Entry</TabsTrigger>
                 <TabsTrigger value="qr">QR Scan</TabsTrigger>
@@ -85,8 +97,12 @@ export function ProductFormDialog({
               </TabsContent>
 
               <TabsContent value="qr" className="mt-4 space-y-4">
-                {open && entryMode === 'qr' && (
-                  <ProductCodeScanner mode="qr" scanning={codeLookupLoading} onScan={onCodeScan} />
+                {open && entryMode === "qr" && (
+                  <ProductCodeScanner
+                    mode="qr"
+                    scanning={codeLookupLoading}
+                    onScan={onCodeScan}
+                  />
                 )}
                 <ProductFormFields
                   formData={formData}
@@ -99,8 +115,12 @@ export function ProductFormDialog({
               </TabsContent>
 
               <TabsContent value="barcode" className="mt-4 space-y-4">
-                {open && entryMode === 'barcode' && (
-                  <ProductCodeScanner mode="barcode" scanning={codeLookupLoading} onScan={onCodeScan} />
+                {open && entryMode === "barcode" && (
+                  <ProductCodeScanner
+                    mode="barcode"
+                    scanning={codeLookupLoading}
+                    onScan={onCodeScan}
+                  />
                 )}
                 <ProductFormFields
                   formData={formData}
@@ -124,11 +144,15 @@ export function ProductFormDialog({
           )}
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={codeLookupLoading}>
-              {isEditing ? 'Update Product' : 'Add Product'}
+              {isEditing ? "Update Product" : "Add Product"}
             </Button>
           </DialogFooter>
         </form>
