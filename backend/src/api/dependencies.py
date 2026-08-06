@@ -2,7 +2,10 @@
 from fastapi import Depends, HTTPException, status, Header, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from ..core.auth import verify_token
-from ..config.database import get_db, get_user_by_email, get_user_tenants, get_tenant_by_id
+from ..config.database import (
+    get_db, get_user_by_email, get_user_tenants, get_tenant_by_id,
+    get_subscription_by_tenant,
+)
 from ..services.rbac_service import RBACService
 from sqlalchemy.orm import Session
 from typing import Optional, List
@@ -397,12 +400,22 @@ def get_tenant_context(
         f"Permissions count: {len(user_permissions)}"
     )
 
+    plan_type = ""
+    state_context = getattr(request.state, "tenant_context", None)
+    if state_context and state_context.get("plan_type"):
+        plan_type = state_context["plan_type"]
+    else:
+        subscription = get_subscription_by_tenant(x_tenant_id, db)
+        if subscription and subscription.plan:
+            plan_type = subscription.plan.planType or ""
+
     tenant_context = {
         "tenant": tenant,
         "user_role": user_role,
         "permissions": user_permissions,
         "tenant_id": x_tenant_id,
-        "is_owner": RBACService.is_owner(db, str(current_user.id), x_tenant_id)
+        "is_owner": RBACService.is_owner(db, str(current_user.id), x_tenant_id),
+        "plan_type": plan_type,
     }
 
     _enforce_granular_permission(request, current_user, tenant_context)
