@@ -29,22 +29,27 @@ def get_all_job_cards(
 
 
 def get_next_job_card_number(db: Session, tenant_id: str) -> str:
-    last_jc = (
-        db.query(JobCard)
+    """Generate the next job card number.
+
+    Format: JC-YYYYMMDD-{sequence} where {sequence} continues globally across
+    all job cards (not reset per day), so existing cards keep their numbers.
+    """
+    numbers = (
+        db.query(JobCard.job_card_number)
         .filter(JobCard.tenant_id == tenant_id, JobCard.is_active == True)
-        .order_by(JobCard.job_card_number.desc())
-        .first()
+        .all()
     )
-    if last_jc:
+    max_number = 0
+    for (card_number,) in numbers:
         try:
-            last_number = int(last_jc.job_card_number.split("-")[-1])
-            next_number = last_number + 1
+            parsed = int(str(card_number).split("-")[-1])
+            if parsed > max_number:
+                max_number = parsed
         except (ValueError, IndexError):
-            next_number = 1
-    else:
-        next_number = 1
-    year = datetime.utcnow().year
-    return f"JC-{year}-{next_number:03d}"
+            continue
+    next_number = max_number + 1
+    date_part = datetime.utcnow().strftime("%Y%m%d")
+    return f"JC-{date_part}-{next_number:03d}"
 
 
 def create_job_card(job_card_data: dict, db: Session, tenant_id: str = None) -> JobCard:
