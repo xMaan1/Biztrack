@@ -17,6 +17,7 @@ type Props = {
   lookupLoading: boolean;
   entryMode: ProductEntryMode;
   form: ProductFormState;
+  categories?: string[];
   onClose: () => void;
   onSave: () => void;
   onEntryModeChange: (mode: ProductEntryMode) => void;
@@ -37,12 +38,14 @@ export function ProductFormModal({
   lookupLoading,
   entryMode,
   form,
+  categories,
   onClose,
   onSave,
   onEntryModeChange,
   onOpenScanner,
   onFieldChange,
 }: Props) {
+  const categoryOptions = categories && categories.length ? categories : PRODUCT_CATEGORIES;
   return (
     <AppModal visible={visible} animationType="slide" onClose={onClose}>
       <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }} edges={['top', 'bottom']}>
@@ -202,7 +205,7 @@ export function ProductFormModal({
             </Text>
             <ProductChipSelect
               label=""
-              options={PRODUCT_CATEGORIES}
+              options={categoryOptions}
               value={form.category}
               onChange={(v) => onFieldChange('category', v)}
             />

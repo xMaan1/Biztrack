@@ -19,6 +19,22 @@ class ProductCategory(str, Enum):
     TOOLS = "tools"
     OTHER = "other"
 
+
+WORKSHOP_CATEGORIES = [
+    "spare_parts",
+    "engine_parts",
+    "electrical",
+    "batteries",
+    "tyres",
+    "lubricants",
+    "filters",
+    "brakes",
+    "body_parts",
+    "accessories",
+    "tools",
+    "other",
+]
+
 class UnitOfMeasure(str, Enum):
     PIECE = "piece"
     KILOGRAM = "kilogram"

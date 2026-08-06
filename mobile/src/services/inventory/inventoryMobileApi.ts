@@ -28,6 +28,7 @@ import type {
   InventoryDashboardStats,
 } from '../../models/inventory';
 import type { Product } from '../../models/pos';
+import type { POSCategoriesResponse } from '../../models/pos';
 
 export async function getInventoryDashboard(): Promise<InventoryDashboardStats> {
   return apiService.get<InventoryDashboardStats>('/inventory/dashboard');
@@ -283,6 +284,10 @@ export async function createSupplierReturn(
 
 export async function fetchPosProducts(): Promise<{ products: Product[] }> {
   return apiService.get<{ products: Product[] }>('/pos/products');
+}
+
+export async function fetchProductCategories(): Promise<POSCategoriesResponse> {
+  return apiService.get<POSCategoriesResponse>('/pos/categories');
 }
 
 export async function getProduct(id: string): Promise<ProductResponse> {

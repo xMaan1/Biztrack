@@ -12,6 +12,7 @@ from .....models.inventory_models import (
     ProductsResponse,
     ProductResponse,
     ProductCategory,
+    WORKSHOP_CATEGORIES,
 )
 from .....config.database import (
     get_products,
@@ -115,8 +116,16 @@ def convert_products_to_pydantic(db: Session, tenant_id: str, db_products):
     ]
 
 
-def get_allowed_category_values(db, tenant_id: str) -> List[str]:
-    default = default_category_values()
+def get_allowed_category_values(
+    db: Session,
+    tenant_id: str,
+    plan_type: Optional[str] = None,
+) -> List[str]:
+    default = (
+        WORKSHOP_CATEGORIES
+        if (plan_type or "").lower() == "workshop"
+        else default_category_values()
+    )
     custom = [c.name for c in get_pos_categories(db, tenant_id)]
     return default + custom
 
@@ -252,7 +261,11 @@ def create_pos_product(
 ):
     if not tenant_context:
         raise HTTPException(status_code=400, detail="Tenant context required")
-    allowed = get_allowed_category_values(db, tenant_context["tenant_id"])
+    allowed = get_allowed_category_values(
+        db,
+        tenant_context["tenant_id"],
+        tenant_context.get("plan_type"),
+    )
     if product_data.category not in allowed:
         raise HTTPException(status_code=400, detail="Invalid category")
     try:
@@ -326,7 +339,11 @@ def update_pos_product(
     if not tenant_context:
         raise HTTPException(status_code=400, detail="Tenant context required")
     if "category" in product_data.dict(exclude_unset=True):
-        allowed = get_allowed_category_values(db, tenant_context["tenant_id"])
+        allowed = get_allowed_category_values(
+            db,
+            tenant_context["tenant_id"],
+            tenant_context.get("plan_type"),
+        )
         if product_data.category not in allowed:
             raise HTTPException(status_code=400, detail="Invalid category")
     try:

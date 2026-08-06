@@ -69,11 +69,12 @@ def delete_pos_category(category_id: str, db: Session, tenant_id: str) -> bool:
 
 def list_pos_categories_endpoint(db: Session, tenant_context: dict):
     from fastapi import HTTPException
-    from .....models.inventory_models import ProductCategory
+    from .....models.inventory_models import ProductCategory, WORKSHOP_CATEGORIES
 
     if not tenant_context:
         raise HTTPException(status_code=400, detail="Tenant context required")
-    default = [e.value for e in ProductCategory]
+    plan_type = (tenant_context.get("plan_type") or "").lower()
+    default = WORKSHOP_CATEGORIES if plan_type == "workshop" else [e.value for e in ProductCategory]
     custom_list = get_pos_categories(db, tenant_context["tenant_id"])
     custom_names = [c.name for c in custom_list]
     return {

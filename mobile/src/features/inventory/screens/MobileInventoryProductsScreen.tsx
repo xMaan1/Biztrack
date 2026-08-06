@@ -7,6 +7,7 @@ import {
   createProduct,
   deleteProduct,
   fetchPosProducts,
+  fetchProductCategories,
   lookupProductCode,
   updateProduct,
 } from '../../../services/inventory/inventoryMobileApi';
@@ -47,6 +48,7 @@ export function MobileInventoryProductsScreen({
   const { canManageInventory, hasPermission, isOwner } = usePermissions();
 
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [q, setQ] = useState('');
@@ -72,6 +74,12 @@ export function MobileInventoryProductsScreen({
   const load = useCallback(async () => {
     const res = await fetchPosProducts();
     setProducts(res.products ?? []);
+    try {
+      const catRes = await fetchProductCategories();
+      setCategories(catRes.categories ?? []);
+    } catch {
+      setCategories([]);
+    }
   }, []);
 
   const run = useCallback(
@@ -296,6 +304,7 @@ export function MobileInventoryProductsScreen({
         lookupLoading={lookupLoading}
         entryMode={entryMode}
         form={form}
+        categories={categories}
         onClose={() => setFormOpen(false)}
         onSave={() => void handleSave()}
         onEntryModeChange={setEntryMode}
