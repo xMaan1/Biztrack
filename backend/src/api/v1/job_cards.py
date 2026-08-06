@@ -48,7 +48,6 @@ def _job_card_to_response(jc) -> JobCardResponse:
         labor_estimate=jc.labor_estimate or 0.0,
         parts_estimate=jc.parts_estimate or 0.0,
         vat_rate=getattr(jc, "vat_rate", None),
-        notes=jc.notes,
         attachments=jc.attachments or [],
         items=jc.items or [],
         is_active=jc.is_active,

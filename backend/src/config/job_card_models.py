@@ -29,7 +29,6 @@ class JobCard(Base):
     labor_estimate = Column(Float, default=0.0)
     parts_estimate = Column(Float, default=0.0)
     vat_rate = Column(Float, default=0.15)
-    notes = Column(Text)
     attachments = Column(JSON, default=[])
     items = Column(JSON, default=[])
     is_active = Column(Boolean, default=True)

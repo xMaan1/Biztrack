@@ -18,7 +18,6 @@ export interface JobCard {
   labor_estimate: number;
   parts_estimate: number;
   vat_rate?: number;
-  notes?: string;
   attachments: string[];
   items: Record<string, unknown>[];
   is_active: boolean;
@@ -41,7 +40,6 @@ export interface JobCardCreate {
   labor_estimate?: number;
   parts_estimate?: number;
   vat_rate?: number;
-  notes?: string;
   attachments?: string[];
   items?: Record<string, unknown>[];
 }
@@ -61,7 +59,6 @@ export interface JobCardUpdate {
   labor_estimate?: number;
   parts_estimate?: number;
   vat_rate?: number;
-  notes?: string;
   attachments?: string[];
   items?: Record<string, unknown>[];
 }

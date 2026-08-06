@@ -272,11 +272,6 @@ def generate_job_card_pdf(job_card_id: str, db: Session, tenant_id: str) -> byte
     story.append(Paragraph("Reported Defect", styles["header"]))
     desc = safe_str(getattr(jc, "description", None)) or "—"
     story.append(Paragraph(desc.replace("\n", "<br/>"), styles["body"]))
-    story.append(Spacer(1, 10))
-
-    story.append(Paragraph("Completed Action", styles["header"]))
-    notes = safe_str(getattr(jc, "notes", None)) or "—"
-    story.append(Paragraph(notes.replace("\n", "<br/>"), styles["body"]))
     story.append(Spacer(1, 14))
 
     story.append(Paragraph("Parts & Labour", styles["header"]))

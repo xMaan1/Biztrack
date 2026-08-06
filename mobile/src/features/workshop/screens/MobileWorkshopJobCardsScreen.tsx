@@ -70,7 +70,6 @@ export function MobileWorkshopJobCardsScreen() {
     labor_estimate: '0',
     parts_estimate: '0',
     vat_rate_percent: '15',
-    notes: '',
   });
 
   useEffect(() => {
@@ -139,7 +138,6 @@ export function MobileWorkshopJobCardsScreen() {
       labor_estimate: '0',
       parts_estimate: '0',
       vat_rate_percent: '15',
-      notes: '',
     });
     setModalOpen(true);
   };
@@ -171,7 +169,6 @@ export function MobileWorkshopJobCardsScreen() {
       vat_rate_percent: String(
         jc.vat_rate != null ? Math.round(Number(jc.vat_rate) * 100) : 15,
       ),
-      notes: jc.notes || '',
     });
     setModalOpen(true);
   };
@@ -209,7 +206,6 @@ export function MobileWorkshopJobCardsScreen() {
       labor_estimate: parseFloat(form.labor_estimate) || 0,
       parts_estimate: parseFloat(form.parts_estimate) || 0,
       vat_rate: vatPct / 100,
-      notes: form.notes || undefined,
     };
     try {
       setSaving(true);
@@ -376,7 +372,7 @@ export function MobileWorkshopJobCardsScreen() {
       >
         <WorkshopFieldLabel>Title *</WorkshopFieldLabel>
         <WorkshopTextInput value={form.title} onChangeText={(v) => setForm((f) => ({ ...f, title: v }))} />
-        <WorkshopFieldLabel>Description</WorkshopFieldLabel>
+        <WorkshopFieldLabel>Description (Defected reports)</WorkshopFieldLabel>
         <WorkshopTextInput value={form.description} onChangeText={(v) => setForm((f) => ({ ...f, description: v }))} multiline />
         <WorkshopPickerField
           label="Assign to"
@@ -408,8 +404,6 @@ export function MobileWorkshopJobCardsScreen() {
           <View style={{ flex: 1 }}><WorkshopTextInput keyboardType="decimal-pad" value={form.parts_estimate} onChangeText={(v) => setForm((f) => ({ ...f, parts_estimate: v }))} /></View>
           <View style={{ width: 64 }}><WorkshopTextInput keyboardType="decimal-pad" value={form.vat_rate_percent} onChangeText={(v) => setForm((f) => ({ ...f, vat_rate_percent: v }))} /></View>
         </View>
-        <WorkshopFieldLabel>Notes</WorkshopFieldLabel>
-        <WorkshopTextInput value={form.notes} onChangeText={(v) => setForm((f) => ({ ...f, notes: v }))} multiline />
       </WorkshopFormSheet>
     </WorkshopChrome>
   );
