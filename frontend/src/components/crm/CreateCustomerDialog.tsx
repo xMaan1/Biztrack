@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,19 +8,19 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '../ui/dialog';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { Textarea } from '../ui/textarea';
-import { CountrySelect } from '../ui/country-select';
+} from "../ui/dialog";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { Textarea } from "../ui/textarea";
+import { CountrySelect } from "../ui/country-select";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../ui/select';
+} from "../ui/select";
 import {
   Table,
   TableBody,
@@ -28,7 +28,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../ui/table';
+} from "../ui/table";
 import {
   Camera,
   Edit,
@@ -36,8 +36,8 @@ import {
   Paperclip,
   Trash2,
   UserPlus,
-} from 'lucide-react';
-import { toast } from 'sonner';
+} from "lucide-react";
+import { toast } from "sonner";
 import {
   Customer,
   CustomerCreate,
@@ -46,46 +46,46 @@ import {
   GuarantorCreate,
   LabeledEmailItem,
   LabeledPhoneItem,
-} from '@/src/services/CRMService';
-import crmService from '@/src/services/CRMService';
-import fileUploadService from '@/src/services/FileUploadService';
-import { LabeledContactFields } from '@/src/components/crm/LabeledContactFields';
-import { CustomerTypeNameFields } from '@/src/components/crm/CustomerTypeNameFields';
+} from "@/src/services/CRMService";
+import crmService from "@/src/services/CRMService";
+import fileUploadService from "@/src/services/FileUploadService";
+import { LabeledContactFields } from "@/src/components/crm/LabeledContactFields";
+import { CustomerTypeNameFields } from "@/src/components/crm/CustomerTypeNameFields";
 import {
   buildCustomerCreatePayload,
   validateCustomerNameFields,
-} from '@/src/utils/customerUtils';
-import { extractErrorMessage } from '@/src/utils/errorUtils';
+} from "@/src/utils/customerUtils";
+import { extractErrorMessage } from "@/src/utils/errorUtils";
 
 const defaultFormData = (): CustomerCreate => ({
-  firstName: '',
-  lastName: '',
-  emails: [{ value: '', label: 'personal' }] as LabeledEmailItem[],
-  phones: [{ value: '', label: 'work' }] as LabeledPhoneItem[],
-  cnic: '',
-  address: '',
-  city: '',
-  state: '',
-  country: '',
-  postalCode: '',
-  customerType: 'individual',
-  customerStatus: 'active',
+  firstName: "",
+  lastName: "",
+  emails: [{ value: "", label: "personal" }] as LabeledEmailItem[],
+  phones: [{ value: "", label: "work" }] as LabeledPhoneItem[],
+  cnic: "",
+  address: "",
+  city: "",
+  state: "",
+  country: "",
+  postalCode: "",
+  customerType: "individual",
+  customerStatus: "active",
   creditLimit: undefined,
   currentBalance: undefined,
-  paymentTerms: 'Cash',
+  paymentTerms: "Cash",
   tags: [],
-  description: '',
+  description: "",
   attachments: [] as CustomerAttachment[],
 });
 
 const emptyGuarantorForm: GuarantorCreate = {
-  name: '',
-  mobile: '',
-  cnic: '',
-  residential_address: '',
-  official_address: '',
-  occupation: '',
-  relation: '',
+  name: "",
+  mobile: "",
+  cnic: "",
+  residential_address: "",
+  official_address: "",
+  occupation: "",
+  relation: "",
 };
 
 export interface CreateCustomerDialogProps {
@@ -100,11 +100,17 @@ export function CreateCustomerDialog({
   onCreated,
 }: CreateCustomerDialogProps) {
   const [formData, setFormData] = useState<CustomerCreate>(defaultFormData());
-  const [customerPhotoPreview, setCustomerPhotoPreview] = useState<string | null>(null);
-  const [createGuarantors, setCreateGuarantors] = useState<GuarantorCreate[]>([]);
+  const [customerPhotoPreview, setCustomerPhotoPreview] = useState<
+    string | null
+  >(null);
+  const [createGuarantors, setCreateGuarantors] = useState<GuarantorCreate[]>(
+    [],
+  );
   const [guarantorDialogOpen, setGuarantorDialogOpen] = useState(false);
-  const [guarantorForm, setGuarantorForm] = useState<GuarantorCreate>(emptyGuarantorForm);
-  const [editingCreateGuarantorIndex, setEditingCreateGuarantorIndex] = useState<number | null>(null);
+  const [guarantorForm, setGuarantorForm] =
+    useState<GuarantorCreate>(emptyGuarantorForm);
+  const [editingCreateGuarantorIndex, setEditingCreateGuarantorIndex] =
+    useState<number | null>(null);
   const [attachmentUploading, setAttachmentUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -125,27 +131,31 @@ export function CreateCustomerDialog({
     }
   }, [open]);
 
-  const handleCustomerTypeChange = (type: 'individual' | 'business') => {
+  const handleCustomerTypeChange = (type: "individual" | "business") => {
     setFormData((prev) => ({
       ...prev,
       customerType: type,
-      ...(type === 'business'
-        ? { lastName: '' }
-        : prev.customerType === 'business'
-          ? { firstName: '', lastName: '' }
+      ...(type === "business"
+        ? { lastName: "" }
+        : prev.customerType === "business"
+          ? { firstName: "", lastName: "" }
           : {}),
     }));
   };
 
-  const handleCustomerPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCustomerPhotoChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = e.target.files?.[0];
-    if (!file || !file.type.startsWith('image/')) return;
+    if (!file || !file.type.startsWith("image/")) return;
     const reader = new FileReader();
     reader.onload = () => setCustomerPhotoPreview(reader.result as string);
     reader.readAsDataURL(file);
   };
 
-  const handleAttachmentFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAttachmentFile = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setAttachmentUploading(true);
@@ -162,12 +172,12 @@ export function CreateCustomerDialog({
           },
         ],
       }));
-      toast.success('File attached');
+      toast.success("File attached");
     } catch (err) {
-      toast.error(extractErrorMessage(err, 'Upload failed'));
+      toast.error(extractErrorMessage(err, "Upload failed"));
     } finally {
       setAttachmentUploading(false);
-      e.target.value = '';
+      e.target.value = "";
     }
   };
 
@@ -180,7 +190,7 @@ export function CreateCustomerDialog({
         try {
           await fileUploadService.deleteFile(key);
         } catch {
-          toast.warning('Removed from list; storage delete may have failed');
+          toast.warning("Removed from list; storage delete may have failed");
         }
       }
     }
@@ -204,12 +214,15 @@ export function CreateCustomerDialog({
 
   const handleDeleteGuarantor = (index: number) => {
     setCreateGuarantors((prev) => prev.filter((_, i) => i !== index));
-    toast.success('Guarantor removed');
+    toast.success("Guarantor removed");
   };
 
   const handleGuarantorDialogSubmit = () => {
     if (!guarantorForm.name.trim()) return;
-    if (editingCreateGuarantorIndex !== null && editingCreateGuarantorIndex >= 0) {
+    if (
+      editingCreateGuarantorIndex !== null &&
+      editingCreateGuarantorIndex >= 0
+    ) {
       setCreateGuarantors((prev) =>
         prev.map((item, idx) =>
           idx === editingCreateGuarantorIndex ? guarantorForm : item,
@@ -222,7 +235,9 @@ export function CreateCustomerDialog({
     setEditingCreateGuarantorIndex(null);
     setGuarantorDialogOpen(false);
     toast.success(
-      editingCreateGuarantorIndex !== null ? 'Guarantor updated' : 'Guarantor added',
+      editingCreateGuarantorIndex !== null
+        ? "Guarantor updated"
+        : "Guarantor added",
     );
   };
 
@@ -243,10 +258,16 @@ export function CreateCustomerDialog({
       const created = await CustomerService.createCustomer(payload);
       if (customerPhotoPreview) {
         try {
-          await CustomerService.uploadCustomerPhoto(created.id, customerPhotoPreview);
+          await CustomerService.uploadCustomerPhoto(
+            created.id,
+            customerPhotoPreview,
+          );
         } catch (photoErr) {
           toast.warning(
-            extractErrorMessage(photoErr, 'Customer created but photo upload failed'),
+            extractErrorMessage(
+              photoErr,
+              "Customer created but photo upload failed",
+            ),
           );
         }
       }
@@ -257,16 +278,16 @@ export function CreateCustomerDialog({
           toast.warning(
             extractErrorMessage(
               guarErr,
-              'Customer created but one or more guarantors could not be added',
+              "Customer created but one or more guarantors could not be added",
             ),
           );
         }
       }
-      toast.success('Customer created successfully');
+      toast.success("Customer created successfully");
       onOpenChange(false);
       onCreated?.(created);
     } catch (error) {
-      toast.error(extractErrorMessage(error, 'Failed to create customer'));
+      toast.error(extractErrorMessage(error, "Failed to create customer"));
     } finally {
       setSubmitting(false);
     }
@@ -275,7 +296,7 @@ export function CreateCustomerDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create New Customer</DialogTitle>
             <DialogDescription>
@@ -322,7 +343,7 @@ export function CreateCustomerDialog({
           <div className="grid grid-cols-4 gap-4">
             <div className="col-span-2">
               <CustomerTypeNameFields
-                customerType={formData.customerType || 'individual'}
+                customerType={formData.customerType || "individual"}
                 firstName={formData.firstName}
                 lastName={formData.lastName}
                 onCustomerTypeChange={handleCustomerTypeChange}
@@ -336,10 +357,14 @@ export function CreateCustomerDialog({
             </div>
             <div className="col-span-2">
               <LabeledContactFields
-                emails={formData.emails || [{ value: '', label: 'personal' }]}
-                phones={formData.phones || [{ value: '', label: 'work' }]}
-                onEmailsChange={(emails) => setFormData((prev) => ({ ...prev, emails }))}
-                onPhonesChange={(phones) => setFormData((prev) => ({ ...prev, phones }))}
+                emails={formData.emails || [{ value: "", label: "personal" }]}
+                phones={formData.phones || [{ value: "", label: "work" }]}
+                onEmailsChange={(emails) =>
+                  setFormData((prev) => ({ ...prev, emails }))
+                }
+                onPhonesChange={(phones) =>
+                  setFormData((prev) => ({ ...prev, phones }))
+                }
               />
             </div>
             <div>
@@ -360,7 +385,7 @@ export function CreateCustomerDialog({
                 onValueChange={(value) =>
                   setFormData((prev) => ({
                     ...prev,
-                    customerStatus: value as 'active' | 'inactive' | 'blocked',
+                    customerStatus: value as "active" | "inactive" | "blocked",
                   }))
                 }
               >
@@ -379,12 +404,12 @@ export function CreateCustomerDialog({
               <Input
                 id="creditLimit"
                 type="number"
-                value={formData.creditLimit ?? ''}
+                value={formData.creditLimit ?? ""}
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
                     creditLimit:
-                      e.target.value === ''
+                      e.target.value === ""
                         ? undefined
                         : parseFloat(e.target.value) || 0,
                   }))
@@ -399,7 +424,11 @@ export function CreateCustomerDialog({
                 onValueChange={(value) =>
                   setFormData((prev) => ({
                     ...prev,
-                    paymentTerms: value as 'Credit' | 'Card' | 'Cash' | 'Due Payments',
+                    paymentTerms: value as
+                      | "Credit"
+                      | "Card"
+                      | "Cash"
+                      | "Due Payments",
                   }))
                 }
               >
@@ -414,7 +443,7 @@ export function CreateCustomerDialog({
                 </SelectContent>
               </Select>
             </div>
-            <div className="col-span-4">
+            <div className="col-span-2">
               <Label htmlFor="address">Billing Address</Label>
               <Input
                 id="address"
@@ -462,21 +491,24 @@ export function CreateCustomerDialog({
                 id="postalCode"
                 value={formData.postalCode}
                 onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, postalCode: e.target.value }))
+                  setFormData((prev) => ({
+                    ...prev,
+                    postalCode: e.target.value,
+                  }))
                 }
                 placeholder="75000"
               />
             </div>
-            <div className="col-span-4">
+            <div className="col-span-2">
               <Label htmlFor="tags">Tags (comma separated)</Label>
               <Input
                 id="tags"
-                value={formData.tags?.join(', ') || ''}
+                value={formData.tags?.join(", ") || ""}
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
                     tags: e.target.value
-                      .split(',')
+                      .split(",")
                       .map((tag) => tag.trim())
                       .filter(Boolean),
                   }))
@@ -484,20 +516,23 @@ export function CreateCustomerDialog({
                 placeholder="vip, regular, premium"
               />
             </div>
-            <div className="col-span-4">
+            <div className="col-span-2">
               <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
-                value={formData.description || ''}
+                value={formData.description || ""}
                 onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, description: e.target.value }))
+                  setFormData((prev) => ({
+                    ...prev,
+                    description: e.target.value,
+                  }))
                 }
                 placeholder="Notes or profile summary for this customer"
-                rows={4}
-                className="resize-y min-h-[80px]"
+                rows={2}
+                className="resize-y min-h-[60px]"
               />
             </div>
-            <div className="col-span-4 space-y-2">
+            <div className="col-span-2 space-y-2">
               <Label>Attachments</Label>
               <input
                 ref={attachmentFileInputRef}
@@ -515,7 +550,7 @@ export function CreateCustomerDialog({
                   onClick={() => attachmentFileInputRef.current?.click()}
                 >
                   <Paperclip className="h-4 w-4 mr-1" />
-                  {attachmentUploading ? 'Uploading…' : 'Add file'}
+                  {attachmentUploading ? "Uploading…" : "Add file"}
                 </Button>
                 <span className="text-xs text-muted-foreground">
                   PDF, DOC, DOCX (max 10MB)
@@ -532,7 +567,7 @@ export function CreateCustomerDialog({
                         className="truncate flex-1"
                         title={att.original_filename || att.url}
                       >
-                        {att.original_filename || 'Attachment'}
+                        {att.original_filename || "Attachment"}
                       </span>
                       <div className="flex items-center gap-1 shrink-0">
                         <a
@@ -562,13 +597,22 @@ export function CreateCustomerDialog({
           </div>
           <div className="border-t pt-4 mt-4">
             <div className="flex items-center justify-between mb-2">
-              <Label className="text-sm font-medium">Guarantors / Friends</Label>
-              <Button type="button" variant="outline" size="sm" onClick={openAddGuarantor}>
+              <Label className="text-sm font-medium">
+                Guarantors / Friends
+              </Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={openAddGuarantor}
+              >
                 <UserPlus className="h-4 w-4 mr-1" /> Add
               </Button>
             </div>
             {createGuarantors.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-2">No guarantors added.</p>
+              <p className="text-sm text-muted-foreground py-2">
+                No guarantors added.
+              </p>
             ) : (
               <div className="border rounded overflow-hidden">
                 <Table>
@@ -585,9 +629,9 @@ export function CreateCustomerDialog({
                     {createGuarantors.map((g, idx) => (
                       <TableRow key={idx}>
                         <TableCell className="font-medium">{g.name}</TableCell>
-                        <TableCell>{g.mobile || '-'}</TableCell>
-                        <TableCell>{g.cnic || '-'}</TableCell>
-                        <TableCell>{g.relation || '-'}</TableCell>
+                        <TableCell>{g.mobile || "-"}</TableCell>
+                        <TableCell>{g.cnic || "-"}</TableCell>
+                        <TableCell>{g.relation || "-"}</TableCell>
                         <TableCell>
                           <Button
                             variant="ghost"
@@ -616,7 +660,7 @@ export function CreateCustomerDialog({
               Cancel
             </Button>
             <Button onClick={handleCreate} disabled={submitting}>
-              {submitting ? 'Creating…' : 'Create Customer'}
+              {submitting ? "Creating…" : "Create Customer"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -626,9 +670,10 @@ export function CreateCustomerDialog({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editingCreateGuarantorIndex !== null && editingCreateGuarantorIndex >= 0
-                ? 'Edit Guarantor'
-                : 'Add Guarantor'}
+              {editingCreateGuarantorIndex !== null &&
+              editingCreateGuarantorIndex >= 0
+                ? "Edit Guarantor"
+                : "Add Guarantor"}
             </DialogTitle>
           </DialogHeader>
           <div className="grid gap-3">
@@ -693,7 +738,10 @@ export function CreateCustomerDialog({
               <Input
                 value={guarantorForm.occupation}
                 onChange={(e) =>
-                  setGuarantorForm((p) => ({ ...p, occupation: e.target.value }))
+                  setGuarantorForm((p) => ({
+                    ...p,
+                    occupation: e.target.value,
+                  }))
                 }
                 placeholder="Job"
               />
@@ -710,14 +758,17 @@ export function CreateCustomerDialog({
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setGuarantorDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setGuarantorDialogOpen(false)}
+            >
               Cancel
             </Button>
             <Button
               onClick={handleGuarantorDialogSubmit}
               disabled={!guarantorForm.name.trim()}
             >
-              {editingCreateGuarantorIndex !== null ? 'Update' : 'Add'}
+              {editingCreateGuarantorIndex !== null ? "Update" : "Add"}
             </Button>
           </DialogFooter>
         </DialogContent>
