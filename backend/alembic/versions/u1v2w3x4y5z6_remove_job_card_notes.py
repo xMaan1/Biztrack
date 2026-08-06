@@ -1,7 +1,7 @@
 """remove job card notes
 
 Revision ID: u1v2w3x4y5z6
-Revises: a1b2c3d4e5f6
+Revises: f1a2b3c4d5e6
 Create Date: 2026-08-06 12:00:00.000000
 
 """
@@ -17,7 +17,7 @@ from migration_utils import (
 
 
 revision: str = "u1v2w3x4y5z6"
-down_revision: Union[str, None] = "a1b2c3d4e5f6"
+down_revision: Union[str, None] = "f1a2b3c4d5e6"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
