@@ -7,6 +7,7 @@ import {
   FileText,
   Hash,
   Loader2,
+  Package,
   Sparkles,
   User,
   Wrench,
@@ -169,6 +170,17 @@ export function InvoiceCreatedDialog({
                     {formatDate(invoice.issueDate || invoice.createdAt)}
                   </span>
                 </div>
+                {invoice.subtotal ? (
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-2 text-gray-500">
+                      <Package className="h-4 w-4 text-blue-500" />
+                      Parts Estimate
+                    </span>
+                    <span className="font-medium text-gray-900">
+                      {formatCurrency(invoice.subtotal)}
+                    </span>
+                  </div>
+                ) : null}
                 {invoice.labourCost ? (
                   <div className="flex items-center justify-between">
                     <span className="flex items-center gap-2 text-gray-500">
