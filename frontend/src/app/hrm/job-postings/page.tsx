@@ -1,25 +1,25 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { ModuleGuard } from '../../../components/guards/PermissionGuard';
+import React, { useState, useEffect } from "react";
+import { ModuleGuard } from "../../../components/guards/PermissionGuard";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
-import { Label } from '@/src/components/ui/label';
-import { Textarea } from '@/src/components/ui/textarea';
+} from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
+import { Label } from "@/src/components/ui/label";
+import { Textarea } from "@/src/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
+} from "@/src/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -27,10 +27,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/src/components/ui/dialog';
-import { Badge } from '@/src/components/ui/badge';
-import { Alert, AlertDescription } from '@/src/components/ui/alert';
-import { useCurrency } from '@/src/contexts/CurrencyContext';
+} from "@/src/components/ui/dialog";
+import { Badge } from "@/src/components/ui/badge";
+import { Alert, AlertDescription } from "@/src/components/ui/alert";
+import { useCurrency } from "@/src/contexts/CurrencyContext";
 import {
   Briefcase,
   Plus,
@@ -43,8 +43,8 @@ import {
   MapPin,
   Users,
   Building,
-} from 'lucide-react';
-import HRMService from '@/src/services/HRMService';
+} from "lucide-react";
+import HRMService from "@/src/services/HRMService";
 import {
   JobPosting,
   JobPostingCreate,
@@ -52,43 +52,45 @@ import {
   Department,
   EmployeeType,
   HRMJobFilters,
-} from '@/src/models/hrm';
-import { DashboardLayout } from '@/src/components/layout';
-import { useCustomDepartments } from '@/src/hooks/useCustomDepartments';
-import { useCachedApi } from '@/src/hooks/useCachedApi';
-import { CustomOptionDialog } from '@/src/components/common/CustomOptionDialog';
-import { extractErrorMessage } from '@/src/utils/errorUtils';
+} from "@/src/models/hrm";
+import { DashboardLayout } from "@/src/components/layout";
+import { useCustomDepartments } from "@/src/hooks/useCustomDepartments";
+import { useCachedApi } from "@/src/hooks/useCachedApi";
+import { CustomOptionDialog } from "@/src/components/common/CustomOptionDialog";
+import { extractErrorMessage } from "@/src/utils/errorUtils";
 
 function validateJobPostingForm(
   data: JobPostingCreate,
   isPublished: boolean,
 ): Record<string, string> {
   const e: Record<string, string> = {};
-  const title = data.title?.trim() ?? '';
-  if (title.length < 2) e.title = 'Title must be at least 2 characters';
-  else if (title.length > 200) e.title = 'Title must be at most 200 characters';
+  const title = data.title?.trim() ?? "";
+  if (title.length < 2) e.title = "Title must be at least 2 characters";
+  else if (title.length > 200) e.title = "Title must be at most 200 characters";
 
-  const desc = data.description?.trim() ?? '';
-  if (desc.length < 20) e.description = 'Description must be at least 20 characters';
-  else if (desc.length > 20000) e.description = 'Description is too long';
+  const desc = data.description?.trim() ?? "";
+  if (desc.length < 20)
+    e.description = "Description must be at least 20 characters";
+  else if (desc.length > 20000) e.description = "Description is too long";
 
-  const loc = data.location?.trim() ?? '';
-  if (loc.length < 2) e.location = 'Location must be at least 2 characters';
-  else if (loc.length > 200) e.location = 'Location must be at most 200 characters';
+  const loc = data.location?.trim() ?? "";
+  if (loc.length < 2) e.location = "Location must be at least 2 characters";
+  else if (loc.length > 200)
+    e.location = "Location must be at most 200 characters";
 
-  if (!data.openDate?.trim()) e.openDate = 'Open date is required';
+  if (!data.openDate?.trim()) e.openDate = "Open date is required";
 
   if (data.openDate?.trim() && data.closeDate?.trim()) {
     const o = new Date(`${data.openDate}T12:00:00`);
     const c = new Date(`${data.closeDate}T12:00:00`);
     if (!Number.isNaN(o.getTime()) && !Number.isNaN(c.getTime()) && c < o) {
-      e.closeDate = 'Close date must be on or after open date';
+      e.closeDate = "Close date must be on or after open date";
     }
   }
 
   const sal = data.salaryRange?.trim();
   if (sal && sal.length > 500) {
-    e.salaryRange = 'Salary range must be at most 500 characters';
+    e.salaryRange = "Salary range must be at most 500 characters";
   }
 
   if (data.hiringManagerId?.trim()) {
@@ -98,7 +100,7 @@ function validateJobPostingForm(
         u,
       )
     ) {
-      e.hiringManagerId = 'Hiring manager must be a valid UUID';
+      e.hiringManagerId = "Hiring manager must be a valid UUID";
     }
   }
 
@@ -106,10 +108,10 @@ function validateJobPostingForm(
     const reqs = (data.requirements || []).filter((x) => String(x).trim());
     const resps = (data.responsibilities || []).filter((x) => String(x).trim());
     if (reqs.length < 1) {
-      e.requirements = 'Add at least one requirement to publish';
+      e.requirements = "Add at least one requirement to publish";
     }
     if (resps.length < 1) {
-      e.responsibilities = 'Add at least one responsibility to publish';
+      e.responsibilities = "Add at least one responsibility to publish";
     }
   }
 
@@ -118,7 +120,10 @@ function validateJobPostingForm(
 
 export default function HRMJobPostingsPage() {
   return (
-    <ModuleGuard module="hrm" fallback={<div>You don't have access to HRM module</div>}>
+    <ModuleGuard
+      module="hrm"
+      fallback={<div>You don't have access to HRM module</div>}
+    >
       <HRMJobPostingsContent />
     </ModuleGuard>
   );
@@ -127,7 +132,7 @@ export default function HRMJobPostingsPage() {
 function HRMJobPostingsContent() {
   const { getCurrencySymbol } = useCurrency();
   const [filters, setFilters] = useState<HRMJobFilters>({});
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingJobPosting, setEditingJobPosting] = useState<JobPosting | null>(
@@ -153,40 +158,40 @@ function HRMJobPostingsContent() {
   } = useCustomDepartments();
 
   // Cached job postings with shorter TTL since they change more frequently
-  const { 
-    data: jobPostingsData, 
-    loading: jobPostingsLoading, 
+  const {
+    data: jobPostingsData,
+    loading: jobPostingsLoading,
     error: jobPostingsError,
-    refetch: refetchJobPostings 
+    refetch: refetchJobPostings,
   } = useCachedApi<{ jobPostings: JobPosting[] }>(
     `job-postings-${JSON.stringify(filters)}`,
     () => HRMService.getJobPostings(filters, 1, 100),
-    { ttl: 2 * 60 * 1000 } // 2 minutes cache
+    { ttl: 2 * 60 * 1000 }, // 2 minutes cache
   );
 
   const jobPostings = jobPostingsData?.jobPostings || [];
   const loading = jobPostingsLoading || customOptionsLoading;
-  
+
   // Set error from API if there's an error
   useEffect(() => {
     if (jobPostingsError) {
-      setError('Failed to load job postings');
+      setError("Failed to load job postings");
     }
   }, [jobPostingsError]);
   const [formData, setFormData] = useState<JobPostingCreate>({
-    title: '',
+    title: "",
     department: Department.ENGINEERING,
-    description: '',
+    description: "",
     requirements: [] as string[],
     responsibilities: [] as string[],
-    location: '',
+    location: "",
     type: EmployeeType.FULL_TIME,
-    salaryRange: '',
+    salaryRange: "",
     benefits: [] as string[],
     status: JobStatus.DRAFT,
-    openDate: new Date().toISOString().split('T')[0],
-    closeDate: '',
-    hiringManagerId: '',
+    openDate: new Date().toISOString().split("T")[0],
+    closeDate: "",
+    hiringManagerId: "",
     tags: [] as string[],
   });
 
@@ -198,7 +203,7 @@ function HRMJobPostingsContent() {
 
   const resetFilters = () => {
     setFilters({});
-    setSearch('');
+    setSearch("");
   };
 
   const handleCreateCustomDepartment = async (
@@ -207,25 +212,24 @@ function HRMJobPostingsContent() {
   ) => {
     try {
       await createCustomDepartment(name, description);
-    } catch (error) {
-      }
+    } catch (error) {}
   };
 
   const resetForm = () => {
     setFormData({
-      title: '',
+      title: "",
       department: Department.ENGINEERING,
-      description: '',
+      description: "",
       requirements: [] as string[],
       responsibilities: [] as string[],
-      location: '',
+      location: "",
       type: EmployeeType.FULL_TIME,
-      salaryRange: '',
+      salaryRange: "",
       benefits: [] as string[],
       status: JobStatus.DRAFT,
-      openDate: new Date().toISOString().split('T')[0],
-      closeDate: '',
-      hiringManagerId: '',
+      openDate: new Date().toISOString().split("T")[0],
+      closeDate: "",
+      hiringManagerId: "",
       tags: [] as string[],
     });
     setEditingJobPosting(null);
@@ -242,17 +246,17 @@ function HRMJobPostingsContent() {
       const fieldErrs = validateJobPostingForm(formData, published);
       setFormErrors(fieldErrs);
       if (Object.keys(fieldErrs).length > 0) {
-        setError('Please fix the highlighted fields.');
+        setError("Please fix the highlighted fields.");
         setSubmitting(false);
         return;
       }
 
       if (editingJobPosting) {
         await HRMService.updateJobPosting(editingJobPosting.id, formData);
-        setSuccessMessage('Job posting updated successfully!');
+        setSuccessMessage("Job posting updated successfully!");
       } else {
         await HRMService.createJobPosting(formData);
-        setSuccessMessage('Job posting created successfully!');
+        setSuccessMessage("Job posting created successfully!");
       }
 
       setShowCreateDialog(false);
@@ -260,9 +264,12 @@ function HRMJobPostingsContent() {
       refetchJobPostings();
     } catch (err) {
       setError(
-        extractErrorMessage(err, 'Failed to save job posting. Please try again.'),
+        extractErrorMessage(
+          err,
+          "Failed to save job posting. Please try again.",
+        ),
       );
-      } finally {
+    } finally {
       setSubmitting(false);
     }
   };
@@ -277,12 +284,12 @@ function HRMJobPostingsContent() {
       responsibilities: jobPosting.responsibilities,
       location: jobPosting.location,
       type: jobPosting.type,
-      salaryRange: jobPosting.salaryRange || '',
+      salaryRange: jobPosting.salaryRange || "",
       benefits: jobPosting.benefits,
       status: jobPosting.status,
-      openDate: jobPosting.openDate.split('T')[0],
-      closeDate: jobPosting.closeDate?.split('T')[0] || '',
-      hiringManagerId: jobPosting.hiringManagerId || '',
+      openDate: jobPosting.openDate.split("T")[0],
+      closeDate: jobPosting.closeDate?.split("T")[0] || "",
+      hiringManagerId: jobPosting.hiringManagerId || "",
       tags: jobPosting.tags,
     });
     setFormErrors({});
@@ -303,40 +310,40 @@ function HRMJobPostingsContent() {
     try {
       setDeleting(true);
       await HRMService.deleteJobPosting(deletingJobPosting.id);
-      setSuccessMessage('Job posting deleted successfully!');
+      setSuccessMessage("Job posting deleted successfully!");
       setDeletingJobPosting(null);
       refetchJobPostings();
     } catch (err) {
-      setError('Failed to delete job posting. Please try again.');
-      } finally {
+      setError("Failed to delete job posting. Please try again.");
+    } finally {
       setDeleting(false);
     }
   };
 
   const getStatusColor = (status: JobStatus) => {
     const statusColors: { [key: string]: string } = {
-      draft: 'bg-gray-100 text-gray-800',
-      published: 'bg-green-100 text-green-800',
-      closed: 'bg-red-100 text-red-800',
-      on_hold: 'bg-yellow-100 text-yellow-800',
+      draft: "bg-gray-100 text-gray-800",
+      published: "bg-green-100 text-green-800",
+      closed: "bg-red-100 text-red-800",
+      on_hold: "bg-yellow-100 text-yellow-800",
     };
-    return statusColors[status] || 'bg-gray-100 text-gray-800';
+    return statusColors[status] || "bg-gray-100 text-gray-800";
   };
 
   const getDepartmentColor = (department: Department) => {
     const deptColors: { [key: string]: string } = {
-      engineering: 'bg-blue-100 text-blue-800',
-      sales: 'bg-green-100 text-green-800',
-      marketing: 'bg-purple-100 text-purple-800',
-      hr: 'bg-pink-100 text-pink-800',
-      finance: 'bg-yellow-100 text-yellow-800',
-      operations: 'bg-indigo-100 text-indigo-800',
-      customer_support: 'bg-orange-100 text-orange-800',
-      legal: 'bg-red-100 text-red-800',
-      it: 'bg-cyan-100 text-cyan-800',
-      other: 'bg-gray-100 text-gray-800',
+      engineering: "bg-blue-100 text-blue-800",
+      sales: "bg-green-100 text-green-800",
+      marketing: "bg-purple-100 text-purple-800",
+      hr: "bg-pink-100 text-pink-800",
+      finance: "bg-yellow-100 text-yellow-800",
+      operations: "bg-indigo-100 text-indigo-800",
+      customer_support: "bg-orange-100 text-orange-800",
+      legal: "bg-red-100 text-red-800",
+      it: "bg-cyan-100 text-cyan-800",
+      other: "bg-gray-100 text-gray-800",
     };
-    return deptColors[department] || 'bg-gray-100 text-gray-800';
+    return deptColors[department] || "bg-gray-100 text-gray-800";
   };
 
   // Clear success/error messages after 5 seconds
@@ -424,7 +431,7 @@ function HRMJobPostingsContent() {
                     placeholder="Search job postings..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                    onKeyPress={(e) => e.key === "Enter" && handleSearch()}
                   />
                   <Button onClick={handleSearch}>
                     <Search className="w-4 h-4" />
@@ -434,12 +441,12 @@ function HRMJobPostingsContent() {
               <div>
                 <label className="text-sm font-medium">Department</label>
                 <Select
-                  value={filters.department || 'all'}
+                  value={filters.department || "all"}
                   onValueChange={(value) =>
                     setFilters((prev: HRMJobFilters) => ({
                       ...prev,
                       department:
-                        value === 'all' ? undefined : (value as Department),
+                        value === "all" ? undefined : (value as Department),
                     }))
                   }
                 >
@@ -450,7 +457,7 @@ function HRMJobPostingsContent() {
                     <SelectItem value="all">All departments</SelectItem>
                     {Object.values(Department).map((dept) => (
                       <SelectItem key={dept} value={dept}>
-                        {dept.replace('_', ' ').toUpperCase()}
+                        {dept.replace("_", " ").toUpperCase()}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -459,12 +466,12 @@ function HRMJobPostingsContent() {
               <div>
                 <label className="text-sm font-medium">Status</label>
                 <Select
-                  value={filters.status || 'all'}
+                  value={filters.status || "all"}
                   onValueChange={(value) =>
                     setFilters((prev: HRMJobFilters) => ({
                       ...prev,
                       status:
-                        value === 'all' ? undefined : (value as JobStatus),
+                        value === "all" ? undefined : (value as JobStatus),
                     }))
                   }
                 >
@@ -475,7 +482,7 @@ function HRMJobPostingsContent() {
                     <SelectItem value="all">All statuses</SelectItem>
                     {Object.values(JobStatus).map((status) => (
                       <SelectItem key={status} value={status}>
-                        {status.replace('_', ' ').toUpperCase()}
+                        {status.replace("_", " ").toUpperCase()}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -484,12 +491,12 @@ function HRMJobPostingsContent() {
               <div>
                 <label className="text-sm font-medium">Type</label>
                 <Select
-                  value={filters.type || 'all'}
+                  value={filters.type || "all"}
                   onValueChange={(value) =>
                     setFilters((prev: HRMJobFilters) => ({
                       ...prev,
                       type:
-                        value === 'all' ? undefined : (value as EmployeeType),
+                        value === "all" ? undefined : (value as EmployeeType),
                     }))
                   }
                 >
@@ -500,7 +507,7 @@ function HRMJobPostingsContent() {
                     <SelectItem value="all">All types</SelectItem>
                     {Object.values(EmployeeType).map((type) => (
                       <SelectItem key={type} value={type}>
-                        {type.replace('_', ' ').toUpperCase()}
+                        {type.replace("_", " ").toUpperCase()}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -607,13 +614,13 @@ function HRMJobPostingsContent() {
                       <Badge
                         className={getDepartmentColor(jobPosting.department)}
                       >
-                        {jobPosting.department.replace('_', ' ').toUpperCase()}
+                        {jobPosting.department.replace("_", " ").toUpperCase()}
                       </Badge>
                       <Badge className={getStatusColor(jobPosting.status)}>
-                        {jobPosting.status.replace('_', ' ').toUpperCase()}
+                        {jobPosting.status.replace("_", " ").toUpperCase()}
                       </Badge>
                       <Badge variant="outline">
-                        {jobPosting.type.replace('_', ' ').toUpperCase()}
+                        {jobPosting.type.replace("_", " ").toUpperCase()}
                       </Badge>
                       {jobPosting.salaryRange && (
                         <Badge variant="outline">
@@ -630,7 +637,7 @@ function HRMJobPostingsContent() {
                       <div className="flex items-center space-x-1">
                         <Calendar className="w-3 h-3" />
                         <span>
-                          Opens:{' '}
+                          Opens:{" "}
                           {new Date(jobPosting.openDate).toLocaleDateString()}
                         </span>
                       </div>
@@ -638,7 +645,7 @@ function HRMJobPostingsContent() {
                         <div className="flex items-center space-x-1">
                           <Calendar className="w-3 h-3" />
                           <span>
-                            Closes:{' '}
+                            Closes:{" "}
                             {new Date(
                               jobPosting.closeDate,
                             ).toLocaleDateString()}
@@ -648,7 +655,7 @@ function HRMJobPostingsContent() {
                       <div className="flex items-center space-x-1">
                         <Building className="w-3 h-3" />
                         <span>
-                          Created:{' '}
+                          Created:{" "}
                           {new Date(jobPosting.createdAt).toLocaleDateString()}
                         </span>
                       </div>
@@ -700,15 +707,15 @@ function HRMJobPostingsContent() {
             }
           }}
         >
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
-                {editingJobPosting ? 'Edit Job Posting' : 'New Job Posting'}
+                {editingJobPosting ? "Edit Job Posting" : "New Job Posting"}
               </DialogTitle>
               <DialogDescription>
                 {editingJobPosting
-                  ? 'Update job posting information'
-                  : 'Create a new job posting for recruitment'}
+                  ? "Update job posting information"
+                  : "Create a new job posting for recruitment"}
               </DialogDescription>
             </DialogHeader>
 
@@ -718,8 +725,8 @@ function HRMJobPostingsContent() {
               </Alert>
             )}
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2">
+            <div className="grid grid-cols-4 gap-4">
+              <div className="col-span-4">
                 <Label htmlFor="title">Job Title *</Label>
                 <Input
                   id="title"
@@ -728,18 +735,20 @@ function HRMJobPostingsContent() {
                     setFormData((prev) => ({ ...prev, title: e.target.value }))
                   }
                   placeholder="e.g., Senior Software Engineer"
-                  className={formErrors.title ? 'border-red-500' : ''}
+                  className={formErrors.title ? "border-red-500" : ""}
                 />
                 {formErrors.title && (
-                  <p className="text-sm text-red-600 mt-1">{formErrors.title}</p>
+                  <p className="text-sm text-red-600 mt-1">
+                    {formErrors.title}
+                  </p>
                 )}
               </div>
-              <div>
+              <div className="col-span-2">
                 <Label htmlFor="department">Department *</Label>
                 <Select
                   value={formData.department}
                   onValueChange={(value) => {
-                    if (value === 'create_new') {
+                    if (value === "create_new") {
                       setShowCustomDepartmentDialog(true);
                     } else {
                       setFormData((prev) => ({
@@ -755,7 +764,7 @@ function HRMJobPostingsContent() {
                   <SelectContent>
                     {Object.values(Department).map((dept) => (
                       <SelectItem key={dept} value={dept}>
-                        {dept.replace('_', ' ').toUpperCase()}
+                        {dept.replace("_", " ").toUpperCase()}
                       </SelectItem>
                     ))}
 
@@ -777,7 +786,7 @@ function HRMJobPostingsContent() {
                   </SelectContent>
                 </Select>
               </div>
-              <div>
+              <div className="col-span-2">
                 <Label htmlFor="type">Employment Type *</Label>
                 <Select
                   value={formData.type}
@@ -794,13 +803,13 @@ function HRMJobPostingsContent() {
                   <SelectContent>
                     {Object.values(EmployeeType).map((type) => (
                       <SelectItem key={type} value={type}>
-                        {type.replace('_', ' ').toUpperCase()}
+                        {type.replace("_", " ").toUpperCase()}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-              <div>
+              <div className="col-span-2">
                 <Label htmlFor="location">Location *</Label>
                 <Input
                   id="location"
@@ -812,13 +821,15 @@ function HRMJobPostingsContent() {
                     }))
                   }
                   placeholder="e.g., New York, NY"
-                  className={formErrors.location ? 'border-red-500' : ''}
+                  className={formErrors.location ? "border-red-500" : ""}
                 />
                 {formErrors.location && (
-                  <p className="text-sm text-red-600 mt-1">{formErrors.location}</p>
+                  <p className="text-sm text-red-600 mt-1">
+                    {formErrors.location}
+                  </p>
                 )}
               </div>
-              <div>
+              <div className="col-span-2">
                 <Label htmlFor="salaryRange">Salary Range</Label>
                 <Input
                   id="salaryRange"
@@ -830,7 +841,7 @@ function HRMJobPostingsContent() {
                     }))
                   }
                   placeholder={`e.g., ${getCurrencySymbol()}80,000 - ${getCurrencySymbol()}120,000`}
-                  className={formErrors.salaryRange ? 'border-red-500' : ''}
+                  className={formErrors.salaryRange ? "border-red-500" : ""}
                 />
                 {formErrors.salaryRange && (
                   <p className="text-sm text-red-600 mt-1">
@@ -838,7 +849,7 @@ function HRMJobPostingsContent() {
                   </p>
                 )}
               </div>
-              <div>
+              <div className="col-span-2">
                 <Label htmlFor="status">Status *</Label>
                 <Select
                   value={formData.status}
@@ -855,7 +866,7 @@ function HRMJobPostingsContent() {
                   <SelectContent>
                     {Object.values(JobStatus).map((status) => (
                       <SelectItem key={status} value={status}>
-                        {status.replace('_', ' ').toUpperCase()}
+                        {status.replace("_", " ").toUpperCase()}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -873,10 +884,12 @@ function HRMJobPostingsContent() {
                       openDate: e.target.value,
                     }))
                   }
-                  className={formErrors.openDate ? 'border-red-500' : ''}
+                  className={formErrors.openDate ? "border-red-500" : ""}
                 />
                 {formErrors.openDate && (
-                  <p className="text-sm text-red-600 mt-1">{formErrors.openDate}</p>
+                  <p className="text-sm text-red-600 mt-1">
+                    {formErrors.openDate}
+                  </p>
                 )}
               </div>
               <div>
@@ -891,13 +904,15 @@ function HRMJobPostingsContent() {
                       closeDate: e.target.value,
                     }))
                   }
-                  className={formErrors.closeDate ? 'border-red-500' : ''}
+                  className={formErrors.closeDate ? "border-red-500" : ""}
                 />
                 {formErrors.closeDate && (
-                  <p className="text-sm text-red-600 mt-1">{formErrors.closeDate}</p>
+                  <p className="text-sm text-red-600 mt-1">
+                    {formErrors.closeDate}
+                  </p>
                 )}
               </div>
-              <div className="col-span-2">
+              <div className="col-span-4">
                 <Label htmlFor="description">Job Description *</Label>
                 <Textarea
                   id="description"
@@ -910,7 +925,7 @@ function HRMJobPostingsContent() {
                   }
                   placeholder="Detailed job description..."
                   rows={4}
-                  className={formErrors.description ? 'border-red-500' : ''}
+                  className={formErrors.description ? "border-red-500" : ""}
                 />
                 {formErrors.description && (
                   <p className="text-sm text-red-600 mt-1">
@@ -924,18 +939,18 @@ function HRMJobPostingsContent() {
                 </Label>
                 <Textarea
                   id="requirements"
-                  value={(formData.requirements || []).join('\n')}
+                  value={(formData.requirements || []).join("\n")}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
                       requirements: e.target.value
-                        .split('\n')
+                        .split("\n")
                         .filter((line) => line.trim()),
                     }))
                   }
                   placeholder="Enter requirements, one per line..."
                   rows={3}
-                  className={formErrors.requirements ? 'border-red-500' : ''}
+                  className={formErrors.requirements ? "border-red-500" : ""}
                 />
                 {formErrors.requirements && (
                   <p className="text-sm text-red-600 mt-1">
@@ -949,18 +964,20 @@ function HRMJobPostingsContent() {
                 </Label>
                 <Textarea
                   id="responsibilities"
-                  value={(formData.responsibilities || []).join('\n')}
+                  value={(formData.responsibilities || []).join("\n")}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
                       responsibilities: e.target.value
-                        .split('\n')
+                        .split("\n")
                         .filter((line) => line.trim()),
                     }))
                   }
                   placeholder="Enter responsibilities, one per line..."
                   rows={3}
-                  className={formErrors.responsibilities ? 'border-red-500' : ''}
+                  className={
+                    formErrors.responsibilities ? "border-red-500" : ""
+                  }
                 />
                 {formErrors.responsibilities && (
                   <p className="text-sm text-red-600 mt-1">
@@ -968,16 +985,16 @@ function HRMJobPostingsContent() {
                   </p>
                 )}
               </div>
-              <div className="col-span-2">
+              <div className="col-span-4">
                 <Label htmlFor="benefits">Benefits (one per line)</Label>
                 <Textarea
                   id="benefits"
-                  value={(formData.benefits || []).join('\n')}
+                  value={(formData.benefits || []).join("\n")}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
                       benefits: e.target.value
-                        .split('\n')
+                        .split("\n")
                         .filter((line) => line.trim()),
                     }))
                   }
@@ -996,10 +1013,10 @@ function HRMJobPostingsContent() {
               </Button>
               <Button onClick={handleSubmit} disabled={submitting}>
                 {submitting
-                  ? 'Saving...'
+                  ? "Saving..."
                   : editingJobPosting
-                    ? 'Update Job Posting'
-                    : 'Create Job Posting'}
+                    ? "Update Job Posting"
+                    : "Create Job Posting"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -1037,7 +1054,7 @@ function HRMJobPostingsContent() {
                       )}
                     >
                       {viewingJobPosting.department
-                        .replace('_', ' ')
+                        .replace("_", " ")
                         .toUpperCase()}
                     </Badge>
                   </div>
@@ -1046,7 +1063,7 @@ function HRMJobPostingsContent() {
                       Employment Type
                     </Label>
                     <Badge variant="outline">
-                      {viewingJobPosting.type.replace('_', ' ').toUpperCase()}
+                      {viewingJobPosting.type.replace("_", " ").toUpperCase()}
                     </Badge>
                   </div>
                   <div>
@@ -1054,7 +1071,7 @@ function HRMJobPostingsContent() {
                       Status
                     </Label>
                     <Badge className={getStatusColor(viewingJobPosting.status)}>
-                      {viewingJobPosting.status.replace('_', ' ').toUpperCase()}
+                      {viewingJobPosting.status.replace("_", " ").toUpperCase()}
                     </Badge>
                   </div>
                   <div>
@@ -1220,7 +1237,7 @@ function HRMJobPostingsContent() {
                 onClick={confirmDelete}
                 disabled={deleting}
               >
-                {deleting ? 'Deleting...' : 'Delete Job Posting'}
+                {deleting ? "Deleting..." : "Delete Job Posting"}
               </Button>
             </DialogFooter>
           </DialogContent>
