@@ -38,6 +38,38 @@ export interface DashboardData {
       expenses: number;
     }>;
   };
+  invoices: {
+    invoices: {
+      total: number;
+      draft: number;
+      sent: number;
+      paid: number;
+      overdue: number;
+    };
+    amounts: {
+      total: number;
+      paid: number;
+      outstanding: number;
+    };
+  };
+  purchaseOrders: {
+    stats: {
+      total: number;
+      committed: number;
+      received: number;
+      pending: number;
+      committedAmount: number;
+    };
+    recent: Array<{
+      id: string;
+      orderNumber: string;
+      supplierName: string;
+      orderDate: string | null;
+      status: string;
+      totalAmount: number;
+      createdAt: string | null;
+    }>;
+  };
   inventory: {
     totalItems: number;
     lowStock: number;

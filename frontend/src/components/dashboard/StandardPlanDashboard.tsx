@@ -18,6 +18,9 @@ interface DashboardStats extends Partial<AgencyStats> {
   averageProgress: number;
   qualityIssues?: number;
   productionEfficiency?: number;
+  financials?: DashboardData["financials"];
+  invoices?: DashboardData["invoices"];
+  purchaseOrders?: DashboardData["purchaseOrders"];
 }
 
 function getTeamMembersFromDashboard(
@@ -81,6 +84,9 @@ export default function StandardPlanDashboard({
           teamMembers,
           qualityIssues: 0,
           productionEfficiency: averageProgress,
+          financials: dashboardData.financials,
+          invoices: dashboardData.invoices,
+          purchaseOrders: dashboardData.purchaseOrders,
         };
       })()
     : {

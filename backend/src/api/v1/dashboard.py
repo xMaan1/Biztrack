@@ -1,4 +1,8 @@
+from datetime import datetime, timedelta
+from uuid import UUID
+
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import and_, case, desc, func
 from sqlalchemy.orm import Session
 from typing import Dict, Any, Optional
 
@@ -6,8 +10,21 @@ from ...config.database import (
     get_db, get_all_projects, get_invoice_dashboard_data,
     get_project_stats, get_all_users
 )
+from ...config.hrm_models import Supplier
+from ...config.inventory_models import PurchaseOrder
+from ...models.invoices import Invoice
 from ...api.dependencies import get_tenant_context
 from ...core.cache import cached_sync
+
+# Purchase order statuses that represent committed spend (money going out)
+COMMITTED_PO_STATUSES = [
+    "submitted",
+    "approved",
+    "ordered",
+    "arrived",
+    "partially_received",
+    "received",
+]
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 
@@ -35,12 +52,16 @@ def get_dashboard_overview(
         invoices_data = get_invoices_data(db, tenant_id)
         users_data = get_users_data(db, tenant_id)
         subscription_data = get_subscription_data(db, tenant_context)
+        financials_data = get_financials_data(db, tenant_id)
+        purchase_orders_data = get_purchase_orders_data(db, tenant_id)
         
         return {
             "projects": projects_data,
             "invoices": invoices_data,
             "users": users_data,
             "subscription": subscription_data,
+            "financials": financials_data,
+            "purchaseOrders": purchase_orders_data,
             "timestamp": tenant_context.get("timestamp"),
             "tenant_id": tenant_id
         }
@@ -113,3 +134,156 @@ def get_subscription_data(db: Session, tenant_context: dict) -> Dict[str, Any]:
         }
     except Exception as e:
         return {"plan": "basic", "status": "active", "error": str(e)}
+
+
+def _get_supplier_name_map(db: Session, tenant_id: str, supplier_ids: list) -> Dict[str, str]:
+    """Build a {supplier_id: supplier_name} map for the given supplier ids"""
+    valid_ids = []
+    for supplier_id in supplier_ids:
+        try:
+            valid_ids.append(UUID(str(supplier_id)))
+        except (ValueError, TypeError):
+            continue
+
+    if not valid_ids:
+        return {}
+
+    supplier_rows = db.query(Supplier.id, Supplier.name).filter(
+        Supplier.tenant_id == tenant_id,
+        Supplier.id.in_(valid_ids)
+    ).all()
+
+    return {str(supplier_id): name for supplier_id, name in supplier_rows}
+
+
+def get_financials_data(db: Session, tenant_id: str) -> Dict[str, Any]:
+    """Get financial overview: revenue, committed PO spend, net income and monthly trend"""
+    try:
+        total_revenue = db.query(func.sum(Invoice.total)).filter(
+            and_(Invoice.tenant_id == tenant_id, Invoice.status == "paid")
+        ).scalar() or 0
+
+        total_expenses = db.query(func.sum(PurchaseOrder.totalAmount)).filter(
+            and_(
+                PurchaseOrder.tenant_id == tenant_id,
+                PurchaseOrder.status.in_(COMMITTED_PO_STATUSES),
+            )
+        ).scalar() or 0
+
+        monthly_trend = []
+        for i in range(5, -1, -1):
+            date = datetime.now() - timedelta(days=30 * i)
+            month_start = date.replace(day=1)
+            month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+
+            revenue = db.query(func.sum(Invoice.total)).filter(
+                and_(
+                    Invoice.tenant_id == tenant_id,
+                    Invoice.status == "paid",
+                    Invoice.paidAt >= month_start,
+                    Invoice.paidAt <= month_end,
+                )
+            ).scalar() or 0
+
+            expenses = db.query(func.sum(PurchaseOrder.totalAmount)).filter(
+                and_(
+                    PurchaseOrder.tenant_id == tenant_id,
+                    PurchaseOrder.status.in_(COMMITTED_PO_STATUSES),
+                    PurchaseOrder.createdAt >= month_start,
+                    PurchaseOrder.createdAt <= month_end,
+                )
+            ).scalar() or 0
+
+            monthly_trend.append({
+                "month": month_start.strftime("%b %Y"),
+                "revenue": round(float(revenue), 2),
+                "expenses": round(float(expenses), 2),
+            })
+
+        return {
+            "totalRevenue": round(float(total_revenue), 2),
+            "totalExpenses": round(float(total_expenses), 2),
+            "netIncome": round(float(total_revenue) - float(total_expenses), 2),
+            "monthlyTrend": monthly_trend,
+        }
+    except Exception as e:
+        return {
+            "totalRevenue": 0,
+            "totalExpenses": 0,
+            "netIncome": 0,
+            "monthlyTrend": [],
+            "error": str(e),
+        }
+
+
+def get_purchase_orders_data(db: Session, tenant_id: str) -> Dict[str, Any]:
+    """Get purchase order stats and recent orders"""
+    try:
+        total_pos = db.query(func.count(PurchaseOrder.id)).filter(
+            PurchaseOrder.tenant_id == tenant_id
+        ).scalar() or 0
+
+        committed_pos = db.query(func.count(PurchaseOrder.id)).filter(
+            and_(
+                PurchaseOrder.tenant_id == tenant_id,
+                PurchaseOrder.status.in_(COMMITTED_PO_STATUSES),
+            )
+        ).scalar() or 0
+
+        received_pos = db.query(func.count(PurchaseOrder.id)).filter(
+            and_(
+                PurchaseOrder.tenant_id == tenant_id,
+                PurchaseOrder.status == "received",
+            )
+        ).scalar() or 0
+
+        pending_pos = db.query(func.count(PurchaseOrder.id)).filter(
+            and_(
+                PurchaseOrder.tenant_id == tenant_id,
+                PurchaseOrder.status.in_(["draft", "submitted", "approved", "ordered", "arrived", "partially_received"]),
+            )
+        ).scalar() or 0
+
+        committed_amount = db.query(func.sum(PurchaseOrder.totalAmount)).filter(
+            and_(
+                PurchaseOrder.tenant_id == tenant_id,
+                PurchaseOrder.status.in_(COMMITTED_PO_STATUSES),
+            )
+        ).scalar() or 0
+
+        recent_pos = db.query(PurchaseOrder).filter(
+            PurchaseOrder.tenant_id == tenant_id
+        ).order_by(desc(PurchaseOrder.createdAt)).limit(5).all()
+
+        supplier_ids = [str(po.supplierId) for po in recent_pos if po.supplierId]
+        supplier_name_map = _get_supplier_name_map(db, tenant_id, supplier_ids)
+
+        recent = [
+            {
+                "id": str(po.id),
+                "orderNumber": po.poNumber or "",
+                "supplierName": supplier_name_map.get(str(po.supplierId), ""),
+                "orderDate": po.orderDate.isoformat() if po.orderDate else None,
+                "status": po.status or "draft",
+                "totalAmount": round(float(po.totalAmount or 0), 2),
+                "createdAt": po.createdAt.isoformat() if po.createdAt else None,
+            }
+            for po in recent_pos
+        ]
+
+        return {
+            "stats": {
+                "total": total_pos,
+                "committed": committed_pos,
+                "received": received_pos,
+                "pending": pending_pos,
+                "committedAmount": round(float(committed_amount), 2),
+            },
+            "recent": recent,
+        }
+    except Exception as e:
+        return {
+            "stats": {"total": 0, "committed": 0, "received": 0, "pending": 0, "committedAmount": 0},
+            "recent": [],
+            "error": str(e),
+        }
