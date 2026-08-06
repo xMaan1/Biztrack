@@ -1,25 +1,25 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { ModuleGuard } from '../../../components/guards/PermissionGuard';
+import React, { useState, useEffect, useCallback } from "react";
+import { ModuleGuard } from "../../../components/guards/PermissionGuard";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
-import { Label } from '@/src/components/ui/label';
-import { Textarea } from '@/src/components/ui/textarea';
+} from "@/src/components/ui/card";
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
+import { Label } from "@/src/components/ui/label";
+import { Textarea } from "@/src/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
+} from "@/src/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -27,9 +27,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/src/components/ui/dialog';
-import { Badge } from '@/src/components/ui/badge';
-import { Alert, AlertDescription } from '@/src/components/ui/alert';
+} from "@/src/components/ui/dialog";
+import { Badge } from "@/src/components/ui/badge";
+import { Alert, AlertDescription } from "@/src/components/ui/alert";
 import {
   Award,
   Plus,
@@ -44,8 +44,8 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
-} from 'lucide-react';
-import HRMService from '@/src/services/HRMService';
+} from "lucide-react";
+import HRMService from "@/src/services/HRMService";
 import {
   PerformanceReview,
   PerformanceReviewCreate,
@@ -53,12 +53,15 @@ import {
   ReviewStatus,
   HRMReviewFilters,
   Employee,
-} from '@/src/models/hrm';
-import { DashboardLayout } from '@/src/components/layout';
+} from "@/src/models/hrm";
+import { DashboardLayout } from "@/src/components/layout";
 
 export default function HRMPerformanceReviewsPage() {
   return (
-    <ModuleGuard module="hrm" fallback={<div>You don't have access to HRM module</div>}>
+    <ModuleGuard
+      module="hrm"
+      fallback={<div>You don't have access to HRM module</div>}
+    >
       <HRMPerformanceReviewsContent />
     </ModuleGuard>
   );
@@ -72,7 +75,7 @@ function HRMPerformanceReviewsContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<HRMReviewFilters>({});
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingReview, setEditingReview] = useState<PerformanceReview | null>(
     null,
@@ -86,11 +89,11 @@ function HRMPerformanceReviewsContent() {
   const [deleting, setDeleting] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [formData, setFormData] = useState<PerformanceReviewCreate>({
-    employeeId: '',
-    reviewerId: '',
+    employeeId: "",
+    reviewerId: "",
     reviewType: ReviewType.ANNUAL,
-    reviewPeriod: '',
-    reviewDate: new Date().toISOString().split('T')[0],
+    reviewPeriod: "",
+    reviewDate: new Date().toISOString().split("T")[0],
     status: ReviewStatus.DRAFT,
     goals: [] as string[],
     achievements: [] as string[],
@@ -100,8 +103,8 @@ function HRMPerformanceReviewsContent() {
     communicationRating: 0,
     teamworkRating: 0,
     leadershipRating: 0,
-    comments: '',
-    nextReviewDate: '',
+    comments: "",
+    nextReviewDate: "",
   });
 
   useEffect(() => {
@@ -117,8 +120,8 @@ function HRMPerformanceReviewsContent() {
       const response = await HRMService.getPerformanceReviews(filters, 1, 100);
       setPerformanceReviews(response.reviews);
     } catch (err) {
-      setError('Failed to load performance reviews');
-      } finally {
+      setError("Failed to load performance reviews");
+    } finally {
       setLoading(false);
     }
   }, [filters]);
@@ -127,8 +130,7 @@ function HRMPerformanceReviewsContent() {
     try {
       const response = await HRMService.getEmployees({}, 1, 100);
       setEmployees(response.employees);
-    } catch (err) {
-      }
+    } catch (err) {}
   };
 
   const handleSearch = () => {
@@ -137,16 +139,16 @@ function HRMPerformanceReviewsContent() {
 
   const resetFilters = () => {
     setFilters({});
-    setSearch('');
+    setSearch("");
   };
 
   const resetForm = () => {
     setFormData({
-      employeeId: '',
-      reviewerId: '',
+      employeeId: "",
+      reviewerId: "",
       reviewType: ReviewType.ANNUAL,
-      reviewPeriod: '',
-      reviewDate: new Date().toISOString().split('T')[0],
+      reviewPeriod: "",
+      reviewDate: new Date().toISOString().split("T")[0],
       status: ReviewStatus.DRAFT,
       goals: [] as string[],
       achievements: [] as string[],
@@ -156,8 +158,8 @@ function HRMPerformanceReviewsContent() {
       communicationRating: 0,
       teamworkRating: 0,
       leadershipRating: 0,
-      comments: '',
-      nextReviewDate: '',
+      comments: "",
+      nextReviewDate: "",
     });
     setEditingReview(null);
     setError(null);
@@ -176,7 +178,7 @@ function HRMPerformanceReviewsContent() {
         !formData.reviewDate
       ) {
         setError(
-          'Please fill in all required fields (Employee, Reviewer, and Review Date)',
+          "Please fill in all required fields (Employee, Reviewer, and Review Date)",
         );
         return;
       }
@@ -200,10 +202,10 @@ function HRMPerformanceReviewsContent() {
           nextReviewDate: formData.nextReviewDate,
         };
         await HRMService.updatePerformanceReview(editingReview.id, updateData);
-        setSuccessMessage('Performance review updated successfully!');
+        setSuccessMessage("Performance review updated successfully!");
       } else {
         await HRMService.createPerformanceReview(formData);
-        setSuccessMessage('Performance review created successfully!');
+        setSuccessMessage("Performance review created successfully!");
       }
 
       setShowCreateDialog(false);
@@ -213,8 +215,8 @@ function HRMPerformanceReviewsContent() {
         await loadPerformanceReviews();
       }, 100);
     } catch (err) {
-      setError('Failed to save performance review. Please try again.');
-      } finally {
+      setError("Failed to save performance review. Please try again.");
+    } finally {
       setSubmitting(false);
     }
   };
@@ -225,8 +227,8 @@ function HRMPerformanceReviewsContent() {
       employeeId: review.employeeId,
       reviewerId: review.reviewerId,
       reviewType: review.reviewType,
-      reviewPeriod: review.reviewPeriod || '',
-      reviewDate: review.reviewDate.split('T')[0],
+      reviewPeriod: review.reviewPeriod || "",
+      reviewDate: review.reviewDate.split("T")[0],
       status: review.status,
       goals: review.goals || [],
       achievements: review.achievements || [],
@@ -236,8 +238,8 @@ function HRMPerformanceReviewsContent() {
       communicationRating: review.communicationRating || 0,
       teamworkRating: review.teamworkRating || 0,
       leadershipRating: review.leadershipRating || 0,
-      comments: review.comments || '',
-      nextReviewDate: review.nextReviewDate || '',
+      comments: review.comments || "",
+      nextReviewDate: review.nextReviewDate || "",
     });
     setShowCreateDialog(true);
   };
@@ -256,49 +258,49 @@ function HRMPerformanceReviewsContent() {
     try {
       setDeleting(true);
       await HRMService.deletePerformanceReview(deletingReview.id);
-      setSuccessMessage('Performance review deleted successfully!');
+      setSuccessMessage("Performance review deleted successfully!");
       setDeletingReview(null);
       loadPerformanceReviews();
     } catch (err) {
-      setError('Failed to delete performance review. Please try again.');
-      } finally {
+      setError("Failed to delete performance review. Please try again.");
+    } finally {
       setDeleting(false);
     }
   };
 
   const getStatusColor = (status: ReviewStatus) => {
     const statusColors: { [key: string]: string } = {
-      draft: 'bg-gray-100 text-gray-800',
-      in_progress: 'bg-blue-100 text-blue-800',
-      completed: 'bg-green-100 text-green-800',
-      approved: 'bg-purple-100 text-purple-800',
+      draft: "bg-gray-100 text-gray-800",
+      in_progress: "bg-blue-100 text-blue-800",
+      completed: "bg-green-100 text-green-800",
+      approved: "bg-purple-100 text-purple-800",
     };
-    return statusColors[status] || 'bg-gray-100 text-gray-800';
+    return statusColors[status] || "bg-gray-100 text-gray-800";
   };
 
   const getReviewTypeColor = (type: ReviewType) => {
     const typeColors: { [key: string]: string } = {
-      annual: 'bg-blue-100 text-blue-800',
-      quarterly: 'bg-green-100 text-green-800',
-      monthly: 'bg-yellow-100 text-yellow-800',
-      project_based: 'bg-purple-100 text-purple-800',
-      probation: 'bg-orange-100 text-orange-800',
+      annual: "bg-blue-100 text-blue-800",
+      quarterly: "bg-green-100 text-green-800",
+      monthly: "bg-yellow-100 text-yellow-800",
+      project_based: "bg-purple-100 text-purple-800",
+      probation: "bg-orange-100 text-orange-800",
     };
-    return typeColors[type] || 'bg-gray-100 text-gray-800';
+    return typeColors[type] || "bg-gray-100 text-gray-800";
   };
 
   const getRatingColor = (rating: number) => {
-    if (rating >= 4.5) return 'bg-green-100 text-green-800';
-    if (rating >= 3.5) return 'bg-blue-100 text-blue-800';
-    if (rating >= 2.5) return 'bg-yellow-100 text-yellow-800';
-    return 'bg-red-100 text-red-800';
+    if (rating >= 4.5) return "bg-green-100 text-green-800";
+    if (rating >= 3.5) return "bg-blue-100 text-blue-800";
+    if (rating >= 2.5) return "bg-yellow-100 text-yellow-800";
+    return "bg-red-100 text-red-800";
   };
 
   const getEmployeeName = (employeeId: string) => {
     const employee = employees.find((emp) => emp.id === employeeId);
     return employee
       ? `${employee.firstName} ${employee.lastName}`
-      : 'Unknown Employee';
+      : "Unknown Employee";
   };
 
   // Clear success/error messages after 5 seconds
@@ -387,7 +389,7 @@ function HRMPerformanceReviewsContent() {
                     placeholder="Search reviews..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                    onKeyPress={(e) => e.key === "Enter" && handleSearch()}
                   />
                   <Button onClick={handleSearch}>
                     <Search className="w-4 h-4" />
@@ -397,12 +399,12 @@ function HRMPerformanceReviewsContent() {
               <div>
                 <label className="text-sm font-medium">Review Type</label>
                 <Select
-                  value={filters.reviewType || 'all'}
+                  value={filters.reviewType || "all"}
                   onValueChange={(value) =>
                     setFilters((prev: HRMReviewFilters) => ({
                       ...prev,
                       reviewType:
-                        value === 'all' ? undefined : (value as ReviewType),
+                        value === "all" ? undefined : (value as ReviewType),
                     }))
                   }
                 >
@@ -413,7 +415,7 @@ function HRMPerformanceReviewsContent() {
                     <SelectItem value="all">All types</SelectItem>
                     {Object.values(ReviewType).map((type) => (
                       <SelectItem key={type} value={type}>
-                        {type.replace('_', ' ').toUpperCase()}
+                        {type.replace("_", " ").toUpperCase()}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -422,12 +424,12 @@ function HRMPerformanceReviewsContent() {
               <div>
                 <label className="text-sm font-medium">Status</label>
                 <Select
-                  value={filters.status || 'all'}
+                  value={filters.status || "all"}
                   onValueChange={(value) =>
                     setFilters((prev: HRMReviewFilters) => ({
                       ...prev,
                       status:
-                        value === 'all' ? undefined : (value as ReviewStatus),
+                        value === "all" ? undefined : (value as ReviewStatus),
                     }))
                   }
                 >
@@ -438,7 +440,7 @@ function HRMPerformanceReviewsContent() {
                     <SelectItem value="all">All statuses</SelectItem>
                     {Object.values(ReviewStatus).map((status) => (
                       <SelectItem key={status} value={status}>
-                        {status.replace('_', ' ').toUpperCase()}
+                        {status.replace("_", " ").toUpperCase()}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -447,11 +449,11 @@ function HRMPerformanceReviewsContent() {
               <div>
                 <label className="text-sm font-medium">Employee</label>
                 <Select
-                  value={filters.employeeId || 'all'}
+                  value={filters.employeeId || "all"}
                   onValueChange={(value) =>
                     setFilters((prev: HRMReviewFilters) => ({
                       ...prev,
-                      employeeId: value === 'all' ? undefined : value,
+                      employeeId: value === "all" ? undefined : value,
                     }))
                   }
                 >
@@ -562,8 +564,8 @@ function HRMPerformanceReviewsContent() {
                         <Award className="w-5 h-5 text-gray-500" />
                         <div>
                           <div className="font-medium text-lg">
-                            {getEmployeeName(review.employeeId)} -{' '}
-                            {review.reviewType.replace('_', ' ').toUpperCase()}{' '}
+                            {getEmployeeName(review.employeeId)} -{" "}
+                            {review.reviewType.replace("_", " ").toUpperCase()}{" "}
                             Review
                           </div>
                           <div className="text-sm text-gray-500">
@@ -575,10 +577,10 @@ function HRMPerformanceReviewsContent() {
                     </div>
                     <div className="flex items-center space-x-2 mt-2">
                       <Badge className={getReviewTypeColor(review.reviewType)}>
-                        {review.reviewType.replace('_', ' ').toUpperCase()}
+                        {review.reviewType.replace("_", " ").toUpperCase()}
                       </Badge>
                       <Badge className={getStatusColor(review.status)}>
-                        {review.status.replace('_', ' ').toUpperCase()}
+                        {review.status.replace("_", " ").toUpperCase()}
                       </Badge>
                       <Badge
                         className={getRatingColor(review.overallRating || 0)}
@@ -591,7 +593,7 @@ function HRMPerformanceReviewsContent() {
                       <div className="flex items-center space-x-1">
                         <Calendar className="w-3 h-3" />
                         <span>
-                          Review Date:{' '}
+                          Review Date:{" "}
                           {new Date(review.reviewDate).toLocaleDateString()}
                         </span>
                       </div>
@@ -610,14 +612,14 @@ function HRMPerformanceReviewsContent() {
                       <div className="flex items-center space-x-1">
                         <Clock className="w-3 h-3" />
                         <span>
-                          Created:{' '}
+                          Created:{" "}
                           {new Date(review.createdAt).toLocaleDateString()}
                         </span>
                       </div>
                     </div>
                     {review.goals && review.goals.length > 0 && (
                       <div className="mt-2 text-sm text-gray-600">
-                        <strong>Goals:</strong> {review.goals.join(', ')}
+                        <strong>Goals:</strong> {review.goals.join(", ")}
                       </div>
                     )}
                   </div>
@@ -658,17 +660,17 @@ function HRMPerformanceReviewsContent() {
 
         {/* Create/Edit Performance Review Dialog */}
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
                 {editingReview
-                  ? 'Edit Performance Review'
-                  : 'New Performance Review'}
+                  ? "Edit Performance Review"
+                  : "New Performance Review"}
               </DialogTitle>
               <DialogDescription>
                 {editingReview
-                  ? 'Update performance review information'
-                  : 'Create a new performance review for an employee'}
+                  ? "Update performance review information"
+                  : "Create a new performance review for an employee"}
               </DialogDescription>
             </DialogHeader>
 
@@ -678,8 +680,8 @@ function HRMPerformanceReviewsContent() {
               </Alert>
             )}
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
+            <div className="grid grid-cols-4 gap-4">
+              <div className="col-span-2">
                 <Label htmlFor="employeeId">Employee *</Label>
                 <Select
                   value={formData.employeeId}
@@ -699,7 +701,7 @@ function HRMPerformanceReviewsContent() {
                   </SelectContent>
                 </Select>
               </div>
-              <div>
+              <div className="col-span-2">
                 <Label htmlFor="reviewerId">Reviewer *</Label>
                 <Select
                   value={formData.reviewerId}
@@ -736,7 +738,7 @@ function HRMPerformanceReviewsContent() {
                   <SelectContent>
                     {Object.values(ReviewType).map((type) => (
                       <SelectItem key={type} value={type}>
-                        {type.replace('_', ' ').toUpperCase()}
+                        {type.replace("_", " ").toUpperCase()}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -787,16 +789,16 @@ function HRMPerformanceReviewsContent() {
                   <SelectContent>
                     {Object.values(ReviewStatus).map((status) => (
                       <SelectItem key={status} value={status}>
-                        {status.replace('_', ' ').toUpperCase()}
+                        {status.replace("_", " ").toUpperCase()}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-              <div>
+              <div className="col-span-2">
                 <Label htmlFor="overallRating">Overall Rating (0-5) *</Label>
                 <Select
-                  value={formData.overallRating?.toString() || '0'}
+                  value={formData.overallRating?.toString() || "0"}
                   onValueChange={(value) =>
                     setFormData((prev) => ({
                       ...prev,
@@ -821,12 +823,12 @@ function HRMPerformanceReviewsContent() {
                 <Label htmlFor="goals">Goals & Objectives (one per line)</Label>
                 <Textarea
                   id="goals"
-                  value={(formData.goals || []).join('\n')}
+                  value={(formData.goals || []).join("\n")}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
                       goals: e.target.value
-                        .split('\n')
+                        .split("\n")
                         .filter((line) => line.trim()),
                     }))
                   }
@@ -840,12 +842,12 @@ function HRMPerformanceReviewsContent() {
                 </Label>
                 <Textarea
                   id="achievements"
-                  value={(formData.achievements || []).join('\n')}
+                  value={(formData.achievements || []).join("\n")}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
                       achievements: e.target.value
-                        .split('\n')
+                        .split("\n")
                         .filter((line) => line.trim()),
                     }))
                   }
@@ -859,12 +861,12 @@ function HRMPerformanceReviewsContent() {
                 </Label>
                 <Textarea
                   id="areasOfImprovement"
-                  value={(formData.areasOfImprovement || []).join('\n')}
+                  value={(formData.areasOfImprovement || []).join("\n")}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
                       areasOfImprovement: e.target.value
-                        .split('\n')
+                        .split("\n")
                         .filter((line) => line.trim()),
                     }))
                   }
@@ -890,7 +892,7 @@ function HRMPerformanceReviewsContent() {
               <div>
                 <Label htmlFor="technicalRating">Technical Rating (0-5)</Label>
                 <Select
-                  value={formData.technicalRating?.toString() || '0'}
+                  value={formData.technicalRating?.toString() || "0"}
                   onValueChange={(value) =>
                     setFormData((prev) => ({
                       ...prev,
@@ -916,7 +918,7 @@ function HRMPerformanceReviewsContent() {
                   Communication Rating (0-5)
                 </Label>
                 <Select
-                  value={formData.communicationRating?.toString() || '0'}
+                  value={formData.communicationRating?.toString() || "0"}
                   onValueChange={(value) =>
                     setFormData((prev) => ({
                       ...prev,
@@ -940,7 +942,7 @@ function HRMPerformanceReviewsContent() {
               <div>
                 <Label htmlFor="teamworkRating">Teamwork Rating (0-5)</Label>
                 <Select
-                  value={formData.teamworkRating?.toString() || '0'}
+                  value={formData.teamworkRating?.toString() || "0"}
                   onValueChange={(value) =>
                     setFormData((prev) => ({
                       ...prev,
@@ -966,7 +968,7 @@ function HRMPerformanceReviewsContent() {
                   Leadership Rating (0-5)
                 </Label>
                 <Select
-                  value={formData.leadershipRating?.toString() || '0'}
+                  value={formData.leadershipRating?.toString() || "0"}
                   onValueChange={(value) =>
                     setFormData((prev) => ({
                       ...prev,
@@ -987,7 +989,7 @@ function HRMPerformanceReviewsContent() {
                   </SelectContent>
                 </Select>
               </div>
-              <div>
+              <div className="col-span-2">
                 <Label htmlFor="nextReviewDate">Next Review Date</Label>
                 <Input
                   id="nextReviewDate"
@@ -1012,10 +1014,10 @@ function HRMPerformanceReviewsContent() {
               </Button>
               <Button onClick={handleSubmit} disabled={submitting}>
                 {submitting
-                  ? 'Saving...'
+                  ? "Saving..."
                   : editingReview
-                    ? 'Update Review'
-                    : 'Create Review'}
+                    ? "Update Review"
+                    : "Create Review"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -1058,7 +1060,7 @@ function HRMPerformanceReviewsContent() {
                     <Badge
                       className={getReviewTypeColor(viewingReview.reviewType)}
                     >
-                      {viewingReview.reviewType.replace('_', ' ').toUpperCase()}
+                      {viewingReview.reviewType.replace("_", " ").toUpperCase()}
                     </Badge>
                   </div>
                   <div>
@@ -1066,7 +1068,7 @@ function HRMPerformanceReviewsContent() {
                       Status
                     </Label>
                     <Badge className={getStatusColor(viewingReview.status)}>
-                      {viewingReview.status.replace('_', ' ').toUpperCase()}
+                      {viewingReview.status.replace("_", " ").toUpperCase()}
                     </Badge>
                   </div>
                   <div>
@@ -1273,7 +1275,7 @@ function HRMPerformanceReviewsContent() {
                 &quot;
                 {deletingReview
                   ? getEmployeeName(deletingReview.employeeId)
-                  : ''}
+                  : ""}
                 &quot;? This action cannot be undone.
               </DialogDescription>
             </DialogHeader>
@@ -1287,7 +1289,7 @@ function HRMPerformanceReviewsContent() {
                 onClick={confirmDelete}
                 disabled={deleting}
               >
-                {deleting ? 'Deleting...' : 'Delete Review'}
+                {deleting ? "Deleting..." : "Delete Review"}
               </Button>
             </DialogFooter>
           </DialogContent>
