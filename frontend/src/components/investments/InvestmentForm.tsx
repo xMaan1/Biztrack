@@ -168,7 +168,7 @@ export default function InvestmentForm({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {editingInvestment ? "Edit Investment" : "Add New Investment"}
@@ -179,7 +179,7 @@ export default function InvestmentForm({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="investment_date">Investment Date</Label>
               <div className="relative">
@@ -225,27 +225,7 @@ export default function InvestmentForm({
                 </SelectContent>
               </Select>
             </div>
-          </div>
 
-          {selectedType && (
-            <Card className="bg-blue-50 border-blue-200">
-              <CardContent className="pt-4">
-                <div className="flex items-start gap-2">
-                  <FileText className="h-4 w-4 text-blue-600 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium text-blue-900">
-                      {selectedType.label}
-                    </p>
-                    <p className="text-sm text-blue-700">
-                      {selectedType.description}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="amount">Amount ({getCurrencySymbol()})</Label>
               <div className="relative">
@@ -268,6 +248,24 @@ export default function InvestmentForm({
               </div>
             </div>
           </div>
+
+          {selectedType && (
+            <Card className="bg-blue-50 border-blue-200">
+              <CardContent className="pt-4">
+                <div className="flex items-start gap-2">
+                  <FileText className="h-4 w-4 text-blue-600 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-blue-900">
+                      {selectedType.label}
+                    </p>
+                    <p className="text-sm text-blue-700">
+                      {selectedType.description}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
