@@ -209,7 +209,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold bg-gradient-primary bg-clip-text text-transparent">
             {isEditing
@@ -231,7 +231,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
             </Alert>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <div className="md:col-span-2">
               <Label htmlFor="title">Title *</Label>
               <Input
@@ -243,7 +243,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
               />
             </div>
 
-            <div className="md:col-span-2">
+            <div className="md:col-span-3">
               <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
@@ -514,7 +514,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
               </div>
             )}
 
-            <div className="md:col-span-2">
+            <div className="md:col-span-3">
               <Label>Tags</Label>
               <div className="mt-1">
                 <div className="flex flex-wrap gap-2 mb-2">
@@ -563,7 +563,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
             </div>
 
             {isEditing && task?.id && (
-              <div className="md:col-span-2">
+              <div className="md:col-span-3">
                 <TaskMessagesPanel taskId={task.id} />
               </div>
             )}
