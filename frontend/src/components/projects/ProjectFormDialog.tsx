@@ -39,7 +39,8 @@ export function ProjectFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className={cn(
-          "flex max-h-[85vh] min-h-0 w-[calc(100vw-1.5rem)] max-w-2xl flex-col gap-0 overflow-hidden p-0 sm:max-h-[90vh]",
+          "flex max-h-[85vh] min-h-0 w-[calc(100vw-1.5rem)] max-w-6xl flex-col " +
+            "gap-0 overflow-hidden p-0 sm:max-h-[90vh]",
         )}
         onInteractOutside={(e) => {
           if (formLoading) e.preventDefault();
@@ -60,7 +61,7 @@ export function ProjectFormDialog({
         </DialogHeader>
         <form onSubmit={onSubmit} className="flex min-h-0 flex-1 flex-col">
           <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-6 py-4">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="project-form-name">Project name *</Label>
                 <Input
@@ -152,73 +153,73 @@ export function ProjectFormDialog({
                   }
                 />
               </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="project-form-description">Description</Label>
-              <Textarea
-                id="project-form-description"
-                value={formData.description}
-                onChange={(e) =>
-                  onFormDataChange({ ...formData, description: e.target.value })
-                }
-                rows={3}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="project-form-client-email">Client email</Label>
-              <Input
-                id="project-form-client-email"
-                type="email"
-                value={formData.clientEmail}
-                onChange={(e) =>
-                  onFormDataChange({ ...formData, clientEmail: e.target.value })
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="project-form-notes">Notes</Label>
-              <Textarea
-                id="project-form-notes"
-                value={formData.notes}
-                onChange={(e) =>
-                  onFormDataChange({ ...formData, notes: e.target.value })
-                }
-                rows={2}
-              />
-            </div>
-            <div className="space-y-2">
-              <UserSearch
-                users={users}
-                value={selectedProjectManager}
-                onSelect={(user) =>
-                  onFormDataChange({
-                    ...formData,
-                    projectManagerId: user ? user.id || user.userId || "" : "",
-                  })
-                }
-                placeholder="Search by name or email..."
-                label="Project manager *"
-                required
-                error={
-                  formError === "Please select a project manager"
-                    ? formError
-                    : undefined
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <UserMultiSearch
-                users={users}
-                value={selectedTeamMembers}
-                onChange={(selected) =>
-                  onFormDataChange({
-                    ...formData,
-                    teamMemberIds: selected.map((u) => u.id || u.userId || ""),
-                  })
-                }
-                placeholder="Search to add team members..."
-                label="Team members"
-              />
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="project-form-client-email">Client email</Label>
+                <Input
+                  id="project-form-client-email"
+                  type="email"
+                  value={formData.clientEmail}
+                  onChange={(e) =>
+                    onFormDataChange({ ...formData, clientEmail: e.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="project-form-notes">Notes</Label>
+                <Textarea
+                  id="project-form-notes"
+                  value={formData.notes}
+                  onChange={(e) =>
+                    onFormDataChange({ ...formData, notes: e.target.value })
+                  }
+                  rows={2}
+                />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="project-form-description">Description</Label>
+                <Textarea
+                  id="project-form-description"
+                  value={formData.description}
+                  onChange={(e) =>
+                    onFormDataChange({ ...formData, description: e.target.value })
+                  }
+                  rows={3}
+                />
+              </div>
+              <div className="space-y-2">
+                <UserSearch
+                  users={users}
+                  value={selectedProjectManager}
+                  onSelect={(user) =>
+                    onFormDataChange({
+                      ...formData,
+                      projectManagerId: user ? user.id || user.userId || "" : "",
+                    })
+                  }
+                  placeholder="Search by name or email..."
+                  label="Project manager *"
+                  required
+                  error={
+                    formError === "Please select a project manager"
+                      ? formError
+                      : undefined
+                  }
+                />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <UserMultiSearch
+                  users={users}
+                  value={selectedTeamMembers}
+                  onChange={(selected) =>
+                    onFormDataChange({
+                      ...formData,
+                      teamMemberIds: selected.map((u) => u.id || u.userId || ""),
+                    })
+                  }
+                  placeholder="Search to add team members..."
+                  label="Team members"
+                />
+              </div>
             </div>
           </div>
           <DialogFooter className="shrink-0 gap-2 border-t px-6 py-4 sm:gap-2">
