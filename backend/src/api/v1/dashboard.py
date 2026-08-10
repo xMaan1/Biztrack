@@ -12,6 +12,8 @@ from ...config.database import (
 )
 from ...config.hrm_models import Supplier
 from ...config.inventory_models import PurchaseOrder
+from ...config.job_card_models import JobCard
+from ...config.job_card_crud import get_job_card_stats
 from ...models.invoices import Invoice
 from ...api.dependencies import get_tenant_context
 from ...core.cache import cached_sync
@@ -39,6 +41,7 @@ def get_dashboard_overview(
         if not tenant_context:
             return {
                 "projects": {"recent": [], "stats": {"total": 0, "active": 0, "completed": 0, "on_hold": 0}},
+                "jobCards": {"recent": [], "stats": {"total": 0, "draft": 0, "in_progress": 0, "completed": 0, "cancelled": 0}},
                 "invoices": {"invoices": {"total": 0, "draft": 0, "sent": 0, "paid": 0, "overdue": 0}, "amounts": {"total": 0, "paid": 0, "outstanding": 0}},
                 "users": {"users": [], "total": 0},
                 "subscription": {"plan": "basic", "status": "active"},
@@ -49,6 +52,7 @@ def get_dashboard_overview(
         tenant_id = tenant_context["tenant_id"]
         
         projects_data = get_projects_data(db, tenant_id)
+        job_cards_data = get_job_cards_data(db, tenant_id)
         invoices_data = get_invoices_data(db, tenant_id)
         users_data = get_users_data(db, tenant_id)
         subscription_data = get_subscription_data(db, tenant_context)
@@ -57,6 +61,7 @@ def get_dashboard_overview(
         
         return {
             "projects": projects_data,
+            "jobCards": job_cards_data,
             "invoices": invoices_data,
             "users": users_data,
             "subscription": subscription_data,
@@ -91,6 +96,40 @@ def get_projects_data(db: Session, tenant_id: str) -> Dict[str, Any]:
         }
     except Exception as e:
         return {"recent": [], "stats": {"total": 0, "active": 0, "completed": 0, "on_hold": 0}, "error": str(e)}
+
+def get_job_cards_data(db: Session, tenant_id: str) -> Dict[str, Any]:
+    """Get job card stats and recent cards"""
+    try:
+        stats = get_job_card_stats(db, tenant_id)
+        recent = (
+            db.query(JobCard)
+            .filter(JobCard.tenant_id == tenant_id, JobCard.is_active == True)
+            .order_by(desc(JobCard.created_at))
+            .limit(5)
+            .all()
+        )
+        return {
+            "stats": stats,
+            "recent": [
+                {
+                    "id": str(jc.id),
+                    "jobCardNumber": jc.job_card_number or "",
+                    "title": jc.title or "",
+                    "status": jc.status or "draft",
+                    "priority": jc.priority or "medium",
+                    "customerName": jc.customer_name or "",
+                    "createdAt": jc.created_at.isoformat() if jc.created_at else None,
+                }
+                for jc in recent
+            ],
+        }
+    except Exception as e:
+        return {
+            "stats": {"total": 0, "draft": 0, "in_progress": 0, "completed": 0, "cancelled": 0},
+            "recent": [],
+            "error": str(e),
+        }
+
 
 def get_invoices_data(db: Session, tenant_id: str) -> Dict[str, Any]:
     """Get invoices dashboard data"""

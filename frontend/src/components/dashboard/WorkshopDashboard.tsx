@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import {
   Card,
   CardContent,
@@ -29,6 +29,8 @@ import {
   AlertCircle,
   Sparkles,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   ShoppingCart,
   Wallet,
   ArrowDownRight,
@@ -92,6 +94,9 @@ interface WorkshopStats {
   averageProgress: number;
   qualityIssues?: number;
   productionEfficiency?: number;
+  totalJobCards?: number;
+  activeJobCards?: number;
+  completedJobCards?: number;
   financials?: WorkshopFinancials;
   invoices?: WorkshopInvoices;
   purchaseOrders?: WorkshopPurchaseOrders;
@@ -122,6 +127,31 @@ function getPoStatusStyle(status: string) {
       label: status.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
       className: "bg-gray-100 text-gray-700",
     }
+  );
+}
+
+function CollapseToggle({
+  open,
+  onClick,
+}: {
+  open: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      onClick={onClick}
+      aria-label={open ? "Collapse section" : "Expand section"}
+      className="text-muted-foreground hover:bg-gray-100 hover:text-gray-900"
+    >
+      {open ? (
+        <ChevronUp className="h-4 w-4" />
+      ) : (
+        <ChevronDown className="h-4 w-4" />
+      )}
+    </Button>
   );
 }
 
@@ -236,8 +266,11 @@ export default function WorkshopDashboard({
   onNavigate,
 }: WorkshopDashboardProps) {
   const { formatCurrency } = useCurrency();
-  const productionEfficiency = stats.productionEfficiency || 85;
+  const productionEfficiency = stats.productionEfficiency ?? 0;
   const qualityIssues = stats.qualityIssues || 0;
+  const [poHistoryOpen, setPoHistoryOpen] = useState(true);
+  const [invoiceOverviewOpen, setInvoiceOverviewOpen] = useState(true);
+  const [recentActivityOpen, setRecentActivityOpen] = useState(true);
 
   const financials = stats.financials ?? {
     totalRevenue: 0,
@@ -406,17 +439,17 @@ export default function WorkshopDashboard({
           icon={<Activity className="h-5 w-5 text-indigo-600" />}
           iconClass="bg-indigo-100"
           accent="bg-gradient-to-r from-indigo-500 to-violet-400"
-          label="Active Projects"
-          value={stats.activeProjects.toLocaleString()}
-          sub={`${stats.totalProjects} total projects • ${completionRate}% complete`}
+          label="Active Job Cards"
+          value={(stats.activeJobCards ?? 0).toLocaleString()}
+          sub={`${stats.totalJobCards ?? 0} total job cards`}
         />
         <StatCard
           icon={<CheckCircle2 className="h-5 w-5 text-blue-600" />}
           iconClass="bg-blue-100"
           accent="bg-gradient-to-r from-blue-500 to-sky-400"
           label="Completed"
-          value={stats.completedProjects.toLocaleString()}
-          sub="Finished projects"
+          value={(stats.completedJobCards ?? 0).toLocaleString()}
+          sub="Finished job cards"
         />
         <StatCard
           icon={<Zap className="h-5 w-5 text-emerald-600" />}
@@ -717,68 +750,76 @@ export default function WorkshopDashboard({
               View all
               <ChevronRight className="ml-1 h-4 w-4" />
             </Button>
+            <CollapseToggle
+              open={poHistoryOpen}
+              onClick={() => setPoHistoryOpen((o) => !o)}
+            />
           </div>
         </CardHeader>
-        <CardContent className="p-5">
-          {purchaseOrders.recent.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-2 py-10 text-center">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-purple-50">
-                <ShoppingCart className="h-6 w-6 text-purple-400" />
+        {poHistoryOpen && (
+          <CardContent className="p-5">
+            {purchaseOrders.recent.length === 0 ? (
+              <div className="flex flex-col items-center justify-center gap-2 py-10 text-center">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-purple-50">
+                  <ShoppingCart className="h-6 w-6 text-purple-400" />
+                </div>
+                <p className="mt-2 font-medium text-gray-900">
+                  No purchase orders yet
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Committed purchase orders will show up here so you can follow
+                  company cash flow
+                </p>
               </div>
-              <p className="mt-2 font-medium text-gray-900">
-                No purchase orders yet
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Committed purchase orders will show up here so you can follow
-                company cash flow
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-2.5">
-              {purchaseOrders.recent.map((po) => {
-                const statusStyle = getPoStatusStyle(po.status);
-                return (
-                  <div
-                    key={po.id}
-                    className="flex items-center justify-between gap-4 rounded-xl border border-gray-100 bg-white p-3.5 transition-all duration-200 hover:border-purple-100 hover:bg-purple-50/40 hover:shadow-sm"
-                  >
-                    <div className="flex min-w-0 items-center gap-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-slate-100 to-slate-200 text-slate-600">
-                        <Package className="h-4 w-4" />
+            ) : (
+              <div className="space-y-2.5">
+                {purchaseOrders.recent.map((po) => {
+                  const statusStyle = getPoStatusStyle(po.status);
+                  return (
+                    <div
+                      key={po.id}
+                      className="flex items-center justify-between gap-4 rounded-xl border border-gray-100 bg-white p-3.5 transition-all duration-200 hover:border-purple-100 hover:bg-purple-50/40 hover:shadow-sm"
+                    >
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-slate-100 to-slate-200 text-slate-600">
+                          <Package className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-gray-900">
+                            {po.orderNumber}
+                          </p>
+                          <p className="truncate text-xs text-muted-foreground">
+                            {po.supplierName || "Unknown supplier"}
+                          </p>
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-gray-900">
-                          {po.orderNumber}
+                      <div className="hidden shrink-0 text-right sm:block">
+                        <p className="text-sm font-bold text-gray-900">
+                          {formatCurrency(po.totalAmount)}
                         </p>
-                        <p className="truncate text-xs text-muted-foreground">
-                          {po.supplierName || "Unknown supplier"}
+                        <p className="text-xs text-muted-foreground">
+                          {po.orderDate
+                            ? InvoiceService.formatDate(po.orderDate)
+                            : "—"}
                         </p>
                       </div>
+                      <div className="flex shrink-0 items-center gap-2">
+                        <Badge
+                          className={cn("border-0", statusStyle.className)}
+                        >
+                          {statusStyle.label}
+                        </Badge>
+                        <span className="text-sm font-bold text-gray-900 sm:hidden">
+                          {formatCurrency(po.totalAmount)}
+                        </span>
+                      </div>
                     </div>
-                    <div className="hidden shrink-0 text-right sm:block">
-                      <p className="text-sm font-bold text-gray-900">
-                        {formatCurrency(po.totalAmount)}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {po.orderDate
-                          ? InvoiceService.formatDate(po.orderDate)
-                          : "—"}
-                      </p>
-                    </div>
-                    <div className="flex shrink-0 items-center gap-2">
-                      <Badge className={cn("border-0", statusStyle.className)}>
-                        {statusStyle.label}
-                      </Badge>
-                      <span className="text-sm font-bold text-gray-900 sm:hidden">
-                        {formatCurrency(po.totalAmount)}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        )}
       </Card>
 
       {/* Invoice snapshot */}
@@ -804,129 +845,149 @@ export default function WorkshopDashboard({
             View dashboard
             <ChevronRight className="ml-1 h-4 w-4" />
           </Button>
+          <CollapseToggle
+            open={invoiceOverviewOpen}
+            onClick={() => setInvoiceOverviewOpen((o) => !o)}
+          />
         </CardHeader>
-        <CardContent className="p-5">
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
-            <div className="p-3 rounded-xl bg-gray-50 text-center">
-              <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground mb-1">
-                <FileText className="h-3.5 w-3.5" />
-                Total
+        {invoiceOverviewOpen && (
+          <CardContent className="p-5">
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+              <div className="p-3 rounded-xl bg-gray-50 text-center">
+                <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground mb-1">
+                  <FileText className="h-3.5 w-3.5" />
+                  Total
+                </div>
+                <div className="text-xl font-bold text-gray-900">
+                  {invoices.invoices.total}
+                </div>
               </div>
-              <div className="text-xl font-bold text-gray-900">
-                {invoices.invoices.total}
+              <div className="p-3 rounded-xl bg-blue-50 text-center">
+                <div className="flex items-center justify-center gap-1.5 text-xs text-blue-600 mb-1">
+                  <Clock className="h-3.5 w-3.5" />
+                  Sent
+                </div>
+                <div className="text-xl font-bold text-blue-700">
+                  {invoices.invoices.sent}
+                </div>
+              </div>
+              <div className="p-3 rounded-xl bg-emerald-50 text-center">
+                <div className="flex items-center justify-center gap-1.5 text-xs text-emerald-600 mb-1">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  Paid
+                </div>
+                <div className="text-xl font-bold text-emerald-700">
+                  {invoices.invoices.paid}
+                </div>
+              </div>
+              <div className="p-3 rounded-xl bg-red-50 text-center">
+                <div className="flex items-center justify-center gap-1.5 text-xs text-red-600 mb-1">
+                  <AlertCircle className="h-3.5 w-3.5" />
+                  Overdue
+                </div>
+                <div className="text-xl font-bold text-red-700">
+                  {invoices.invoices.overdue}
+                </div>
+              </div>
+              <div className="p-3 rounded-xl bg-orange-50 text-center">
+                <div className="flex items-center justify-center gap-1.5 text-xs text-orange-600 mb-1">
+                  <Target className="h-3.5 w-3.5" />
+                  Outstanding
+                </div>
+                <div className="text-base font-bold text-orange-700">
+                  {formatCurrency(invoices.amounts.outstanding)}
+                </div>
+              </div>
+              <div className="p-3 rounded-xl bg-gray-50 text-center">
+                <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground mb-1">
+                  <Boxes className="h-3.5 w-3.5" />
+                  Draft
+                </div>
+                <div className="text-xl font-bold text-gray-900">
+                  {invoices.invoices.draft}
+                </div>
               </div>
             </div>
-            <div className="p-3 rounded-xl bg-blue-50 text-center">
-              <div className="flex items-center justify-center gap-1.5 text-xs text-blue-600 mb-1">
-                <Clock className="h-3.5 w-3.5" />
-                Sent
-              </div>
-              <div className="text-xl font-bold text-blue-700">
-                {invoices.invoices.sent}
-              </div>
-            </div>
-            <div className="p-3 rounded-xl bg-emerald-50 text-center">
-              <div className="flex items-center justify-center gap-1.5 text-xs text-emerald-600 mb-1">
-                <CheckCircle2 className="h-3.5 w-3.5" />
-                Paid
-              </div>
-              <div className="text-xl font-bold text-emerald-700">
-                {invoices.invoices.paid}
-              </div>
-            </div>
-            <div className="p-3 rounded-xl bg-red-50 text-center">
-              <div className="flex items-center justify-center gap-1.5 text-xs text-red-600 mb-1">
-                <AlertCircle className="h-3.5 w-3.5" />
-                Overdue
-              </div>
-              <div className="text-xl font-bold text-red-700">
-                {invoices.invoices.overdue}
-              </div>
-            </div>
-            <div className="p-3 rounded-xl bg-orange-50 text-center">
-              <div className="flex items-center justify-center gap-1.5 text-xs text-orange-600 mb-1">
-                <Target className="h-3.5 w-3.5" />
-                Outstanding
-              </div>
-              <div className="text-base font-bold text-orange-700">
-                {formatCurrency(invoices.amounts.outstanding)}
-              </div>
-            </div>
-            <div className="p-3 rounded-xl bg-gray-50 text-center">
-              <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground mb-1">
-                <Boxes className="h-3.5 w-3.5" />
-                Draft
-              </div>
-              <div className="text-xl font-bold text-gray-900">
-                {invoices.invoices.draft}
-              </div>
-            </div>
-          </div>
-        </CardContent>
+          </CardContent>
+        )}
       </Card>
 
       {/* Recent activity summary */}
       <Card className="overflow-hidden rounded-2xl border-0 bg-white shadow-sm">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="h-5 w-5 text-indigo-600" />
-            Recent Activity Summary
-          </CardTitle>
-          <CardDescription>Latest updates and milestones</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-4 gap-4">
-            <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-200">
-              <div className="flex items-center gap-2 mb-2">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                <span className="text-sm font-medium">Projects Completed</span>
-              </div>
-              <div className="text-2xl font-bold text-indigo-600">
-                {stats.completedProjects}
-              </div>
-              <div className="text-xs text-muted-foreground mt-1">All time</div>
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5 text-indigo-600" />
+                Recent Activity Summary
+              </CardTitle>
+              <CardDescription>Latest updates and milestones</CardDescription>
             </div>
-
-            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <div className="flex items-center gap-2 mb-2">
-                <Activity className="h-4 w-4 text-blue-600" />
-                <span className="text-sm font-medium">Active Operations</span>
-              </div>
-              <div className="text-2xl font-bold text-blue-600">
-                {stats.activeProjects}
-              </div>
-              <div className="text-xs text-muted-foreground mt-1">
-                In progress now
-              </div>
-            </div>
-
-            <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
-              <div className="flex items-center gap-2 mb-2">
-                <ShoppingCart className="h-4 w-4 text-purple-600" />
-                <span className="text-sm font-medium">Purchase Orders</span>
-              </div>
-              <div className="text-2xl font-bold text-purple-600">
-                {purchaseOrders.stats.total}
-              </div>
-              <div className="text-xs text-muted-foreground mt-1">
-                {purchaseOrders.stats.pending} pending
-              </div>
-            </div>
-
-            <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-200">
-              <div className="flex items-center gap-2 mb-2">
-                <TrendingUp className="h-4 w-4 text-emerald-600" />
-                <span className="text-sm font-medium">Net Revenue</span>
-              </div>
-              <div className="text-2xl font-bold text-emerald-600">
-                {formatCurrency(financials.netIncome)}
-              </div>
-              <div className="text-xs text-muted-foreground mt-1">
-                After PO spend
-              </div>
-            </div>
+            <CollapseToggle
+              open={recentActivityOpen}
+              onClick={() => setRecentActivityOpen((o) => !o)}
+            />
           </div>
-        </CardContent>
+        </CardHeader>
+        {recentActivityOpen && (
+          <CardContent>
+            <div className="grid md:grid-cols-4 gap-4">
+              <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                  <span className="text-sm font-medium">
+                    Job Cards Completed
+                  </span>
+                </div>
+                <div className="text-2xl font-bold text-indigo-600">
+                  {stats.completedJobCards ?? 0}
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  All time
+                </div>
+              </div>
+
+              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <Activity className="h-4 w-4 text-blue-600" />
+                  <span className="text-sm font-medium">Active Job Cards</span>
+                </div>
+                <div className="text-2xl font-bold text-blue-600">
+                  {stats.activeJobCards ?? 0}
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  In progress now
+                </div>
+              </div>
+
+              <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <ShoppingCart className="h-4 w-4 text-purple-600" />
+                  <span className="text-sm font-medium">Purchase Orders</span>
+                </div>
+                <div className="text-2xl font-bold text-purple-600">
+                  {purchaseOrders.stats.total}
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  {purchaseOrders.stats.pending} pending
+                </div>
+              </div>
+
+              <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <TrendingUp className="h-4 w-4 text-emerald-600" />
+                  <span className="text-sm font-medium">Net Revenue</span>
+                </div>
+                <div className="text-2xl font-bold text-emerald-600">
+                  {formatCurrency(financials.netIncome)}
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  After PO spend
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        )}
       </Card>
     </div>
   );

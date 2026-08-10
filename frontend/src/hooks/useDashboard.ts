@@ -17,6 +17,24 @@ export interface DashboardData {
       dueDate: string;
     }>;
   };
+  jobCards?: {
+    stats: {
+      total: number;
+      draft: number;
+      in_progress: number;
+      completed: number;
+      cancelled: number;
+    };
+    recent: Array<{
+      id: string;
+      jobCardNumber: string;
+      title: string;
+      status: string;
+      priority: string;
+      customerName: string;
+      createdAt: string | null;
+    }>;
+  };
   users: {
     total: number;
     active: number;
