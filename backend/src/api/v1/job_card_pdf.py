@@ -239,10 +239,14 @@ def _totals_table(subtotal: float, labour_total: float, vat_rate: float = 0.15, 
     total_val = before_vat + vat_val
     vat_pct = f"VAT ({int(round(vat_rate * 100))}%)"
     data = [
-        ["Sub Total", format_currency(before_vat, currency)],
+        ["Sub Total", format_currency(subtotal, currency)],
+    ]
+    if labour_total:
+        data.append(["Labour", format_currency(labour_total, currency)])
+    data.extend([
         [vat_pct, format_currency(vat_val, currency)],
         ["TOTAL", format_currency(total_val, currency)],
-    ]
+    ])
     t = Table(data, colWidths=[1.2 * inch, 1.2 * inch])
     t.setStyle(TableStyle([
         ("FONTNAME", (0, 0), (-1, -2), "Helvetica"),
