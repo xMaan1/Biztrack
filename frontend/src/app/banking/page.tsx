@@ -608,7 +608,7 @@ function BankingDashboardContent() {
 
         {/* Create Bank Account Modal */}
         <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
-          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Add Bank Account</DialogTitle>
               <DialogDescription>
@@ -616,176 +616,167 @@ function BankingDashboardContent() {
               </DialogDescription>
             </DialogHeader>
 
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="accountName">Account Name *</Label>
-                  <Input
-                    id="accountName"
-                    value={formData.accountName}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        accountName: e.target.value,
-                      }))
-                    }
-                    placeholder="e.g., Main Business Account"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="accountNumber">Account Number *</Label>
-                  <Input
-                    id="accountNumber"
-                    value={formData.accountNumber}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        accountNumber: e.target.value,
-                      }))
-                    }
-                    placeholder="Account number"
-                  />
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="accountName">Account Name *</Label>
+                <Input
+                  id="accountName"
+                  value={formData.accountName}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      accountName: e.target.value,
+                    }))
+                  }
+                  placeholder="e.g., Main Business Account"
+                />
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="bankName">Bank Name *</Label>
-                  <Input
-                    id="bankName"
-                    value={formData.bankName}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        bankName: e.target.value,
-                      }))
-                    }
-                    placeholder="e.g., Chase Bank"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="routingNumber">Routing Number</Label>
-                  <Input
-                    id="routingNumber"
-                    value={formData.routingNumber}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        routingNumber: e.target.value,
-                      }))
-                    }
-                    placeholder="9-digit routing number"
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="accountNumber">Account Number *</Label>
+                <Input
+                  id="accountNumber"
+                  value={formData.accountNumber}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      accountNumber: e.target.value,
+                    }))
+                  }
+                  placeholder="Account number"
+                />
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="accountType">Account Type *</Label>
-                  <Select
-                    value={formData.accountType}
-                    onValueChange={(value) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        accountType: value as BankAccountType,
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={BankAccountType.CHECKING}>
-                        Checking
-                      </SelectItem>
-                      <SelectItem value={BankAccountType.SAVINGS}>
-                        Savings
-                      </SelectItem>
-                      <SelectItem value={BankAccountType.BUSINESS}>
-                        Business
-                      </SelectItem>
-                      <SelectItem value={BankAccountType.CREDIT_LINE}>
-                        Credit Line
-                      </SelectItem>
-                      <SelectItem value={BankAccountType.MONEY_MARKET}>
-                        Money Market
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="currency">Currency</Label>
-                  <Select
-                    value={formData.currency}
-                    onValueChange={(value) =>
-                      setFormData((prev) => ({ ...prev, currency: value }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="USD">USD</SelectItem>
-                      <SelectItem value="EUR">EUR</SelectItem>
-                      <SelectItem value="GBP">GBP</SelectItem>
-                      <SelectItem value="CAD">CAD</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="currentBalance">Current Balance</Label>
-                  <Input
-                    id="currentBalance"
-                    type="number"
-                    step="0.01"
-                    value={formData.currentBalance}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        currentBalance: parseFloat(e.target.value) || 0,
-                      }))
-                    }
-                    placeholder="0.00"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="availableBalance">Available Balance</Label>
-                  <Input
-                    id="availableBalance"
-                    type="number"
-                    step="0.01"
-                    value={formData.availableBalance}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        availableBalance: parseFloat(e.target.value) || 0,
-                      }))
-                    }
-                    placeholder="0.00"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="pendingBalance">Pending Balance</Label>
-                  <Input
-                    id="pendingBalance"
-                    type="number"
-                    step="0.01"
-                    value={formData.pendingBalance}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        pendingBalance: parseFloat(e.target.value) || 0,
-                      }))
-                    }
-                    placeholder="0.00"
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="bankName">Bank Name *</Label>
+                <Input
+                  id="bankName"
+                  value={formData.bankName}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      bankName: e.target.value,
+                    }))
+                  }
+                  placeholder="e.g., Chase Bank"
+                />
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="routingNumber">Routing Number</Label>
+                <Input
+                  id="routingNumber"
+                  value={formData.routingNumber}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      routingNumber: e.target.value,
+                    }))
+                  }
+                  placeholder="9-digit routing number"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="accountType">Account Type *</Label>
+                <Select
+                  value={formData.accountType}
+                  onValueChange={(value) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      accountType: value as BankAccountType,
+                    }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={BankAccountType.CHECKING}>
+                      Checking
+                    </SelectItem>
+                    <SelectItem value={BankAccountType.SAVINGS}>
+                      Savings
+                    </SelectItem>
+                    <SelectItem value={BankAccountType.BUSINESS}>
+                      Business
+                    </SelectItem>
+                    <SelectItem value={BankAccountType.CREDIT_LINE}>
+                      Credit Line
+                    </SelectItem>
+                    <SelectItem value={BankAccountType.MONEY_MARKET}>
+                      Money Market
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="currency">Currency</Label>
+                <Select
+                  value={formData.currency}
+                  onValueChange={(value) =>
+                    setFormData((prev) => ({ ...prev, currency: value }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="USD">USD</SelectItem>
+                    <SelectItem value="EUR">EUR</SelectItem>
+                    <SelectItem value="GBP">GBP</SelectItem>
+                    <SelectItem value="CAD">CAD</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="currentBalance">Current Balance</Label>
+                <Input
+                  id="currentBalance"
+                  type="number"
+                  step="0.01"
+                  value={formData.currentBalance}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      currentBalance: parseFloat(e.target.value) || 0,
+                    }))
+                  }
+                  placeholder="0.00"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="availableBalance">Available Balance</Label>
+                <Input
+                  id="availableBalance"
+                  type="number"
+                  step="0.01"
+                  value={formData.availableBalance}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      availableBalance: parseFloat(e.target.value) || 0,
+                    }))
+                  }
+                  placeholder="0.00"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="pendingBalance">Pending Balance</Label>
+                <Input
+                  id="pendingBalance"
+                  type="number"
+                  step="0.01"
+                  value={formData.pendingBalance}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      pendingBalance: parseFloat(e.target.value) || 0,
+                    }))
+                  }
+                  placeholder="0.00"
+                />
+              </div>
+
+              <div className="space-y-2 md:col-span-3">
                 <Label htmlFor="description">Description</Label>
                 <Textarea
                   id="description"
@@ -801,7 +792,7 @@ function BankingDashboardContent() {
                 />
               </div>
 
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-4 md:col-span-3">
                 <div className="flex items-center space-x-2">
                   <input
                     type="checkbox"
