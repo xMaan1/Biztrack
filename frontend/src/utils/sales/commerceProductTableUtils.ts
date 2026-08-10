@@ -40,8 +40,12 @@ function formatTotalUnits(
   return `${total} ${formatUnitLabel(unit)}`;
 }
 
-export function productToTableRow(product: Product): ProductTableRow {
+export function productToTableRow(
+  product: Product,
+  reservedQty = 0,
+): ProductTableRow {
   const packSize = product.packSize ?? 1;
+  const availableQty = Math.max(0, (product.stockQuantity ?? 0) - reservedQty);
 
   return {
     code: product.sku || "—",
@@ -52,12 +56,8 @@ export function productToTableRow(product: Product): ProductTableRow {
     vendor: product.supplierName || "—",
     category: product.category || "—",
     salePrice: product.salePrice ?? 0,
-    totalQty: product.stockQuantity ?? 0,
-    totalUnits: formatTotalUnits(
-      product.stockQuantity ?? 0,
-      packSize,
-      product.unitOfMeasure,
-    ),
+    totalQty: availableQty,
+    totalUnits: formatTotalUnits(availableQty, packSize, product.unitOfMeasure),
   };
 }
 

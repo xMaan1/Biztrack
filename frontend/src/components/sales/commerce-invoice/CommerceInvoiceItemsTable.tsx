@@ -58,6 +58,15 @@ export function CommerceInvoiceItemsTable({
 }: CommerceInvoiceItemsTableProps) {
   const isSearching = productSearch.trim().length > 0;
 
+  const reservedQuantities: Record<string, number> = {};
+  for (const item of items) {
+    if (item.productId) {
+      reservedQuantities[item.productId] =
+        (reservedQuantities[item.productId] ?? 0) +
+        (Number(item.quantity) || 0);
+    }
+  }
+
   if (!isSearching && items.length === 0 && !itemsError) {
     return null;
   }
@@ -68,6 +77,7 @@ export function CommerceInvoiceItemsTable({
         <CommerceInvoiceProductSearchTable
           searchResults={searchResults}
           onPickProduct={onPickProduct}
+          reservedQuantities={reservedQuantities}
         />
       )}
 

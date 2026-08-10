@@ -245,6 +245,8 @@ def bulk_delete_invoices_endpoint(
                     continue
 
                 try:
+                    sync_service = InventorySyncService(db)
+                    sync_service.restore_invoice_stock(str(invoice_id), tenant_id)
                     delete_invoice_dependencies(db, str(invoice_id), tenant_id)
                 except Exception as dep_error:
                     failed_count += 1

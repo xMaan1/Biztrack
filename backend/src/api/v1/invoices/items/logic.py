@@ -99,6 +99,10 @@ def update_invoice(invoice_id: str, update_data: dict, db: Session, tenant_id: s
 def delete_invoice(invoice_id: str, db: Session, tenant_id: str = None) -> bool:
     invoice = get_invoice_by_id(invoice_id, db, tenant_id)
     if invoice:
+        if tenant_id:
+            from .....services.inventory_sync_service import InventorySyncService
+
+            InventorySyncService(db).restore_invoice_stock(invoice_id, tenant_id)
         delete_invoice_dependencies(db, invoice_id, tenant_id)
         db.delete(invoice)
         db.commit()
@@ -255,6 +259,46 @@ def create_invoice_endpoint(
             })
 
         db_invoice.items = invoice_items
+
+        from .....services.inventory_sync_service import InventorySyncService
+        from .....config.inventory_models import Product as ProductORM
+
+        stock_items = [
+            {
+                "productId": item["productId"],
+                "quantity": item["quantity"],
+            }
+            for item in invoice_items
+            if item.get("productId")
+        ]
+        if stock_items:
+            sync_service = InventorySyncService(db)
+            for stock_item in stock_items:
+                product = db.query(ProductORM).filter(
+                    ProductORM.id == stock_item["productId"],
+                    ProductORM.tenant_id == tenant_id,
+                ).first()
+                if product and product.stockQuantity < stock_item["quantity"]:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=(
+                            f"Insufficient stock for product {product.name}. "
+                            f"Available: {product.stockQuantity}, "
+                            f"Required: {stock_item['quantity']}"
+                        ),
+                    )
+            deduction = sync_service.deduct_invoice_stock(
+                invoice_id=str(db_invoice.id),
+                tenant_id=tenant_id,
+                user_id=str(current_user.id),
+                items=stock_items,
+                skip_deducted=False,
+            )
+            if not deduction["success"]:
+                raise HTTPException(
+                    status_code=400,
+                    detail="; ".join(deduction.get("errors", [])) or "Failed to deduct stock",
+                )
 
         if invoice_data.customerId:
             try:
@@ -471,6 +515,8 @@ def update_invoice_endpoint(
 
         update_data = invoice_data.dict(exclude_unset=True)
 
+        old_items = list(invoice.items or [])
+
         if "issueDate" in update_data:
             try:
                 issue_date = datetime.fromisoformat(update_data["issueDate"])
@@ -590,6 +636,32 @@ def update_invoice_endpoint(
             invoice.taxAmount = totals["taxAmount"]
             invoice.total = totals["total"]
 
+        if update_data.get("items"):
+            from .....services.inventory_sync_service import InventorySyncService
+
+            new_stock_items = [
+                {
+                    "productId": item["productId"],
+                    "quantity": item["quantity"],
+                }
+                for item in converted_items
+                if item.get("productId")
+            ]
+            if new_stock_items:
+                sync_service = InventorySyncService(db)
+                reconciliation = sync_service.reconcile_invoice_stock(
+                    invoice_id=invoice_id,
+                    tenant_id=tenant_id,
+                    user_id=str(current_user.id),
+                    new_items=new_stock_items,
+                )
+                if not reconciliation["success"]:
+                    db.rollback()
+                    raise HTTPException(
+                        status_code=400,
+                        detail="; ".join(reconciliation.get("errors", [])) or "Failed to reconcile stock",
+                    )
+
         invoice.updatedAt = datetime.utcnow()
         db.commit()
         db.refresh(invoice)
@@ -634,6 +706,9 @@ def delete_invoice_endpoint(invoice_id: str, db: Session, current_user: User, te
         if not invoice:
             raise HTTPException(status_code=404, detail="Invoice not found")
 
+        from .....services.inventory_sync_service import InventorySyncService
+
+        InventorySyncService(db).restore_invoice_stock(invoice_id, tenant_id)
         delete_invoice_dependencies(db, invoice_id, tenant_id)
         db.delete(invoice)
         db.commit()

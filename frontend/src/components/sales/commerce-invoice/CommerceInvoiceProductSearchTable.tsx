@@ -10,6 +10,7 @@ import {
 type CommerceInvoiceProductSearchTableProps = {
   searchResults: Product[];
   onPickProduct: (product: Product) => void;
+  reservedQuantities?: Record<string, number>;
 };
 
 function CatalogTableCells({
@@ -58,6 +59,7 @@ function CatalogTableCells({
 export function CommerceInvoiceProductSearchTable({
   searchResults,
   onPickProduct,
+  reservedQuantities,
 }: CommerceInvoiceProductSearchTableProps) {
   return (
     <section className="w-full min-w-0 overflow-hidden rounded-lg border border-border">
@@ -91,7 +93,10 @@ export function CommerceInvoiceProductSearchTable({
               </tr>
             ) : (
               searchResults.slice(0, 20).map((product, index) => {
-                const row = productToTableRow(product);
+                const row = productToTableRow(
+                  product,
+                  reservedQuantities?.[product.id] ?? 0,
+                );
                 return (
                   <tr
                     key={`search-${product.id}`}

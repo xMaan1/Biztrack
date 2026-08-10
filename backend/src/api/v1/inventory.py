@@ -22,6 +22,7 @@ from ...models.inventory_models import (
 )
 from ...config.inventory_models import PurchaseOrder as PurchaseOrderDB
 from ...config.hrm_models import Supplier
+from ...services.inventory_sync_service import InventorySyncService
 from ...config.database import (
     get_warehouses, get_warehouse_by_id, create_warehouse, update_warehouse, delete_warehouse,
     get_storage_locations, get_storage_locations_by_warehouse, get_storage_location_by_id, create_storage_location, update_storage_location, delete_storage_location,
@@ -727,6 +728,23 @@ def create_purchase_order_endpoint(
     
     db_order = create_purchase_order(order_data, db)
 
+    sync_service = InventorySyncService(db)
+    stock_increase = sync_service.increase_purchase_order_stock(
+        po_id=str(db_order.id),
+        tenant_id=str(tenant_context["tenant_id"]),
+        user_id=str(current_user.id),
+        items=po_items,
+        skip_existing=False,
+    )
+    if not stock_increase["success"]:
+        sync_service.reverse_purchase_order_stock(
+            str(db_order.id), str(tenant_context["tenant_id"])
+        )
+        raise HTTPException(
+            status_code=400,
+            detail="; ".join(stock_increase.get("errors", [])) or "Failed to increase stock",
+        )
+
     from ...config.workshop_document_links import sync_workshop_document_links
     sync_workshop_document_links(
         db,
@@ -805,6 +823,27 @@ def update_purchase_order_endpoint(
     
     db_order = update_purchase_order(order_id, order_update, db, str(tenant_context["tenant_id"]))
 
+    if "items" in order_update:
+        sync_service = InventorySyncService(db)
+        reconciliation = sync_service.reconcile_purchase_order_stock(
+            po_id=str(db_order.id),
+            tenant_id=str(tenant_context["tenant_id"]),
+            user_id=str(current_user.id),
+            new_items=order_update.get("items") or [],
+            warehouse_id=str(db_order.warehouseId) if db_order.warehouseId else None,
+        )
+        if not reconciliation["success"]:
+            sync_service.reverse_purchase_order_stock(
+                str(db_order.id), str(tenant_context["tenant_id"])
+            )
+            db.rollback()
+            raise HTTPException(
+                status_code=400,
+                detail="; ".join(reconciliation.get("errors", [])) or "Failed to reconcile stock",
+            )
+        db.commit()
+        db.refresh(db_order)
+
     if db_order and "jobCardId" in order_update:
         from ...config.workshop_document_links import sync_workshop_document_links
         sync_workshop_document_links(
@@ -840,6 +879,10 @@ def delete_purchase_order_endpoint(
         success = delete_purchase_order(order_id, db, str(tenant_context["tenant_id"]))
         if not success:
             raise HTTPException(status_code=404, detail="Purchase order not found")
+        InventorySyncService(db).reverse_purchase_order_stock(
+            order_id, str(tenant_context["tenant_id"])
+        )
+        db.commit()
         return {"message": "Purchase order deleted successfully"}
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
