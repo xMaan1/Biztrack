@@ -132,6 +132,19 @@ def _company_header(db: Session, tenant_id: str, styles: Dict) -> List:
     return elements
 
 
+def _tenant_currency(db: Session, tenant_id: str) -> str:
+    try:
+        from ...config.invoice_customization_models import InvoiceCustomization
+        customization = db.query(InvoiceCustomization).filter(
+            InvoiceCustomization.tenant_id == tenant_id,
+            InvoiceCustomization.is_active == True,
+        ).first()
+        currency = (getattr(customization, "default_currency", None) or "USD").strip() or "USD"
+        return currency
+    except Exception:
+        return "USD"
+
+
 def _info_table(jc: Any, styles: Dict) -> Table:
     vi = lambda k: _vehicle_info(jc, k)
     job_date = format_date(getattr(jc, "planned_date", None)) or format_date(getattr(jc, "created_at", None))
@@ -161,15 +174,15 @@ def _info_table(jc: Any, styles: Dict) -> Table:
     return t
 
 
-def _parts_table(jc: Any, styles: Dict) -> tuple:
+def _parts_table(jc: Any, styles: Dict, currency: str = "USD") -> tuple:
     items = normalize_items(getattr(jc, "items", None))
     subtotal = 0.0
-    labour_total = 0.0
+    labour_total = float(getattr(jc, "labor_estimate", 0) or 0)
     if not items or not any(items[0].get(k) for k in ["part_no", "partNo", "description", "part_description", "unit_price", "unitPrice", "labour", "labor"]):
         subtotal = float(getattr(jc, "parts_estimate", 0) or 0)
         labour_total = float(getattr(jc, "labor_estimate", 0) or 0)
         rows = [["Part No.", "Part Desc.", "Qty", "Unit Price", "Line Total", "Labour"]]
-        rows.append(["", "See estimates above", "", "", format_currency(subtotal, "USD"), format_currency(labour_total, "USD")])
+        rows.append(["", "See estimates above", "", "", format_currency(subtotal, currency), format_currency(labour_total, currency)])
     else:
         rows = [["Part No.", "Part Desc.", "Qty", "Unit Price", "Line Total", "Labour"]]
         for row in items:
@@ -193,15 +206,15 @@ def _parts_table(jc: Any, styles: Dict) -> tuple:
             except (TypeError, ValueError):
                 labour_val = 0.0
             if unit_price not in (None, "") and not isinstance(unit_price, str):
-                unit_price = format_currency(float(unit_price), "USD")
+                unit_price = format_currency(float(unit_price), currency)
             else:
-                unit_price = format_currency(up_val, "USD") if up_val else ""
+                unit_price = format_currency(up_val, currency) if up_val else ""
             subtotal += line_total
             labour_total += labour_val
-            line_total_s = format_currency(line_total, "USD") if line_total else ""
-            labour_s = format_currency(labour_val, "USD") if labour_val else ""
+            line_total_s = format_currency(line_total, currency) if line_total else ""
+            labour_s = format_currency(labour_val, currency) if labour_val else ""
             if labour not in (None, "") and not labour_s and str(labour).replace(".", "").replace("-", "").isdigit():
-                labour_s = format_currency(float(labour), "USD")
+                labour_s = format_currency(float(labour), currency)
             rows.append([part_no[:20], part_desc[:35], qty_s[:6], unit_price[:12], line_total_s[:12], labour_s[:12]])
     col_widths = [0.85 * inch, 2.0 * inch, 0.45 * inch, 0.9 * inch, 0.9 * inch, 0.75 * inch]
     t = Table(rows, colWidths=col_widths)
@@ -220,15 +233,15 @@ def _parts_table(jc: Any, styles: Dict) -> tuple:
     return t, subtotal, labour_total
 
 
-def _totals_table(subtotal: float, labour_total: float, vat_rate: float = 0.15) -> tuple:
+def _totals_table(subtotal: float, labour_total: float, vat_rate: float = 0.15, currency: str = "USD") -> tuple:
     before_vat = subtotal + labour_total
     vat_val = before_vat * vat_rate
     total_val = before_vat + vat_val
     vat_pct = f"VAT ({int(round(vat_rate * 100))}%)"
     data = [
-        ["Sub Total", format_currency(before_vat, "USD")],
-        [vat_pct, format_currency(vat_val, "USD")],
-        ["TOTAL", format_currency(total_val, "USD")],
+        ["Sub Total", format_currency(before_vat, currency)],
+        [vat_pct, format_currency(vat_val, currency)],
+        ["TOTAL", format_currency(total_val, currency)],
     ]
     t = Table(data, colWidths=[1.2 * inch, 1.2 * inch])
     t.setStyle(TableStyle([
@@ -275,14 +288,15 @@ def generate_job_card_pdf(job_card_id: str, db: Session, tenant_id: str) -> byte
     story.append(Spacer(1, 14))
 
     story.append(Paragraph("Parts & Labour", styles["header"]))
-    parts_tbl, subtotal, labour_total = _parts_table(jc, styles)
+    currency = _tenant_currency(db, tenant_id)
+    parts_tbl, subtotal, labour_total = _parts_table(jc, styles, currency)
     story.append(parts_tbl)
     story.append(Spacer(1, 12))
 
     vat_rate = getattr(jc, "vat_rate", None)
     if vat_rate is None:
         vat_rate = 0.15
-    totals_tbl, before_vat, vat_val, total_val = _totals_table(subtotal, labour_total, vat_rate)
+    totals_tbl, before_vat, vat_val, total_val = _totals_table(subtotal, labour_total, vat_rate, currency)
     story.append(totals_tbl)
     story.append(Spacer(1, 16))
 
