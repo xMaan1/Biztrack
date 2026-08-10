@@ -155,7 +155,7 @@ export default function EventForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Title */}
         <div className="md:col-span-2">
           <Label htmlFor="title">Event Title *</Label>
@@ -165,18 +165,6 @@ export default function EventForm({
             onChange={(e) => handleInputChange("title", e.target.value)}
             placeholder="Enter event title"
             required
-          />
-        </div>
-
-        {/* Description */}
-        <div className="md:col-span-2">
-          <Label htmlFor="description">Description</Label>
-          <Textarea
-            id="description"
-            value={formData.description}
-            onChange={(e) => handleInputChange("description", e.target.value)}
-            placeholder="Enter event description"
-            rows={3}
           />
         </div>
 
@@ -219,6 +207,18 @@ export default function EventForm({
               </SelectItem>
             </SelectContent>
           </Select>
+        </div>
+
+        {/* Description */}
+        <div className="md:col-span-3">
+          <Label htmlFor="description">Description</Label>
+          <Textarea
+            id="description"
+            value={formData.description}
+            onChange={(e) => handleInputChange("description", e.target.value)}
+            placeholder="Enter event description"
+            rows={2}
+          />
         </div>
 
         {/* Project */}
@@ -342,7 +342,7 @@ export default function EventForm({
         </div>
 
         {/* Online Meeting */}
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 md:pt-8">
           <Switch
             id="isOnline"
             checked={formData.isOnline}
@@ -367,7 +367,7 @@ export default function EventForm({
         </div>
 
         {/* Discussion Points */}
-        <div className="md:col-span-2">
+        <div className="md:col-span-3">
           <Label htmlFor="discussionPoints">
             Discussion Points (comma-separated)
           </Label>
