@@ -125,17 +125,25 @@ def calculate_invoice_totals(
     labour_cost: float = 0.0,
 ) -> dict:
     subtotal = 0
+    discount_amount = 0
     for item in items:
         if isinstance(item, dict):
-            subtotal += item.get("quantity", 0) * (item.get("salePrice") or item.get("unitPrice", 0))
+            quantity = item.get("quantity", 0)
+            unit_price = item.get("salePrice") or item.get("unitPrice", 0)
+            discount = item.get("discount", 0) or 0
         else:
-            subtotal += item.quantity * item.salePrice
+            quantity = item.quantity
+            unit_price = item.salePrice
+            discount = item.discount or 0
+        gross = quantity * unit_price
+        subtotal += gross
+        discount_amount += gross * (discount / 100)
 
-    total = subtotal + (labour_cost or 0)
+    total = (subtotal - discount_amount) + (labour_cost or 0)
 
     return {
         "subtotal": round(subtotal, 2),
-        "discountAmount": 0.0,
+        "discountAmount": round(discount_amount, 2),
         "taxAmount": 0.0,
         "total": round(total, 2),
     }

@@ -47,6 +47,9 @@ function CatalogTableCells({
         {formatSalePrice(row.salePrice)}
       </td>
       <td className={`border border-border px-2 py-1 text-right ${className}`}>
+        {formatSalePrice(row.costPrice)}
+      </td>
+      <td className={`border border-border px-2 py-1 text-right ${className}`}>
         {row.totalQty}
       </td>
       <td className={`border border-border px-2 py-1 ${className}`}>
@@ -64,14 +67,16 @@ export function CommerceInvoiceProductSearchTable({
   return (
     <section className="w-full min-w-0 overflow-hidden rounded-lg border border-border">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-0 border-collapse text-sm md:min-w-[960px]">
+        <table className="w-full min-w-0 border-collapse text-sm md:min-w-[1040px]">
           <thead>
             <tr className="bg-primary text-primary-foreground">
               {PRODUCT_TABLE_COLUMNS.map((column) => (
                 <th
                   key={column}
                   className={`border border-primary/80 px-2 py-1.5 font-semibold ${
-                    column === "Sale Price" || column === "Total Qty"
+                    column === "Sale Price" ||
+                    column === "Cost Price" ||
+                    column === "Total Qty"
                       ? "text-right"
                       : "text-left"
                   }`}

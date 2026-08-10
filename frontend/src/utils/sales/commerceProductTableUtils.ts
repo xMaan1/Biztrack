@@ -9,6 +9,7 @@ export type ProductTableRow = {
   vendor: string;
   category: string;
   salePrice: number;
+  costPrice: number;
   totalQty: number;
   totalUnits: string;
 };
@@ -22,6 +23,7 @@ export const PRODUCT_TABLE_COLUMNS = [
   "Vendor",
   "Category",
   "Sale Price",
+  "Cost Price",
   "Total Qty",
   "Total Units",
 ] as const;
@@ -56,6 +58,7 @@ export function productToTableRow(
     vendor: product.supplierName || "—",
     category: product.category || "—",
     salePrice: product.salePrice ?? 0,
+    costPrice: product.costPerUnitPrice ?? 0,
     totalQty: availableQty,
     totalUnits: formatTotalUnits(availableQty, packSize, product.unitOfMeasure),
   };

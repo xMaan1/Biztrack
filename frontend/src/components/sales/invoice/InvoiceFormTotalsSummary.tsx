@@ -26,6 +26,15 @@ export function InvoiceFormTotalsSummary({
               className={`${COMMERCE_INPUT_CLS} bg-background`}
             />
           </InlineField>
+          {totals.discountAmount > 0 && (
+            <InlineField label="Total Discount:">
+              <Input
+                readOnly
+                value={formatCurrency(-totals.discountAmount)}
+                className={`${COMMERCE_INPUT_CLS} bg-background text-destructive`}
+              />
+            </InlineField>
+          )}
           <InlineField label="Labour Cost:">
             <Input
               readOnly

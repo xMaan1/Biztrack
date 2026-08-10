@@ -315,10 +315,16 @@ class InvoiceService {
       (sum, item) => sum + item.quantity * item.salePrice,
       0,
     );
-    const total = subtotal + labourCost;
+    const discountAmount = items.reduce(
+      (sum, item) =>
+        sum + item.quantity * item.salePrice * ((item.discount || 0) / 100),
+      0,
+    );
+    const total = subtotal - discountAmount + labourCost;
 
     return {
       subtotal: Math.round(subtotal * 100) / 100,
+      discountAmount: Math.round(discountAmount * 100) / 100,
       labourCost: Math.round(labourCost * 100) / 100,
       total: Math.round(total * 100) / 100,
     };

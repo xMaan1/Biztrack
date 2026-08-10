@@ -175,11 +175,17 @@ export function calculateInvoiceTotals(
     (sum, item) => sum + item.quantity * item.salePrice,
     0,
   );
+  const discountAmount = items.reduce(
+    (sum, item) =>
+      sum + item.quantity * item.salePrice * ((item.discount || 0) / 100),
+    0,
+  );
   const labourCost = formData.labourCost || 0;
-  const total = subtotal + labourCost;
+  const total = subtotal - discountAmount + labourCost;
 
   return {
     subtotal: Math.round(subtotal * 100) / 100,
+    discountAmount: Math.round(discountAmount * 100) / 100,
     labourCost: Math.round(labourCost * 100) / 100,
     total: Math.round(total * 100) / 100,
   };
@@ -260,5 +266,7 @@ export function getInvoiceDialogContentClassName(
 }
 
 export function lineItemTotal(item: InvoiceItemCreate): number {
-  return item.quantity * item.salePrice;
+  const gross = item.quantity * item.salePrice;
+  const discountAmount = gross * ((item.discount || 0) / 100);
+  return gross - discountAmount;
 }

@@ -214,8 +214,28 @@ export function useInvoiceForm({
       }
       const vi = (jc.vehicle_info || {}) as Record<string, unknown>;
       const reg = vi.registration_number ? String(vi.registration_number) : "";
+      const vehicle: Vehicle | null =
+        vi.registration_number || vi.vin || vi.make || vi.model
+          ? {
+              id: vi.vehicle_id ? String(vi.vehicle_id) : jc.id,
+              tenant_id: jc.tenant_id,
+              make: vi.make ? String(vi.make) : "",
+              model: vi.model ? String(vi.model) : "",
+              year: vi.year ? String(vi.year) : "",
+              color: vi.color ? String(vi.color) : "",
+              vin: vi.vin ? String(vi.vin) : "",
+              registration_number: reg,
+              mileage: vi.mileage ? String(vi.mileage) : "",
+              engine_number: vi.engine_number ? String(vi.engine_number) : "",
+              is_active: true,
+              created_at: "",
+              updated_at: "",
+            }
+          : null;
+      setSelectedVehicle(vehicle);
       setFormData((prev) => ({
         ...prev,
+        orderNumber: jc.job_card_number || prev.orderNumber,
         vehicleReg: reg || prev.vehicleReg,
         customerId: jc.customer_id || prev.customerId,
         customerName: jc.customer_name || prev.customerName,
