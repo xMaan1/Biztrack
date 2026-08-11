@@ -26,7 +26,7 @@ export function InvoiceFormTotalsSummary({
   labourCost,
   onLabourCostChange,
 }: InvoiceFormTotalsSummaryProps) {
-  const { formatCurrency } = useCurrency();
+  const { formatCurrency, getCurrencySymbol } = useCurrency();
 
   return (
     <section className="rounded-lg border border-border bg-muted/40 px-3 py-2">
@@ -49,18 +49,26 @@ export function InvoiceFormTotalsSummary({
             </InlineField>
           )}
           <InlineField label="Labour Cost:">
-            <Input
-              id="labourCost"
-              type="number"
-              step="0.01"
-              min="0"
-              disabled={mode === "view"}
-              value={labourCost ?? 0}
-              onChange={(e) =>
-                onLabourCostChange("labourCost", parseFloat(e.target.value) || 0)
-              }
-              className={`${COMMERCE_INPUT_CLS} bg-background`}
-            />
+            <div className="relative">
+              <span className="pointer-events-none absolute inset-y-0 left-2.5 flex items-center text-sm text-muted-foreground">
+                {getCurrencySymbol()}
+              </span>
+              <Input
+                id="labourCost"
+                type="number"
+                step="0.01"
+                min="0"
+                disabled={mode === "view"}
+                value={labourCost ?? 0}
+                onChange={(e) =>
+                  onLabourCostChange(
+                    "labourCost",
+                    parseFloat(e.target.value) || 0,
+                  )
+                }
+                className={`${COMMERCE_INPUT_CLS} bg-background pl-7`}
+              />
+            </div>
           </InlineField>
         </div>
 
