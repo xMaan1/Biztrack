@@ -134,6 +134,8 @@ def create_job_card_endpoint(
         data["planned_date"] = datetime.fromisoformat(data["planned_date"].replace("Z", "+00:00"))
     if data.get("completed_at") and isinstance(data["completed_at"], str):
         data["completed_at"] = datetime.fromisoformat(data["completed_at"].replace("Z", "+00:00"))
+    if data.get("status") == "completed" and not data.get("completed_at"):
+        data["completed_at"] = datetime.utcnow()
     data["tenant_id"] = tenant_id
     data["created_by_id"] = str(current_user.id)
     data["job_card_number"] = job_card_number
@@ -191,6 +193,12 @@ def update_job_card_endpoint(
         data["planned_date"] = datetime.fromisoformat(data["planned_date"].replace("Z", "+00:00"))
     if data.get("completed_at") and isinstance(data["completed_at"], str):
         data["completed_at"] = datetime.fromisoformat(data["completed_at"].replace("Z", "+00:00"))
+    if (
+        data.get("status") == "completed"
+        and not data.get("completed_at")
+        and str(getattr(jc, "status", "") or "") != "completed"
+    ):
+        data["completed_at"] = datetime.utcnow()
     if "purchase_order_id" in data:
         data["purchase_order_id"] = data["purchase_order_id"] or None
     if "invoice_id" in data:

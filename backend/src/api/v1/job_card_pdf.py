@@ -148,13 +148,16 @@ def _tenant_currency(db: Session, tenant_id: str) -> str:
 def _info_table(jc: Any, styles: Dict) -> Table:
     vi = lambda k: _vehicle_info(jc, k)
     job_date = format_date(getattr(jc, "planned_date", None)) or format_date(getattr(jc, "created_at", None))
+    time_out = format_date(getattr(jc, "completed_at", None))
+    if not time_out and str(getattr(jc, "status", "") or "").lower() == "completed":
+        time_out = format_date(getattr(jc, "updated_at", None))
     data = [
         ["Job No.", safe_str(jc.job_card_number), "Job Date", (job_date or "")[:16]],
         ["Reg. No.", vi("registration_number"), "Year", vi("year")],
         ["Mileage", vi("mileage"), "Make", vi("make")],
         ["Model", vi("model"), "Engine No.", vi("engine_number") or vi("engine_no")],
         ["VIN", vi("vin"), "", ""],
-        ["Date/Time In", (format_date(getattr(jc, "created_at", None)) or "")[:16], "Date/Time Out", (format_date(getattr(jc, "completed_at", None)) or "")[:16]],
+        ["Date/Time In", (format_date(getattr(jc, "created_at", None)) or "")[:16], "Date/Time Out", (time_out or "")[:16]],
     ]
     t = Table(data, colWidths=[1.0 * inch, 2.0 * inch, 1.0 * inch, 2.0 * inch])
     t.setStyle(TableStyle([
@@ -176,47 +179,72 @@ def _info_table(jc: Any, styles: Dict) -> Table:
 
 def _parts_table(jc: Any, styles: Dict, currency: str = "USD") -> tuple:
     items = normalize_items(getattr(jc, "items", None))
+    rows = [["Part No.", "Part Desc.", "Qty", "Unit Price", "Line Total"]]
     subtotal = 0.0
     labour_total = float(getattr(jc, "labor_estimate", 0) or 0)
-    if not items or not any(items[0].get(k) for k in ["part_no", "partNo", "description", "part_description", "unit_price", "unitPrice", "labour", "labor"]):
-        subtotal = float(getattr(jc, "parts_estimate", 0) or 0)
-        labour_total = float(getattr(jc, "labor_estimate", 0) or 0)
-        rows = [["Part No.", "Part Desc.", "Qty", "Unit Price", "Line Total", "Labour"]]
-        rows.append(["", "See estimates above", "", "", format_currency(subtotal, currency), format_currency(labour_total, currency)])
-    else:
-        rows = [["Part No.", "Part Desc.", "Qty", "Unit Price", "Line Total", "Labour"]]
-        for row in items:
-            part_no = safe_str(row.get("part_no") or row.get("partNo", ""))
-            part_desc = safe_str(row.get("description") or row.get("part_description", ""))
-            qty = row.get("qty") or row.get("quantity", "")
-            qty_s = str(qty) if qty != "" else ""
-            unit_price = row.get("unit_price") or row.get("unitPrice")
+    dict_items = [r for r in items if isinstance(r, dict)]
+    has_items = any(
+        row.get("sku") or row.get("part_no") or row.get("partNo")
+        or row.get("part_number") or row.get("partNumber")
+        or row.get("description") or row.get("part_description")
+        or row.get("unit_price") not in (None, "")
+        or row.get("unitPrice") not in (None, "")
+        for row in dict_items
+    )
+    if has_items:
+        for row in dict_items:
+            part_no = safe_str(
+                row.get("sku")
+                or row.get("part_no")
+                or row.get("partNo")
+                or row.get("part_number")
+                or row.get("partNumber")
+            )
+            part_desc = safe_str(
+                row.get("description")
+                or row.get("part_description")
+                or row.get("productName")
+                or row.get("name")
+            )
+            qty = row.get("qty")
+            if qty is None:
+                qty = row.get("quantity", "")
+            qty_s = str(qty) if qty not in ("", None) else ""
+            try:
+                qty_val = float(qty) if qty not in ("", None) else 0.0
+            except (TypeError, ValueError):
+                qty_val = 0.0
+            unit_price = row.get("unit_price")
+            if unit_price is None:
+                unit_price = row.get("unitPrice", 0)
             try:
                 up_val = float(unit_price) if unit_price not in (None, "") else 0.0
             except (TypeError, ValueError):
                 up_val = 0.0
-            try:
-                qty_val = float(qty) if qty != "" else 0
-            except (TypeError, ValueError):
-                qty_val = 0
-            line_total = up_val * qty_val
-            labour = row.get("labour") or row.get("labor")
+            labour = row.get("labour")
+            if labour is None:
+                labour = row.get("labor", 0)
             try:
                 labour_val = float(labour) if labour not in (None, "") else 0.0
             except (TypeError, ValueError):
                 labour_val = 0.0
-            if unit_price not in (None, "") and not isinstance(unit_price, str):
-                unit_price = format_currency(float(unit_price), currency)
-            else:
-                unit_price = format_currency(up_val, currency) if up_val else ""
+            line_total = up_val * qty_val
             subtotal += line_total
             labour_total += labour_val
-            line_total_s = format_currency(line_total, currency) if line_total else ""
-            labour_s = format_currency(labour_val, currency) if labour_val else ""
-            if labour not in (None, "") and not labour_s and str(labour).replace(".", "").replace("-", "").isdigit():
-                labour_s = format_currency(float(labour), currency)
-            rows.append([part_no[:20], part_desc[:35], qty_s[:6], unit_price[:12], line_total_s[:12], labour_s[:12]])
-    col_widths = [0.85 * inch, 2.0 * inch, 0.45 * inch, 0.9 * inch, 0.9 * inch, 0.75 * inch]
+            rows.append([
+                part_no[:20],
+                part_desc[:35],
+                qty_s[:6],
+                format_currency(up_val, currency) if up_val else "",
+                format_currency(line_total, currency) if line_total else "",
+            ])
+    else:
+        subtotal = float(getattr(jc, "parts_estimate", 0) or 0)
+        if subtotal:
+            rows.append(["", "Estimated parts", "", "", format_currency(subtotal, currency)])
+        else:
+            rows.append(["", "No parts recorded", "", "", ""])
+    col_widths = [0.85 * inch, 2.4 * inch, 0.55 * inch, 1.0 * inch, 1.0 * inch]
     t = Table(rows, colWidths=col_widths)
     t.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, 0), hex_to_color(PRIMARY_HEX)),
@@ -237,16 +265,15 @@ def _totals_table(subtotal: float, labour_total: float, vat_rate: float = 0.15, 
     before_vat = subtotal + labour_total
     vat_val = before_vat * vat_rate
     total_val = before_vat + vat_val
-    vat_pct = f"VAT ({int(round(vat_rate * 100))}%)"
     data = [
         ["Sub Total", format_currency(subtotal, currency)],
     ]
     if labour_total:
         data.append(["Labour", format_currency(labour_total, currency)])
-    data.extend([
-        [vat_pct, format_currency(vat_val, currency)],
-        ["TOTAL", format_currency(total_val, currency)],
-    ])
+    if vat_rate and vat_rate > 0:
+        vat_pct = f"VAT ({int(round(vat_rate * 100))}%)"
+        data.append([vat_pct, format_currency(vat_val, currency)])
+    data.append(["TOTAL", format_currency(total_val, currency)])
     t = Table(data, colWidths=[1.2 * inch, 1.2 * inch])
     t.setStyle(TableStyle([
         ("FONTNAME", (0, 0), (-1, -2), "Helvetica"),
