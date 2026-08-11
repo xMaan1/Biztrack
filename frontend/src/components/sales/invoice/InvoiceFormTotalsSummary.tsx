@@ -20,55 +20,68 @@ type InvoiceFormTotalsSummaryProps = {
   ) => void;
 };
 
+function CurrencyInput({
+  value,
+  disabled,
+  onChange,
+  className,
+}: {
+  value: number;
+  disabled?: boolean;
+  onChange?: (value: number) => void;
+  className?: string;
+}) {
+  const { getCurrencySymbol } = useCurrency();
+  return (
+    <div className="relative">
+      <span className="pointer-events-none absolute inset-y-0 left-2.5 flex items-center text-sm text-muted-foreground">
+        {getCurrencySymbol()}
+      </span>
+      <Input
+        type="number"
+        step="0.01"
+        min="0"
+        readOnly={!onChange}
+        disabled={disabled}
+        value={value}
+        onChange={
+          onChange
+            ? (e) => onChange(parseFloat(e.target.value) || 0)
+            : undefined
+        }
+        className={`${COMMERCE_INPUT_CLS} bg-background pl-7 ${className ?? ""}`}
+      />
+    </div>
+  );
+}
+
 export function InvoiceFormTotalsSummary({
   mode,
   totals,
   labourCost,
   onLabourCostChange,
 }: InvoiceFormTotalsSummaryProps) {
-  const { formatCurrency, getCurrencySymbol } = useCurrency();
-
   return (
     <section className="rounded-lg border border-border bg-muted/40 px-3 py-2">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <div className="space-y-1.5">
           <InlineField label="Subtotal:">
-            <Input
-              readOnly
-              value={formatCurrency(totals.subtotal)}
-              className={`${COMMERCE_INPUT_CLS} bg-background`}
-            />
+            <CurrencyInput value={totals.subtotal} />
           </InlineField>
           {totals.discountAmount > 0 && (
             <InlineField label="Total Discount:">
-              <Input
-                readOnly
-                value={formatCurrency(-totals.discountAmount)}
-                className={`${COMMERCE_INPUT_CLS} bg-background text-destructive`}
+              <CurrencyInput
+                value={-totals.discountAmount}
+                className="text-destructive"
               />
             </InlineField>
           )}
           <InlineField label="Labour Cost:">
-            <div className="relative">
-              <span className="pointer-events-none absolute inset-y-0 left-2.5 flex items-center text-sm text-muted-foreground">
-                {getCurrencySymbol()}
-              </span>
-              <Input
-                id="labourCost"
-                type="number"
-                step="0.01"
-                min="0"
-                disabled={mode === "view"}
-                value={labourCost ?? 0}
-                onChange={(e) =>
-                  onLabourCostChange(
-                    "labourCost",
-                    parseFloat(e.target.value) || 0,
-                  )
-                }
-                className={`${COMMERCE_INPUT_CLS} bg-background pl-7`}
-              />
-            </div>
+            <CurrencyInput
+              value={labourCost ?? 0}
+              disabled={mode === "view"}
+              onChange={(value) => onLabourCostChange("labourCost", value)}
+            />
           </InlineField>
         </div>
 
@@ -76,11 +89,7 @@ export function InvoiceFormTotalsSummary({
 
         <div className="space-y-1.5">
           <InlineField label="Total Amount:">
-            <Input
-              readOnly
-              value={formatCurrency(totals.total)}
-              className={`${COMMERCE_INPUT_CLS} bg-background font-semibold`}
-            />
+            <CurrencyInput value={totals.total} className="font-semibold" />
           </InlineField>
         </div>
       </div>
