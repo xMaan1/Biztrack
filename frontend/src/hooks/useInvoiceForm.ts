@@ -24,6 +24,7 @@ import {
   invoiceFormDataFromInvoice,
   invoiceItemsFromInvoice,
   invoiceItemsFromJobCard,
+  jobCardLabourEstimate,
   validateInvoiceForm,
   validateNewItem,
 } from "@/src/utils/sales/invoiceFormUtils";
@@ -237,6 +238,7 @@ export function useInvoiceForm({
         ...prev,
         orderNumber: jc.job_card_number || prev.orderNumber,
         vehicleReg: reg || prev.vehicleReg,
+        labourCost: jobCardLabourEstimate(jc),
         customerId: jc.customer_id || prev.customerId,
         customerName: jc.customer_name || prev.customerName,
         customerPhone: jc.customer_phone || prev.customerPhone,

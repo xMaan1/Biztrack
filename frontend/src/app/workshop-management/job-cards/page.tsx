@@ -38,7 +38,7 @@ import InvoiceService from "../../../services/InvoiceService";
 import type { Customer } from "../../../services/CustomerService";
 import type { InvoiceCreate } from "../../../models/sales";
 import { extractErrorMessage } from "../../../utils/errorUtils";
-import { invoiceItemsFromJobCard } from "../../../utils/sales/invoiceFormUtils";
+import { invoiceItemsFromJobCard, jobCardLabourEstimate } from "../../../utils/sales/invoiceFormUtils";
 
 function JobCardsContent() {
   const [jobCards, setJobCards] = useState<JobCard[]>([]);
@@ -66,33 +66,18 @@ function JobCardsContent() {
       const str = (v: unknown) =>
         v === null || v === undefined ? "" : String(v);
       let items = invoiceItemsFromJobCard(jc);
-      if (items.length === 0) {
-        if (jc.parts_estimate) {
-          items = [
-            ...items,
-            {
-              description: "Parts",
-              quantity: 1,
-              salePrice: jc.parts_estimate,
-              discount: 0,
-              taxRate: 0,
-              unit: "piece",
-            },
-          ];
-        }
-        if (jc.labor_estimate) {
-          items = [
-            ...items,
-            {
-              description: "Labour",
-              quantity: 1,
-              salePrice: jc.labor_estimate,
-              discount: 0,
-              taxRate: 0,
-              unit: "hour",
-            },
-          ];
-        }
+      if (items.length === 0 && jc.parts_estimate) {
+        items = [
+          ...items,
+          {
+            description: "Parts",
+            quantity: 1,
+            salePrice: jc.parts_estimate,
+            discount: 0,
+            taxRate: 0,
+            unit: "piece",
+          },
+        ];
       }
 
       return {
@@ -101,6 +86,7 @@ function JobCardsContent() {
         customerPhone: jc.customer_phone || "",
         vehicleReg: str(vi.registration_number),
         jobCardId: jc.id,
+        labourCost: jobCardLabourEstimate(jc),
         items,
       };
     },

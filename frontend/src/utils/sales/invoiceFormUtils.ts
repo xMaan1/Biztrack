@@ -147,6 +147,10 @@ export function invoiceItemsFromJobCard(jc: JobCard): InvoiceItemCreate[] {
   return mapped;
 }
 
+export function jobCardLabourEstimate(jc: JobCard): number {
+  return Number(jc.labor_estimate) || 0;
+}
+
 export function customerFallbackFromInvoice(invoice: Invoice): Customer {
   return {
     id: invoice.customerId,
