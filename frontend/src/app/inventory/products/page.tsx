@@ -264,7 +264,9 @@ function ProductsContent() {
                               <Button
                                 size="sm"
                                 onClick={() =>
-                                  router.push("/inventory/purchase-orders/new")
+                                  router.push(
+                                    `/inventory/purchase-orders?openAdd=1&productId=${product.id}`,
+                                  )
                                 }
                               >
                                 <ShoppingCart className="mr-2 h-4 w-4" />

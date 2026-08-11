@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCachedApi } from "../../../hooks/useCachedApi";
 import { ModuleGuard } from "../../../components/guards/PermissionGuard";
 import {
@@ -82,7 +83,9 @@ export default function PurchaseOrdersPage() {
       module="inventory"
       fallback={<div>You don&apos;t have access to Inventory module</div>}
     >
-      <PurchaseOrdersContent />
+      <Suspense fallback={null}>
+        <PurchaseOrdersContent />
+      </Suspense>
     </ModuleGuard>
   );
 }
@@ -93,6 +96,12 @@ function PurchaseOrdersContent() {
   const isHealthcare = planInfo?.planType === "healthcare";
   const isWorkshop = planInfo?.planType === "workshop";
   const { formatCurrency } = useCurrency();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [prefill, setPrefill] = useState<{
+    productId: string;
+    quantity: number;
+  } | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
 
@@ -104,6 +113,17 @@ function PurchaseOrdersContent() {
 
     return () => clearTimeout(timer);
   }, [searchTerm]);
+
+  // Open the create modal pre-filled when arriving from a low-stock product
+  useEffect(() => {
+    const openAdd = searchParams.get("openAdd");
+    const productId = searchParams.get("productId");
+    if (openAdd === "1" && productId) {
+      setPrefill({ productId, quantity: 1 });
+      setIsAddModalOpen(true);
+      router.replace("/inventory/purchase-orders", { scroll: false });
+    }
+  }, [searchParams, router]);
 
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -714,6 +734,8 @@ function PurchaseOrdersContent() {
           showSupplierCount={true}
           showAddSupplierButton={true}
           useToastNotifications={true}
+          prefillProductId={prefill?.productId}
+          prefillQuantity={prefill?.quantity ?? 1}
         />
 
         {/* View Purchase Order Modal */}

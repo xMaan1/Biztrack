@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -60,6 +60,8 @@ interface PurchaseOrderModalProps {
   useToastNotifications?: boolean;
   initialData?: Partial<PurchaseOrderCreate>;
   hideJobCardLink?: boolean;
+  prefillProductId?: string;
+  prefillQuantity?: number;
 }
 
 export default function PurchaseOrderModal({
@@ -73,6 +75,8 @@ export default function PurchaseOrderModal({
   useToastNotifications = true,
   initialData = {},
   hideJobCardLink = false,
+  prefillProductId,
+  prefillQuantity,
 }: PurchaseOrderModalProps) {
   const { planInfo } = usePlanInfo();
   const isHealthcare = planInfo?.planType === "healthcare";
@@ -91,6 +95,7 @@ export default function PurchaseOrderModal({
   const [newItemUnitCost, setNewItemUnitCost] = useState(0);
   const [isCreateProductOpen, setIsCreateProductOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
+  const prefillAppliedRef = useRef(false);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [documentLinks, setDocumentLinks] =
     useState<WorkshopDocumentLinksValue>({});
@@ -121,6 +126,7 @@ export default function PurchaseOrderModal({
 
   useEffect(() => {
     if (isOpen) {
+      prefillAppliedRef.current = false;
       fetchData();
       setDocumentLinks({
         jobCardId: initialData.jobCardId || undefined,
@@ -155,7 +161,32 @@ export default function PurchaseOrderModal({
     try {
       apiService
         .get("/pos/products?limit=1000&page=1")
-        .then((res: any) => setProducts(res.products || []))
+        .then((res: any) => {
+          const loadedProducts = res.products || [];
+          setProducts(loadedProducts);
+          if (!prefillAppliedRef.current && prefillProductId) {
+            const product = loadedProducts.find(
+              (p: any) => p.id === prefillProductId,
+            );
+            if (product) {
+              const quantity =
+                prefillQuantity && prefillQuantity > 0 ? prefillQuantity : 1;
+              setOrderItems((prev) => {
+                if (prev.length > 0) return prev;
+                return [
+                  {
+                    productId: product.id,
+                    productName: product.name,
+                    sku: product.sku,
+                    quantity,
+                    unitCost: product.costPerUnitPrice,
+                  },
+                ];
+              });
+              prefillAppliedRef.current = true;
+            }
+          }
+        })
         .catch(() => setProducts([]));
     } catch (error) {}
   };
