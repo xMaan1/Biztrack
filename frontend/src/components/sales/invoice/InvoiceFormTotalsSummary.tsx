@@ -2,16 +2,29 @@
 
 import { Input } from "@/src/components/ui/input";
 import { useCurrency } from "@/src/contexts/CurrencyContext";
-import type { InvoiceFormTotals } from "@/src/types/sales/invoiceForm";
+import type { InvoiceCreate } from "@/src/models/sales";
+import type {
+  InvoiceFormMode,
+  InvoiceFormTotals,
+} from "@/src/types/sales/invoiceForm";
 import { COMMERCE_INPUT_CLS } from "../commerce-invoice/constants";
 import { InlineField } from "../commerce-invoice/InlineField";
 
 type InvoiceFormTotalsSummaryProps = {
+  mode: InvoiceFormMode;
   totals: InvoiceFormTotals;
+  labourCost?: number;
+  onLabourCostChange: (
+    field: keyof InvoiceCreate,
+    value: string | number,
+  ) => void;
 };
 
 export function InvoiceFormTotalsSummary({
+  mode,
   totals,
+  labourCost,
+  onLabourCostChange,
 }: InvoiceFormTotalsSummaryProps) {
   const { formatCurrency } = useCurrency();
 
@@ -37,8 +50,15 @@ export function InvoiceFormTotalsSummary({
           )}
           <InlineField label="Labour Cost:">
             <Input
-              readOnly
-              value={formatCurrency(totals.labourCost)}
+              id="labourCost"
+              type="number"
+              step="0.01"
+              min="0"
+              disabled={mode === "view"}
+              value={labourCost ?? 0}
+              onChange={(e) =>
+                onLabourCostChange("labourCost", parseFloat(e.target.value) || 0)
+              }
               className={`${COMMERCE_INPUT_CLS} bg-background`}
             />
           </InlineField>

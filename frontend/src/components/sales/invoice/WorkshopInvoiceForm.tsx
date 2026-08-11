@@ -6,7 +6,6 @@ import { CommerceInvoiceFormHeader } from "../commerce-invoice/CommerceInvoiceFo
 import { InvoiceFormDetailsSection } from "./InvoiceFormDetailsSection";
 import { InvoiceFormItemsSection } from "./InvoiceFormItemsSection";
 import { InvoiceFormTotalsSummary } from "./InvoiceFormTotalsSummary";
-import { InvoiceLabourCostSection } from "./InvoiceLabourCostSection";
 import { InvoiceFormNotesSection } from "./InvoiceFormNotesSection";
 import { InvoiceInstallmentSection } from "./InvoiceInstallmentSection";
 import { InvoiceFormActions } from "./InvoiceFormActions";
@@ -69,13 +68,12 @@ export function WorkshopInvoiceForm({
         clearNewItemErrors={clearNewItemErrors}
       />
 
-      <InvoiceLabourCostSection
+      <InvoiceFormTotalsSummary
         mode={mode}
-        value={form.formData.labourCost}
-        onInputChange={form.handleInputChange}
+        totals={form.totals}
+        labourCost={form.formData.labourCost}
+        onLabourCostChange={form.handleInputChange}
       />
-
-      <InvoiceFormTotalsSummary totals={form.totals} />
 
       <InvoiceFormNotesSection
         formData={form.formData}
