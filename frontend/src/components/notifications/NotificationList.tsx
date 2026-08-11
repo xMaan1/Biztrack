@@ -240,15 +240,17 @@ export default function NotificationList() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
-          {filteredNotifications.map((notification) => (
-            <NotificationItem
-              key={notification.id}
-              notification={notification}
-              compact={false}
-            />
-          ))}
-        </div>
+        <Card className="overflow-hidden">
+          <div className="divide-y divide-gray-100">
+            {filteredNotifications.map((notification) => (
+              <NotificationItem
+                key={notification.id}
+                notification={notification}
+                compact={false}
+              />
+            ))}
+          </div>
+        </Card>
       )}
 
       {/* Pagination */}

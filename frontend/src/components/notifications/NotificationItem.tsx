@@ -13,7 +13,6 @@ import {
 } from "../../models/notifications";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
-import { Card, CardContent } from "../ui/card";
 import {
   Check,
   X,
@@ -26,6 +25,13 @@ import {
   Settings,
   Bell,
   FolderOpen,
+  Users,
+  Package,
+  UserCheck,
+  Factory,
+  Shield,
+  Wrench,
+  Calculator,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useRouter } from "next/navigation";
@@ -44,6 +50,13 @@ const iconMap = {
   Settings,
   Bell,
   FolderOpen,
+  Users,
+  Package,
+  UserCheck,
+  Factory,
+  Shield,
+  Wrench,
+  Calculator,
 };
 
 export default function NotificationItem({
@@ -181,91 +194,99 @@ export default function NotificationItem({
   }
 
   return (
-    <Card
-      className={`${!notification.is_read ? "border-blue-200 bg-blue-50" : ""}`}
+    <div
+      className={`flex items-start gap-3 px-4 py-3.5 transition-colors ${
+        !notification.is_read
+          ? "bg-blue-50/60 hover:bg-blue-50"
+          : "hover:bg-gray-50"
+      }`}
     >
-      <CardContent className="p-4">
-        <div className="flex items-start space-x-3">
-          <div className={`p-2 rounded-full ${typeColor}`}>
-            <TypeIcon className="h-4 w-4" />
+      <div
+        className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${typeColor}`}
+      >
+        <TypeIcon className="h-4 w-4" />
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              {!notification.is_read && (
+                <span className="h-2 w-2 shrink-0 rounded-full bg-blue-500" />
+              )}
+              <h4
+                className={`truncate text-sm ${
+                  notification.is_read
+                    ? "font-medium text-gray-700"
+                    : "font-semibold text-gray-900"
+                }`}
+              >
+                {notification.title}
+              </h4>
+            </div>
+            <p className="mt-0.5 line-clamp-2 text-sm text-gray-600">
+              {notification.message}
+            </p>
           </div>
 
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <h4 className="text-sm font-semibold text-gray-900 mb-1">
-                  {notification.title}
-                </h4>
-                <p className="text-sm text-gray-700 mb-3">
-                  {notification.message}
-                </p>
-
-                <div className="flex items-center space-x-4 text-xs text-gray-500">
-                  <div className="flex items-center space-x-1">
-                    <CategoryIcon className="h-3 w-3" />
-                    <span>{getCategoryDisplayName(notification.category)}</span>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <Clock className="h-3 w-3" />
-                    <span>{timeAgo}</span>
-                  </div>
-                  {notification.read_at && (
-                    <div className="flex items-center space-x-1">
-                      <Check className="h-3 w-3" />
-                      <span>
-                        Read{" "}
-                        {formatDistanceToNow(new Date(notification.read_at), {
-                          addSuffix: true,
-                        })}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-1 ml-4">
-                {!notification.is_read && (
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                )}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleMarkAsRead}
-                  className="h-8 w-8 p-0"
-                >
-                  {notification.is_read ? (
-                    <Check className="h-4 w-4 text-gray-400" />
-                  ) : (
-                    <Check className="h-4 w-4 text-blue-500" />
-                  )}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleDelete}
-                  className="h-8 w-8 p-0 text-gray-400 hover:text-red-500"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-
-            {detailHref && (
-              <div className="mt-3 pt-3 border-t border-gray-200">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleActionClick}
-                  className="text-xs"
-                >
-                  <ExternalLink className="h-3 w-3 mr-1" />
-                  View Details
-                </Button>
-              </div>
-            )}
+          <div className="flex shrink-0 items-center space-x-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleMarkAsRead}
+              title={
+                notification.is_read ? "Mark as unread" : "Mark as read"
+              }
+              className="h-7 w-7 p-0"
+            >
+              {notification.is_read ? (
+                <Check className="h-3.5 w-3.5 text-gray-400" />
+              ) : (
+                <Check className="h-3.5 w-3.5 text-blue-500" />
+              )}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleDelete}
+              title="Delete"
+              className="h-7 w-7 p-0 text-gray-400 hover:text-red-500"
+            >
+              <X className="h-3.5 w-3.5" />
+            </Button>
           </div>
         </div>
-      </CardContent>
-    </Card>
+
+        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
+          <span className="flex items-center gap-1">
+            <CategoryIcon className="h-3 w-3" />
+            {getCategoryDisplayName(notification.category)}
+          </span>
+          <span className="flex items-center gap-1">
+            <Clock className="h-3 w-3" />
+            {timeAgo}
+          </span>
+          {notification.read_at && (
+            <span className="flex items-center gap-1">
+              <Check className="h-3 w-3" />
+              Read{" "}
+              {formatDistanceToNow(new Date(notification.read_at), {
+                addSuffix: true,
+              })}
+            </span>
+          )}
+          {detailHref && (
+            <button
+              type="button"
+              onClick={handleActionClick}
+              className="flex items-center gap-1 text-blue-600 hover:text-blue-700 hover:underline"
+            >
+              <ExternalLink className="h-3 w-3" />
+              View
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
