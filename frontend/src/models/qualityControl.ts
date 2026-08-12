@@ -134,6 +134,7 @@ export interface QualityCheckUpdate {
   assigned_to_id?: string;
   scheduled_date?: string;
   tags?: string[];
+  status?: QualityStatus;
 }
 
 export interface QualityInspectionUpdate {
@@ -200,6 +201,7 @@ export interface QualityInspectionResponse extends QualityInspectionBase {
 export interface QualityDefectResponse extends QualityDefectBase {
   id: string;
   tenant_id: string;
+  defect_number: string;
   created_at: string;
   updated_at: string;
   detected_by_name: string;
@@ -209,6 +211,7 @@ export interface QualityDefectResponse extends QualityDefectBase {
 export interface QualityReportResponse extends QualityReportBase {
   id: string;
   tenant_id: string;
+  report_number: string;
   created_at: string;
   updated_at: string;
   generated_by_name: string;

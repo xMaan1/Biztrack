@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from typing import List, Optional, Dict
 from datetime import datetime, timedelta
 import logging
@@ -14,14 +15,20 @@ from ...config.quality_control_crud import (
     update_quality_check, delete_quality_check, get_next_quality_check_number,
     create_quality_inspection, get_quality_inspection_by_id,
     get_quality_inspections_by_check, get_quality_inspections_by_inspector,
+    get_all_quality_inspections,
     update_quality_inspection, delete_quality_inspection,
     create_quality_defect, get_quality_defect_by_id,
     get_quality_defects_by_severity, get_quality_defects_by_status,
+    get_all_quality_defects,
     update_quality_defect, delete_quality_defect,
     create_quality_report, get_quality_report_by_id,
-    get_quality_reports_by_type, update_quality_report, delete_quality_report,
+    get_quality_reports_by_type, get_all_quality_reports,
+    update_quality_report, delete_quality_report,
     get_quality_dashboard_stats, get_recent_quality_checks,
     get_upcoming_quality_checks, get_critical_defects
+)
+from ...config.quality_control_models import (
+    QualityCheck, QualityInspection, QualityStatus
 )
 from ...models.quality_control import (
     QualityCheckCreate, QualityCheckUpdate, QualityCheckResponse, QualityChecksResponse,
@@ -33,6 +40,158 @@ from ...models.quality_control import (
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/quality-control", tags=["Quality Control"])
+
+
+def _user_name(user) -> Optional[str]:
+    """Best-effort display name for a user object (relationship-loaded)."""
+    if not user:
+        return None
+    return user.firstName or user.userName or user.email
+
+
+def _inspection_counts(db: Session, check_ids: List[str]) -> Dict[str, dict]:
+    """Aggregated inspection counts for a batch of quality checks."""
+    result = {
+        cid: {"total": 0, "passed": 0, "failed": 0, "pending": 0, "in_progress": 0}
+        for cid in check_ids
+    }
+    if not check_ids:
+        return result
+
+    rows = (
+        db.query(
+            QualityInspection.quality_check_id,
+            QualityInspection.status,
+            func.count(QualityInspection.id),
+        )
+        .filter(QualityInspection.quality_check_id.in_(check_ids))
+        .group_by(QualityInspection.quality_check_id, QualityInspection.status)
+        .all()
+    )
+    for check_id, status, count in rows:
+        key = str(check_id)
+        if key not in result:
+            result[key] = {"total": 0, "passed": 0, "failed": 0, "pending": 0, "in_progress": 0}
+        entry = result[key]
+        entry["total"] += count
+        if status == QualityStatus.PASSED:
+            entry["passed"] += count
+        elif status == QualityStatus.FAILED:
+            entry["failed"] += count
+        elif status == QualityStatus.PENDING:
+            entry["pending"] += count
+        elif status == QualityStatus.IN_PROGRESS:
+            entry["in_progress"] += count
+        else:
+            entry["pending"] += count
+    return result
+
+
+def _check_to_dict(check, counts: dict) -> dict:
+    c = counts.get(str(check.id), {"total": 0, "passed": 0, "failed": 0, "pending": 0, "in_progress": 0})
+    return {
+        "id": str(check.id),
+        "tenant_id": str(check.tenant_id),
+        "title": check.title,
+        "description": check.description,
+        "inspection_type": check.inspection_type,
+        "priority": check.priority,
+        "quality_standard": check.quality_standard,
+        "criteria": check.criteria or [],
+        "acceptance_criteria": check.acceptance_criteria or {},
+        "tolerance_limits": check.tolerance_limits or {},
+        "required_equipment": check.required_equipment or [],
+        "required_skills": check.required_skills or [],
+        "estimated_duration_minutes": check.estimated_duration_minutes or 0,
+        "project_id": str(check.project_id) if check.project_id else None,
+        "assigned_to_id": str(check.assigned_to_id) if check.assigned_to_id else None,
+        "scheduled_date": check.scheduled_date,
+        "tags": check.tags or [],
+        "created_by_id": str(check.created_by_id),
+        "created_at": check.created_at,
+        "updated_at": check.updated_at,
+        "status": check.status,
+        "completion_percentage": check.completion_percentage or 0.0,
+        "total_inspections": c["total"],
+        "passed_inspections": c["passed"],
+        "failed_inspections": c["failed"],
+        "pending_inspections": c["pending"],
+    }
+
+
+def _inspection_to_dict(inspection) -> dict:
+    return {
+        "id": str(inspection.id),
+        "tenant_id": str(inspection.tenant_id),
+        "quality_check_id": str(inspection.quality_check_id),
+        "inspector_id": str(inspection.inspector_id),
+        "inspection_date": inspection.inspection_date,
+        "status": inspection.status,
+        "results": inspection.results or {},
+        "measurements": inspection.measurements or {},
+        "defects_found": inspection.defects_found or [],
+        "corrective_actions": inspection.corrective_actions or [],
+        "notes": inspection.notes,
+        "photos": inspection.photos or [],
+        "documents": inspection.documents or [],
+        "compliance_score": inspection.compliance_score or 0.0,
+        "created_at": inspection.created_at,
+        "updated_at": inspection.updated_at,
+        "inspector_name": _user_name(getattr(inspection, "inspector", None)),
+        "quality_check_title": (
+            inspection.quality_check.title if getattr(inspection, "quality_check", None) else None
+        ),
+    }
+
+
+def _defect_to_dict(defect) -> dict:
+    return {
+        "id": str(defect.id),
+        "tenant_id": str(defect.tenant_id),
+        "defect_number": defect.defect_number,
+        "title": defect.title,
+        "description": defect.description,
+        "severity": defect.severity,
+        "category": defect.category,
+        "location": defect.location,
+        "detected_date": defect.detected_date,
+        "detected_by_id": str(defect.detected_by_id),
+        "quality_check_id": str(defect.quality_check_id) if defect.quality_check_id else None,
+        "project_id": str(defect.project_id) if defect.project_id else None,
+        "status": defect.status,
+        "priority": defect.priority,
+        "assigned_to_id": str(defect.assigned_to_id) if defect.assigned_to_id else None,
+        "estimated_resolution_date": defect.estimated_resolution_date,
+        "actual_resolution_date": defect.actual_resolution_date,
+        "resolution_notes": defect.resolution_notes,
+        "cost_impact": defect.cost_impact or 0.0,
+        "tags": defect.tags or [],
+        "created_at": defect.created_at,
+        "updated_at": defect.updated_at,
+        "detected_by_name": _user_name(getattr(defect, "detected_by", None)),
+        "assigned_to_name": _user_name(getattr(defect, "assigned_to", None)),
+    }
+
+
+def _report_to_dict(report) -> dict:
+    return {
+        "id": str(report.id),
+        "tenant_id": str(report.tenant_id),
+        "report_number": report.report_number,
+        "title": report.title,
+        "report_type": report.report_type,
+        "period_start": report.period_start,
+        "period_end": report.period_end,
+        "summary": report.summary,
+        "key_findings": report.key_findings or [],
+        "recommendations": report.recommendations or [],
+        "metrics": report.metrics or {},
+        "generated_by_id": str(report.generated_by_id),
+        "tags": report.tags or [],
+        "created_at": report.created_at,
+        "updated_at": report.updated_at,
+        "generated_by_name": _user_name(getattr(report, "generated_by", None)),
+    }
 
 # Quality Check endpoints
 @router.get("/checks", response_model=List[QualityCheckResponse])
@@ -77,36 +236,8 @@ async def get_quality_checks(
                    search_lower in check.check_number.lower()
             ]
         
-        return [
-            QualityCheckResponse(
-                id=str(check.id),
-                tenant_id=str(check.tenant_id),
-                title=check.title,
-                description=check.description,
-                inspection_type=check.inspection_type,
-                priority=check.priority,
-                quality_standard=check.quality_standard,
-                criteria=check.criteria or [],
-                acceptance_criteria=check.acceptance_criteria or {},
-                tolerance_limits=check.tolerance_limits or {},
-                required_equipment=check.required_equipment or [],
-                required_skills=check.required_skills or [],
-                estimated_duration_minutes=check.estimated_duration_minutes or 0,
-                project_id=check.project_id,
-                assigned_to_id=check.assigned_to_id,
-                scheduled_date=check.scheduled_date,
-                tags=check.tags or [],
-                created_by_id=str(check.created_by_id),
-                created_at=check.created_at,
-                updated_at=check.updated_at,
-                status=check.status,
-                completion_percentage=check.completion_percentage or 0.0,
-                total_inspections=0,
-                passed_inspections=0,
-                failed_inspections=0,
-                pending_inspections=0
-            ) for check in quality_checks
-        ]
+        counts = _inspection_counts(db, [str(c.id) for c in quality_checks])
+        return [_check_to_dict(check, counts) for check in quality_checks]
     except Exception as e:
         logger.error(f"Error getting quality checks: {str(e)}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get quality checks")
@@ -129,34 +260,8 @@ async def get_quality_check(
         if not quality_check:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Quality check not found")
         
-        return QualityCheckResponse(
-            id=str(quality_check.id),
-            tenant_id=str(quality_check.tenant_id),
-            title=quality_check.title,
-            description=quality_check.description,
-            inspection_type=quality_check.inspection_type,
-            priority=quality_check.priority,
-            quality_standard=quality_check.quality_standard,
-            criteria=quality_check.criteria or [],
-            acceptance_criteria=quality_check.acceptance_criteria or {},
-            tolerance_limits=quality_check.tolerance_limits or {},
-            required_equipment=quality_check.required_equipment or [],
-            required_skills=quality_check.required_skills or [],
-            estimated_duration_minutes=quality_check.estimated_duration_minutes or 0,
-            project_id=quality_check.project_id,
-            assigned_to_id=quality_check.assigned_to_id,
-            scheduled_date=quality_check.scheduled_date,
-            tags=quality_check.tags or [],
-            created_by_id=str(quality_check.created_by_id),
-            created_at=quality_check.created_at,
-            updated_at=quality_check.updated_at,
-            status=quality_check.status,
-            completion_percentage=quality_check.completion_percentage or 0.0,
-            total_inspections=0,
-            passed_inspections=0,
-            failed_inspections=0,
-            pending_inspections=0
-        )
+        counts = _inspection_counts(db, [str(quality_check.id)])
+        return _check_to_dict(quality_check, counts)
     except HTTPException:
         raise
     except Exception as e:
@@ -181,34 +286,8 @@ async def create_quality_check_endpoint(
         check_dict = check_data.dict()
         
         quality_check = create_quality_check(db, check_dict, tenant_id, current_user.id)
-        return QualityCheckResponse(
-            id=str(quality_check.id),
-            tenant_id=str(quality_check.tenant_id),
-            title=quality_check.title,
-            description=quality_check.description,
-            inspection_type=quality_check.inspection_type,
-            priority=quality_check.priority,
-            quality_standard=quality_check.quality_standard,
-            criteria=quality_check.criteria or [],
-            acceptance_criteria=quality_check.acceptance_criteria or {},
-            tolerance_limits=quality_check.tolerance_limits or {},
-            required_equipment=quality_check.required_equipment or [],
-            required_skills=quality_check.required_skills or [],
-            estimated_duration_minutes=quality_check.estimated_duration_minutes or 0,
-            project_id=quality_check.project_id,
-            assigned_to_id=quality_check.assigned_to_id,
-            scheduled_date=quality_check.scheduled_date,
-            tags=quality_check.tags or [],
-            created_by_id=str(quality_check.created_by_id),
-            created_at=quality_check.created_at,
-            updated_at=quality_check.updated_at,
-            status=quality_check.status,
-            completion_percentage=quality_check.completion_percentage or 0.0,
-            total_inspections=0,
-            passed_inspections=0,
-            failed_inspections=0,
-            pending_inspections=0
-        )
+        counts = _inspection_counts(db, [str(quality_check.id)])
+        return _check_to_dict(quality_check, counts)
     except HTTPException:
         raise
     except Exception as e:
@@ -237,34 +316,8 @@ async def update_quality_check_endpoint(
         if not quality_check:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Quality check not found")
         
-        return QualityCheckResponse(
-            id=str(quality_check.id),
-            tenant_id=str(quality_check.tenant_id),
-            title=quality_check.title,
-            description=quality_check.description,
-            inspection_type=quality_check.inspection_type,
-            priority=quality_check.priority,
-            quality_standard=quality_check.quality_standard,
-            criteria=quality_check.criteria or [],
-            acceptance_criteria=quality_check.acceptance_criteria or {},
-            tolerance_limits=quality_check.tolerance_limits or {},
-            required_equipment=quality_check.required_equipment or [],
-            required_skills=quality_check.required_skills or [],
-            estimated_duration_minutes=quality_check.estimated_duration_minutes or 0,
-            project_id=quality_check.project_id,
-            assigned_to_id=quality_check.assigned_to_id,
-            scheduled_date=quality_check.scheduled_date,
-            tags=quality_check.tags or [],
-            created_by_id=str(quality_check.created_by_id),
-            created_at=quality_check.created_at,
-            updated_at=quality_check.updated_at,
-            status=quality_check.status,
-            completion_percentage=quality_check.completion_percentage or 0.0,
-            total_inspections=0,
-            passed_inspections=0,
-            failed_inspections=0,
-            pending_inspections=0
-        )
+        counts = _inspection_counts(db, [str(quality_check.id)])
+        return _check_to_dict(quality_check, counts)
     except HTTPException:
         raise
     except Exception as e:
@@ -323,11 +376,17 @@ async def get_quality_inspections(
         elif inspector_id:
             inspections = get_quality_inspections_by_inspector(inspector_id, db, tenant_id, skip, limit)
         else:
-            # Get all inspections and apply filters
-            inspections = []
-            # This would need to be implemented in the CRUD layer
+            inspections = get_all_quality_inspections(db, tenant_id, skip, limit)
         
-        return inspections
+        if search:
+            search_lower = search.lower()
+            inspections = [
+                i for i in inspections
+                if search_lower in (i.quality_check.title or "").lower()
+                or search_lower in (_user_name(getattr(i, "inspector", None)) or "").lower()
+            ]
+        
+        return [_inspection_to_dict(i) for i in inspections]
     except Exception as e:
         logger.error(f"Error getting quality inspections: {str(e)}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get quality inspections")
@@ -350,7 +409,7 @@ async def get_quality_inspection(
         if not inspection:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Quality inspection not found")
         
-        return inspection
+        return _inspection_to_dict(inspection)
     except HTTPException:
         raise
     except Exception as e:
@@ -375,7 +434,7 @@ async def create_quality_inspection_endpoint(
         inspection_dict = inspection_data.dict()
         
         inspection = create_quality_inspection(db, inspection_dict, tenant_id)
-        return inspection
+        return _inspection_to_dict(inspection)
     except HTTPException:
         raise
     except Exception as e:
@@ -404,7 +463,7 @@ async def update_quality_inspection_endpoint(
         if not inspection:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Quality inspection not found")
         
-        return inspection
+        return _inspection_to_dict(inspection)
     except HTTPException:
         raise
     except Exception as e:
@@ -465,11 +524,18 @@ async def get_quality_defects(
         elif status_filter:
             defects = get_quality_defects_by_status(status_filter, db, tenant_id, skip, limit)
         else:
-            # Get all defects and apply filters
-            defects = []
-            # This would need to be implemented in the CRUD layer
+            defects = get_all_quality_defects(db, tenant_id, skip, limit)
         
-        return defects
+        if search:
+            search_lower = search.lower()
+            defects = [
+                d for d in defects
+                if search_lower in d.title.lower()
+                or search_lower in (d.description or "").lower()
+                or search_lower in d.defect_number.lower()
+            ]
+        
+        return [_defect_to_dict(d) for d in defects]
     except Exception as e:
         logger.error(f"Error getting quality defects: {str(e)}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get quality defects")
@@ -492,7 +558,7 @@ async def get_quality_defect(
         if not defect:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Quality defect not found")
         
-        return defect
+        return _defect_to_dict(defect)
     except HTTPException:
         raise
     except Exception as e:
@@ -517,7 +583,7 @@ async def create_quality_defect_endpoint(
         defect_dict = defect_data.dict()
         
         defect = create_quality_defect(db, defect_dict, tenant_id)
-        return defect
+        return _defect_to_dict(defect)
     except HTTPException:
         raise
     except Exception as e:
@@ -546,7 +612,7 @@ async def update_quality_defect_endpoint(
         if not defect:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Quality defect not found")
         
-        return defect
+        return _defect_to_dict(defect)
     except HTTPException:
         raise
     except Exception as e:
@@ -596,11 +662,9 @@ async def get_quality_reports(
         if report_type:
             reports = get_quality_reports_by_type(report_type, db, tenant_id, skip, limit)
         else:
-            # Get all reports
-            reports = []
-            # This would need to be implemented in the CRUD layer
+            reports = get_all_quality_reports(db, tenant_id, skip, limit)
         
-        return reports
+        return [_report_to_dict(r) for r in reports]
     except Exception as e:
         logger.error(f"Error getting quality reports: {str(e)}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get quality reports")
@@ -623,7 +687,7 @@ async def get_quality_report(
         if not report:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Quality report not found")
         
-        return report
+        return _report_to_dict(report)
     except HTTPException:
         raise
     except Exception as e:
@@ -648,7 +712,7 @@ async def create_quality_report_endpoint(
         report_dict = report_data.dict()
         
         report = create_quality_report(db, report_dict, tenant_id)
-        return report
+        return _report_to_dict(report)
     except HTTPException:
         raise
     except Exception as e:
@@ -677,7 +741,7 @@ async def update_quality_report_endpoint(
         if not report:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Quality report not found")
         
-        return report
+        return _report_to_dict(report)
     except HTTPException:
         raise
     except Exception as e:

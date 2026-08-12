@@ -134,6 +134,7 @@ class QualityCheckUpdate(BaseModel):
     assigned_to_id: Optional[str] = None
     scheduled_date: Optional[datetime] = None
     tags: Optional[List[str]] = None
+    status: Optional[QualityStatus] = None
 
 class QualityInspectionUpdate(BaseModel):
     status: Optional[QualityStatus] = None

@@ -52,11 +52,11 @@ def get_quality_check_by_id(db: Session, check_id: str, tenant_id: str) -> Optio
         return None
 
 def get_all_quality_checks(db: Session, tenant_id: str, skip: int = 0, limit: int = 100) -> List[QualityCheck]:
-    """Get all quality checks for a tenant with pagination"""
+    """Get all quality checks for a tenant with pagination (newest first)"""
     try:
         return db.query(QualityCheck).filter(
             QualityCheck.tenant_id == tenant_id
-        ).offset(skip).limit(limit).all()
+        ).order_by(desc(QualityCheck.created_at)).offset(skip).limit(limit).all()
     except Exception as e:
         logger.error(f"Error getting quality checks: {str(e)}")
         return []
@@ -193,7 +193,16 @@ def create_quality_inspection(db: Session, inspection_data: Dict[str, Any], tena
         db.add(inspection)
         db.commit()
         db.refresh(inspection)
-        
+
+        check = get_quality_check_by_id(db, str(inspection.quality_check_id), tenant_id)
+        if check:
+            if inspection.status in (QualityStatus.PASSED, QualityStatus.FAILED, QualityStatus.CONDITIONAL_PASS):
+                recompute_check_progress(db, str(inspection.quality_check_id), tenant_id)
+            elif check.status == QualityStatus.PENDING:
+                check.status = QualityStatus.IN_PROGRESS
+                check.updated_at = datetime.utcnow()
+                db.commit()
+
         logger.info(f"Created quality inspection {inspection.id} for tenant {tenant_id}")
         return inspection
         
@@ -236,10 +245,59 @@ def get_quality_inspections_by_inspector(db: Session, inspector_id: str, tenant_
                 QualityInspection.tenant_id == tenant_id,
                 QualityInspection.inspector_id == inspector_id
             )
-        ).offset(skip).limit(limit).all()
+        ).order_by(desc(QualityInspection.created_at)).offset(skip).limit(limit).all()
     except Exception as e:
         logger.error(f"Error getting quality inspections by inspector: {str(e)}")
         return []
+
+def get_all_quality_inspections(db: Session, tenant_id: str, skip: int = 0, limit: int = 100) -> List[QualityInspection]:
+    """Get all quality inspections for a tenant (newest first)"""
+    try:
+        return db.query(QualityInspection).filter(
+            QualityInspection.tenant_id == tenant_id
+        ).order_by(desc(QualityInspection.created_at)).offset(skip).limit(limit).all()
+    except Exception as e:
+        logger.error(f"Error getting all quality inspections: {str(e)}")
+        return []
+
+def recompute_check_progress(db: Session, check_id: str, tenant_id: str) -> None:
+    """Recompute a quality check's status and completion from its inspections."""
+    try:
+        check = get_quality_check_by_id(db, check_id, tenant_id)
+        if not check:
+            return
+        inspections = db.query(QualityInspection).filter(
+            and_(
+                QualityInspection.tenant_id == tenant_id,
+                QualityInspection.quality_check_id == check_id
+            )
+        ).all()
+
+        total = len(inspections)
+        if total == 0:
+            return
+
+        passed = sum(1 for i in inspections if i.status == QualityStatus.PASSED)
+        failed = sum(1 for i in inspections if i.status == QualityStatus.FAILED)
+        conditional = sum(1 for i in inspections if i.status == QualityStatus.CONDITIONAL_PASS)
+        in_progress = sum(1 for i in inspections if i.status == QualityStatus.IN_PROGRESS)
+
+        if failed > 0:
+            check.status = QualityStatus.FAILED
+        elif passed + conditional == total:
+            check.status = QualityStatus.CONDITIONAL_PASS if conditional > 0 else QualityStatus.PASSED
+        elif in_progress > 0 or passed + conditional > 0:
+            check.status = QualityStatus.IN_PROGRESS
+        else:
+            check.status = QualityStatus.PENDING
+
+        check.completion_percentage = round((passed / total) * 100, 1) if total else 0.0
+        check.updated_at = datetime.utcnow()
+        db.commit()
+        logger.info(f"Recomputed quality check {check_id} -> {check.status} ({check.completion_percentage}%)")
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error recomputing quality check {check_id}: {str(e)}")
 
 def update_quality_inspection(db: Session, inspection_id: str, update_data: Dict[str, Any], tenant_id: str) -> Optional[QualityInspection]:
     """Update quality inspection"""
@@ -255,7 +313,9 @@ def update_quality_inspection(db: Session, inspection_id: str, update_data: Dict
         inspection.updated_at = datetime.utcnow()
         db.commit()
         db.refresh(inspection)
-        
+
+        recompute_check_progress(db, str(inspection.quality_check_id), tenant_id)
+
         logger.info(f"Updated quality inspection {inspection_id}")
         return inspection
         
@@ -341,9 +401,19 @@ def get_quality_defects_by_status(db: Session, status: str, tenant_id: str, skip
                 QualityDefect.tenant_id == tenant_id,
                 QualityDefect.status == status
             )
-        ).offset(skip).limit(limit).all()
+        ).order_by(desc(QualityDefect.created_at)).offset(skip).limit(limit).all()
     except Exception as e:
         logger.error(f"Error getting quality defects by status: {str(e)}")
+        return []
+
+def get_all_quality_defects(db: Session, tenant_id: str, skip: int = 0, limit: int = 100) -> List[QualityDefect]:
+    """Get all quality defects for a tenant (newest first)"""
+    try:
+        return db.query(QualityDefect).filter(
+            QualityDefect.tenant_id == tenant_id
+        ).order_by(desc(QualityDefect.created_at)).offset(skip).limit(limit).all()
+    except Exception as e:
+        logger.error(f"Error getting all quality defects: {str(e)}")
         return []
 
 def update_quality_defect(db: Session, defect_id: str, update_data: Dict[str, Any], tenant_id: str) -> Optional[QualityDefect]:
@@ -433,9 +503,19 @@ def get_quality_reports_by_type(db: Session, report_type: str, tenant_id: str, s
                 QualityReport.tenant_id == tenant_id,
                 QualityReport.report_type == report_type
             )
-        ).offset(skip).limit(limit).all()
+        ).order_by(desc(QualityReport.created_at)).offset(skip).limit(limit).all()
     except Exception as e:
         logger.error(f"Error getting quality reports by type: {str(e)}")
+        return []
+
+def get_all_quality_reports(db: Session, tenant_id: str, skip: int = 0, limit: int = 100) -> List[QualityReport]:
+    """Get all quality reports for a tenant (newest first)"""
+    try:
+        return db.query(QualityReport).filter(
+            QualityReport.tenant_id == tenant_id
+        ).order_by(desc(QualityReport.created_at)).offset(skip).limit(limit).all()
+    except Exception as e:
+        logger.error(f"Error getting all quality reports: {str(e)}")
         return []
 
 def update_quality_report(db: Session, report_id: str, update_data: Dict[str, Any], tenant_id: str) -> Optional[QualityReport]:
