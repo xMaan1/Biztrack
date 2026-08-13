@@ -20,6 +20,7 @@ export function InvoiceDialog({
   inline = false,
   initialData,
   initialCustomer,
+  initialVehicle,
 }: InvoiceDialogProps) {
   const form = useInvoiceForm({
     open,
@@ -28,6 +29,7 @@ export function InvoiceDialog({
     invoice,
     initialData,
     initialCustomer,
+    initialVehicle,
     onSubmit,
     onOpenChange,
   });

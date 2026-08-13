@@ -37,6 +37,7 @@ export type InvoiceDialogProps = {
   inline?: boolean;
   initialData?: Partial<InvoiceCreate> | null;
   initialCustomer?: Customer | null;
+  initialVehicle?: Vehicle | null;
 };
 
 export type InvoiceFormState = {

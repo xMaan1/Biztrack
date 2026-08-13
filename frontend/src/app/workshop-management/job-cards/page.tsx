@@ -38,7 +38,8 @@ import InvoiceService from "../../../services/InvoiceService";
 import type { Customer } from "../../../services/CustomerService";
 import type { InvoiceCreate } from "../../../models/sales";
 import { extractErrorMessage } from "../../../utils/errorUtils";
-import { invoiceItemsFromJobCard, jobCardLabourEstimate } from "../../../utils/sales/invoiceFormUtils";
+import { invoiceItemsFromJobCard, jobCardLabourEstimate, jobCardToVehicle } from "../../../utils/sales/invoiceFormUtils";
+import type { Vehicle } from "../../../models/workshop";
 
 function JobCardsContent() {
   const [jobCards, setJobCards] = useState<JobCard[]>([]);
@@ -55,6 +56,7 @@ function JobCardsContent() {
   const [invoicePrefill, setInvoicePrefill] =
     useState<Partial<InvoiceCreate> | null>(null);
   const [invoiceCustomer, setInvoiceCustomer] = useState<Customer | null>(null);
+  const [invoiceVehicle, setInvoiceVehicle] = useState<Vehicle | null>(null);
   const [invoiceError, setInvoiceError] = useState<string | null>(null);
   const [preparingInvoiceId, setPreparingInvoiceId] = useState<string | null>(
     null,
@@ -85,6 +87,7 @@ function JobCardsContent() {
         customerName: jc.customer_name || "",
         customerPhone: jc.customer_phone || "",
         vehicleReg: str(vi.registration_number),
+        orderNumber: jc.job_card_number || "",
         jobCardId: jc.id,
         labourCost: jobCardLabourEstimate(jc),
         items,
@@ -107,6 +110,7 @@ function JobCardsContent() {
         }
         setInvoicePrefill(buildInvoicePrefill(jc));
         setInvoiceCustomer(customer);
+        setInvoiceVehicle(jobCardToVehicle(jc));
         setInvoiceError(null);
         setInvoiceDialogOpen(true);
       } finally {
@@ -397,6 +401,7 @@ function JobCardsContent() {
             error={invoiceError}
             initialData={invoicePrefill}
             initialCustomer={invoiceCustomer}
+            initialVehicle={invoiceVehicle}
           />
         )}
         {deleteDialogOpen && (

@@ -9,6 +9,7 @@ import type {
   InvoiceFormTotals,
 } from "@/src/types/sales/invoiceForm";
 import type { JobCard } from "@/src/models/workshop";
+import type { Vehicle } from "@/src/models/workshop";
 
 export const EMPTY_NEW_ITEM: InvoiceItemCreate = {
   description: "",
@@ -149,6 +150,29 @@ export function invoiceItemsFromJobCard(jc: JobCard): InvoiceItemCreate[] {
 
 export function jobCardLabourEstimate(jc: JobCard): number {
   return Number(jc.labor_estimate) || 0;
+}
+
+export function jobCardToVehicle(jc: JobCard): Vehicle | null {
+  const vi = (jc.vehicle_info || {}) as Record<string, unknown>;
+  const reg = vi.registration_number ? String(vi.registration_number) : "";
+  if (!vi.registration_number && !vi.vin && !vi.make && !vi.model) {
+    return null;
+  }
+  return {
+    id: vi.vehicle_id ? String(vi.vehicle_id) : jc.id,
+    tenant_id: jc.tenant_id,
+    make: vi.make ? String(vi.make) : "",
+    model: vi.model ? String(vi.model) : "",
+    year: vi.year ? String(vi.year) : "",
+    color: vi.color ? String(vi.color) : "",
+    vin: vi.vin ? String(vi.vin) : "",
+    registration_number: reg,
+    mileage: vi.mileage ? String(vi.mileage) : "",
+    engine_number: vi.engine_number ? String(vi.engine_number) : "",
+    is_active: true,
+    created_at: "",
+    updated_at: "",
+  };
 }
 
 export function customerFallbackFromInvoice(invoice: Invoice): Customer {
