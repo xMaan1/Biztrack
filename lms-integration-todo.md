@@ -30,11 +30,11 @@
 - **Smoke test**: backend `src.main` imports OK; frontend `tsc --noemit` clean on `main` (baseline)
 
 ## Phase 1 — Backend: SQLAlchemy Models + Alembic (BizTrack-style)
-- [ ] Create `backend/src/models/lms/` package (healthcare layout) with a shared `Base`
-- [ ] Model `department` (UUID id, tenant_id, name, camelCase timestamps)
-- [ ] Model `course` (+ cover image, price?, status)
-- [ ] Model `lecture`, `material`, `quiz`, `review`, `progress`
-- [ ] Model `enrollment` (course × user, status)
+- [x] Create `backend/src/models/lms/` package (healthcare layout) with a shared `Base`
+- [x] Model `department` (UUID id, tenant_id, name, camelCase timestamps)
+- [x] Model `course` (+ cover image, price?, status)
+- [x] Model `lecture`, `material`, `quiz`, `review`, `progress`
+- [x] Model `enrollment` (course × user, status)
 - [ ] Model `assignment`, `submission`, `grade`
 - [ ] Model `attendance`, `face_encoding`
 - [ ] Model `live_session`
