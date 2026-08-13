@@ -422,7 +422,7 @@ export const TaskList: React.FC<TaskListProps> = ({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
             Tasks
@@ -431,7 +431,7 @@ export const TaskList: React.FC<TaskListProps> = ({
             <p className="text-gray-600 mt-1">{tasks.length} active tasks</p>
           )}
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <Button
             variant="ghost"
             onClick={() => setCompletedSheetOpen(true)}

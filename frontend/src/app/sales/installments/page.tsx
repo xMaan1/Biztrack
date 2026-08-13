@@ -311,6 +311,7 @@ export default function InstallmentsPage() {
                   </Button>
                 </div>
                 <div className="border rounded overflow-hidden">
+                  <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
                       <tr className="bg-gray-50 border-b">
@@ -361,6 +362,7 @@ export default function InstallmentsPage() {
                       ))}
                     </tbody>
                   </table>
+                  </div>
                 </div>
               </div>
             )}
@@ -423,16 +425,18 @@ export default function InstallmentsPage() {
                 {paymentError && (
                   <p className="text-sm text-red-600">{paymentError}</p>
                 )}
-                <div className="flex justify-end gap-2">
+                <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                   <Button
                     variant="outline"
                     onClick={() => setPaymentDialogOpen(false)}
+                    className="w-full sm:w-auto"
                   >
                     Cancel
                   </Button>
                   <Button
                     onClick={handleRecordPayment}
                     disabled={paymentSubmitting}
+                    className="w-full sm:w-auto"
                   >
                     {paymentSubmitting ? "Saving..." : "Record payment"}
                   </Button>

@@ -333,7 +333,7 @@ function ReceivingContent() {
     <DashboardLayout>
       <div className="container mx-auto p-6 space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Receiving</h1>
             <p className="text-muted-foreground">
@@ -352,7 +352,7 @@ function ReceivingContent() {
             <CardTitle>Search & Filters</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-4">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
@@ -558,7 +558,7 @@ function ReceivingContent() {
               <DialogTitle>Process Incoming Receiving</DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="purchaseOrderId">Purchase Order *</Label>
                   <Select
@@ -670,7 +670,7 @@ function ReceivingContent() {
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                           <div className="space-y-2">
                             <Label className="text-sm">Ordered Quantity</Label>
                             <div className="text-sm font-medium">
@@ -947,18 +947,19 @@ function ReceivingContent() {
                 action cannot be undone.
               </DialogDescription>
             </DialogHeader>
-            <div className="flex justify-end space-x-2 mt-4">
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end mt-4">
               <Button
                 variant="outline"
                 onClick={closeDeleteModal}
                 disabled={deleteLoading}
+                className="w-full sm:w-auto"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleDelete}
                 disabled={deleteLoading}
-                className="bg-red-600 hover:bg-red-700"
+                className="bg-red-600 hover:bg-red-700 w-full sm:w-auto"
               >
                 {deleteLoading ? "Deleting..." : "Delete"}
               </Button>

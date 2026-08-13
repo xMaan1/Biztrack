@@ -269,7 +269,7 @@ export default function EmployeePortalTimePage() {
               <CardTitle>History</CardTitle>
               <CardDescription>Completed punches only</CardDescription>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button
                 variant={period === "today" ? "default" : "outline"}
                 size="sm"

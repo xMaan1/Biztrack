@@ -49,7 +49,7 @@ export function LeadCampaignsTab({
             ))}
           </SelectContent>
         </Select>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
             size="sm"
@@ -89,6 +89,7 @@ export function LeadCampaignsTab({
           </Button>
         </div>
       </div>
+      <div className="overflow-x-auto">
       <table className="w-full text-xs">
         <thead>
           <tr className="border-b text-muted-foreground">
@@ -144,6 +145,7 @@ export function LeadCampaignsTab({
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

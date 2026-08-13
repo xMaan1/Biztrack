@@ -152,7 +152,7 @@ function HospitalPaymentsContent() {
 
   return (
     <div className="container mx-auto px-6 py-8">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">
             Hospital Payments

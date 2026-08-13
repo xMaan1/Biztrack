@@ -281,7 +281,7 @@ function DoctorsContent() {
 
   return (
     <div className="container mx-auto px-6 py-8">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Doctors</h1>
           <p className="text-gray-600">Manage doctors and their availability</p>
@@ -447,7 +447,7 @@ function DoctorsContent() {
             )}
             {step === 2 && (
               <>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>First Name</Label>
                     <Input

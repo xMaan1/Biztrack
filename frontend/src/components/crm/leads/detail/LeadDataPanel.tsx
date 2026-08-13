@@ -35,7 +35,7 @@ export function LeadDataPanel({ lead, patchLead }: Props) {
           </button>
         ))}
       </div>
-      <div className="p-4 grid grid-cols-2 gap-3 text-xs">
+      <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
         {(dataTab === "lead" || dataTab === "more") && (
           <>
             <LeadField
@@ -118,7 +118,7 @@ export function LeadDataPanel({ lead, patchLead }: Props) {
           />
         )}
         {dataTab === "custom" && (
-          <div className="col-span-2">
+          <div className="col-span-1 sm:col-span-2">
             <Label>Custom JSON</Label>
             <Textarea
               defaultValue={JSON.stringify(lead.customFields || {}, null, 2)}

@@ -233,7 +233,7 @@ function BankAccountsContent() {
     <DashboardLayout>
       <div className="container mx-auto px-6 py-8 space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-3xl font-bold">Bank Accounts</h1>
             <p className="text-muted-foreground">
@@ -398,18 +398,19 @@ function BankAccountsContent() {
                 deactivate the account and cannot be undone.
               </DialogDescription>
             </DialogHeader>
-            <div className="flex justify-end space-x-2 mt-4">
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end mt-4">
               <Button
                 variant="outline"
                 onClick={() => setIsDeleteModalOpen(false)}
                 disabled={deleteLoading}
+                className="w-full sm:w-auto"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleDeleteAccount}
                 disabled={deleteLoading}
-                className="bg-red-600 hover:bg-red-700"
+                className="bg-red-600 hover:bg-red-700 w-full sm:w-auto"
               >
                 {deleteLoading ? "Deleting..." : "Delete"}
               </Button>

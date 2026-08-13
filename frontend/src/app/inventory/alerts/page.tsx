@@ -141,7 +141,7 @@ function AlertsContent() {
     <DashboardLayout>
       <div className="container mx-auto p-6 space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">
               Inventory Alerts
@@ -150,7 +150,7 @@ function AlertsContent() {
               Monitor stock levels and inventory warnings
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={fetchAlerts}>
               <RefreshCw className="mr-2 h-4 w-4" />
               Refresh
@@ -225,7 +225,7 @@ function AlertsContent() {
             <CardTitle>Filter Alerts</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-4">
               <Button
                 variant={filterType === "all" ? "default" : "outline"}
                 onClick={() => setFilterType("all")}
@@ -291,7 +291,7 @@ function AlertsContent() {
                           </div>
                         </div>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2">
                         <Button
                           variant="outline"
                           size="sm"

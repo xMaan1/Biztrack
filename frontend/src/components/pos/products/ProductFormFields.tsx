@@ -39,7 +39,7 @@ export function ProductFormFields({
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="col-span-2 space-y-2">
           <Label htmlFor="name">Product Name *</Label>
           <Input
@@ -69,7 +69,7 @@ export function ProductFormFields({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <div className="flex items-end gap-2">
             <div className="flex-1 space-y-2">
@@ -137,7 +137,7 @@ export function ProductFormFields({
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="col-span-2 space-y-2">
           <Label htmlFor="brand">Company</Label>
           <Input
@@ -170,7 +170,7 @@ export function ProductFormFields({
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="space-y-2">
           <Label htmlFor="salePrice">Sale Price *</Label>
           <Input
@@ -234,7 +234,7 @@ export function ProductFormFields({
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="space-y-2">
           <Label htmlFor="minStockLevel">Low Stock Threshold</Label>
           <Input
@@ -276,7 +276,7 @@ export function ProductFormFields({
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="col-span-2 space-y-2">
           <Label htmlFor="modelNo">Model No.</Label>
           <Input

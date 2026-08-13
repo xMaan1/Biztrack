@@ -33,7 +33,7 @@ export function LedgerTransactionViewDialog({
         </DialogHeader>
         {transaction && (
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label className="text-sm font-medium">
                   Transaction Number
@@ -48,7 +48,7 @@ export function LedgerTransactionViewDialog({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label className="text-sm font-medium">Type</Label>
                 <p className="text-sm">
@@ -70,7 +70,7 @@ export function LedgerTransactionViewDialog({
               <p className="text-sm">{transaction.description}</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label className="text-sm font-medium">Debit Account</Label>
                 <p className="text-sm">
@@ -85,7 +85,7 @@ export function LedgerTransactionViewDialog({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label className="text-sm font-medium">Amount</Label>
                 <p className="text-sm font-medium">

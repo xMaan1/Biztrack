@@ -9,14 +9,14 @@ export function LedgerTransactionsHeader({
   onAddTransaction,
 }: LedgerTransactionsHeaderProps) {
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h1 className="text-3xl font-bold">Ledger Transactions</h1>
         <p className="text-muted-foreground">
           Manage and view all general ledger transactions
         </p>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Button variant="outline" onClick={onExport}>
           <Download className="h-4 w-4 mr-2" />
           Export

@@ -23,7 +23,7 @@ export function LeadContactCard({
 }: Props) {
   return (
     <div className="rounded-lg border bg-card p-4 space-y-3">
-      <div className="grid grid-cols-2 gap-2 border-b pb-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 border-b pb-2">
         <Input
           value={lead.firstName}
           onChange={(e) => setLead({ ...lead, firstName: e.target.value })}
@@ -62,7 +62,7 @@ export function LeadContactCard({
           <Mail className="h-4 w-4 text-muted-foreground" />
         </a>
       </div>
-      <div className="flex gap-3 text-sm text-primary">
+      <div className="flex flex-wrap gap-3 text-sm text-primary">
         <button
           type="button"
           className="flex items-center gap-1"

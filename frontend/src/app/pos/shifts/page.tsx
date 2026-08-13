@@ -150,7 +150,7 @@ const POSShifts = () => {
     <DashboardLayout>
       <div className="container mx-auto p-6 space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">POS Shifts</h1>
             <p className="text-muted-foreground">
@@ -416,7 +416,7 @@ const POSShifts = () => {
             {selectedShift && (
               <div className="space-y-6">
                 {/* Shift Info */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label className="text-sm font-medium text-muted-foreground">
                       Shift Number

@@ -166,7 +166,7 @@ export function ProductCodeScanner({
 
       <div className="space-y-2">
         <Label htmlFor={`${containerId}-manual`}>Enter code manually</Label>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Input
             id={`${containerId}-manual`}
             value={manualCode}

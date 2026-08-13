@@ -233,7 +233,7 @@ export function TimeEntryList({
               </div>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Select
                 value={filters.status || undefined}
                 onValueChange={(value) =>
@@ -345,7 +345,7 @@ export function TimeEntryList({
                 {Math.min(currentPage * 10, totalEntries)} of {totalEntries}{" "}
                 entries
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button
                   variant="outline"
                   size="sm"

@@ -51,7 +51,7 @@ export default function CommerceDashboard({
   return (
     <div className="space-y-8">
       {/* Commerce-Specific Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
             Commerce Dashboard
@@ -60,7 +60,7 @@ export default function CommerceDashboard({
             Retail & E-commerce Business Overview
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <Button
             onClick={handleCreateProject}
             className="bg-green-600 hover:bg-green-700"

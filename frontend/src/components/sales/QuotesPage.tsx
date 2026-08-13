@@ -456,14 +456,17 @@ export default function QuotesPage() {
                   />
                 </div>
               </div>
-              <div className="flex justify-end space-x-2">
+              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                 <Button
                   variant="outline"
                   onClick={() => setIsCreateDialogOpen(false)}
+                  className="w-full sm:w-auto"
                 >
                   Cancel
                 </Button>
-                <Button onClick={handleCreateQuote}>Create Quote</Button>
+                <Button onClick={handleCreateQuote} className="w-full sm:w-auto">
+                  Create Quote
+                </Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -725,14 +728,17 @@ export default function QuotesPage() {
                 </div>
               </div>
             )}
-            <div className="flex justify-end space-x-2">
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <Button
                 variant="outline"
                 onClick={() => setIsEditDialogOpen(false)}
+                className="w-full sm:w-auto"
               >
                 Cancel
               </Button>
-              <Button onClick={handleUpdateQuote}>Update Quote</Button>
+              <Button onClick={handleUpdateQuote} className="w-full sm:w-auto">
+                Update Quote
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -790,15 +796,19 @@ export default function QuotesPage() {
                 </div>
               </div>
             )}
-            <div className="flex justify-end gap-2">
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <Button
                 variant="outline"
                 onClick={() => setIsViewDialogOpen(false)}
+                className="w-full sm:w-auto"
               >
                 Close
               </Button>
               {selectedQuote && (
-                <Button onClick={() => handleDownloadQuote(selectedQuote)}>
+                <Button
+                  onClick={() => handleDownloadQuote(selectedQuote)}
+                  className="w-full sm:w-auto"
+                >
                   Download PDF
                 </Button>
               )}

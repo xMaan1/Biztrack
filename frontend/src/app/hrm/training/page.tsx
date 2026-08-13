@@ -331,7 +331,7 @@ function HRMTrainingContent() {
     <DashboardLayout>
       <div className="container mx-auto p-6 space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
               Training Management
@@ -689,7 +689,7 @@ function HRMTrainingContent() {
               </Alert>
             )}
 
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="col-span-4">
                 <Label htmlFor="title">Title *</Label>
                 <Input
@@ -917,7 +917,7 @@ function HRMTrainingContent() {
 
             {viewingTraining && (
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label className="text-sm font-medium text-gray-600">
                       Title
@@ -955,7 +955,7 @@ function HRMTrainingContent() {
                     <p className="text-gray-900">{viewingTraining.provider}</p>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label className="text-sm font-medium text-gray-600">
                       Duration
@@ -1020,7 +1020,7 @@ function HRMTrainingContent() {
                       </ul>
                     </div>
                   )}
-                <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-600">
                   <div>
                     <Label className="text-sm font-medium text-gray-600">
                       Created

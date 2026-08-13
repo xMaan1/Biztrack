@@ -389,7 +389,7 @@ function CalendarContent() {
 
   return (
     <div className="container mx-auto px-6 py-8">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Calendar</h1>
           <p className="text-gray-600">View and manage appointments by date</p>
@@ -407,7 +407,7 @@ function CalendarContent() {
           <CardTitle className="text-xl">
             {format(currentMonth, "MMMM yyyy")}
           </CardTitle>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button
               variant="outline"
               size="icon"
@@ -648,7 +648,7 @@ function CalendarContent() {
               </Select>
             </div>
             {(formData.patient_id === "__none__" || !formData.patient_id) && (
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Patient name</Label>
                   <Input
@@ -689,7 +689,7 @@ function CalendarContent() {
                 }
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Start time</Label>
                 <Input

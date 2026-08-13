@@ -200,7 +200,7 @@ function FinancialReportsContent() {
     <DashboardLayout>
       <div className="container mx-auto px-6 py-8 space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
               Financial Reports
@@ -209,7 +209,7 @@ function FinancialReportsContent() {
               Comprehensive financial analysis and reporting
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <div className="flex items-center gap-2 border border-gray-300 rounded-md px-3 py-2">
               <Calendar className="h-4 w-4 text-gray-500" />
               <DatePicker
@@ -241,7 +241,7 @@ function FinancialReportsContent() {
         {/* Report Type Selector */}
         <Card className="modern-card">
           <CardContent className="p-6">
-            <div className="flex gap-4">
+            <div className="flex gap-4 flex-wrap">
               <Button
                 variant={selectedReport === "overview" ? "default" : "outline"}
                 onClick={() => setSelectedReport("overview")}

@@ -665,7 +665,7 @@ export default function ProjectDetailsPage() {
 
           {/* Tasks Tab */}
           <TabsContent value="tasks" className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <h3 className="text-xl font-semibold text-gray-900">
                 Project Tasks
               </h3>

@@ -11,7 +11,7 @@ export function ContactsPageHeader({
   onNewContact,
 }: ContactsPageHeaderProps) {
   return (
-    <div className="flex justify-between items-center">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">CRM Contacts</h1>
         <p className="text-gray-600">

@@ -148,7 +148,7 @@ export default function DeliveryNotesPage() {
   return (
     <DashboardLayout>
       <div className="container mx-auto p-6 space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
               <Truck className="h-8 w-8" />
@@ -269,11 +269,19 @@ export default function DeliveryNotesPage() {
               {createError && (
                 <p className="text-sm text-red-600">{createError}</p>
               )}
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setCreateOpen(false)}>
+              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => setCreateOpen(false)}
+                  className="w-full sm:w-auto"
+                >
                   Cancel
                 </Button>
-                <Button onClick={handleCreate} disabled={submitting}>
+                <Button
+                  onClick={handleCreate}
+                  disabled={submitting}
+                  className="w-full sm:w-auto"
+                >
                   {submitting ? "Creating..." : "Create"}
                 </Button>
               </div>

@@ -52,7 +52,7 @@ export function AdminPlanEditDialog({
         </DialogHeader>
 
         <div className="space-y-6">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium text-gray-700">
                 Plan Name
@@ -85,7 +85,7 @@ export function AdminPlanEditDialog({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium text-gray-700">
                 Billing Cycle
@@ -136,11 +136,11 @@ export function AdminPlanEditDialog({
             </label>
           </div>
 
-          <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={onCancel}>
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button variant="outline" onClick={onCancel} className="w-full sm:w-auto">
               Cancel
             </Button>
-            <Button onClick={onSave} disabled={isUpdating}>
+            <Button onClick={onSave} disabled={isUpdating} className="w-full sm:w-auto">
               {isUpdating ? "Updating..." : "Update Plan"}
             </Button>
           </div>

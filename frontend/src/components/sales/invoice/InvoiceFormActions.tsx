@@ -24,12 +24,12 @@ export function InvoiceFormActions({
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
-      <div className="flex justify-end gap-2">
+      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <Button
           type="button"
           variant="outline"
           size="sm"
-          className="h-8"
+          className="h-8 w-full sm:w-auto"
           onClick={onCancel}
         >
           {mode === "view" ? "Close" : "Cancel"}
@@ -40,7 +40,7 @@ export function InvoiceFormActions({
             variant="gradient"
             size="sm"
             disabled={loading}
-            className="h-8"
+            className="h-8 w-full sm:w-auto"
           >
             {loading
               ? "Saving..."

@@ -47,7 +47,7 @@ function CreateInvoicePageContent() {
   return (
     <DashboardLayout>
       <div className="w-full min-w-0 max-w-full space-y-4 px-3 py-4 sm:space-y-6 sm:px-4 md:px-5">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
               {isCommerce ? "Create Sales Invoice" : "Create Invoice"}

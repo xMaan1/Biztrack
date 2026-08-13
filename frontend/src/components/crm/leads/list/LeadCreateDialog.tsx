@@ -89,7 +89,7 @@ export function LeadCreateDialog({ open, onOpenChange }: Props) {
             {formError && (
               <p className="text-sm text-destructive">{formError}</p>
             )}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Label>First name</Label>
                 <Input
@@ -127,7 +127,7 @@ export function LeadCreateDialog({ open, onOpenChange }: Props) {
                 }
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Label>Lead type</Label>
                 <Input

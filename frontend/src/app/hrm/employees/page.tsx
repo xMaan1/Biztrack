@@ -309,7 +309,7 @@ function HRMEmployeesContent() {
     <DashboardLayout>
       <div className="container mx-auto p-6 space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Employees</h1>
             <p className="text-gray-600">Manage your workforce</p>
@@ -449,7 +449,7 @@ function HRMEmployeesContent() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <div className="text-right">
                       <div className="font-medium">{employee.employeeId}</div>
                       <div className="text-sm text-gray-500">
@@ -472,7 +472,7 @@ function HRMEmployeesContent() {
                         {employee.employeeType.replace("_", " ")}
                       </Badge>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <Button
                         variant="outline"
                         size="sm"
@@ -540,7 +540,7 @@ function HRMEmployeesContent() {
                 </div>
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">Basic Information</h3>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <Label className="text-sm font-medium text-gray-500">
                         First Name
@@ -589,7 +589,7 @@ function HRMEmployeesContent() {
                   <h3 className="text-lg font-semibold">
                     Employment Information
                   </h3>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <Label className="text-sm font-medium text-gray-500">
                         Employee ID
@@ -839,7 +839,7 @@ function HRMEmployeesContent() {
               {/* Basic Information */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Basic Information</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="edit-firstName">First Name *</Label>
                     <Input
@@ -915,7 +915,7 @@ function HRMEmployeesContent() {
                 <h3 className="text-lg font-semibold">
                   Employment Information
                 </h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="edit-employeeId">Employee ID *</Label>
                     <Input
@@ -1071,7 +1071,7 @@ function HRMEmployeesContent() {
                       rows={3}
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="edit-emergencyContact">
                         Emergency Contact
@@ -1237,15 +1237,16 @@ function HRMEmployeesContent() {
               )}
 
               {/* Actions */}
-              <div className="flex justify-end gap-4 pt-4">
+              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end pt-4">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={closeEditModal}
+                  className="w-full sm:w-auto"
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={editLoading}>
+                <Button type="submit" disabled={editLoading} className="w-full sm:w-auto">
                   {editLoading ? (
                     <>
                       <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
@@ -1275,18 +1276,19 @@ function HRMEmployeesContent() {
                 ? This action cannot be undone.
               </DialogDescription>
             </DialogHeader>
-            <div className="flex justify-end space-x-2 mt-4">
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end mt-4">
               <Button
                 variant="outline"
                 onClick={closeDeleteModal}
                 disabled={deleteLoading}
+                className="w-full sm:w-auto"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleDeleteEmployee}
                 disabled={deleteLoading}
-                className="bg-red-600 hover:bg-red-700"
+                className="bg-red-600 hover:bg-red-700 w-full sm:w-auto"
               >
                 {deleteLoading ? (
                   <>

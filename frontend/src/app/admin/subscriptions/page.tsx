@@ -252,7 +252,7 @@ function AdminSubscriptionsContent() {
 
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <CardTitle>All Subscriptions</CardTitle>
                 <CardDescription>
@@ -266,7 +266,7 @@ function AdminSubscriptionsContent() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="flex gap-4 mb-4">
+            <div className="flex gap-4 flex-wrap mb-4">
               <div className="flex-1">
                 <div className="relative">
                   <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />

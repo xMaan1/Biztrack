@@ -19,11 +19,18 @@ export function ProjectDeleteDialog({
           Are you sure you want to delete &quot;{project?.name}&quot;? This
           action cannot be undone.
         </p>
-        <div className="flex gap-2 justify-end">
-          <Button variant="outline" onClick={onClose}>
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button
+            variant="outline"
+            onClick={onClose}
+            className="w-full sm:w-auto"
+          >
             Cancel
           </Button>
-          <Button onClick={onConfirm} className="bg-red-600 hover:bg-red-700">
+          <Button
+            onClick={onConfirm}
+            className="bg-red-600 hover:bg-red-700 w-full sm:w-auto"
+          >
             Delete
           </Button>
         </div>

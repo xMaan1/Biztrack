@@ -469,13 +469,14 @@ export function InvoiceManagementPanel({
               </Alert>
             )}
           </div>
-          <div className="flex justify-end space-x-2">
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button
               variant="outline"
               onClick={() => {
                 setShowDeleteDialog(false);
                 setDeleteError(null);
               }}
+              className="w-full sm:w-auto"
             >
               Cancel
             </Button>
@@ -484,6 +485,7 @@ export function InvoiceManagementPanel({
               onClick={() =>
                 selectedInvoice && handleDeleteInvoice(selectedInvoice.id)
               }
+              className="w-full sm:w-auto"
             >
               Delete
             </Button>

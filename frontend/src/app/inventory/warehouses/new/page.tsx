@@ -339,15 +339,16 @@ function NewWarehouseContent() {
           </div>
 
           {/* Submit Button */}
-          <div className="flex justify-end gap-4 mt-6">
+          <div className="flex flex-col-reverse gap-4 sm:flex-row sm:justify-end mt-6">
             <Button
               type="button"
               variant="outline"
               onClick={() => router.back()}
+              className="w-full sm:w-auto"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading} className="w-full sm:w-auto">
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

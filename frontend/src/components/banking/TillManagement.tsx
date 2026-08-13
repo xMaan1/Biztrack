@@ -850,18 +850,19 @@ export function TillManagement({ tills, onRefresh }: TillManagementProps) {
               the till and all its transactions. This cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex justify-end space-x-2 mt-4">
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end mt-4">
             <Button
               variant="outline"
               onClick={closeDeleteModal}
               disabled={deleteLoading}
+              className="w-full sm:w-auto"
             >
               Cancel
             </Button>
             <Button
               onClick={handleDeleteTill}
               disabled={deleteLoading}
-              className="bg-red-600 hover:bg-red-700"
+              className="w-full sm:w-auto bg-red-600 hover:bg-red-700"
             >
               {deleteLoading ? "Deleting..." : "Delete"}
             </Button>

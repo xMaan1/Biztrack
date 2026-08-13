@@ -438,14 +438,20 @@ export default function ContractsPage() {
                   />
                 </div>
               </div>
-              <div className="flex justify-end space-x-2">
+              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                 <Button
                   variant="outline"
                   onClick={() => setIsCreateDialogOpen(false)}
+                  className="w-full sm:w-auto"
                 >
                   Cancel
                 </Button>
-                <Button onClick={handleCreateContract}>Create Contract</Button>
+                <Button
+                  onClick={handleCreateContract}
+                  className="w-full sm:w-auto"
+                >
+                  Create Contract
+                </Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -753,14 +759,20 @@ export default function ContractsPage() {
                 </div>
               </div>
             )}
-            <div className="flex justify-end space-x-2">
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <Button
                 variant="outline"
                 onClick={() => setIsEditDialogOpen(false)}
+                className="w-full sm:w-auto"
               >
                 Cancel
               </Button>
-              <Button onClick={handleUpdateContract}>Update Contract</Button>
+              <Button
+                onClick={handleUpdateContract}
+                className="w-full sm:w-auto"
+              >
+                Update Contract
+              </Button>
             </div>
           </DialogContent>
         </Dialog>

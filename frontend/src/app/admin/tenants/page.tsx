@@ -413,7 +413,7 @@ function AdminTenantsContent() {
                   </div>
                 </div>
 
-                <div className="flex gap-2 pt-2">
+                <div className="flex gap-2 flex-wrap pt-2">
                   <Button
                     variant="outline"
                     size="sm"

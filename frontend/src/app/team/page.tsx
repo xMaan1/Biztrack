@@ -286,7 +286,7 @@ export default function TeamPage() {
     <DashboardLayout>
       <div className="container mx-auto px-6 py-8 space-y-8">
         {/* Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
               Team Management
@@ -295,7 +295,7 @@ export default function TeamPage() {
               Manage your team members and their roles
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             <Button
               variant="outline"
               size="icon"
@@ -558,7 +558,7 @@ export default function TeamPage() {
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleEditSubmit} className="space-y-6 py-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="edit-firstName">First Name *</Label>
                   <Input
@@ -626,15 +626,16 @@ export default function TeamPage() {
                   </Select>
                 </div>
               </div>
-              <div className="flex justify-end space-x-2 pt-4">
+              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end pt-4">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setIsEditDialogOpen(false)}
+                  className="w-full sm:w-auto"
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={loading}>
+                <Button type="submit" disabled={loading} className="w-full sm:w-auto">
                   {loading ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />

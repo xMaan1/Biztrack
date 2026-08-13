@@ -335,7 +335,7 @@ function HRMLeaveManagementContent() {
     <DashboardLayout>
       <div className="container mx-auto p-6 space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
               Leave Management
@@ -693,7 +693,7 @@ function HRMLeaveManagementContent() {
               </Alert>
             )}
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="employeeId">Employee *</Label>
                 <Select
@@ -881,7 +881,7 @@ function HRMLeaveManagementContent() {
 
             {viewingRequest && (
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label className="text-sm font-medium text-gray-600">
                       Employee
@@ -920,7 +920,7 @@ function HRMLeaveManagementContent() {
                     </p>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label className="text-sm font-medium text-gray-600">
                       Start Date
@@ -952,7 +952,7 @@ function HRMLeaveManagementContent() {
                     <p className="text-gray-900">{viewingRequest.notes}</p>
                   </div>
                 )}
-                <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-600">
                   <div>
                     <Label className="text-sm font-medium text-gray-600">
                       Created

@@ -27,11 +27,11 @@ export function SupplierDeleteDialog({
             This action cannot be undone.
           </DialogDescription>
         </DialogHeader>
-        <div className="mt-4 flex justify-end space-x-2">
-          <Button variant="outline" onClick={onCancel}>
+        <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button variant="outline" onClick={onCancel} className="w-full sm:w-auto">
             Cancel
           </Button>
-          <Button onClick={onConfirm} className="bg-red-600 hover:bg-red-700">
+          <Button onClick={onConfirm} className="w-full sm:w-auto bg-red-600 hover:bg-red-700">
             Delete
           </Button>
         </div>

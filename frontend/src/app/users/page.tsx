@@ -146,7 +146,7 @@ export default function UserManagementPage() {
           }
           redirectTo={null}
         >
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="text-3xl font-bold">User Management</h1>
               <p className="text-muted-foreground">
@@ -154,7 +154,7 @@ export default function UserManagementPage() {
               </p>
             </div>
             {canManageUsers() && (
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 {(isOwner() || hasPermission("users:update")) && (
                   <Button
                     variant="outline"

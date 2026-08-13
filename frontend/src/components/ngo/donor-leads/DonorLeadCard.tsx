@@ -74,11 +74,11 @@ export function DonorLeadCard({
           </div>
         )}
       </div>
-      <div className="mt-4 flex justify-end gap-3 border-t pt-3">
+      <div className="mt-4 flex flex-col-reverse gap-2 border-t pt-3 sm:flex-row sm:justify-end">
         <Button
           variant="ghost"
           size="sm"
-          className="text-emerald-600"
+          className="w-full sm:w-auto text-emerald-600"
           onClick={onView}
         >
           <Eye className="mr-1 h-4 w-4" />
@@ -87,7 +87,7 @@ export function DonorLeadCard({
         <Button
           variant="ghost"
           size="sm"
-          className="text-blue-600"
+          className="w-full sm:w-auto text-blue-600"
           onClick={onEdit}
         >
           <Edit className="mr-1 h-4 w-4" />
@@ -96,7 +96,7 @@ export function DonorLeadCard({
         <Button
           variant="ghost"
           size="sm"
-          className="text-red-600"
+          className="w-full sm:w-auto text-red-600"
           onClick={onDelete}
         >
           <Trash2 className="mr-1 h-4 w-4" />

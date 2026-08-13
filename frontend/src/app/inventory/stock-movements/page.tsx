@@ -363,7 +363,7 @@ function StockMovementsContent() {
     <DashboardLayout>
       <div className="container mx-auto p-6 space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">
               Stock Movements
@@ -384,7 +384,7 @@ function StockMovementsContent() {
             <CardTitle>Search & Filters</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-4">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
@@ -638,7 +638,7 @@ function StockMovementsContent() {
               <DialogTitle>Record Stock Movement</DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="movementType">Movement Type *</Label>
                   <Select
@@ -709,7 +709,7 @@ function StockMovementsContent() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="productId">Product *</Label>
                   <Select
@@ -757,7 +757,7 @@ function StockMovementsContent() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="quantity">Quantity *</Label>
                   <Input
@@ -793,7 +793,7 @@ function StockMovementsContent() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="referenceNumber">Reference Number *</Label>
                   <Input
@@ -824,7 +824,7 @@ function StockMovementsContent() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="batchNumber">Batch Number</Label>
                   <Input
@@ -855,7 +855,7 @@ function StockMovementsContent() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="expiryDate">Expiry Date</Label>
                   <Input
@@ -1042,7 +1042,7 @@ function StockMovementsContent() {
               <DialogTitle>Edit Stock Movement</DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="edit-movementType">Movement Type *</Label>
                   <Select
@@ -1113,7 +1113,7 @@ function StockMovementsContent() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="edit-productId">Product *</Label>
                   <Select
@@ -1161,7 +1161,7 @@ function StockMovementsContent() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="edit-quantity">Quantity *</Label>
                   <Input
@@ -1197,7 +1197,7 @@ function StockMovementsContent() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="edit-referenceNumber">
                     Reference Number *
@@ -1230,7 +1230,7 @@ function StockMovementsContent() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="edit-batchNumber">Batch Number</Label>
                   <Input
@@ -1261,7 +1261,7 @@ function StockMovementsContent() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="edit-expiryDate">Expiry Date</Label>
                   <Input
@@ -1355,18 +1355,19 @@ function StockMovementsContent() {
                 </div>
               </div>
             )}
-            <div className="flex justify-end space-x-2 mt-4">
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end mt-4">
               <Button
                 variant="outline"
                 onClick={closeDeleteDialog}
                 disabled={deleteLoading}
+                className="w-full sm:w-auto"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleDelete}
                 disabled={deleteLoading}
-                className="bg-red-600 hover:bg-red-700"
+                className="bg-red-600 hover:bg-red-700 w-full sm:w-auto"
               >
                 {deleteLoading ? (
                   <>

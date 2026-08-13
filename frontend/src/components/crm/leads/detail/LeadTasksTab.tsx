@@ -59,7 +59,7 @@ export function LeadTasksTab({
         value={taskDetails}
         onChange={(e) => setTaskDetails(e.target.value)}
       />
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Select value={taskStatus} onValueChange={setTaskStatus}>
           <SelectTrigger>
             <SelectValue />

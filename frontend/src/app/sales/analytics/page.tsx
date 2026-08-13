@@ -193,7 +193,7 @@ export default function SalesAnalyticsPage() {
     <DashboardLayout>
       <div className="container mx-auto p-6 space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
               Sales Analytics
@@ -203,7 +203,7 @@ export default function SalesAnalyticsPage() {
             </p>
           </div>
 
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-4">
             <div>
               <Label htmlFor="timeRange">Time Range</Label>
               <Select value={timeRange} onValueChange={setTimeRange}>
@@ -535,7 +535,7 @@ export default function SalesAnalyticsPage() {
             <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-4">
               <Button
                 variant="outline"
                 onClick={() => (window.location.href = "/crm/opportunities")}

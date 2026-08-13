@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+import { X } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 import { useSidebarCollapse } from "@/src/hooks/useSidebarCollapse";
 import Header from "./Header";
@@ -13,12 +15,33 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { collapsed, toggle, expand, ready } = useSidebarCollapse();
+  const pathname = usePathname();
+
+  const closeSidebar = useCallback(() => setSidebarOpen(false), []);
+  const openSidebar = useCallback(() => setSidebarOpen(true), []);
+
+  useEffect(() => {
+    closeSidebar();
+  }, [pathname, closeSidebar]);
+
+  useEffect(() => {
+    if (!sidebarOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeSidebar();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = "";
+    };
+  }, [sidebarOpen, closeSidebar]);
 
   const desktopSidebarWidth = collapsed ? "w-[4.5rem]" : "w-64";
   const mainMargin = collapsed ? "md:ml-[4.5rem]" : "md:ml-64";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex flex-row">
+    <div className="flex min-h-screen flex-row bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
       <div className="hidden md:block">
         <div
           className={cn(
@@ -37,15 +60,25 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         {sidebarOpen && (
           <div
             className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
-            onClick={() => setSidebarOpen(false)}
+            onClick={closeSidebar}
+            aria-hidden
           />
         )}
         <div
           className={cn(
-            "fixed inset-y-0 left-0 z-[60] flex w-64 max-h-[100dvh] flex-col overflow-hidden shadow-2xl transition-transform duration-300 ease-out",
+            "fixed inset-y-0 left-0 z-[60] flex max-h-[100dvh] w-64 max-w-[85vw] flex-col overflow-hidden shadow-2xl transition-transform duration-300 ease-out",
             sidebarOpen ? "translate-x-0" : "-translate-x-full",
           )}
+          aria-hidden={!sidebarOpen}
         >
+          <button
+            type="button"
+            onClick={closeSidebar}
+            aria-label="Close menu"
+            className="absolute right-2 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors hover:bg-gray-200"
+          >
+            <X className="h-4 w-4" />
+          </button>
           <Sidebar collapsed={false} onToggleCollapse={toggle} />
         </div>
       </div>
@@ -55,8 +88,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           ready ? mainMargin : "md:ml-64",
         )}
       >
-        <Header onMenuClick={() => setSidebarOpen(true)} />
-        <main className="min-h-[calc(100vh-4rem)] min-w-0 w-full">
+        <Header onMenuClick={openSidebar} />
+        <main className="min-h-[calc(100vh-4rem)] w-full min-w-0">
           {children}
         </main>
       </div>

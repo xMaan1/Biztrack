@@ -66,7 +66,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 </details>
               )}
 
-              <div className="flex gap-3 mt-4">
+              <div className="flex flex-wrap gap-3 mt-4">
                 <Button
                   onClick={this.handleRetry}
                   className="flex items-center gap-2"

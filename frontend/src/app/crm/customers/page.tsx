@@ -517,14 +517,14 @@ function CustomersContent() {
     <DashboardLayout>
       <div className="container mx-auto p-6 space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Customers</h1>
             <p className="text-gray-600">
               Manage your customer relationships and information
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             <Button
               variant="outline"
               onClick={() => setIsImportDialogOpen(true)}
@@ -943,7 +943,7 @@ function CustomersContent() {
                 </div>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <CustomerTypeNameFields
                 customerType={formData.customerType || "individual"}
                 firstName={formData.firstName}
@@ -1403,15 +1403,19 @@ function CustomersContent() {
                 ? This action cannot be undone.
               </DialogDescription>
             </DialogHeader>
-            <div className="flex justify-end space-x-2 mt-4">
-              <Button variant="outline" onClick={closeDeleteDialog}>
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end mt-4">
+              <Button
+                variant="outline"
+                onClick={closeDeleteDialog}
+                className="w-full sm:w-auto"
+              >
                 Cancel
               </Button>
               <Button
                 onClick={() =>
                   customerToDelete && handleDeleteCustomer(customerToDelete.id)
                 }
-                className="bg-red-600 hover:bg-red-700"
+                className="bg-red-600 hover:bg-red-700 w-full sm:w-auto"
               >
                 Delete
               </Button>

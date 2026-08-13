@@ -293,7 +293,7 @@ export default function EventForm({
         {/* Start Date */}
         <div>
           <Label htmlFor="startDate">Start Date *</Label>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Input
               id="startDate"
               type="date"
@@ -313,7 +313,7 @@ export default function EventForm({
         {/* End Date */}
         <div>
           <Label htmlFor="endDate">End Date *</Label>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Input
               id="endDate"
               type="date"

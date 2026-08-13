@@ -37,11 +37,11 @@ export function SupplierFormDialog({
 
         <SupplierFormFields formData={formData} onChange={onFormChange} />
 
-        <div className="mt-6 flex justify-end space-x-2">
-          <Button type="button" variant="outline" onClick={onCancel} disabled={submitting}>
+        <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button type="button" variant="outline" onClick={onCancel} disabled={submitting} className="w-full sm:w-auto">
             Cancel
           </Button>
-          <Button type="button" onClick={onSubmit} disabled={submitting}>
+          <Button type="button" onClick={onSubmit} disabled={submitting} className="w-full sm:w-auto">
             {submitting
               ? editingSupplier
                 ? "Updating..."

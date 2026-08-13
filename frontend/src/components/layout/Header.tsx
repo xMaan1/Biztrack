@@ -81,7 +81,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
         </div>
 
         {/* Right side - Notifications and User menu */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           {/* Notifications */}
           <NotificationBell />
 

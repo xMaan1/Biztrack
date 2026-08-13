@@ -22,7 +22,7 @@ export function LeadAgentsPanel({ lead, leadId, users, patchLead }: Props) {
     <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
       <div className="md:col-span-7 rounded-lg border bg-card p-4">
         <div className="font-medium text-sm mb-3">Agents</div>
-        <div className="grid grid-cols-2 gap-3 text-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
           <LeadAgentSelect
             label="Main agent"
             value={lead.mainAgentId || lead.assignedTo || ""}

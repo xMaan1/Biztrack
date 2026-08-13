@@ -157,6 +157,15 @@ input[type="number"]::-webkit-outer-spin-button {
   }
 }
 
+/* Mobile responsiveness safety net */
+html,
+body {
+  overflow-x: clip;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
 html.desktop-app,
 html.desktop-app body {
   overscroll-behavior: none;

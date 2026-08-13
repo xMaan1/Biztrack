@@ -57,7 +57,7 @@ export function DonorsFiltersCard({
             ))}
           </SelectContent>
         </Select>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button
             onClick={onApply}
             className="bg-emerald-600 hover:bg-emerald-700"

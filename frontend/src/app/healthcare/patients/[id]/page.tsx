@@ -71,7 +71,7 @@ export default function PatientHistoryPage() {
   return (
     <DashboardLayout>
       <div className="container mx-auto px-6 py-8">
-        <div className="mb-6 flex items-center gap-4">
+        <div className="mb-6 flex items-center gap-4 flex-wrap">
           <Button variant="ghost" size="sm" asChild>
             <Link
               href="/healthcare/patients"

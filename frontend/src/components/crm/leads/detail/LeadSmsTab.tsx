@@ -62,7 +62,7 @@ export function LeadSmsTab({
           </div>
         ))}
       </div>
-      <div className="flex gap-2 border-t pt-3">
+      <div className="flex flex-wrap gap-2 border-t pt-3">
         <Input
           placeholder="SMS message..."
           value={smsBody}

@@ -45,7 +45,7 @@ export function LeadListingSearchesCard({ lead, leadId, reload }: Props) {
           <Plus className="h-3 w-3 mr-1" /> Add
         </Button>
       </div>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <Input
           placeholder="Name"
           value={searchName}

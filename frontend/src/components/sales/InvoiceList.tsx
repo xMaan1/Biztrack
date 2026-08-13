@@ -314,7 +314,7 @@ export function InvoiceList({
                 {selectedInvoices.size} invoice
                 {selectedInvoices.size !== 1 ? "s" : ""} selected
               </span>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button
                   size="sm"
                   variant="outline"

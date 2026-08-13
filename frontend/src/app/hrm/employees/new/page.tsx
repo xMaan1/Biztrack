@@ -530,7 +530,7 @@ function NewEmployeeContent() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Skills</Label>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Input
                     value={skillsInput}
                     onChange={(e) => setSkillsInput(e.target.value)}
@@ -569,7 +569,7 @@ function NewEmployeeContent() {
 
               <div className="space-y-2">
                 <Label>Certifications</Label>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Input
                     value={certificationsInput}
                     onChange={(e) => setCertificationsInput(e.target.value)}
@@ -744,11 +744,16 @@ function NewEmployeeContent() {
           </Card>
 
           {/* Actions */}
-          <div className="flex justify-end gap-4">
-            <Button type="button" variant="outline" onClick={handleCancel}>
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleCancel}
+              className="w-full sm:w-auto"
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading} className="w-full sm:w-auto">
               {loading ? (
                 <>
                   <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
@@ -773,14 +778,19 @@ function NewEmployeeContent() {
                 lost.
               </DialogDescription>
             </DialogHeader>
-            <div className="flex justify-end space-x-2 mt-4">
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end mt-4">
               <Button
                 variant="outline"
                 onClick={() => setShowCancelDialog(false)}
+                className="w-full sm:w-auto"
               >
                 Continue Editing
               </Button>
-              <Button variant="destructive" onClick={confirmCancel}>
+              <Button
+                variant="destructive"
+                onClick={confirmCancel}
+                className="w-full sm:w-auto"
+              >
                 Cancel
               </Button>
             </div>

@@ -91,17 +91,17 @@ export function DonorLeadsFiltersCard({
             onChange={(e) => onDateChange(e.target.value)}
           />
         </div>
-        <div className="mt-4 flex justify-end gap-2">
+        <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button
             onClick={onApply}
-            className="bg-emerald-600 hover:bg-emerald-700"
+            className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700"
           >
             Apply Filters
           </Button>
           <Button
             variant="ghost"
             onClick={onReset}
-            className="text-muted-foreground"
+            className="w-full sm:w-auto text-muted-foreground"
           >
             <RotateCcw className="mr-2 h-4 w-4" />
             Reset Filters

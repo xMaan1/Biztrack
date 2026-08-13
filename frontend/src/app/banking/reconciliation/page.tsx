@@ -274,7 +274,7 @@ const ReconciliationContent = () => {
   return (
     <DashboardLayout>
       <div className="container mx-auto px-6 py-8 space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
               Bank Reconciliation
@@ -448,7 +448,7 @@ const ReconciliationContent = () => {
               </div>
             </div>
 
-            <div className="flex gap-2 mt-4">
+            <div className="flex gap-2 flex-wrap mt-4">
               <Button onClick={handleSearch}>Apply Filters</Button>
               <Button variant="outline" onClick={clearFilters}>
                 Clear Filters
@@ -627,7 +627,7 @@ const ReconciliationContent = () => {
                                       className="mt-1"
                                     />
                                   </div>
-                                  <div className="flex gap-2">
+                                  <div className="flex gap-2 flex-wrap">
                                     <Button
                                       onClick={() =>
                                         selectedTransaction &&

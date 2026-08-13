@@ -17,7 +17,7 @@ export function DonorsPageHeader({ onAdd }: DonorsPageHeaderProps) {
           Manage your donor relationships and information
         </p>
       </div>
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <Button variant="outline" asChild>
           <Link href="/ngo/donor-dashboard">Donor Dashboard</Link>
         </Button>

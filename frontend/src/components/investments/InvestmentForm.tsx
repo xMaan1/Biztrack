@@ -322,7 +322,7 @@ export default function InvestmentForm({
 
           <div className="space-y-2">
             <Label>Tags</Label>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Input
                 value={newTag}
                 onChange={(e) => setNewTag(e.target.value)}
@@ -351,7 +351,7 @@ export default function InvestmentForm({
             )}
           </div>
 
-          <div className="flex justify-end gap-3 pt-4">
+          <div className="flex flex-wrap justify-end gap-3 pt-4">
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>

@@ -248,7 +248,7 @@ export function Step3DateTime({
 
         <div className="space-y-2">
           <Label className="text-sm font-bold">Time</Label>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <Select
               value={selectedHour12 || undefined}
               onValueChange={handleHourChange}

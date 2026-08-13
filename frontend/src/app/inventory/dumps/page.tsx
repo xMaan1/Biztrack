@@ -350,7 +350,7 @@ function DumpsContent() {
     <DashboardLayout>
       <div className="container mx-auto p-6 space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
               <Trash2 className="h-8 w-8 text-red-500" />
@@ -360,7 +360,7 @@ function DumpsContent() {
               Track and manage items that were damaged while in your possession
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button
               variant="outline"
               onClick={() => router.push("/inventory/stock-movements")}
@@ -1065,18 +1065,19 @@ function DumpsContent() {
                 action cannot be undone.
               </DialogDescription>
             </DialogHeader>
-            <div className="flex justify-end space-x-2 mt-4">
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end mt-4">
               <Button
                 variant="outline"
                 onClick={closeDeleteDialog}
                 disabled={deleteLoading}
+                className="w-full sm:w-auto"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleDelete}
                 disabled={deleteLoading}
-                className="bg-red-600 hover:bg-red-700"
+                className="bg-red-600 hover:bg-red-700 w-full sm:w-auto"
               >
                 {deleteLoading ? (
                   <>

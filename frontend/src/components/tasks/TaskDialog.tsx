@@ -365,7 +365,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
 
             <div className="md:col-span-2">
               <Label>Estimated Time</Label>
-              <div className="mt-1 grid grid-cols-3 gap-2">
+              <div className="mt-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                 <div>
                   <Label
                     htmlFor="estimatedHours"
@@ -433,7 +433,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
 
             <div className="md:col-span-2">
               <Label>Reminder When Time Left</Label>
-              <div className="mt-1 grid grid-cols-3 gap-2">
+              <div className="mt-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                 <div>
                   <Label
                     htmlFor="reminderHours"
@@ -537,7 +537,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                     ),
                   )}
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Input
                     placeholder="Add tag"
                     value={tagInput}

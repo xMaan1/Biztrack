@@ -6,7 +6,7 @@ import type { TransactionPageHeaderProps } from "./types";
 
 export function TransactionPageHeader({ onAddTransaction }: TransactionPageHeaderProps) {
   return (
-    <div className="flex justify-between items-center">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h1 className="text-3xl font-bold">Bank Transactions</h1>
         <p className="text-muted-foreground">

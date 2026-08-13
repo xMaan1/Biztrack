@@ -764,11 +764,12 @@ export function InvoiceCustomizationDialog({
           </TabsContent>
         </Tabs>
 
-        <div className="flex justify-end space-x-2 pt-4 border-t">
+        <div className="flex flex-col-reverse gap-2 pt-4 border-t sm:flex-row sm:justify-end">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={saving}
+            className="w-full sm:w-auto"
           >
             <X className="h-4 w-4 mr-2" />
             Cancel
@@ -776,7 +777,7 @@ export function InvoiceCustomizationDialog({
           <Button
             onClick={handleSave}
             disabled={saving || uploading || !formData.company_name}
-            className="modern-button"
+            className="modern-button w-full sm:w-auto"
           >
             <Save className="h-4 w-4 mr-2" />
             {saving

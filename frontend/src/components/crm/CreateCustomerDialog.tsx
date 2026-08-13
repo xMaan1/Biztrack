@@ -339,8 +339,8 @@ export function CreateCustomerDialog({
               </Button>
             </div>
           </div>
-          <div className="grid grid-cols-4 gap-4">
-            <div className="col-span-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="col-span-1 sm:col-span-2">
               <CustomerTypeNameFields
                 customerType={formData.customerType || "individual"}
                 firstName={formData.firstName}
@@ -354,7 +354,7 @@ export function CreateCustomerDialog({
                 }
               />
             </div>
-            <div className="col-span-2">
+            <div className="col-span-1 sm:col-span-2">
               <LabeledContactFields
                 emails={formData.emails || [{ value: "", label: "personal" }]}
                 phones={formData.phones || [{ value: "", label: "work" }]}
@@ -442,7 +442,7 @@ export function CreateCustomerDialog({
                 </SelectContent>
               </Select>
             </div>
-            <div className="col-span-2">
+            <div className="col-span-1 sm:col-span-2">
               <Label htmlFor="address">Billing Address</Label>
               <Input
                 id="address"
@@ -498,7 +498,7 @@ export function CreateCustomerDialog({
                 placeholder="75000"
               />
             </div>
-            <div className="col-span-2">
+            <div className="col-span-1 sm:col-span-2">
               <Label htmlFor="tags">Tags (comma separated)</Label>
               <Input
                 id="tags"
@@ -515,7 +515,7 @@ export function CreateCustomerDialog({
                 placeholder="vip, regular, premium"
               />
             </div>
-            <div className="col-span-2">
+            <div className="col-span-1 sm:col-span-2">
               <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
@@ -531,7 +531,7 @@ export function CreateCustomerDialog({
                 className="resize-y min-h-[60px]"
               />
             </div>
-            <div className="col-span-2 space-y-2">
+            <div className="col-span-1 sm:col-span-2 space-y-2">
               <Label>Attachments</Label>
               <input
                 ref={attachmentFileInputRef}
