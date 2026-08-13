@@ -290,6 +290,17 @@ export default function JobCardDialog({
         </DialogHeader>
         <form
           onSubmit={handleSubmit}
+          onKeyDown={(e) => {
+            const target = e.target as HTMLElement;
+            if (
+              e.key === "Enter" &&
+              target instanceof HTMLInputElement &&
+              target.type !== "date" &&
+              target.type !== "datetime-local"
+            ) {
+              e.preventDefault();
+            }
+          }}
           className="flex min-h-0 flex-1 flex-col gap-3"
         >
           {errorMessage && (

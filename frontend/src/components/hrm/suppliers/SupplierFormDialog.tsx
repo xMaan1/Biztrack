@@ -38,10 +38,10 @@ export function SupplierFormDialog({
         <SupplierFormFields formData={formData} onChange={onFormChange} />
 
         <div className="mt-6 flex justify-end space-x-2">
-          <Button variant="outline" onClick={onCancel} disabled={submitting}>
+          <Button type="button" variant="outline" onClick={onCancel} disabled={submitting}>
             Cancel
           </Button>
-          <Button onClick={onSubmit} disabled={submitting}>
+          <Button type="button" onClick={onSubmit} disabled={submitting}>
             {submitting
               ? editingSupplier
                 ? "Updating..."

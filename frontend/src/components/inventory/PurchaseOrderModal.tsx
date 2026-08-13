@@ -836,10 +836,10 @@ export default function PurchaseOrderModal({
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={handleClose}>
+            <Button type="button" variant="outline" onClick={handleClose}>
               Cancel
             </Button>
-            <Button onClick={handleCreateOrder} disabled={isSubmitting}>
+            <Button type="button" onClick={handleCreateOrder} disabled={isSubmitting}>
               {isSubmitting ? "Creating..." : "Create Purchase Order"}
             </Button>
           </DialogFooter>
