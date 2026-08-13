@@ -84,7 +84,7 @@ export const ProjectCard = React.memo(function ProjectCard({
               variant="ghost"
               size="icon"
               onClick={handleStarClick}
-              className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+              className="h-8 w-8 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100"
             >
               <Star
                 className={cn(
@@ -101,7 +101,7 @@ export const ProjectCard = React.memo(function ProjectCard({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="h-8 w-8 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100"
                   >
                     <MoreVertical className="h-4 w-4" />
                   </Button>

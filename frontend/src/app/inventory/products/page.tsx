@@ -409,7 +409,7 @@ function ProductsContent() {
               <div className="flex-1 overflow-y-auto pr-2">
                 <div className="space-y-6">
                   {/* Basic Information */}
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <Label className="text-sm font-medium text-gray-600">
                         Product Name
@@ -435,7 +435,7 @@ function ProductsContent() {
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <Label className="text-sm font-medium text-gray-600">
                         Category
@@ -459,7 +459,7 @@ function ProductsContent() {
                     <h4 className="font-medium text-gray-900 mb-3">
                       Pricing Information
                     </h4>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <Label className="text-sm font-medium text-gray-600">
                           Sale Price
@@ -505,7 +505,7 @@ function ProductsContent() {
                     <h4 className="font-medium text-gray-900 mb-3">
                       Stock Information
                     </h4>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <Label className="text-sm font-medium text-gray-600">
                           Current Stock
@@ -551,7 +551,7 @@ function ProductsContent() {
                     <h4 className="font-medium text-gray-900 mb-3">
                       Additional Information
                     </h4>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <Label className="text-sm font-medium text-gray-600">
                           Barcode
@@ -569,7 +569,7 @@ function ProductsContent() {
                         </p>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4 mt-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                       <div>
                         <Label className="text-sm font-medium text-gray-600">
                           Serial Number

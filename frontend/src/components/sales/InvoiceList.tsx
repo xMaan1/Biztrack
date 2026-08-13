@@ -308,8 +308,8 @@ export function InvoiceList({
       {/* Bulk Actions Bar */}
       {selectedInvoices.size > 0 && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <span className="text-sm font-medium text-blue-800">
                 {selectedInvoices.size} invoice
                 {selectedInvoices.size !== 1 ? "s" : ""} selected

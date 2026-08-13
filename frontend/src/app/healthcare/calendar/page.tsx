@@ -436,17 +436,18 @@ function CalendarContent() {
             <div className="py-12 text-center text-gray-500">Loading...</div>
           ) : (
             <>
-              <div className="grid grid-cols-7 gap-px mb-2">
-                {weekDays.map((wd) => (
-                  <div
-                    key={wd}
-                    className="text-center text-sm font-medium text-gray-600 py-1"
-                  >
-                    {wd}
-                  </div>
-                ))}
-              </div>
-              <div className="grid grid-cols-7 gap-px border rounded-lg overflow-hidden bg-gray-100">
+              <div className="overflow-x-auto">
+                <div className="grid grid-cols-7 gap-px mb-2 min-w-[560px]">
+                  {weekDays.map((wd) => (
+                    <div
+                      key={wd}
+                      className="text-center text-sm font-medium text-gray-600 py-1"
+                    >
+                      {wd}
+                    </div>
+                  ))}
+                </div>
+                <div className="grid grid-cols-7 gap-px border rounded-lg overflow-hidden bg-gray-100 min-w-[560px]">
                 {Array.from({ length: leadingBlanks }).map((_, i) => (
                   <div key={`blank-${i}`} className="min-h-[100px] bg-white" />
                 ))}
@@ -492,6 +493,7 @@ function CalendarContent() {
                     </div>
                   );
                 })}
+              </div>
               </div>
             </>
           )}

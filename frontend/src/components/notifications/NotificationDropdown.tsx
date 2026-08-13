@@ -65,7 +65,7 @@ export default function NotificationDropdown({
   return (
     <div
       ref={dropdownRef}
-      className="absolute right-0 top-full z-50 mt-2 flex w-96 max-h-[min(32rem,calc(100vh-5rem))] flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg"
+      className="absolute right-0 top-full z-50 mt-2 flex w-[min(24rem,calc(100vw-1.5rem))] max-h-[min(32rem,calc(100vh-5rem))] flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg"
     >
       <div className="shrink-0 border-b border-gray-200 p-4">
         <div className="flex items-center justify-between">

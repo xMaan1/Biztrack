@@ -407,7 +407,7 @@ function DailyExpenseContent() {
                       setCategoryFilter(v === "all" ? "" : v)
                     }
                   >
-                    <SelectTrigger className="w-[180px]">
+                    <SelectTrigger className="w-full sm:w-[180px]">
                       <SelectValue placeholder="All categories" />
                     </SelectTrigger>
                     <SelectContent>

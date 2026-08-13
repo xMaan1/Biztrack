@@ -40,7 +40,7 @@ export function LeadsListControls({
             onFiltersChange((prev) => ({ ...prev, sort: v }))
           }
         >
-          <SelectTrigger className="w-[180px] h-9">
+          <SelectTrigger className="w-full h-9 sm:w-[180px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -52,7 +52,7 @@ export function LeadsListControls({
           value={String(pageSize)}
           onValueChange={(v) => onPageSizeChange(Number(v))}
         >
-          <SelectTrigger className="w-[80px] h-9">
+          <SelectTrigger className="w-full h-9 sm:w-[80px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -70,7 +70,7 @@ export function LeadsListControls({
             }))
           }
         >
-          <SelectTrigger className="w-[160px] h-9">
+          <SelectTrigger className="w-full h-9 sm:w-[160px]">
             <SelectValue placeholder="Pipeline" />
           </SelectTrigger>
           <SelectContent>
@@ -83,11 +83,11 @@ export function LeadsListControls({
           </SelectContent>
         </Select>
       </div>
-      <div className="flex items-center gap-2">
-        <div className="relative">
+      <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+        <div className="relative flex-1 min-w-[180px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            className="pl-9 w-64 rounded-full h-9"
+            className="pl-9 w-full rounded-full h-9 sm:w-64"
             placeholder="Enter search criteria..."
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}

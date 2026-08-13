@@ -59,7 +59,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <div className="md:hidden">
         {sidebarOpen && (
           <div
-            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+            className="fixed inset-0 z-[55] bg-black/50 backdrop-blur-sm"
             onClick={closeSidebar}
             aria-hidden
           />
@@ -79,7 +79,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           >
             <X className="h-4 w-4" />
           </button>
-          <Sidebar collapsed={false} onToggleCollapse={toggle} />
+          <Sidebar collapsed={false} />
         </div>
       </div>
       <div

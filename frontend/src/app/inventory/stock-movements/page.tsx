@@ -920,7 +920,7 @@ function StockMovementsContent() {
             </DialogHeader>
             {selectedMovement && (
               <div className="space-y-4 py-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="text-sm font-medium">Movement Type</Label>
                     <div className="flex items-center">
@@ -935,7 +935,7 @@ function StockMovementsContent() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="text-sm font-medium">Product ID</Label>
                     <div className="text-sm text-muted-foreground">
@@ -950,7 +950,7 @@ function StockMovementsContent() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="text-sm font-medium">Quantity</Label>
                     <div className="text-sm text-muted-foreground">
@@ -966,7 +966,7 @@ function StockMovementsContent() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="text-sm font-medium">
                       Reference Number
@@ -985,7 +985,7 @@ function StockMovementsContent() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="text-sm font-medium">Batch Number</Label>
                     <div className="text-sm text-muted-foreground">
@@ -1016,7 +1016,7 @@ function StockMovementsContent() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="text-sm font-medium">Created At</Label>
                     <div className="text-sm text-muted-foreground">

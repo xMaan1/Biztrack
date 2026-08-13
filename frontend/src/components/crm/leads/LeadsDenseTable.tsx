@@ -81,7 +81,7 @@ export function LeadsDenseTable({
           <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary" />
         </div>
       )}
-      <table className="w-full text-left text-sm border-collapse min-w-[1200px]">
+      <table className="w-full text-left text-sm border-collapse min-w-[560px] lg:min-w-[1200px]">
         <thead className="bg-muted/50 text-xs uppercase tracking-wider sticky top-0 z-10 border-b">
           <tr>
             <th className="p-3 w-10">
@@ -92,13 +92,13 @@ export function LeadsDenseTable({
             </th>
             <th className="p-3 font-medium">Info</th>
             <th className="p-3 font-medium">Pipeline / Status / Type</th>
-            <th className="p-3 font-medium">Reg / Source</th>
-            <th className="p-3 font-medium">Price / City</th>
-            <th className="p-3 font-medium">Timeline</th>
-            <th className="p-3 font-medium">Activity</th>
-            <th className="p-3 font-medium">Last Contact</th>
-            <th className="p-3 font-medium">Tasks</th>
-            <th className="p-3 font-medium">Assigned</th>
+            <th className="hidden lg:table-cell p-3 font-medium">Reg / Source</th>
+            <th className="hidden lg:table-cell p-3 font-medium">Price / City</th>
+            <th className="hidden lg:table-cell p-3 font-medium">Timeline</th>
+            <th className="hidden lg:table-cell p-3 font-medium">Activity</th>
+            <th className="hidden lg:table-cell p-3 font-medium">Last Contact</th>
+            <th className="hidden lg:table-cell p-3 font-medium">Tasks</th>
+            <th className="hidden lg:table-cell p-3 font-medium">Assigned</th>
           </tr>
         </thead>
         <tbody className="divide-y">
@@ -146,7 +146,7 @@ export function LeadsDenseTable({
                       </button>
                     </div>
                   </td>
-                  <td className="p-3 align-top min-w-[180px]">
+                  <td className="p-3 align-top min-w-[150px] lg:min-w-[180px]">
                     <div className="font-medium">
                       {lead.firstName} {lead.lastName}
                     </div>
@@ -166,7 +166,7 @@ export function LeadsDenseTable({
                     )}
                   </td>
                   <td
-                    className="p-3 align-top min-w-[160px]"
+                    className="p-3 align-top min-w-[140px] lg:min-w-[160px]"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <Select
@@ -196,7 +196,7 @@ export function LeadsDenseTable({
                       {lead.leadType || "Lead Type"}
                     </div>
                   </td>
-                  <td className="p-3 align-top text-xs min-w-[130px]">
+                  <td className="hidden lg:table-cell p-3 align-top text-xs min-w-[130px]">
                     <div className="font-medium">{createdLabel}</div>
                     {lead.campaignSource && (
                       <div className="text-muted-foreground mt-1 truncate max-w-[120px]">
@@ -212,7 +212,7 @@ export function LeadsDenseTable({
                       <div className="text-muted-foreground">{lead.city}</div>
                     )}
                   </td>
-                  <td className="p-3 align-top text-xs min-w-[110px]">
+                  <td className="hidden lg:table-cell p-3 align-top text-xs min-w-[110px]">
                     <div>Min: {money(lead.priceMin)}</div>
                     <div>Max: {money(lead.priceMax)}</div>
                     <div className="mt-2 text-muted-foreground">
@@ -222,7 +222,7 @@ export function LeadsDenseTable({
                       Sell: {lead.sellIntent || "N/A"}
                     </div>
                   </td>
-                  <td className="p-3 align-top text-xs min-w-[90px]">
+                  <td className="hidden lg:table-cell p-3 align-top text-xs min-w-[90px]">
                     <div className="font-medium">
                       {ageLabel(lead.createdAt)}
                     </div>
@@ -233,7 +233,7 @@ export function LeadsDenseTable({
                       <Mail className="h-3 w-3" /> {lead.emailCount || 0}
                     </div>
                   </td>
-                  <td className="p-3 align-top text-xs min-w-[80px]">
+                  <td className="hidden lg:table-cell p-3 align-top text-xs min-w-[80px]">
                     <div className="flex items-center gap-1 text-muted-foreground">
                       <Phone className="h-3 w-3" /> {lead.callCount || 0}
                     </div>
@@ -244,7 +244,7 @@ export function LeadsDenseTable({
                       <MessageSquare className="h-3 w-3" /> {lead.smsCount || 0}
                     </div>
                   </td>
-                  <td className="p-3 align-top text-xs min-w-[120px]">
+                  <td className="hidden lg:table-cell p-3 align-top text-xs min-w-[120px]">
                     <div className="font-medium">
                       {relTime(lead.lastContactAt || lead.lastContactDate)}
                     </div>
@@ -261,7 +261,7 @@ export function LeadsDenseTable({
                       {lead.smsCount || 0}) {relTime(lead.lastSmsAt)}
                     </div>
                   </td>
-                  <td className="p-3 align-top text-center">
+                  <td className="hidden lg:table-cell p-3 align-top text-center">
                     <Flag
                       className={`h-4 w-4 mx-auto mb-1 ${
                         lead.hasFlaggedTask
@@ -278,7 +278,7 @@ export function LeadsDenseTable({
                     />
                   </td>
                   <td
-                    className="p-3 align-top text-xs min-w-[140px]"
+                    className="hidden lg:table-cell p-3 align-top text-xs min-w-[140px]"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <Select
@@ -306,7 +306,7 @@ export function LeadsDenseTable({
           )}
         </tbody>
       </table>
-      <div className="flex items-center justify-between border-t px-4 py-3 text-xs text-muted-foreground">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t px-4 py-3 text-xs text-muted-foreground">
         <span>
           Showing {(page - 1) * pageSize + 1}-
           {Math.min(page * pageSize, totalCount)} of {totalCount}

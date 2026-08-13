@@ -8,8 +8,7 @@ import type {
   InvoiceFormErrors,
   InvoiceFormTotals,
 } from "@/src/types/sales/invoiceForm";
-import type { JobCard } from "@/src/models/workshop";
-import type { Vehicle } from "@/src/models/workshop";
+import type { JobCard, Vehicle } from "@/src/models/workshop";
 
 export const EMPTY_NEW_ITEM: InvoiceItemCreate = {
   description: "",

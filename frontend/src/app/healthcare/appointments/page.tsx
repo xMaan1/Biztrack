@@ -787,20 +787,20 @@ function AppointmentsContent() {
               placeholder="From"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
-              className="w-[140px]"
+              className="w-full sm:w-[140px]"
             />
             <Input
               type="date"
               placeholder="To"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
-              className="w-[140px]"
+              className="w-full sm:w-[140px]"
             />
             <Select
               value={doctorFilter || "__all__"}
               onValueChange={setDoctorFilter}
             >
-              <SelectTrigger className="w-[200px]">
+              <SelectTrigger className="w-full sm:w-[200px]">
                 <SelectValue placeholder="All doctors" />
               </SelectTrigger>
               <SelectContent>
@@ -1219,7 +1219,7 @@ function AppointmentsContent() {
                               )
                             }
                           >
-                            <SelectTrigger className="w-[100px]">
+                            <SelectTrigger className="w-full sm:w-[100px]">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>

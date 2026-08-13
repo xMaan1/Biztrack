@@ -704,7 +704,7 @@ export const TaskList: React.FC<TaskListProps> = ({
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="flex justify-center gap-2 mt-6">
+                <div className="flex flex-wrap justify-center gap-2 mt-6">
                   <Button
                     variant="outline"
                     onClick={() => setPage(Math.max(1, page - 1))}

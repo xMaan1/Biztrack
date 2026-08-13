@@ -255,24 +255,24 @@ const TenantLayout: React.FC<TenantLayoutProps> = ({ children }) => {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <header className="bg-white border-b border-gray-200 px-6 py-4 flex-shrink-0">
+        <header className="bg-white border-b border-gray-200 px-4 py-4 flex-shrink-0 md:px-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+            <div className="flex min-w-0 items-center space-x-4">
               <Button
                 variant="ghost"
                 size="sm"
-                className="lg:hidden"
+                className="lg:hidden shrink-0"
                 onClick={() => setMobileOpen(true)}
               >
                 <MenuIcon className="h-5 w-5" />
               </Button>
 
-              <h1 className="text-xl font-semibold text-gray-900">
+              <h1 className="min-w-0 truncate text-lg font-semibold text-gray-900 sm:text-xl">
                 {tenantInfo?.name || "Workspace"}
               </h1>
             </div>
 
-            <div className="flex items-center space-x-4">
+            <div className="flex shrink-0 items-center space-x-2 sm:space-x-4">
               <Button
                 variant="outline"
                 onClick={handleSwitchWorkspace}
@@ -286,7 +286,7 @@ const TenantLayout: React.FC<TenantLayoutProps> = ({ children }) => {
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
-                    className="flex items-center space-x-2 px-3"
+                    className="flex items-center space-x-2 px-2 sm:px-3"
                   >
                     <Avatar className="h-8 w-8">
                       <AvatarFallback className="bg-gradient-primary text-white text-sm">
@@ -298,7 +298,14 @@ const TenantLayout: React.FC<TenantLayoutProps> = ({ children }) => {
                     </span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuContent align="end" className="w-48 max-w-[calc(100vw-1rem)]">
+                  <DropdownMenuItem
+                    onClick={handleSwitchWorkspace}
+                    className="sm:hidden"
+                  >
+                    <Building2 className="mr-2 h-4 w-4" />
+                    Switch Workspace
+                  </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={handleLogout}
                     className="text-red-600"
@@ -313,7 +320,7 @@ const TenantLayout: React.FC<TenantLayoutProps> = ({ children }) => {
         </header>
 
         {/* Page Content - Scrollable */}
-        <main className="flex-1 overflow-auto p-6">{children}</main>
+        <main className="flex-1 overflow-auto p-4 md:p-6">{children}</main>
       </div>
       <Toaster />
     </div>

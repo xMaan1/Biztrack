@@ -76,7 +76,18 @@ export function CommerceInvoiceLineItemsTable({
         </p>
       )}
       <div className="overflow-x-auto">
-        <table className="w-full min-w-0 border-collapse text-sm table-fixed md:min-w-[720px] lg:min-w-0 lg:table-auto">
+        <table className="w-full min-w-[760px] border-collapse text-sm lg:min-w-0">
+          <colgroup>
+            <col className="w-10" />
+            <col className="w-[40%] min-w-[200px]" />
+            <col className="w-20" />
+            <col className="w-[110px]" />
+            <col className="w-24" />
+            <col className="w-28" />
+            <col className="w-24" />
+            <col className="w-28" />
+            <col className="w-12" />
+          </colgroup>
           <thead>
             <tr className="bg-primary text-primary-foreground">
               <th className="border border-primary/80 px-2 py-1.5 text-left font-semibold">

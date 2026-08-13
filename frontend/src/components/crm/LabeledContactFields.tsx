@@ -102,10 +102,10 @@ export function LabeledContactFields({
         <Label>Email addresses</Label>
         <div className="space-y-2">
           {emails.map((row, idx) => (
-            <div key={`email-${idx}`} className="flex gap-2 items-center">
+            <div key={`email-${idx}`} className="flex flex-wrap gap-2 items-center">
               <Input
                 type="email"
-                className="flex-1"
+                className="flex-1 min-w-[140px] basis-40"
                 value={row.value}
                 onChange={(e) => {
                   const v = e.target.value;
@@ -169,9 +169,9 @@ export function LabeledContactFields({
         <Label>Phone numbers</Label>
         <div className="space-y-2">
           {phones.map((row, idx) => (
-            <div key={`phone-${idx}`} className="flex gap-2 items-center">
+            <div key={`phone-${idx}`} className="flex flex-wrap gap-2 items-center">
               <Input
-                className="flex-1"
+                className="flex-1 min-w-[140px] basis-40"
                 value={row.value}
                 onChange={(e) => {
                   const v = e.target.value;

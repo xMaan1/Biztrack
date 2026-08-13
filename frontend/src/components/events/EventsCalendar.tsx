@@ -140,13 +140,13 @@ export default function EventsCalendar() {
       {/* Calendar Navigation */}
       <Card>
         <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <Button variant="outline" onClick={previousMonth}>
                 <ChevronLeft className="h-4 w-4" />
               </Button>
 
-              <h2 className="text-xl font-semibold">
+              <h2 className="text-lg font-semibold sm:text-xl">
                 {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
               </h2>
 
@@ -164,8 +164,8 @@ export default function EventsCalendar() {
 
       {/* Calendar Grid */}
       <Card>
-        <CardContent className="p-4">
-          <div className="grid grid-cols-7 gap-1">
+        <CardContent className="p-4 overflow-x-auto">
+          <div className="grid grid-cols-7 gap-1 min-w-[560px]">
             {/* Day Headers */}
             {dayNames.map((day) => (
               <div

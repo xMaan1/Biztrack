@@ -28,7 +28,7 @@ import {
 import { toast } from "sonner";
 import { apiService } from "../../../services/ApiService";
 import { DashboardLayout } from "../../../components/layout";
-import { JobCard } from "../../../models/workshop";
+import { JobCard, type Vehicle } from "../../../models/workshop";
 import JobCardDialog from "../../../components/workshop/JobCardDialog";
 import {
   InvoiceDialog,
@@ -39,7 +39,6 @@ import type { Customer } from "../../../services/CustomerService";
 import type { InvoiceCreate } from "../../../models/sales";
 import { extractErrorMessage } from "../../../utils/errorUtils";
 import { invoiceItemsFromJobCard, jobCardLabourEstimate, jobCardToVehicle } from "../../../utils/sales/invoiceFormUtils";
-import type { Vehicle } from "../../../models/workshop";
 
 function JobCardsContent() {
   const [jobCards, setJobCards] = useState<JobCard[]>([]);
@@ -284,7 +283,7 @@ function JobCardsContent() {
                 />
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[160px]">
+                <SelectTrigger className="w-full sm:w-[160px]">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>

@@ -74,7 +74,7 @@ export function LeadNotesTab({
         />
         {noteType === "call" && (
           <Select value={callResult} onValueChange={setCallResult}>
-            <SelectTrigger className="w-[200px] h-8 text-xs">
+            <SelectTrigger className="w-full sm:w-[200px] h-8 text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
