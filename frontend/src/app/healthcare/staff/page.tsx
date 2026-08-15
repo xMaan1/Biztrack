@@ -551,7 +551,7 @@ function StaffContent() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {HEALTHCARE_PERMISSIONS.map((perm) => {
                   const checked = formData.permissions.includes(perm);
                   const disabled = perm === "healthcare:view";

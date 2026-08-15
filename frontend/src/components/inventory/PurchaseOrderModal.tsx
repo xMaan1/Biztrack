@@ -381,7 +381,7 @@ export default function PurchaseOrderModal({
                 <AlertDescription>{errorMessage}</AlertDescription>
               </Alert>
             )}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="orderNumber">Order Number</Label>
                 <Input
@@ -487,41 +487,43 @@ export default function PurchaseOrderModal({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="supplierId">
                   Supplier *
                   {showSupplierCount && ` (${suppliers.length} available)`}
                 </Label>
-                <div className="flex gap-2">
-                  <Select
-                    value={newOrder.supplierId}
-                    onValueChange={(value) => {
-                      const supplier = suppliers.find((s) => s.id === value);
-                      setNewOrder((prev) => ({
-                        ...prev,
-                        supplierId: value,
-                        supplierName: supplier?.name || "",
-                      }));
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select supplier" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {suppliers.length === 0 ? (
-                        <SelectItem value="no-suppliers" disabled>
-                          No suppliers available
-                        </SelectItem>
-                      ) : (
-                        suppliers.map((supplier) => (
-                          <SelectItem key={supplier.id} value={supplier.id}>
-                            {supplier.name}
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <div className="min-w-0 flex-1">
+                    <Select
+                      value={newOrder.supplierId}
+                      onValueChange={(value) => {
+                        const supplier = suppliers.find((s) => s.id === value);
+                        setNewOrder((prev) => ({
+                          ...prev,
+                          supplierId: value,
+                          supplierName: supplier?.name || "",
+                        }));
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select supplier" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {suppliers.length === 0 ? (
+                          <SelectItem value="no-suppliers" disabled>
+                            No suppliers available
                           </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
+                        ) : (
+                          suppliers.map((supplier) => (
+                            <SelectItem key={supplier.id} value={supplier.id}>
+                              {supplier.name}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
                   {showAddSupplierButton && (
                     <Button
                       type="button"
@@ -572,7 +574,7 @@ export default function PurchaseOrderModal({
 
             {isHealthcare ? (
               <>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                   <div className="space-y-2">
                     <Label htmlFor="department">Department</Label>
                     <Input
@@ -839,7 +841,11 @@ export default function PurchaseOrderModal({
             <Button type="button" variant="outline" onClick={handleClose}>
               Cancel
             </Button>
-            <Button type="button" onClick={handleCreateOrder} disabled={isSubmitting}>
+            <Button
+              type="button"
+              onClick={handleCreateOrder}
+              disabled={isSubmitting}
+            >
               {isSubmitting ? "Creating..." : "Create Purchase Order"}
             </Button>
           </DialogFooter>

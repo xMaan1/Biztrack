@@ -79,7 +79,7 @@ export function ProductFormDialog({
                 onEntryModeChange(value as ProductEntryMode)
               }
             >
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3">
                 <TabsTrigger value="manual">Manual Entry</TabsTrigger>
                 <TabsTrigger value="qr">QR Scan</TabsTrigger>
                 <TabsTrigger value="barcode">Barcode Scan</TabsTrigger>

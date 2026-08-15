@@ -363,7 +363,7 @@ export default function JobCardDialog({
                 </div>
 
                 <div className="flex items-end gap-2">
-                  <div className="flex-1">
+                  <div className="min-w-0 flex-1">
                     <CustomerSearch
                       label="Customer"
                       value={selectedCustomer}
@@ -420,7 +420,7 @@ export default function JobCardDialog({
 
               <div className="space-y-3">
                 <div className="flex items-end gap-2">
-                  <div className="flex-1">
+                  <div className="min-w-0 flex-1">
                     <VehicleSearch
                       label="Vehicle"
                       value={selectedVehicle}

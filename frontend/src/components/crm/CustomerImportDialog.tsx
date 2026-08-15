@@ -194,10 +194,10 @@ export default function CustomerImportDialog({
 
         <div className="space-y-6">
           {/* Template Download */}
-          <div className="flex items-center justify-between p-4 border rounded-lg bg-blue-50">
-            <div className="flex items-center gap-3">
-              <Download className="h-5 w-5 text-blue-600" />
-              <div>
+          <div className="flex flex-col gap-3 border rounded-lg bg-blue-50 p-4 sm:flex-row sm:justify-between">
+            <div className="flex items-center gap-3 min-w-0">
+              <Download className="h-5 w-5 text-blue-600 shrink-0" />
+              <div className="min-w-0">
                 <p className="font-medium text-blue-900">Need a template?</p>
                 <p className="text-sm text-blue-700">
                   Download our CSV template with sample data and column headers
@@ -208,7 +208,7 @@ export default function CustomerImportDialog({
               onClick={handleDownloadTemplate}
               variant="outline"
               size="sm"
-              className="border-blue-300 text-blue-700 hover:bg-blue-100"
+              className="border-blue-300 text-blue-700 hover:bg-blue-100 w-full sm:w-auto shrink-0"
             >
               <Download className="h-4 w-4 mr-2" />
               Download Template
@@ -227,8 +227,10 @@ export default function CustomerImportDialog({
             />
             {file && (
               <div className="flex items-center gap-2 text-sm text-gray-600">
-                <FileText className="h-4 w-4" />
-                {file.name} ({(file.size / 1024).toFixed(1)} KB)
+                <FileText className="h-4 w-4 shrink-0" />
+                <span className="min-w-0 flex-1 break-all">
+                  {file.name} ({(file.size / 1024).toFixed(1)} KB)
+                </span>
               </div>
             )}
           </div>

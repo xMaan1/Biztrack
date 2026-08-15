@@ -48,7 +48,7 @@ export function ProductViewDialog({
         {product && (
           <div className="flex-1 overflow-y-auto pr-2">
             <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <Label className="text-sm font-medium text-gray-600">
                     Product Name
@@ -72,7 +72,7 @@ export function ProductViewDialog({
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <Label className="text-sm font-medium text-gray-600">
                     Category
@@ -125,7 +125,7 @@ export function ProductViewDialog({
                 <h4 className="mb-3 font-medium text-gray-900">
                   Pricing Information
                 </h4>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <Label className="text-sm font-medium text-gray-600">
                       Sale Price
@@ -165,7 +165,7 @@ export function ProductViewDialog({
                 <h4 className="mb-3 font-medium text-gray-900">
                   Stock Information
                 </h4>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <Label className="text-sm font-medium text-gray-600">
                       Current Stock
@@ -206,7 +206,7 @@ export function ProductViewDialog({
                 <h4 className="mb-3 font-medium text-gray-900">
                   Additional Information
                 </h4>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <Label className="text-sm font-medium text-gray-600">
                       Barcode
@@ -224,7 +224,7 @@ export function ProductViewDialog({
                     </p>
                   </div>
                 </div>
-                <div className="mt-4 grid grid-cols-2 gap-4">
+                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <Label className="text-sm font-medium text-gray-600">
                       Serial Number

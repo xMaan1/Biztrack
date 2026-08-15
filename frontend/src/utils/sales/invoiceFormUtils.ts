@@ -285,11 +285,11 @@ export function getInvoiceDialogContentClassName(
   if (!isView) {
     return inline
       ? "w-full min-w-0 max-w-full overflow-x-auto p-2 sm:p-3"
-      : "max-h-[96vh] w-[99vw] max-w-[1600px] overflow-y-auto p-2 sm:p-3";
+      : "max-h-[96vh] w-[99vw] max-w-[1600px] overflow-y-auto overflow-x-auto p-2 sm:p-3";
   }
   return inline
     ? "w-full min-w-0 max-w-full overflow-y-auto p-4"
-    : "max-w-4xl max-h-[90vh] overflow-y-auto";
+    : "max-w-4xl max-h-[90vh] overflow-y-auto overflow-x-auto";
 }
 
 export function lineItemTotal(item: InvoiceItemCreate): number {

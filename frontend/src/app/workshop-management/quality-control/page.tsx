@@ -360,7 +360,7 @@ function QualityCheckDialog({
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {check && mode === "view" && (
-            <div className="grid grid-cols-2 gap-3 rounded-lg border bg-muted/40 p-4 text-sm">
+            <div className="grid grid-cols-1 gap-3 rounded-lg border bg-muted/40 p-4 text-sm sm:grid-cols-2">
               <div>
                 <span className="text-muted-foreground">Status</span>
                 <div className="mt-1">
@@ -1065,7 +1065,7 @@ function DefectDialog({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {defect && isView && (
-            <div className="grid grid-cols-2 gap-3 rounded-lg border bg-muted/40 p-4 text-sm">
+            <div className="grid grid-cols-1 gap-3 rounded-lg border bg-muted/40 p-4 text-sm sm:grid-cols-2">
               <div>
                 <span className="text-muted-foreground">Defect No.</span>
                 <p className="font-mono text-xs break-all mt-1">
@@ -1372,7 +1372,7 @@ function ReportDialog({
 
         {isView && report ? (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3 rounded-lg border bg-muted/40 p-4 text-sm">
+            <div className="grid grid-cols-1 gap-3 rounded-lg border bg-muted/40 p-4 text-sm sm:grid-cols-2">
               <div>
                 <span className="text-muted-foreground">Report No.</span>
                 <p className="font-mono text-xs break-all mt-1">

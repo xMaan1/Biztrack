@@ -66,7 +66,7 @@ export default function PurchaseOrderViewModal({
 
             <div className="space-y-6">
               {/* Header Information */}
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <div className="space-y-4">
                   <div>
                     <Label className="text-sm font-medium text-gray-600">
@@ -141,7 +141,7 @@ export default function PurchaseOrderViewModal({
                   <Package className="h-5 w-5" />
                   Financial Summary
                 </h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="text-center p-4 bg-gray-50 rounded-lg">
                     <Label className="text-sm font-medium text-gray-600">
                       Subtotal
@@ -231,7 +231,7 @@ export default function PurchaseOrderViewModal({
                 <h3 className="text-lg font-semibold mb-4">
                   Order Information
                 </h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <Label className="text-sm font-medium text-gray-600">
                       Order ID

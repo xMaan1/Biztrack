@@ -495,7 +495,7 @@ const POSShifts = () => {
                   <Label className="text-sm font-medium text-muted-foreground">
                     Transactions Summary
                   </Label>
-                  <div className="grid grid-cols-3 gap-4 mt-2 p-4 bg-gray-50 rounded-lg">
+                  <div className="grid grid-cols-1 gap-4 mt-2 p-4 bg-gray-50 rounded-lg sm:grid-cols-3">
                     <div className="text-center">
                       <div className="text-2xl font-bold text-blue-600">
                         {selectedShift.totalTransactions || 0}

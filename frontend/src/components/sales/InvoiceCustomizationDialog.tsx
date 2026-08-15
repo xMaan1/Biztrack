@@ -242,7 +242,7 @@ export function InvoiceCustomizationDialog({
         </DialogHeader>
 
         <Tabs defaultValue="company" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5">
             <TabsTrigger value="company" className="flex items-center gap-2">
               <Building2 className="h-4 w-4" />
               Company

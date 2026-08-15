@@ -381,7 +381,7 @@ function AlertsContent() {
 
             {viewingAlert && (
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <Label className="text-sm font-medium text-gray-600">
                       Product Name
@@ -414,7 +414,7 @@ function AlertsContent() {
                   <p className="text-gray-900 mt-1">{viewingAlert.message}</p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <Label className="text-sm font-medium text-gray-600">
                       Current Stock

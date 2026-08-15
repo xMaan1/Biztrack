@@ -156,7 +156,7 @@ export function InvoiceFormItemsSection({
             </InlineField>
           </div>
 
-          <div className="grid w-full grid-cols-2 gap-2 sm:w-[300px] lg:w-[280px]">
+          <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 sm:w-[300px] lg:w-[280px]">
             <Button
               type="button"
               variant="default"

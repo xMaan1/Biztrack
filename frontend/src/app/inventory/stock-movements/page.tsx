@@ -1325,7 +1325,7 @@ function StockMovementsContent() {
             {movementToDelete && (
               <div className="py-4">
                 <div className="bg-muted p-4 rounded-lg">
-                  <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
                     <div>
                       <span className="font-medium">Product ID:</span>
                       <p className="text-muted-foreground">
