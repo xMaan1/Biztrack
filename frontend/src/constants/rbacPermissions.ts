@@ -114,12 +114,20 @@ export const RBAC_PERMISSION_MODULES: PermissionModule[] = [
   {
     label: "Production",
     permissions: crud("production"),
-    submodules: [],
+    submodules: [
+      { label: "Job Cards", permissions: crud("production:job_cards") },
+      { label: "Vehicles", permissions: crud("production:vehicles") },
+    ],
   },
   {
     label: "Quality",
     permissions: crud("quality"),
-    submodules: [],
+    submodules: [
+      {
+        label: "Quality Control",
+        permissions: crud("quality:quality_control"),
+      },
+    ],
   },
   {
     label: "Banking",
@@ -206,6 +214,9 @@ export const SIDEBAR_PATH_PERMISSIONS: Record<string, string> = {
   "/crm": "crm:dashboard:view",
   "/crm/customers": "crm:customers:view",
   "/workshop-management/customers": "crm:customers:view",
+  "/workshop-management/job-cards": "production:job_cards:view",
+  "/workshop-management/vehicles": "production:vehicles:view",
+  "/workshop-management/quality-control": "quality:quality_control:view",
   "/crm/companies": "crm:companies:view",
   "/crm/contacts": "crm:contacts:view",
   "/crm/leads": "crm:leads:view",

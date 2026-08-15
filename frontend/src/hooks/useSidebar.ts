@@ -98,6 +98,7 @@ export function useSidebar() {
     accessibleModules,
     hasModuleAccess,
     hasPermission,
+    permissions,
     isOwner,
     initializing: rbacInitializing,
   } = usePermissions();
@@ -133,26 +134,34 @@ export function useSidebar() {
     [hasPermission, isOwner, isSuperAdmin, user?.userRole],
   );
 
+  const hasStrictPermission = useCallback(
+    (permission?: string) => {
+      if (!permission || isSuperAdmin || isOwner()) return true;
+      return permissions.includes(permission);
+    },
+    [permissions, isOwner, isSuperAdmin],
+  );
+
   const hasPathPermission = useCallback(
     (path?: string) => {
       if (!path || isSuperAdmin || isOwner()) return true;
       if (path === "/sales/invoice-dashboard") {
         return (
-          hasPermission("sales:invoices:view") ||
-          hasPermission("sales:invoice_dashboard:view")
+          hasStrictPermission("sales:invoices:view") ||
+          hasStrictPermission("sales:invoice_dashboard:view")
         );
       }
       if (path === "/sales/invoices" || path === "/invoices") {
         return (
-          hasPermission("sales:invoices:create") ||
-          hasPermission("sales:invoices:update")
+          hasStrictPermission("sales:invoices:create") ||
+          hasStrictPermission("sales:invoices:update")
         );
       }
       const requiredPermission = SIDEBAR_PATH_PERMISSIONS[path];
       if (!requiredPermission) return true;
-      return hasPermission(requiredPermission);
+      return hasStrictPermission(requiredPermission);
     },
-    [hasPermission, isOwner, isSuperAdmin],
+    [hasStrictPermission, isOwner, isSuperAdmin],
   );
 
   useEffect(() => {
