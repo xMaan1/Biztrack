@@ -238,10 +238,6 @@ export function MobileInvoicesScreen() {
       appAlert('Invoices', 'Select a customer with name and email.');
       return;
     }
-    if (items.length === 0) {
-      appAlert('Invoices', 'Add at least one line item.');
-      return;
-    }
     const labour = parseFloat(labourCost) || 0;
     const payload: InvoiceCreate = {
       customerId,

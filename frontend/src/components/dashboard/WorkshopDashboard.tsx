@@ -268,9 +268,9 @@ export default function WorkshopDashboard({
   const { formatCurrency } = useCurrency();
   const productionEfficiency = stats.productionEfficiency ?? 0;
   const qualityIssues = stats.qualityIssues || 0;
-  const [poHistoryOpen, setPoHistoryOpen] = useState(true);
-  const [invoiceOverviewOpen, setInvoiceOverviewOpen] = useState(true);
-  const [recentActivityOpen, setRecentActivityOpen] = useState(true);
+  const [poHistoryOpen, setPoHistoryOpen] = useState(false);
+  const [invoiceOverviewOpen, setInvoiceOverviewOpen] = useState(false);
+  const [recentActivityOpen, setRecentActivityOpen] = useState(false);
 
   const financials = stats.financials ?? {
     totalRevenue: 0,

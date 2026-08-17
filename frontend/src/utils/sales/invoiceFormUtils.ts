@@ -238,10 +238,6 @@ export function validateInvoiceForm(
   if (!formData.dueDate) {
     newErrors.dueDate = "Due date is required";
   }
-  if (items.length === 0) {
-    newErrors.items = "At least one item is required";
-  }
-
   items.forEach((item, index) => {
     if (!item.description.trim()) {
       newErrors[`item_${index}_description`] = "Item description is required";

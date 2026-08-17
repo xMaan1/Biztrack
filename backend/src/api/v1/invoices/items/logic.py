@@ -151,9 +151,6 @@ def create_invoice_endpoint(
         if not invoice_data.customerName:
             raise HTTPException(status_code=400, detail="Customer name is required")
 
-        if not invoice_data.items or len(invoice_data.items) == 0:
-            raise HTTPException(status_code=400, detail="At least one item is required")
-
         try:
             issue_date = datetime.fromisoformat(invoice_data.issueDate)
             due_date = datetime.fromisoformat(invoice_data.dueDate)
@@ -531,9 +528,6 @@ def update_invoice_endpoint(
 
         for field, value in update_data.items():
             if field == "items" and value:
-                if len(value) == 0:
-                    raise HTTPException(status_code=400, detail="At least one item is required")
-
                 converted_items = []
                 for item_data in value:
                     if isinstance(item_data, dict):
