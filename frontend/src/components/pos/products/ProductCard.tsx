@@ -17,8 +17,8 @@ type ProductCardProps = {
   product: Product;
   formatCurrency: (value: number) => string;
   onView: (product: Product) => void;
-  onEdit: (product: Product) => void;
-  onDelete: (product: Product) => void;
+  onEdit?: (product: Product) => void;
+  onDelete?: (product: Product) => void;
 };
 
 export function ProductCard({
@@ -44,12 +44,20 @@ export function ProductCard({
             <Button variant="ghost" size="sm" onClick={() => onView(product)}>
               <Eye className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => onEdit(product)}>
-              <Edit className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => onDelete(product)}>
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            {onEdit && (
+              <Button variant="ghost" size="sm" onClick={() => onEdit(product)}>
+                <Edit className="h-4 w-4" />
+              </Button>
+            )}
+            {onDelete && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onDelete(product)}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </div>
       </CardHeader>

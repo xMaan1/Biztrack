@@ -44,6 +44,7 @@ import { DashboardLayout } from "../../../components/layout";
 import { useCurrency } from "../../../contexts/CurrencyContext";
 import { apiService } from "../../../services/ApiService";
 import { Product, UnitOfMeasure } from "../../../models/pos";
+import { useCrudPermissions } from "@/src/hooks/usePermissions";
 
 export default function ProductsPage() {
   return (
@@ -57,6 +58,7 @@ export default function ProductsPage() {
 }
 
 function ProductsContent() {
+  const { canCreate } = useCrudPermissions("inventory:products");
   const {} = useAuth();
   const { formatCurrency } = useCurrency();
   const router = useRouter();
@@ -150,10 +152,12 @@ function ProductsContent() {
               <ShoppingCart className="mr-2 h-4 w-4" />
               Manage in POS
             </Button>
-            <Button onClick={() => router.push("/pos/products?openAdd=true")}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Product
-            </Button>
+            {canCreate() && (
+              <Button onClick={() => router.push("/pos/products?openAdd=true")}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Product
+              </Button>
+            )}
           </div>
         </div>
 
@@ -289,7 +293,7 @@ function ProductsContent() {
                     ? "Try adjusting your search terms"
                     : "Get started by adding your first product"}
                 </p>
-                {!searchTerm && (
+                {!searchTerm && canCreate() && (
                   <Button
                     onClick={() => router.push("/pos/products?openAdd=true")}
                   >

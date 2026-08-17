@@ -39,6 +39,7 @@ import {
   Package,
 } from "lucide-react";
 import { DashboardLayout } from "../../../components/layout";
+import { useCrudPermissions } from "@/src/hooks/usePermissions";
 import { toast } from "sonner";
 
 interface CartItem {
@@ -48,6 +49,7 @@ interface CartItem {
 }
 
 const POSSale = () => {
+  const { canCreate } = useCrudPermissions("pos:sale");
   const {} = useAuth();
   const { formatCurrency } = useCurrency();
   const router = useRouter();
@@ -232,13 +234,15 @@ const POSSale = () => {
             </p>
           </div>
 
-          <Button
-            className="bg-blue-600 hover:bg-blue-700"
-            onClick={() => router.push("/pos/products?openAdd=true")}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Add Product
-          </Button>
+          {canCreate() && (
+            <Button
+              className="bg-blue-600 hover:bg-blue-700"
+              onClick={() => router.push("/pos/products?openAdd=true")}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add Product
+            </Button>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -458,13 +462,15 @@ const POSSale = () => {
 
                 {/* Action Buttons */}
                 <div className="space-y-2">
-                  <Button
-                    onClick={handleCheckout}
-                    disabled={cart.length === 0 || loading}
-                    className="w-full bg-green-600 hover:bg-green-700"
-                  >
-                    {loading ? "Processing..." : "Complete Sale"}
-                  </Button>
+                  {canCreate() && (
+                    <Button
+                      onClick={handleCheckout}
+                      disabled={cart.length === 0 || loading}
+                      className="w-full bg-green-600 hover:bg-green-700"
+                    >
+                      {loading ? "Processing..." : "Complete Sale"}
+                    </Button>
+                  )}
 
                   <Button
                     variant="outline"

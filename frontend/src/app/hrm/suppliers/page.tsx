@@ -10,6 +10,7 @@ import { SuppliersStatsCards } from "@/src/components/hrm/suppliers/SuppliersSta
 import { SupplierFormDialog } from "@/src/components/hrm/suppliers/SupplierFormDialog";
 import { SupplierDeleteDialog } from "@/src/components/hrm/suppliers/SupplierDeleteDialog";
 import { useSuppliersPage } from "@/src/hooks/useSuppliersPage";
+import { useCrudPermissions } from "@/src/hooks/usePermissions";
 
 export default function SuppliersPage() {
   return (
@@ -23,6 +24,9 @@ export default function SuppliersPage() {
 }
 
 function SuppliersContent() {
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    "hrm:suppliers",
+  );
   const {
     loading,
     searchTerm,
@@ -54,7 +58,9 @@ function SuppliersContent() {
   return (
     <DashboardLayout>
       <div className="container mx-auto space-y-6 p-6">
-        <SuppliersPageHeader onAddSupplier={openCreateDialog} />
+        <SuppliersPageHeader
+          onAddSupplier={canCreate() ? openCreateDialog : undefined}
+        />
         <SuppliersSearchCard
           searchTerm={searchTerm}
           onSearchTermChange={setSearchTerm}
@@ -62,9 +68,9 @@ function SuppliersContent() {
         <SuppliersListCard
           suppliers={filteredSuppliers}
           searchTerm={searchTerm}
-          onAddSupplier={openCreateDialog}
-          onEdit={openEditDialog}
-          onDelete={openDeleteDialog}
+          onAddSupplier={canCreate() ? openCreateDialog : undefined}
+          onEdit={canUpdate() ? openEditDialog : undefined}
+          onDelete={canDelete() ? openDeleteDialog : undefined}
         />
         <SuppliersStatsCards stats={stats} />
       </div>

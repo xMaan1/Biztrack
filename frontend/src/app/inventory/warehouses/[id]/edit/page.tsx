@@ -26,6 +26,7 @@ import { useAuth } from "../../../../../contexts/AuthContext";
 import { inventoryService } from "../../../../../services/InventoryService";
 import { DashboardLayout } from "../../../../../components/layout";
 import { toast } from "sonner";
+import { useCrudPermissions } from "@/src/hooks/usePermissions";
 
 export default function EditWarehousePage() {
   return (
@@ -39,6 +40,7 @@ export default function EditWarehousePage() {
 }
 
 function EditWarehouseContent() {
+  const { canUpdate } = useCrudPermissions("inventory:warehouses");
   const {} = useAuth();
   const router = useRouter();
   const params = useParams();
@@ -377,19 +379,25 @@ function EditWarehouseContent() {
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading} className="w-full sm:w-auto">
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Updating...
-                </>
-              ) : (
-                <>
-                  <Save className="mr-2 h-4 w-4" />
-                  Update Warehouse
-                </>
-              )}
-            </Button>
+                        {canUpdate() && (
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full sm:w-auto"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    Update Warehouse
+                  </>
+                )}
+              </Button>
+            )}
           </div>
         </form>
       </div>

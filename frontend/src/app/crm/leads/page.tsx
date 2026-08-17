@@ -20,6 +20,7 @@ import { Lead, CRMLeadFilters, LeadSavedFilter } from "@/src/models/crm";
 import { DashboardLayout } from "../../../components/layout";
 import { useConfirm } from "@/src/contexts/ConfirmContext";
 import { useRBAC } from "@/src/contexts/RBACContext";
+import { useCrudPermissions } from "@/src/hooks/usePermissions";
 
 export default function CRMLeadsPage() {
   return (
@@ -36,6 +37,7 @@ export default function CRMLeadsPage() {
 
 function CRMLeadsContent() {
   const confirm = useConfirm();
+  const { canCreate, canDelete } = useCrudPermissions("crm:leads");
   const searchParams = useSearchParams();
   const { tenantUsers, fetchTenantUsers } = useRBAC();
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -199,7 +201,7 @@ function CRMLeadsContent() {
             setPage(1);
           }}
           onBulkAction={runBulk}
-          onAddNew={() => setIsCreateDialogOpen(true)}
+          onAddNew={canCreate() ? () => setIsCreateDialogOpen(true) : undefined}
           onTogglePartial={() => {
             setShowPartialOnly((v) => !v);
             setPage(1);
@@ -243,7 +245,7 @@ function CRMLeadsContent() {
             });
             loadLeads();
           }}
-          onDelete={handleDelete}
+          onDelete={canDelete() ? handleDelete : undefined}
           users={users}
         />
       </div>

@@ -48,7 +48,7 @@ type Props = {
   onPageChange: (page: number) => void;
   onPipelineChange: (id: string, stage: string) => void;
   onAssigneeChange: (id: string, userId: string) => void;
-  onDelete: (id: string) => void;
+  onDelete?: (id: string) => void;
   users: LeadUserOption[];
 };
 
@@ -137,13 +137,15 @@ export function LeadsDenseTable({
                         checked={selectedIds.has(lead.id)}
                         onCheckedChange={() => onToggleSelect(lead.id)}
                       />
-                      <button
-                        type="button"
-                        className="text-muted-foreground hover:text-destructive"
-                        onClick={() => onDelete(lead.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      {onDelete && (
+                        <button
+                          type="button"
+                          className="text-muted-foreground hover:text-destructive"
+                          onClick={() => onDelete(lead.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
                     </div>
                   </td>
                   <td className="p-3 align-top min-w-[150px] lg:min-w-[180px]">

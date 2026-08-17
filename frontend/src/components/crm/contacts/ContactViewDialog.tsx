@@ -31,7 +31,7 @@ type ContactViewDialogProps = {
   contact: Contact | null;
   companies: CompanyOption[];
   onClose: () => void;
-  onEdit: (contact: Contact) => void;
+  onEdit?: (contact: Contact) => void;
 };
 
 export function ContactViewDialog({
@@ -490,15 +490,17 @@ export function ContactViewDialog({
               <Button type="button" variant="outline" onClick={onClose}>
                 Close
               </Button>
-              <Button
-                type="button"
-                onClick={() => {
-                  onClose();
-                  onEdit(contact);
-                }}
-              >
-                Edit Contact
-              </Button>
+              {onEdit && (
+                <Button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onEdit(contact);
+                  }}
+                >
+                  Edit Contact
+                </Button>
+              )}
             </DialogFooter>
           </div>
         )}

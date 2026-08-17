@@ -10,10 +10,10 @@ type ProductsGridProps = {
   products: Product[];
   filters: ProductFiltersState;
   formatCurrency: (value: number) => string;
-  onAddProduct: () => void;
+  onAddProduct?: () => void;
   onView: (product: Product) => void;
-  onEdit: (product: Product) => void;
-  onDelete: (product: Product) => void;
+  onEdit?: (product: Product) => void;
+  onDelete?: (product: Product) => void;
 };
 
 export function ProductsGrid({
@@ -40,7 +40,7 @@ export function ProductsGrid({
             ? "Try adjusting your filters or search terms."
             : "Get started by adding your first product."}
         </p>
-        {!hasActiveFilters && (
+        {!hasActiveFilters && onAddProduct && (
           <Button onClick={onAddProduct} className="mt-4">
             <Plus className="mr-2 h-4 w-4" />
             Add Product

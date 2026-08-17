@@ -33,8 +33,10 @@ import { Clock, Plus, Search, Filter, Eye } from "lucide-react";
 import { DashboardLayout } from "../../../components/layout";
 import { useConfirm } from "@/src/contexts/ConfirmContext";
 import { useCurrency } from "../../../contexts/CurrencyContext";
+import { useCrudPermissions } from "@/src/hooks/usePermissions";
 
 const POSShifts = () => {
+  const { canCreate, canUpdate } = useCrudPermissions("pos:shifts");
   const confirm = useConfirm();
   const {} = useAuth();
   const { formatCurrency } = useCurrency();
@@ -158,10 +160,12 @@ const POSShifts = () => {
             </p>
           </div>
 
-          <Button onClick={() => setIsNewShiftOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Open New Shift
-          </Button>
+          {canCreate() && (
+            <Button onClick={() => setIsNewShiftOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Open New Shift
+            </Button>
+          )}
         </div>
 
         {/* Filters */}
@@ -306,7 +310,7 @@ const POSShifts = () => {
                       Details
                     </Button>
 
-                    {shift.status === POSShiftStatus.OPEN && (
+                    {shift.status === POSShiftStatus.OPEN && canUpdate() && (
                       <Button
                         variant="destructive"
                         size="sm"
@@ -331,12 +335,17 @@ const POSShifts = () => {
                 ? "Try adjusting your filters or search terms."
                 : "No shifts have been created yet."}
             </p>
-            {!searchTerm && selectedStatus === "all" && (
-              <Button onClick={() => setIsNewShiftOpen(true)} className="mt-4">
-                <Plus className="mr-2 h-4 w-4" />
-                Open First Shift
-              </Button>
-            )}
+            {!searchTerm &&
+              selectedStatus === "all" &&
+              canCreate() && (
+                <Button
+                  onClick={() => setIsNewShiftOpen(true)}
+                  className="mt-4"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Open First Shift
+                </Button>
+              )}
           </div>
         )}
 

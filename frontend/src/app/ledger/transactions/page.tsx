@@ -4,6 +4,7 @@ import React, { useState, useMemo } from "react";
 import { ModuleGuard } from "@/src/components/guards/PermissionGuard";
 import { RefreshCw } from "lucide-react";
 import { useAuth } from "@/src/contexts/AuthContext";
+import { useCrudPermissions } from "@/src/hooks/usePermissions";
 import { LedgerService } from "@/src/services/ledgerService";
 import { useCurrency } from "@/src/contexts/CurrencyContext";
 import { formatDate } from "@/src/lib/utils";
@@ -51,6 +52,9 @@ const emptyFormData = (): LedgerTransactionFormData => ({
 });
 
 function LedgerTransactionsContent() {
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    "ledger:transactions",
+  );
   const {} = useAuth();
   const { formatCurrency } = useCurrency();
 
@@ -351,7 +355,9 @@ function LedgerTransactionsContent() {
       <div className="container mx-auto p-6 space-y-6">
         <LedgerTransactionsHeader
           onExport={handleExport}
-          onAddTransaction={() => setIsCreateModalOpen(true)}
+          onAddTransaction={
+            canCreate() ? () => setIsCreateModalOpen(true) : undefined
+          }
         />
 
         <LedgerSummaryCards
@@ -380,8 +386,8 @@ function LedgerTransactionsContent() {
           accounts={accounts ?? undefined}
           formatCurrency={formatCurrency}
           onView={setViewingTransaction}
-          onEdit={openEditModal}
-          onDelete={openDeleteModal}
+          onEdit={canUpdate() ? openEditModal : undefined}
+          onDelete={canDelete() ? openDeleteModal : undefined}
         />
 
         <LedgerTransactionFormDialog

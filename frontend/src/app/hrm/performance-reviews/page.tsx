@@ -55,6 +55,7 @@ import {
   Employee,
 } from "@/src/models/hrm";
 import { DashboardLayout } from "@/src/components/layout";
+import { useCrudPermissions } from "@/src/hooks/usePermissions";
 
 export default function HRMPerformanceReviewsPage() {
   return (
@@ -68,6 +69,7 @@ export default function HRMPerformanceReviewsPage() {
 }
 
 function HRMPerformanceReviewsContent() {
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions("hrm:reviews");
   const [performanceReviews, setPerformanceReviews] = useState<
     PerformanceReview[]
   >([]);
@@ -345,15 +347,17 @@ function HRMPerformanceReviewsContent() {
               Manage employee performance evaluations and feedback
             </p>
           </div>
-          <Button
-            onClick={() => {
-              setShowCreateDialog(true);
-              resetForm();
-            }}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            New Performance Review
-          </Button>
+          {canCreate() && (
+            <Button
+              onClick={() => {
+                setShowCreateDialog(true);
+                resetForm();
+              }}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              New Performance Review
+            </Button>
+          )}
         </div>
 
         {/* Success Message */}
@@ -631,20 +635,24 @@ function HRMPerformanceReviewsContent() {
                     >
                       <Eye className="w-4 h-4" />
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEdit(review)}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDelete(review)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    {canUpdate() && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEdit(review)}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                    )}
+                    {canDelete() && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDelete(review)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -1248,7 +1256,7 @@ function HRMPerformanceReviewsContent() {
               <Button variant="outline" onClick={() => setViewingReview(null)}>
                 Close
               </Button>
-              {viewingReview && (
+              {viewingReview && canUpdate() && (
                 <Button
                   onClick={() => {
                     setViewingReview(null);

@@ -41,6 +41,7 @@ import { ContactFormDialog } from "@/src/components/crm/contacts/ContactFormDial
 import { ContactViewDialog } from "@/src/components/crm/contacts/ContactViewDialog";
 import { ContactDeleteDialog } from "@/src/components/crm/contacts/ContactDeleteDialog";
 import { useAuth } from "@/src/contexts/AuthContext";
+import { useCrudPermissions } from "@/src/hooks/usePermissions";
 import { User } from "@/src/models";
 import { apiService } from "@/src/services/ApiService";
 import { toast } from "sonner";
@@ -61,6 +62,9 @@ const CONTACTS_PAGE_SIZE = 20;
 
 function CRMContactsContent() {
   const { user } = useAuth();
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    "crm:contacts",
+  );
   const searchParams = useSearchParams();
   const router = useRouter();
   const openedContactIdRef = useRef<string | null>(null);
@@ -469,17 +473,21 @@ function CRMContactsContent() {
       <div className="container mx-auto p-6 space-y-6">
         <ContactsPageHeader
           successMessage={successMessage}
-          onNewContact={() => {
-            setEditingContact(null);
-            resetForm();
-            const uid = user?.id || user?.userId;
-            if (uid) {
-              setFormData((prev) => ({ ...prev, assignedTo: uid }));
-            }
-            setErrorMessage("");
-            setSuccessMessage("");
-            setShowCreateDialog(true);
-          }}
+          onNewContact={
+            canCreate()
+              ? () => {
+                  setEditingContact(null);
+                  resetForm();
+                  const uid = user?.id || user?.userId;
+                  if (uid) {
+                    setFormData((prev) => ({ ...prev, assignedTo: uid }));
+                  }
+                  setErrorMessage("");
+                  setSuccessMessage("");
+                  setShowCreateDialog(true);
+                }
+              : undefined
+          }
         />
 
         <ContactsFiltersCard
@@ -501,8 +509,8 @@ function CRMContactsContent() {
           listLoading={listLoading}
           onPageChange={setPage}
           onView={handleView}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
+          onEdit={canUpdate() ? handleEdit : undefined}
+          onDelete={canDelete() ? handleDelete : undefined}
         />
 
         <ContactFormDialog
@@ -544,7 +552,7 @@ function CRMContactsContent() {
           contact={viewingContact}
           companies={companies}
           onClose={() => setViewingContact(null)}
-          onEdit={handleEdit}
+          onEdit={canUpdate() ? handleEdit : undefined}
         />
 
         <ContactDeleteDialog

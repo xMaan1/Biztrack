@@ -53,6 +53,7 @@ import {
 import { DashboardLayout } from "../../../components/layout";
 import { useCustomOptions } from "../../../hooks/useCustomOptions";
 import { CustomOptionDialog } from "../../../components/common/CustomOptionDialog";
+import { useCrudPermissions } from "@/src/hooks/usePermissions";
 
 export default function CRMCompaniesPage() {
   return (
@@ -66,6 +67,9 @@ export default function CRMCompaniesPage() {
 }
 
 function CRMCompaniesContent() {
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    "crm:companies",
+  );
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<CRMCompanyFilters>({});
@@ -276,18 +280,20 @@ function CRMCompaniesContent() {
               </div>
             )}
           </div>
-          <Button
-            onClick={() => {
-              setEditingCompany(null);
-              resetForm();
-              setErrorMessage("");
-              setSuccessMessage("");
-              setShowCreateDialog(true);
-            }}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            New Company
-          </Button>
+          {canCreate() && (
+            <Button
+              onClick={() => {
+                setEditingCompany(null);
+                resetForm();
+                setErrorMessage("");
+                setSuccessMessage("");
+                setShowCreateDialog(true);
+              }}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              New Company
+            </Button>
+          )}
         </div>
 
         {/* Filters and Search */}
@@ -470,20 +476,24 @@ function CRMCompaniesContent() {
                     >
                       <Eye className="w-4 h-4" />
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEdit(company)}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDelete(company)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    {canUpdate() && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEdit(company)}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                    )}
+                    {canDelete() && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDelete(company)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -1016,15 +1026,17 @@ function CRMCompaniesContent() {
                   >
                     Close
                   </Button>
-                  <Button
-                    type="button"
-                    onClick={() => {
-                      setViewingCompany(null);
-                      handleEdit(viewingCompany);
-                    }}
-                  >
-                    Edit Company
-                  </Button>
+                  {canUpdate() && (
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        setViewingCompany(null);
+                        handleEdit(viewingCompany);
+                      }}
+                    >
+                      Edit Company
+                    </Button>
+                  )}
                 </DialogFooter>
               </div>
             )}

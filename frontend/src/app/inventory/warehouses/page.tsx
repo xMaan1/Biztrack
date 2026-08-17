@@ -43,6 +43,7 @@ import { inventoryService } from "../../../services/InventoryService";
 import { Warehouse as WarehouseType } from "../../../models/inventory";
 import { DashboardLayout } from "../../../components/layout";
 import { formatDate } from "../../../lib/utils";
+import { useCrudPermissions } from "@/src/hooks/usePermissions";
 
 export default function WarehousesPage() {
   return (
@@ -56,6 +57,9 @@ export default function WarehousesPage() {
 }
 
 function WarehousesContent() {
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    "inventory:warehouses",
+  );
   const { isAuthenticated } = useAuth();
   const router = useRouter();
   const [warehouses, setWarehouses] = useState<WarehouseType[]>([]);
@@ -152,10 +156,12 @@ function WarehousesContent() {
               Manage your warehouse locations and storage facilities
             </p>
           </div>
-          <Button onClick={() => router.push("/inventory/warehouses/new")}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Warehouse
-          </Button>
+          {canCreate() && (
+            <Button onClick={() => router.push("/inventory/warehouses/new")}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Warehouse
+            </Button>
+          )}
         </div>
 
         {/* Search and Filters */}
@@ -259,6 +265,7 @@ function WarehousesContent() {
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
+{canUpdate() && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -270,6 +277,8 @@ function WarehousesContent() {
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
+                        )}
+                        {canDelete() && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -277,6 +286,7 @@ function WarehousesContent() {
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
+                        )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -294,7 +304,7 @@ function WarehousesContent() {
                     ? "Try adjusting your search terms"
                     : "Get started by creating your first warehouse"}
                 </p>
-                {!searchTerm && (
+                {!searchTerm && canCreate() && (
                   <Button
                     onClick={() => router.push("/inventory/warehouses/new")}
                   >

@@ -233,7 +233,7 @@ export function TransactionViewDialog({
           <Button variant="outline" onClick={onClose}>
             Close
           </Button>
-          {transaction && (
+          {transaction && onEdit && (
             <Button onClick={() => onEdit(transaction)}>Edit Transaction</Button>
           )}
         </DialogFooter>

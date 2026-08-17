@@ -32,12 +32,14 @@ import {
   PaymentMethod,
 } from "../../../models/sales";
 import { useCurrency } from "../../../contexts/CurrencyContext";
+import { useCrudPermissions } from "../../../hooks/usePermissions";
 import { Calendar, Eye, DollarSign, FileDown } from "lucide-react";
 import { extractErrorMessage } from "../../../utils/errorUtils";
 import Link from "next/link";
 import { toast } from "sonner";
 
 export default function InstallmentsPage() {
+  const { canCreate } = useCrudPermissions("sales:installments");
   const { formatCurrency } = useCurrency();
   const [plans, setPlans] = useState<InstallmentPlan[]>([]);
   const [loading, setLoading] = useState(true);
@@ -347,7 +349,7 @@ export default function InstallmentsPage() {
                             </span>
                           </td>
                           <td className="py-2 px-2 text-right">
-                            {inst.status !== "paid" && (
+                            {inst.status !== "paid" && canCreate() && (
                               <Button
                                 variant="outline"
                                 size="sm"

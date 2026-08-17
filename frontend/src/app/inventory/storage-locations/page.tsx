@@ -57,6 +57,7 @@ import {
 } from "../../../components/ui/dialog";
 import { Label } from "../../../components/ui/label";
 import { Textarea } from "../../../components/ui/textarea";
+import { useCrudPermissions } from "@/src/hooks/usePermissions";
 
 export default function StorageLocationsPage() {
   return (
@@ -70,6 +71,9 @@ export default function StorageLocationsPage() {
 }
 
 function StorageLocationsContent() {
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    "inventory:storage_locations",
+  );
   const {} = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -348,10 +352,12 @@ function StorageLocationsContent() {
               Manage storage locations and organize your warehouse space
             </p>
           </div>
-          <Button onClick={() => setIsAddModalOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Location
-          </Button>
+          {canCreate() && (
+            <Button onClick={() => setIsAddModalOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Location
+            </Button>
+          )}
         </div>
 
         {/* Search and Filters */}
@@ -474,6 +480,7 @@ function StorageLocationsContent() {
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
+{canUpdate() && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -481,6 +488,8 @@ function StorageLocationsContent() {
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
+                        )}
+                        {canDelete() && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -488,6 +497,7 @@ function StorageLocationsContent() {
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
+                        )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -505,7 +515,7 @@ function StorageLocationsContent() {
                     ? "Try adjusting your search terms or filters"
                     : "Get started by adding your first storage location"}
                 </p>
-                {!searchTerm && warehouseFilter === "all" && (
+                {!searchTerm && warehouseFilter === "all" && canCreate() && (
                   <Button onClick={() => setIsAddModalOpen(true)}>
                     <Plus className="mr-2 h-4 w-4" />
                     Add Storage Location

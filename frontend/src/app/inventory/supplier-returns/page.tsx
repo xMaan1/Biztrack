@@ -64,6 +64,7 @@ import { Label } from "../../../components/ui/label";
 import { apiService } from "../../../services/ApiService";
 import { Product } from "../../../models/pos";
 import { useCurrency } from "../../../contexts/CurrencyContext";
+import { useCrudPermissions } from "@/src/hooks/usePermissions";
 
 export default function SupplierReturnsPage() {
   return (
@@ -77,6 +78,9 @@ export default function SupplierReturnsPage() {
 }
 
 function SupplierReturnsContent() {
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    "inventory:supplier_returns",
+  );
   const { isAuthenticated } = useAuth();
   const [mounted, setMounted] = useState(false);
 
@@ -369,10 +373,12 @@ function SupplierReturnsContent() {
               <Package className="mr-2 h-4 w-4" />
               View All Movements
             </Button>
-            <Button onClick={() => setIsRecordReturnOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Record Return
-            </Button>
+            {canCreate() && (
+              <Button onClick={() => setIsRecordReturnOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Record Return
+              </Button>
+            )}
           </div>
         </div>
 
@@ -572,21 +578,25 @@ function SupplierReturnsContent() {
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEditReturn(returnItem)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openDeleteDialog(returnItem)}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        {canUpdate() && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditReturn(returnItem)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {canDelete() && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openDeleteDialog(returnItem)}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -698,14 +708,16 @@ function SupplierReturnsContent() {
               <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                 Close
               </Button>
-              <Button
-                onClick={() => {
-                  setIsDialogOpen(false);
-                  handleEditReturn(selectedReturn!);
-                }}
-              >
-                Edit Details
-              </Button>
+              {canUpdate() && (
+                <Button
+                  onClick={() => {
+                    setIsDialogOpen(false);
+                    handleEditReturn(selectedReturn!);
+                  }}
+                >
+                  Edit Details
+                </Button>
+              )}
             </DialogFooter>
           </DialogContent>
         </Dialog>

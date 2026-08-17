@@ -47,6 +47,7 @@ import {
 } from "@/src/models/ledger";
 import { useCurrency } from "@/src/contexts/CurrencyContext";
 import { useCachedApi, useCacheManager } from "../../hooks/useCachedApi";
+import { useCrudPermissions } from "@/src/hooks/usePermissions";
 import {
   DEFAULT_CHART_OF_ACCOUNTS,
   getAccountTypeCount as getAccountTypeCountFromConstants,
@@ -65,6 +66,7 @@ export default function LedgerDashboard() {
 }
 
 function LedgerDashboardContent() {
+  const { canCreate } = useCrudPermissions("ledger:transactions");
   const { formatCurrency } = useCurrency();
   const { clearCache: clearAllCache } = useCacheManager();
 
@@ -302,12 +304,14 @@ function LedgerDashboardContent() {
             </p>
           </div>
           <div className="flex space-x-2">
-            <Button size="sm" asChild>
-              <Link href="/ledger/transactions">
-                <Plus className="w-4 h-4 mr-2" />
-                New Transaction
-              </Link>
-            </Button>
+            {canCreate() && (
+              <Button size="sm" asChild>
+                <Link href="/ledger/transactions">
+                  <Plus className="w-4 h-4 mr-2" />
+                  New Transaction
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
 
@@ -501,12 +505,14 @@ function LedgerDashboardContent() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <Button variant="outline" className="h-20 flex-col" asChild>
-                    <Link href="/ledger/transactions">
-                      <Plus className="w-6 h-6 mb-2" />
-                      New Transaction
-                    </Link>
-                  </Button>
+                  {canCreate() && (
+                    <Button variant="outline" className="h-20 flex-col" asChild>
+                      <Link href="/ledger/transactions">
+                        <Plus className="w-6 h-6 mb-2" />
+                        New Transaction
+                      </Link>
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     className="h-20 flex-col"

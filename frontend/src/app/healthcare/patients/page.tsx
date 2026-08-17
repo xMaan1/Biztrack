@@ -41,6 +41,7 @@ import healthcareService from "@/src/services/HealthcareService";
 import type { Patient, PatientCreate } from "@/src/models/healthcare";
 import { toast } from "sonner";
 import Link from "next/link";
+import { useCrudPermissions } from "@/src/hooks/usePermissions";
 
 export default function HealthcarePatientsPage() {
   return (
@@ -51,6 +52,9 @@ export default function HealthcarePatientsPage() {
 }
 
 function PatientsContent() {
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    "healthcare:patients",
+  );
   const [patients, setPatients] = useState<Patient[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -210,10 +214,12 @@ function PatientsContent() {
           <Button variant="outline" asChild>
             <Link href="/healthcare/appointments">Appointments</Link>
           </Button>
-          <Button onClick={openAdd}>
-            <UserPlus className="w-4 h-4 mr-2" />
-            Add Patient
-          </Button>
+          {canCreate() && (
+            <Button onClick={openAdd}>
+              <UserPlus className="w-4 h-4 mr-2" />
+              Add Patient
+            </Button>
+          )}
         </div>
       </div>
 
@@ -298,23 +304,27 @@ function PatientsContent() {
                           View history
                         </Link>
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openEdit(p)}
-                      >
-                        <Edit className="w-4 h-4 mr-1" />
-                        Edit
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-red-600 hover:text-red-700"
-                        onClick={() => openDelete(p)}
-                      >
-                        <Trash2 className="w-4 h-4 mr-1" />
-                        Delete
-                      </Button>
+                      {canUpdate() && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openEdit(p)}
+                        >
+                          <Edit className="w-4 h-4 mr-1" />
+                          Edit
+                        </Button>
+                      )}
+                      {canDelete() && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-600 hover:text-red-700"
+                          onClick={() => openDelete(p)}
+                        >
+                          <Trash2 className="w-4 h-4 mr-1" />
+                          Delete
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}

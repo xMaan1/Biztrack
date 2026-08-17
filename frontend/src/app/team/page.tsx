@@ -58,8 +58,12 @@ import { DashboardLayout } from "../../components/layout";
 import { useConfirm } from "@/src/contexts/ConfirmContext";
 import { cn, getInitials } from "../../lib/utils";
 import AddMemberModal from "../../components/team/AddMemberModal";
+import { useCrudPermissions } from "@/src/hooks/usePermissions";
 
 export default function TeamPage() {
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    "projects:team_members",
+  );
   const confirm = useConfirm();
   const [teamMembers, setTeamMembers] = useState<User[]>([]);
   const [filteredMembers, setFilteredMembers] = useState<User[]>([]);
@@ -304,13 +308,15 @@ export default function TeamPage() {
             >
               <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
             </Button>
-            <Button
-              className="modern-button"
-              onClick={() => setShowAddMemberModal(true)}
-            >
-              <UserPlus className="h-4 w-4 mr-2" />
-              Add Team Member
-            </Button>
+            {canCreate() && (
+              <Button
+                className="modern-button"
+                onClick={() => setShowAddMemberModal(true)}
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                Add Team Member
+              </Button>
+            )}
           </div>
         </div>
 
@@ -455,30 +461,34 @@ export default function TeamPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => openEditDialog(member)}
-                        >
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit Member
-                        </DropdownMenuItem>
+                        {canUpdate() && (
+                          <DropdownMenuItem
+                            onClick={() => openEditDialog(member)}
+                          >
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit Member
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          className="text-red-600 focus:text-red-600"
-                          onClick={() => {
-                            const memberId = member.userId || member.id;
-                            if (memberId) {
-                              handleRemoveMember(
-                                memberId,
-                                member.firstName && member.lastName
-                                  ? `${member.firstName} ${member.lastName}`
-                                  : member.userName,
-                              );
-                            }
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Remove Member
-                        </DropdownMenuItem>
+                        {canDelete() && (
+                          <DropdownMenuItem
+                            className="text-red-600 focus:text-red-600"
+                            onClick={() => {
+                              const memberId = member.userId || member.id;
+                              if (memberId) {
+                                handleRemoveMember(
+                                  memberId,
+                                  member.firstName && member.lastName
+                                    ? `${member.firstName} ${member.lastName}`
+                                    : member.userName,
+                                );
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Remove Member
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
@@ -536,13 +546,15 @@ export default function TeamPage() {
                   ? "Try adjusting your search terms"
                   : "Get started by inviting your first team member"}
               </p>
-              <Button
-                className="modern-button"
-                onClick={() => setShowAddMemberModal(true)}
-              >
-                <UserPlus className="h-4 w-4 mr-2" />
-                Add Team Member
-              </Button>
+              {canCreate() && (
+                <Button
+                  className="modern-button"
+                  onClick={() => setShowAddMemberModal(true)}
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Add Team Member
+                </Button>
+              )}
             </CardContent>
           </Card>
         )}

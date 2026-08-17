@@ -34,8 +34,8 @@ type ContactsListCardProps = {
   listLoading?: boolean;
   onPageChange: (page: number) => void;
   onView: (contact: Contact) => void;
-  onEdit: (contact: Contact) => void;
-  onDelete: (contact: Contact) => void;
+  onEdit?: (contact: Contact) => void;
+  onDelete?: (contact: Contact) => void;
 };
 
 function primaryEmail(contact: Contact): string {
@@ -200,22 +200,26 @@ export function ContactsListCard({
                         >
                           <Eye className="w-4 h-4" />
                         </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-8 w-8 p-0"
-                          onClick={() => onEdit(contact)}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-8 w-8 p-0"
-                          onClick={() => onDelete(contact)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        {onEdit && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            onClick={() => onEdit(contact)}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                        )}
+                        {onDelete && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            onClick={() => onDelete(contact)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>

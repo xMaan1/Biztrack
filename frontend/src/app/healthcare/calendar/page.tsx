@@ -68,6 +68,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/src/components/ui/select";
+import { useCrudPermissions } from "@/src/hooks/usePermissions";
 
 export default function HealthcareCalendarPage() {
   return (
@@ -78,6 +79,9 @@ export default function HealthcareCalendarPage() {
 }
 
 function CalendarContent() {
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    "healthcare:appointments",
+  );
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -535,10 +539,12 @@ function CalendarContent() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => openEdit(a)}>
-                        <Edit className="w-4 h-4 mr-2" />
-                        Edit
-                      </DropdownMenuItem>
+                      {canUpdate() && (
+                        <DropdownMenuItem onClick={() => openEdit(a)}>
+                          <Edit className="w-4 h-4 mr-2" />
+                          Edit
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem onClick={() => handlePrescription(a)}>
                         <FileText className="w-4 h-4 mr-2" />
                         Assign prescription
@@ -571,18 +577,22 @@ function CalendarContent() {
                             : "Complete"}
                         </DropdownMenuItem>
                       )}
-                      <DropdownMenuItem onClick={() => openDelete(a)}>
-                        <XCircle className="w-4 h-4 mr-2 text-red-600" />
-                        Cancel (delete)
-                      </DropdownMenuItem>
+                      {canDelete() && (
+                        <DropdownMenuItem onClick={() => openDelete(a)}>
+                          <XCircle className="w-4 h-4 mr-2 text-red-600" />
+                          Cancel (delete)
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        className="text-red-600 focus:text-red-600"
-                        onClick={() => openDelete(a)}
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Delete
-                      </DropdownMenuItem>
+                      {canDelete() && (
+                        <DropdownMenuItem
+                          className="text-red-600 focus:text-red-600"
+                          onClick={() => openDelete(a)}
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -590,10 +600,12 @@ function CalendarContent() {
             )}
           </div>
           <DialogFooter>
-            <Button onClick={openAddFromCalendar}>
-              <CalendarPlus className="w-4 h-4 mr-2" />
-              Add appointment
-            </Button>
+            {canCreate() && (
+              <Button onClick={openAddFromCalendar}>
+                <CalendarPlus className="w-4 h-4 mr-2" />
+                Add appointment
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

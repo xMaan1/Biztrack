@@ -59,6 +59,7 @@ import {
   TrainingStatus,
 } from "@/src/models/hrm";
 import { DashboardLayout } from "@/src/components/layout";
+import { useCrudPermissions } from "@/src/hooks/usePermissions";
 import { toast } from "sonner";
 
 export default function HRMTrainingPage() {
@@ -73,6 +74,9 @@ export default function HRMTrainingPage() {
 }
 
 function HRMTrainingContent() {
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    "hrm:training",
+  );
   const { getCurrencySymbol } = useCurrency();
   const [trainings, setTrainings] = useState<Training[]>([]);
   const [loading, setLoading] = useState(true);
@@ -340,15 +344,17 @@ function HRMTrainingContent() {
               Manage employee training programs and enrollments
             </p>
           </div>
-          <Button
-            onClick={() => {
-              setShowCreateDialog(true);
-              resetForm();
-            }}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            New Training Program
-          </Button>
+          {canCreate() && (
+            <Button
+              onClick={() => {
+                setShowCreateDialog(true);
+                resetForm();
+              }}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              New Training Program
+            </Button>
+          )}
         </div>
 
         {/* Success Message */}
@@ -639,20 +645,24 @@ function HRMTrainingContent() {
                       >
                         <Eye className="w-4 h-4" />
                       </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEdit(training)}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDelete(training)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      {canUpdate() && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(training)}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                      )}
+                      {canDelete() && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDelete(training)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                 );

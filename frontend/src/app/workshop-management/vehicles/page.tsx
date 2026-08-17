@@ -13,10 +13,14 @@ import { Input } from "../../../components/ui/input";
 import { Plus, Edit, Trash2, Car } from "lucide-react";
 import { apiService } from "../../../services/ApiService";
 import { DashboardLayout } from "../../../components/layout";
+import { useCrudPermissions } from "../../../hooks/usePermissions";
 import { Vehicle } from "../../../models/workshop";
 import VehicleDialog from "../../../components/workshop/VehicleDialog";
 
 function VehiclesContent() {
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    "production:vehicles",
+  );
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -105,10 +109,12 @@ function VehiclesContent() {
               Manage workshop vehicles. Use them in job cards and invoices.
             </p>
           </div>
-          <Button onClick={openCreate}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Vehicle
-          </Button>
+          {canCreate() && (
+            <Button onClick={openCreate}>
+              <Plus className="h-4 w-4 mr-2" />
+              New Vehicle
+            </Button>
+          )}
         </div>
 
         <Card>
@@ -161,23 +167,27 @@ function VehiclesContent() {
                         </td>
                         <td className="py-2">{v.mileage || "–"}</td>
                         <td className="py-2 text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openEdit(v)}
-                          >
-                            <Edit className="h-4 w-4 mr-1" />
-                            Edit
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteVehicle(v)}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            <Trash2 className="h-4 w-4 mr-1" />
-                            Delete
-                          </Button>
+                          {canUpdate() && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openEdit(v)}
+                            >
+                              <Edit className="h-4 w-4 mr-1" />
+                              Edit
+                            </Button>
+                          )}
+                          {canDelete() && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteVehicle(v)}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              Delete
+                            </Button>
+                          )}
                         </td>
                       </tr>
                     ))}

@@ -73,10 +73,10 @@ export interface TransactionsTableProps {
   formatCurrency: CurrencyFormatter;
   isDeleting: boolean;
   onView: (transaction: BankTransaction) => void;
-  onEdit: (transaction: BankTransaction) => void;
+  onEdit?: (transaction: BankTransaction) => void;
   onReconcile: (transactionId: string) => void;
   onUnreconcile: (transactionId: string) => void;
-  onDelete: (transaction: BankTransaction) => void;
+  onDelete?: (transaction: BankTransaction) => void;
 }
 
 export interface TransactionViewDialogProps {
@@ -84,7 +84,7 @@ export interface TransactionViewDialogProps {
   bankAccounts: BankAccount[];
   formatCurrency: CurrencyFormatter;
   onClose: () => void;
-  onEdit: (transaction: BankTransaction) => void;
+  onEdit?: (transaction: BankTransaction) => void;
 }
 
 export interface TransactionDeleteDialogProps {

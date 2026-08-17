@@ -55,6 +55,7 @@ import {
 } from "@/src/models/hrm";
 import { DashboardLayout } from "@/src/components/layout";
 import { useCustomDepartments } from "@/src/hooks/useCustomDepartments";
+import { useCrudPermissions } from "@/src/hooks/usePermissions";
 import { useCachedApi } from "@/src/hooks/useCachedApi";
 import { CustomOptionDialog } from "@/src/components/common/CustomOptionDialog";
 import { extractErrorMessage } from "@/src/utils/errorUtils";
@@ -130,6 +131,7 @@ export default function HRMJobPostingsPage() {
 }
 
 function HRMJobPostingsContent() {
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions("hrm:jobs");
   const { getCurrencySymbol } = useCurrency();
   const [filters, setFilters] = useState<HRMJobFilters>({});
   const [search, setSearch] = useState("");
@@ -386,16 +388,18 @@ function HRMJobPostingsContent() {
               Manage your job openings and recruitment
             </p>
           </div>
-          <Button
-            onClick={() => {
-              setFormErrors({});
-              setShowCreateDialog(true);
-              resetForm();
-            }}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            New Job Posting
-          </Button>
+          {canCreate() && (
+            <Button
+              onClick={() => {
+                setFormErrors({});
+                setShowCreateDialog(true);
+                resetForm();
+              }}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              New Job Posting
+            </Button>
+          )}
         </div>
 
         {/* Success Message */}
@@ -669,20 +673,24 @@ function HRMJobPostingsContent() {
                     >
                       <Eye className="w-4 h-4" />
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEdit(jobPosting)}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDelete(jobPosting)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    {canUpdate() && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEdit(jobPosting)}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                    )}
+                    {canDelete() && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDelete(jobPosting)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -1197,7 +1205,7 @@ function HRMJobPostingsContent() {
               >
                 Close
               </Button>
-              {viewingJobPosting && (
+              {viewingJobPosting && canUpdate() && (
                 <Button
                   onClick={() => {
                     setViewingJobPosting(null);

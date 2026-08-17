@@ -9,7 +9,7 @@ export type SupplierStats = {
 };
 
 export type SuppliersPageHeaderProps = {
-  onAddSupplier: () => void;
+  onAddSupplier?: () => void;
 };
 
 export type SuppliersSearchCardProps = {
@@ -20,9 +20,9 @@ export type SuppliersSearchCardProps = {
 export type SuppliersListCardProps = {
   suppliers: Supplier[];
   searchTerm: string;
-  onAddSupplier: () => void;
-  onEdit: (supplier: Supplier) => void;
-  onDelete: (supplier: Supplier) => void;
+  onAddSupplier?: () => void;
+  onEdit?: (supplier: Supplier) => void;
+  onDelete?: (supplier: Supplier) => void;
 };
 
 export type SuppliersStatsCardsProps = {

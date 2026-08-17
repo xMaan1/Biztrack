@@ -54,6 +54,7 @@ import {
 } from "@/src/models/hrm";
 import { DashboardLayout } from "@/src/components/layout";
 import { useCurrency } from "@/src/contexts/CurrencyContext";
+import { useCrudPermissions } from "@/src/hooks/usePermissions";
 
 export default function HRMPayrollPage() {
   return (
@@ -67,6 +68,7 @@ export default function HRMPayrollPage() {
 }
 
 function HRMPayrollContent() {
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions("hrm:payroll");
   const { formatCurrency } = useCurrency();
   const [payrolls, setPayrolls] = useState<Payroll[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -329,15 +331,17 @@ function HRMPayrollContent() {
               Manage employee payroll records and payments
             </p>
           </div>
-          <Button
-            onClick={() => {
-              setShowCreateDialog(true);
-              resetForm();
-            }}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            New Payroll Record
-          </Button>
+          {canCreate() && (
+            <Button
+              onClick={() => {
+                setShowCreateDialog(true);
+                resetForm();
+              }}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              New Payroll Record
+            </Button>
+          )}
         </div>
 
         {successMessage && (
@@ -630,20 +634,24 @@ function HRMPayrollContent() {
                     >
                       <Eye className="w-4 h-4" />
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEdit(payroll)}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDelete(payroll)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    {canUpdate() && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEdit(payroll)}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                    )}
+                    {canDelete() && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDelete(payroll)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -1037,7 +1045,7 @@ function HRMPayrollContent() {
               <Button variant="outline" onClick={() => setViewingPayroll(null)}>
                 Close
               </Button>
-              {viewingPayroll && (
+              {viewingPayroll && canUpdate() && (
                 <Button
                   onClick={() => {
                     setViewingPayroll(null);

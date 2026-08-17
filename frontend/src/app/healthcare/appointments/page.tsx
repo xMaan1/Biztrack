@@ -77,6 +77,7 @@ import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { useCrudPermissions } from "@/src/hooks/usePermissions";
 
 export default function HealthcareAppointmentsPage() {
   return (
@@ -87,6 +88,9 @@ export default function HealthcareAppointmentsPage() {
 }
 
 function AppointmentsContent() {
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    "healthcare:appointments",
+  );
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -760,10 +764,12 @@ function AppointmentsContent() {
               Calendar
             </Link>
           </Button>
-          <Button onClick={openAdd}>
-            <CalendarPlus className="w-4 h-4 mr-2" />
-            Add Appointment
-          </Button>
+          {canCreate() && (
+            <Button onClick={openAdd}>
+              <CalendarPlus className="w-4 h-4 mr-2" />
+              Add Appointment
+            </Button>
+          )}
         </div>
       </div>
 
@@ -901,10 +907,12 @@ function AppointmentsContent() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => openEdit(a)}>
-                            <Edit className="w-4 h-4 mr-2" />
-                            Edit
-                          </DropdownMenuItem>
+                          {canUpdate() && (
+                            <DropdownMenuItem onClick={() => openEdit(a)}>
+                              <Edit className="w-4 h-4 mr-2" />
+                              Edit
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem
                             onClick={() => openPrescriptionForm(a)}
                           >
@@ -941,23 +949,27 @@ function AppointmentsContent() {
                                 : "Complete"}
                             </DropdownMenuItem>
                           )}
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setAppointmentToDelete(a);
-                              setDeleteDialogOpen(true);
-                            }}
-                          >
-                            <XCircle className="w-4 h-4 mr-2 text-red-600" />
-                            Cancel (delete)
-                          </DropdownMenuItem>
+                          {canDelete() && (
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setAppointmentToDelete(a);
+                                setDeleteDialogOpen(true);
+                              }}
+                            >
+                              <XCircle className="w-4 h-4 mr-2 text-red-600" />
+                              Cancel (delete)
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            className="text-red-600 focus:text-red-600"
-                            onClick={() => openDelete(a)}
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Delete
-                          </DropdownMenuItem>
+                          {canDelete() && (
+                            <DropdownMenuItem
+                              className="text-red-600 focus:text-red-600"
+                              onClick={() => openDelete(a)}
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -1455,14 +1467,16 @@ function AppointmentsContent() {
                       >
                         <Download className="w-4 h-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-red-600"
-                        onClick={() => handleDeletePrescription(rx)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      {canDelete() && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-600"
+                          onClick={() => handleDeletePrescription(rx)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>

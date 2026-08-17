@@ -2,6 +2,7 @@
 
 import { DashboardLayout } from "@/src/components/layout";
 import { useCurrency } from "@/src/contexts/CurrencyContext";
+import { useCrudPermissions } from "@/src/hooks/usePermissions";
 import { usePosProductsPage } from "@/src/hooks/usePosProductsPage";
 import { ProductsLoadingState } from "@/src/components/pos/products/ProductsLoadingState";
 import { ProductsPageHeader } from "@/src/components/pos/products/ProductsPageHeader";
@@ -12,6 +13,9 @@ import { ProductViewDialog } from "@/src/components/pos/products/ProductViewDial
 import { ProductDeleteDialog } from "@/src/components/pos/products/ProductDeleteDialog";
 
 export default function POSProductsPage() {
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    "pos:products",
+  );
   const { formatCurrency } = useCurrency();
   const page = usePosProductsPage();
 
@@ -22,7 +26,9 @@ export default function POSProductsPage() {
   return (
     <DashboardLayout>
       <div className="container mx-auto space-y-6 p-6">
-        <ProductsPageHeader onAddProduct={page.openNewProductDialog} />
+        <ProductsPageHeader
+          onAddProduct={canCreate() ? page.openNewProductDialog : undefined}
+        />
 
         <ProductsFiltersCard
           categories={page.categories}
@@ -37,10 +43,10 @@ export default function POSProductsPage() {
           products={page.filteredProducts}
           filters={page.filters}
           formatCurrency={formatCurrency}
-          onAddProduct={page.openNewProductDialog}
+          onAddProduct={canCreate() ? page.openNewProductDialog : undefined}
           onView={page.setViewingProduct}
-          onEdit={page.handleEdit}
-          onDelete={page.handleDeleteClick}
+          onEdit={canUpdate() ? page.handleEdit : undefined}
+          onDelete={canDelete() ? page.handleDeleteClick : undefined}
         />
 
         <CreateProductDialog
@@ -54,7 +60,7 @@ export default function POSProductsPage() {
           product={page.viewingProduct}
           formatCurrency={formatCurrency}
           onClose={() => page.setViewingProduct(null)}
-          onEdit={page.handleEdit}
+          onEdit={canUpdate() ? page.handleEdit : undefined}
         />
 
         <ProductDeleteDialog

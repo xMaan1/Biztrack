@@ -43,6 +43,7 @@ import { toast } from "sonner";
 import { extractErrorMessage } from "@/src/utils/errorUtils";
 import { Alert, AlertDescription } from "@/src/components/ui/alert";
 import { useCustomDepartments } from "@/src/hooks/useCustomDepartments";
+import { useCrudPermissions } from "@/src/hooks/usePermissions";
 import { CustomOptionDialog } from "@/src/components/common/CustomOptionDialog";
 
 export default function NewEmployeePage() {
@@ -57,6 +58,7 @@ export default function NewEmployeePage() {
 }
 
 function NewEmployeeContent() {
+  const { canCreate } = useCrudPermissions("hrm:employees");
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -753,19 +755,25 @@ function NewEmployeeContent() {
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading} className="w-full sm:w-auto">
-              {loading ? (
-                <>
-                  <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
-                  Creating...
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4 mr-2" />
-                  Create Employee
-                </>
-              )}
-            </Button>
+            {canCreate() && (
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full sm:w-auto"
+              >
+                {loading ? (
+                  <>
+                    <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Create Employee
+                  </>
+                )}
+              </Button>
+            )}
           </div>
         </form>
 

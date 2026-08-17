@@ -61,6 +61,7 @@ import {
 import { Label } from "../../../components/ui/label";
 import { Textarea } from "../../../components/ui/textarea";
 import { apiService } from "../../../services/ApiService";
+import { useCrudPermissions } from "@/src/hooks/usePermissions";
 
 export default function StockMovementsPage() {
   return (
@@ -74,6 +75,9 @@ export default function StockMovementsPage() {
 }
 
 function StockMovementsContent() {
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    "inventory:stock_movements",
+  );
   const {} = useAuth();
   const { getCurrencySymbol } = useCurrency();
   const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);
@@ -372,10 +376,12 @@ function StockMovementsContent() {
               Track and manage inventory movements across warehouses
             </p>
           </div>
-          <Button onClick={() => setIsAddModalOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Record Movement
-          </Button>
+          {canCreate() && (
+            <Button onClick={() => setIsAddModalOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Record Movement
+            </Button>
+          )}
         </div>
 
         {/* Search and Filters */}
@@ -505,6 +511,7 @@ function StockMovementsContent() {
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
+{canUpdate() && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -512,6 +519,8 @@ function StockMovementsContent() {
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
+                        )}
+                        {canDelete() && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -519,6 +528,7 @@ function StockMovementsContent() {
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
+                        )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -536,7 +546,7 @@ function StockMovementsContent() {
                     ? "Try adjusting your search terms or filters"
                     : "Get started by recording your first stock movement"}
                 </p>
-                {!searchTerm && typeFilter === "all" && (
+                {!searchTerm && typeFilter === "all" && canCreate() && (
                   <Button onClick={() => setIsAddModalOpen(true)}>
                     <Plus className="mr-2 h-4 w-4" />
                     Record Movement

@@ -21,10 +21,12 @@ export function LedgerTransactionsHeader({
           <Download className="h-4 w-4 mr-2" />
           Export
         </Button>
+        {onAddTransaction && (
         <Button onClick={onAddTransaction}>
           <Plus className="h-4 w-4 mr-2" />
           New Transaction
         </Button>
+      )}
       </div>
     </div>
   );

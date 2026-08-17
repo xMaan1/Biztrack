@@ -38,9 +38,13 @@ import InvoiceService from "../../../services/InvoiceService";
 import type { Customer } from "../../../services/CustomerService";
 import type { InvoiceCreate } from "../../../models/sales";
 import { extractErrorMessage } from "../../../utils/errorUtils";
+import { useCrudPermissions } from "../../../hooks/usePermissions";
 import { invoiceItemsFromJobCard, jobCardLabourEstimate, jobCardToVehicle } from "../../../utils/sales/invoiceFormUtils";
 
 function JobCardsContent() {
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    "production:job_cards",
+  );
   const [jobCards, setJobCards] = useState<JobCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -263,10 +267,12 @@ function JobCardsContent() {
             </h1>
             <p className="text-gray-600">Manage workshop job cards.</p>
           </div>
-          <Button onClick={openCreate}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Job Card
-          </Button>
+          {canCreate() && (
+            <Button onClick={openCreate}>
+              <Plus className="h-4 w-4 mr-2" />
+              New Job Card
+            </Button>
+          )}
         </div>
 
         <Card>
@@ -357,23 +363,27 @@ function JobCardsContent() {
                               ? "Downloading..."
                               : "Download PDF"}
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openEdit(jc)}
-                          >
-                            <Edit className="h-4 w-4 mr-1" />
-                            Edit
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteJobCard(jc)}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            <Trash2 className="h-4 w-4 mr-1" />
-                            Delete
-                          </Button>
+                          {canUpdate() && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openEdit(jc)}
+                            >
+                              <Edit className="h-4 w-4 mr-1" />
+                              Edit
+                            </Button>
+                          )}
+                          {canDelete() && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteJobCard(jc)}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              Delete
+                            </Button>
+                          )}
                         </td>
                       </tr>
                     ))}

@@ -40,6 +40,7 @@ import {
   type HealthcareStaffCreate,
   type HealthcareStaffUpdate,
 } from "@/src/models/healthcare";
+import { useCrudPermissions } from "@/src/hooks/usePermissions";
 
 export default function HealthcareStaffPage() {
   return (
@@ -69,6 +70,9 @@ const PERMISSION_LABELS: Record<string, string> = {
 };
 
 function StaffContent() {
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    "healthcare:staff",
+  );
   const [staff, setStaff] = useState<HealthcareStaff[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -291,10 +295,12 @@ function StaffContent() {
           <h1 className="text-3xl font-bold text-gray-900">Staff</h1>
           <p className="text-gray-600">Manage healthcare staff access</p>
         </div>
+        {canCreate() && (
         <Button onClick={openAdd}>
           <UserPlus className="w-4 h-4 mr-2" />
           Add Staff
         </Button>
+      )}
       </div>
 
       <Card className="mb-6">
@@ -394,23 +400,27 @@ function StaffContent() {
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openEdit(s)}
-                      >
-                        <Edit className="w-4 h-4 mr-1" />
-                        Edit
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-red-600 hover:text-red-700"
-                        onClick={() => openDelete(s)}
-                      >
-                        <Trash2 className="w-4 h-4 mr-1" />
-                        Disable
-                      </Button>
+                      {canUpdate() && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openEdit(s)}
+                        >
+                          <Edit className="w-4 h-4 mr-1" />
+                          Edit
+                        </Button>
+                      )}
+                      {canDelete() && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-600 hover:text-red-700"
+                          onClick={() => openDelete(s)}
+                        >
+                          <Trash2 className="w-4 h-4 mr-1" />
+                          Disable
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}

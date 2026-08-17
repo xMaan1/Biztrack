@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useRBAC } from "@/src/contexts/RBACContext";
 import { usePermissions } from "@/src/hooks/usePermissions";
+import { useCrudPermissions } from "@/src/hooks/usePermissions";
 import { PermissionGuard } from "@/src/components/guards/PermissionGuard";
 import { DashboardLayout } from "../../components/layout";
 import { Button } from "@/src/components/ui/button";
@@ -51,6 +52,7 @@ import { extractErrorMessage } from "@/src/utils/errorUtils";
 import { toast } from "sonner";
 
 export default function UserManagementPage() {
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions("users");
   const {
     tenantUsers,
     roles,
@@ -165,13 +167,15 @@ export default function UserManagementPage() {
                     Manage Roles
                   </Button>
                 )}
-                <Button
-                  onClick={() => setShowCreateModal(true)}
-                  className="flex items-center gap-2"
-                >
-                  <UserPlus className="h-4 w-4" />
-                  Add User
-                </Button>
+                {canCreate() && (
+                  <Button
+                    onClick={() => setShowCreateModal(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    Add User
+                  </Button>
+                )}
               </div>
             )}
           </div>
@@ -287,20 +291,24 @@ export default function UserManagementPage() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() => handleEditUser(user)}
-                              >
-                                <Edit className="h-4 w-4 mr-2" />
-                                Edit User
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleRemoveUser(user)}
-                                className="text-destructive"
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Remove User
-                              </DropdownMenuItem>
-                              {(isOwner() || hasPermission("users:delete")) && (
+                              {canUpdate() && (
+                                <DropdownMenuItem
+                                  onClick={() => handleEditUser(user)}
+                                >
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  Edit User
+                                </DropdownMenuItem>
+                              )}
+                              {canDelete() && (
+                                <DropdownMenuItem
+                                  onClick={() => handleRemoveUser(user)}
+                                  className="text-destructive"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Remove User
+                                </DropdownMenuItem>
+                              )}
+                              {canDelete() && (
                                 <DropdownMenuItem
                                   onClick={() => handleForceDeleteUser(user)}
                                   className="text-destructive"

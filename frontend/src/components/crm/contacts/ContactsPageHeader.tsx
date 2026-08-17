@@ -3,7 +3,7 @@ import { Plus } from "lucide-react";
 
 type ContactsPageHeaderProps = {
   successMessage: string;
-  onNewContact: () => void;
+  onNewContact?: () => void;
 };
 
 export function ContactsPageHeader({
@@ -23,10 +23,12 @@ export function ContactsPageHeader({
           </div>
         )}
       </div>
-      <Button onClick={onNewContact}>
-        <Plus className="w-4 h-4 mr-2" />
-        New Contact
-      </Button>
+      {onNewContact && (
+        <Button onClick={onNewContact}>
+          <Plus className="w-4 h-4 mr-2" />
+          New Contact
+        </Button>
+      )}
     </div>
   );
 }

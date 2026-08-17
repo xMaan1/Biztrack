@@ -42,6 +42,7 @@ import { apiService } from "@/src/services/ApiService";
 import type { AdmissionInvoiceSummary } from "@/src/models/healthcare";
 import { toast } from "sonner";
 import Link from "next/link";
+import { useCrudPermissions } from "@/src/hooks/usePermissions";
 
 const PAYMENT_METHODS = [
   { value: "cash", label: "Cash" },
@@ -60,6 +61,7 @@ export default function HospitalPaymentsPage() {
 }
 
 function HospitalPaymentsContent() {
+  const { canCreate } = useCrudPermissions("healthcare:expenses");
   const [invoices, setInvoices] = useState<AdmissionInvoiceSummary[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -238,15 +240,17 @@ function HospitalPaymentsContent() {
                     </TableCell>
                     <TableCell>{inv.status}</TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openRecordPayment(inv)}
-                        disabled={inv.balance <= 0}
-                      >
-                        <Banknote className="w-4 h-4 mr-1" />
-                        Record payment
-                      </Button>
+                      {canCreate() && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openRecordPayment(inv)}
+                          disabled={inv.balance <= 0}
+                        >
+                          <Banknote className="w-4 h-4 mr-1" />
+                          Record payment
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}

@@ -49,6 +49,7 @@ import { toast } from "sonner";
 import { extractErrorMessage } from "../../../utils/errorUtils";
 import { BankAccountFormDialog } from "../../../components/banking/BankAccountFormDialog";
 import { BankAccountViewDialog } from "../../../components/banking/BankAccountViewDialog";
+import { useCrudPermissions } from "@/src/hooks/usePermissions";
 
 export default function BankAccountsPage() {
   return (
@@ -62,6 +63,9 @@ export default function BankAccountsPage() {
 }
 
 function BankAccountsContent() {
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    "banking:accounts",
+  );
   const {} = useAuth();
   const { formatCurrency } = useCurrency();
 
@@ -240,10 +244,12 @@ function BankAccountsContent() {
               Manage your bank accounts and track balances
             </p>
           </div>
-          <Button onClick={() => setIsCreateModalOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Bank Account
-          </Button>
+          {canCreate() && (
+            <Button onClick={() => setIsCreateModalOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Bank Account
+            </Button>
+          )}
         </div>
 
         {/* Search */}
@@ -338,20 +344,24 @@ function BankAccountsContent() {
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openEditModal(account)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openDeleteModal(account)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        {canUpdate() && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openEditModal(account)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {canDelete() && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openDeleteModal(account)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>

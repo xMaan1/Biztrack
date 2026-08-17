@@ -61,6 +61,7 @@ import {
 } from "@/src/models/hrm";
 import { DashboardLayout } from "@/src/components/layout";
 import { useCustomOptions } from "@/src/hooks/useCustomOptions";
+import { useCrudPermissions } from "@/src/hooks/usePermissions";
 import { CustomOptionDialog } from "@/src/components/common/CustomOptionDialog";
 
 export default function HRMLeaveManagementPage() {
@@ -75,6 +76,9 @@ export default function HRMLeaveManagementPage() {
 }
 
 function HRMLeaveManagementContent() {
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    "hrm:leave_requests",
+  );
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
@@ -344,15 +348,17 @@ function HRMLeaveManagementContent() {
               Manage employee leave requests and approvals
             </p>
           </div>
-          <Button
-            onClick={() => {
-              setShowCreateDialog(true);
-              resetForm();
-            }}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            New Leave Request
-          </Button>
+          {canCreate() && (
+            <Button
+              onClick={() => {
+                setShowCreateDialog(true);
+                resetForm();
+              }}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              New Leave Request
+            </Button>
+          )}
         </div>
 
         {/* Success Message */}
@@ -645,20 +651,24 @@ function HRMLeaveManagementContent() {
                       >
                         <Eye className="w-4 h-4" />
                       </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEdit(request)}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDelete(request)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      {canUpdate() && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(request)}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                      )}
+                      {canDelete() && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDelete(request)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                 );
@@ -977,7 +987,7 @@ function HRMLeaveManagementContent() {
               <Button variant="outline" onClick={() => setViewingRequest(null)}>
                 Close
               </Button>
-              {viewingRequest && (
+              {viewingRequest && canUpdate() && (
                 <Button
                   onClick={() => {
                     setViewingRequest(null);

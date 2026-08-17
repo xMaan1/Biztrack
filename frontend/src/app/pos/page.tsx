@@ -36,6 +36,7 @@ import {
 import { DashboardLayout } from "../../components/layout";
 import { useRouter } from "next/navigation";
 import { useCurrency } from "../../contexts/CurrencyContext";
+import { useCrudPermissions } from "@/src/hooks/usePermissions";
 
 export default function POSDashboard() {
   return <POSDashboardContent />;
@@ -43,6 +44,9 @@ export default function POSDashboard() {
 
 const POSDashboardContent = () => {
   const {} = useAuth();
+  const { canCreate } = useCrudPermissions("pos:sale");
+  const { canCreate: canCreateShift, canUpdate: canUpdateShift } =
+    useCrudPermissions("pos:shifts");
   const { formatCurrency } = useCurrency();
   const router = useRouter();
   const [metrics, setMetrics] = useState<POSMetrics | null>(null);
@@ -167,22 +171,26 @@ const POSDashboardContent = () => {
                 <span className="text-sm text-muted-foreground">
                   {openShift.shiftNumber}
                 </span>
-                <Button
-                  variant="outline"
-                  onClick={closeShift}
-                  disabled={shiftLoading}
-                >
-                  {shiftLoading ? "Closing..." : "Close Shift"}
-                </Button>
+                {canUpdateShift() && (
+                  <Button
+                    variant="outline"
+                    onClick={closeShift}
+                    disabled={shiftLoading}
+                  >
+                    {shiftLoading ? "Closing..." : "Close Shift"}
+                  </Button>
+                )}
               </div>
             ) : (
-              <Button
-                onClick={handleOpenShift}
-                disabled={shiftLoading}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                {shiftLoading ? "Opening..." : "Open Shift"}
-              </Button>
+              canCreateShift() && (
+                <Button
+                  onClick={handleOpenShift}
+                  disabled={shiftLoading}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  {shiftLoading ? "Opening..." : "Open Shift"}
+                </Button>
+              )
             )}
           </div>
         </div>
@@ -304,14 +312,16 @@ const POSDashboardContent = () => {
                   <CardDescription>Common POS operations</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <Button
-                    className="w-full justify-start"
-                    variant="outline"
-                    onClick={navigateToNewSale}
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    New Sale
-                  </Button>
+                  {canCreate() && (
+                    <Button
+                      className="w-full justify-start"
+                      variant="outline"
+                      onClick={navigateToNewSale}
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      New Sale
+                    </Button>
+                  )}
                   <Button
                     className="w-full justify-start"
                     variant="outline"

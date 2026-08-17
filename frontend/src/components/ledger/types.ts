@@ -24,7 +24,7 @@ export interface LedgerTransactionFormData {
 
 export interface LedgerTransactionsHeaderProps {
   onExport: () => void;
-  onAddTransaction: () => void;
+  onAddTransaction?: () => void;
 }
 
 export interface LedgerSummaryCardsProps {
@@ -53,8 +53,8 @@ export interface LedgerTransactionsTableProps {
   accounts: ChartOfAccountsResponse[] | undefined;
   formatCurrency: CurrencyFormatter;
   onView: (transaction: LedgerTransactionResponse) => void;
-  onEdit: (transaction: LedgerTransactionResponse) => void;
-  onDelete: (transaction: LedgerTransactionResponse) => void;
+  onEdit?: (transaction: LedgerTransactionResponse) => void;
+  onDelete?: (transaction: LedgerTransactionResponse) => void;
 }
 
 export interface LedgerTransactionFormDialogProps {

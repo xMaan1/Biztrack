@@ -16,7 +16,7 @@ type Props = {
   onApplyFilter: (sf: LeadSavedFilter) => void;
   onClearFilters: () => void;
   onBulkAction: (action: string, extra?: Record<string, string>) => void;
-  onAddNew: () => void;
+  onAddNew?: () => void;
   onTogglePartial: () => void;
 };
 
@@ -86,9 +86,11 @@ export function LeadsListToolbar({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <Button size="sm" onClick={onAddNew}>
-          <Plus className="mr-1 h-4 w-4" /> Add New Lead
-        </Button>
+        {onAddNew && (
+          <Button size="sm" onClick={onAddNew}>
+            <Plus className="mr-1 h-4 w-4" /> Add New Lead
+          </Button>
+        )}
         <Button
           size="sm"
           variant={showPartialOnly ? "default" : "outline"}

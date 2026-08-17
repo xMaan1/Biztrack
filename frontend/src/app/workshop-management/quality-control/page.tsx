@@ -89,6 +89,7 @@ import {
 } from "../../../models/qualityControl";
 import QualityControlService from "../../../services/QualityControlService";
 import { DashboardLayout } from "../../../components/layout";
+import { useCrudPermissions } from "../../../hooks/usePermissions";
 import { cn, formatDate } from "../../../lib/utils";
 import { apiService } from "../../../services/ApiService";
 import { SessionManager } from "../../../services/SessionManager";
@@ -1603,6 +1604,9 @@ export default function QualityControlPage() {
 }
 
 function QualityControlContent() {
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    "quality:quality_control",
+  );
   const [activeTab, setActiveTab] = useState("overview");
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
@@ -1971,9 +1975,11 @@ function QualityControlContent() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Button onClick={() => openCheck("create")}>
-              <Plus className="mr-2 h-4 w-4" /> New Check
-            </Button>
+            {canCreate() && (
+              <Button onClick={() => openCheck("create")}>
+                <Plus className="mr-2 h-4 w-4" /> New Check
+              </Button>
+            )}
             <Button variant="outline" onClick={loadAll}>
               <RefreshCw className="mr-2 h-4 w-4" /> Refresh
             </Button>
@@ -2068,36 +2074,44 @@ function QualityControlContent() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
-                      <Button
-                        className="w-full justify-start"
-                        variant="outline"
-                        onClick={() => openCheck("create")}
-                      >
-                        <PlusCircle className="mr-2 h-4 w-4" /> Create a quality
-                        check
-                      </Button>
-                      <Button
-                        className="w-full justify-start"
-                        variant="outline"
-                        onClick={() => openInspection()}
-                      >
-                        <ClipboardCheck className="mr-2 h-4 w-4" /> Record an
-                        inspection
-                      </Button>
-                      <Button
-                        className="w-full justify-start"
-                        variant="outline"
-                        onClick={() => openDefect("create")}
-                      >
-                        <Bug className="mr-2 h-4 w-4" /> Log a defect
-                      </Button>
-                      <Button
-                        className="w-full justify-start"
-                        variant="outline"
-                        onClick={() => openReport()}
-                      >
-                        <FileText className="mr-2 h-4 w-4" /> Generate report
-                      </Button>
+                      {canCreate() && (
+                        <Button
+                          className="w-full justify-start"
+                          variant="outline"
+                          onClick={() => openCheck("create")}
+                        >
+                          <PlusCircle className="mr-2 h-4 w-4" /> Create a
+                          quality check
+                        </Button>
+                      )}
+                      {canCreate() && (
+                        <Button
+                          className="w-full justify-start"
+                          variant="outline"
+                          onClick={() => openInspection()}
+                        >
+                          <ClipboardCheck className="mr-2 h-4 w-4" /> Record an
+                          inspection
+                        </Button>
+                      )}
+                      {canCreate() && (
+                        <Button
+                          className="w-full justify-start"
+                          variant="outline"
+                          onClick={() => openDefect("create")}
+                        >
+                          <Bug className="mr-2 h-4 w-4" /> Log a defect
+                        </Button>
+                      )}
+                      {canCreate() && (
+                        <Button
+                          className="w-full justify-start"
+                          variant="outline"
+                          onClick={() => openReport()}
+                        >
+                          <FileText className="mr-2 h-4 w-4" /> Generate report
+                        </Button>
+                      )}
                     </CardContent>
                   </Card>
                 </div>
@@ -2388,11 +2402,13 @@ function QualityControlContent() {
                               >
                                 <Eye className="mr-2 h-4 w-4" /> View
                               </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => openCheck("edit", check)}
-                              >
-                                <Edit className="mr-2 h-4 w-4" /> Edit
-                              </DropdownMenuItem>
+                              {canUpdate() && (
+                                <DropdownMenuItem
+                                  onClick={() => openCheck("edit", check)}
+                                >
+                                  <Edit className="mr-2 h-4 w-4" /> Edit
+                                </DropdownMenuItem>
+                              )}
                               {check.status !== QualityStatus.PENDING &&
                                 check.status !== QualityStatus.IN_PROGRESS && (
                                   <DropdownMenuItem
@@ -2407,14 +2423,19 @@ function QualityControlContent() {
                                   </DropdownMenuItem>
                                 )}
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  requestDelete({ type: "check", item: check })
-                                }
-                                className="text-red-600"
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" /> Delete
-                              </DropdownMenuItem>
+                              {canDelete() && (
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    requestDelete({
+                                      type: "check",
+                                      item: check,
+                                    })
+                                  }
+                                  className="text-red-600"
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                </DropdownMenuItem>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
@@ -2435,9 +2456,11 @@ function QualityControlContent() {
                         : "Try adjusting your search or filters."
                     }
                     action={
-                      <Button onClick={() => openCheck("create")}>
-                        <Plus className="mr-2 h-4 w-4" /> New Check
-                      </Button>
+                      canCreate() && (
+                        <Button onClick={() => openCheck("create")}>
+                          <Plus className="mr-2 h-4 w-4" /> New Check
+                        </Button>
+                      )
                     }
                   />
                 )}
@@ -2456,10 +2479,12 @@ function QualityControlContent() {
                       Records of inspections performed against your checks.
                     </CardDescription>
                   </div>
-                  <Button onClick={() => openInspection()}>
-                    <ClipboardCheck className="mr-2 h-4 w-4" /> Record
-                    Inspection
-                  </Button>
+                  {canCreate() && (
+                    <Button onClick={() => openInspection()}>
+                      <ClipboardCheck className="mr-2 h-4 w-4" /> Record
+                      Inspection
+                    </Button>
+                  )}
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <div className="relative">
@@ -2577,10 +2602,12 @@ function QualityControlContent() {
                     title="No inspections recorded"
                     description="Record an inspection against a quality check to start tracking results."
                     action={
-                      <Button onClick={() => openInspection()}>
-                        <ClipboardCheck className="mr-2 h-4 w-4" /> Record
-                        Inspection
-                      </Button>
+                      canCreate() && (
+                        <Button onClick={() => openInspection()}>
+                          <ClipboardCheck className="mr-2 h-4 w-4" /> Record
+                          Inspection
+                        </Button>
+                      )
                     }
                   />
                 )}
@@ -2600,9 +2627,11 @@ function QualityControlContent() {
                       resolution.
                     </CardDescription>
                   </div>
-                  <Button onClick={() => openDefect("create")}>
-                    <Plus className="mr-2 h-4 w-4" /> Log Defect
-                  </Button>
+                  {canCreate() && (
+                    <Button onClick={() => openDefect("create")}>
+                      <Plus className="mr-2 h-4 w-4" /> Log Defect
+                    </Button>
+                  )}
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <div className="relative">
@@ -2723,23 +2752,27 @@ function QualityControlContent() {
                               >
                                 <Eye className="mr-2 h-4 w-4" /> View
                               </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => openDefect("edit", defect)}
-                              >
-                                <Edit className="mr-2 h-4 w-4" /> Edit
-                              </DropdownMenuItem>
+                              {canUpdate() && (
+                                <DropdownMenuItem
+                                  onClick={() => openDefect("edit", defect)}
+                                >
+                                  <Edit className="mr-2 h-4 w-4" /> Edit
+                                </DropdownMenuItem>
+                              )}
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  requestDelete({
-                                    type: "defect",
-                                    item: defect,
-                                  })
-                                }
-                                className="text-red-600"
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" /> Delete
-                              </DropdownMenuItem>
+                              {canDelete() && (
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    requestDelete({
+                                      type: "defect",
+                                      item: defect,
+                                    })
+                                  }
+                                  className="text-red-600"
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                </DropdownMenuItem>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
@@ -2752,9 +2785,11 @@ function QualityControlContent() {
                     title="No defects logged"
                     description="Log defects found during inspections to track and resolve them."
                     action={
-                      <Button onClick={() => openDefect("create")}>
-                        <Plus className="mr-2 h-4 w-4" /> Log Defect
-                      </Button>
+                      canCreate() && (
+                        <Button onClick={() => openDefect("create")}>
+                          <Plus className="mr-2 h-4 w-4" /> Log Defect
+                        </Button>
+                      )
                     }
                   />
                 )}
@@ -2773,9 +2808,11 @@ function QualityControlContent() {
                       Summaries of your quality performance.
                     </CardDescription>
                   </div>
-                  <Button onClick={() => openReport()}>
-                    <Plus className="mr-2 h-4 w-4" /> Generate Report
-                  </Button>
+                  {canCreate() && (
+                    <Button onClick={() => openReport()}>
+                      <Plus className="mr-2 h-4 w-4" /> Generate Report
+                    </Button>
+                  )}
                 </div>
               </CardHeader>
               <CardContent>
@@ -2855,9 +2892,11 @@ function QualityControlContent() {
                     title="No reports yet"
                     description="Generate a quality report to summarise checks, inspections and defects."
                     action={
-                      <Button onClick={() => openReport()}>
-                        <Plus className="mr-2 h-4 w-4" /> Generate Report
-                      </Button>
+                      canCreate() && (
+                        <Button onClick={() => openReport()}>
+                          <Plus className="mr-2 h-4 w-4" /> Generate Report
+                        </Button>
+                      )
                     }
                   />
                 )}

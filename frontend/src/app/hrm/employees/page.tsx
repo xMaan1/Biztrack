@@ -49,6 +49,7 @@ import {
 import { toast } from "sonner";
 import { extractErrorMessage } from "@/src/utils/errorUtils";
 import { useCustomDepartments } from "@/src/hooks/useCustomDepartments";
+import { useCrudPermissions } from "@/src/hooks/usePermissions";
 import { CustomOptionDialog } from "@/src/components/common/CustomOptionDialog";
 
 function formatDepartmentLabel(department: string) {
@@ -72,6 +73,9 @@ export default function HRMEmployeesPage() {
 }
 
 function HRMEmployeesContent() {
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    "hrm:employees",
+  );
   const { getCurrencySymbol } = useCurrency();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
@@ -314,12 +318,14 @@ function HRMEmployeesContent() {
             <h1 className="text-3xl font-bold text-gray-900">Employees</h1>
             <p className="text-gray-600">Manage your workforce</p>
           </div>
-          <Button asChild>
-            <Link href="/hrm/employees/new">
-              <UserPlus className="w-4 h-4 mr-2" />
-              Add Employee
-            </Link>
-          </Button>
+          {canCreate() && (
+            <Button asChild>
+              <Link href="/hrm/employees/new">
+                <UserPlus className="w-4 h-4 mr-2" />
+                Add Employee
+              </Link>
+            </Button>
+          )}
         </div>
 
         {/* Filters */}
@@ -481,23 +487,27 @@ function HRMEmployeesContent() {
                         <Eye className="w-4 h-4 mr-1" />
                         View
                       </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openEditModal(employee)}
-                      >
-                        <Edit className="w-4 h-4 mr-1" />
-                        Edit
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openDeleteModal(employee)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="w-4 h-4 mr-1" />
-                        Delete
-                      </Button>
+                      {canUpdate() && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openEditModal(employee)}
+                        >
+                          <Edit className="w-4 h-4 mr-1" />
+                          Edit
+                        </Button>
+                      )}
+                      {canDelete() && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openDeleteModal(employee)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="w-4 h-4 mr-1" />
+                          Delete
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>

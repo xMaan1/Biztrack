@@ -61,6 +61,7 @@ import {
 import { Label } from "../../../components/ui/label";
 import { Textarea } from "../../../components/ui/textarea";
 import { toast } from "sonner";
+import { useCrudPermissions } from "@/src/hooks/usePermissions";
 
 export default function ReceivingPage() {
   return (
@@ -74,6 +75,9 @@ export default function ReceivingPage() {
 }
 
 function ReceivingContent() {
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    "inventory:receiving",
+  );
   const {} = useAuth();
   const [receivings, setReceivings] = useState<Receiving[]>([]);
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
@@ -340,10 +344,12 @@ function ReceivingContent() {
               Manage incoming shipments and process received goods
             </p>
           </div>
-          <Button onClick={() => setIsProcessModalOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Process Receiving
-          </Button>
+          {canCreate() && (
+            <Button onClick={() => setIsProcessModalOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Process Receiving
+            </Button>
+          )}
         </div>
 
         {/* Search and Filters */}
@@ -448,6 +454,7 @@ function ReceivingContent() {
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
+{canUpdate() && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -455,6 +462,8 @@ function ReceivingContent() {
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
+                        )}
+                        {canDelete() && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -462,6 +471,7 @@ function ReceivingContent() {
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
+                        )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -479,7 +489,7 @@ function ReceivingContent() {
                     ? "Try adjusting your search terms or filters"
                     : "Get started by processing your first receiving"}
                 </p>
-                {!searchTerm && statusFilter === "all" && (
+                {!searchTerm && statusFilter === "all" && canCreate() && (
                   <Button onClick={() => setIsProcessModalOpen(true)}>
                     <Plus className="mr-2 h-4 w-4" />
                     Process Receiving

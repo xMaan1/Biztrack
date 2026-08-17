@@ -26,6 +26,7 @@ import { useAuth } from "../../../../contexts/AuthContext";
 import { inventoryService } from "../../../../services/InventoryService";
 import { extractErrorMessage } from "../../../../utils/errorUtils";
 import { DashboardLayout } from "../../../../components/layout";
+import { useCrudPermissions } from "@/src/hooks/usePermissions";
 
 export default function NewWarehousePage() {
   return (
@@ -39,6 +40,7 @@ export default function NewWarehousePage() {
 }
 
 function NewWarehouseContent() {
+  const { canCreate } = useCrudPermissions("inventory:warehouses");
   const {} = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -348,19 +350,25 @@ function NewWarehouseContent() {
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading} className="w-full sm:w-auto">
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
-                </>
-              ) : (
-                <>
-                  <Save className="mr-2 h-4 w-4" />
-                  Create Warehouse
-                </>
-              )}
-            </Button>
+                        {canCreate() && (
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full sm:w-auto"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    Create Warehouse
+                  </>
+                )}
+              </Button>
+            )}
           </div>
         </form>
       </div>

@@ -47,6 +47,7 @@ import type {
   DailyExpenseUpdate,
 } from "@/src/models/healthcare";
 import { toast } from "sonner";
+import { useCrudPermissions } from "@/src/hooks/usePermissions";
 
 export default function HealthcareDailyExpensePage() {
   return (
@@ -57,6 +58,9 @@ export default function HealthcareDailyExpensePage() {
 }
 
 function DailyExpenseContent() {
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    "healthcare:expenses",
+  );
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [, setCategoriesTotal] = useState(0);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
@@ -318,10 +322,12 @@ function DailyExpenseContent() {
               Create categories first, then add expenses and assign a category.
             </CardDescription>
           </div>
-          <Button onClick={openAddCategory}>
-            <Plus className="w-4 h-4 mr-2" />
-            Create expense category
-          </Button>
+          {canCreate() && (
+            <Button onClick={openAddCategory}>
+              <Plus className="w-4 h-4 mr-2" />
+              Create expense category
+            </Button>
+          )}
         </CardHeader>
         <CardContent>
           {categoriesLoading ? (
@@ -348,23 +354,27 @@ function DailyExpenseContent() {
                       {c.description || "—"}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openEditCategory(c)}
-                      >
-                        <Edit className="w-4 h-4 mr-1" />
-                        Edit
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-red-600 hover:text-red-700"
-                        onClick={() => openDeleteCategory(c)}
-                      >
-                        <Trash2 className="w-4 h-4 mr-1" />
-                        Delete
-                      </Button>
+                      {canUpdate() && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openEditCategory(c)}
+                        >
+                          <Edit className="w-4 h-4 mr-1" />
+                          Edit
+                        </Button>
+                      )}
+                      {canDelete() && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-600 hover:text-red-700"
+                          onClick={() => openDeleteCategory(c)}
+                        >
+                          <Trash2 className="w-4 h-4 mr-1" />
+                          Delete
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -386,10 +396,12 @@ function DailyExpenseContent() {
               Filter by category and date.
             </CardDescription>
           </div>
-          <Button onClick={openAddExpense} disabled={categories.length === 0}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add expense
-          </Button>
+          {canCreate() && (
+            <Button onClick={openAddExpense} disabled={categories.length === 0}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add expense
+            </Button>
+          )}
         </CardHeader>
         <CardContent>
           {categories.length === 0 ? (
@@ -468,23 +480,27 @@ function DailyExpenseContent() {
                           {e.description || "—"}
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openEditExpense(e)}
-                          >
-                            <Edit className="w-4 h-4 mr-1" />
-                            Edit
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-red-600 hover:text-red-700"
-                            onClick={() => openDeleteExpense(e)}
-                          >
-                            <Trash2 className="w-4 h-4 mr-1" />
-                            Delete
-                          </Button>
+                          {canUpdate() && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openEditExpense(e)}
+                            >
+                              <Edit className="w-4 h-4 mr-1" />
+                              Edit
+                            </Button>
+                          )}
+                          {canDelete() && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-600 hover:text-red-700"
+                              onClick={() => openDeleteExpense(e)}
+                            >
+                              <Trash2 className="w-4 h-4 mr-1" />
+                              Delete
+                            </Button>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}

@@ -55,6 +55,7 @@ import { User } from "@/src/models";
 import { apiService } from "@/src/services/ApiService";
 import { DashboardLayout } from "../../../components/layout";
 import { useCurrency } from "../../../contexts/CurrencyContext";
+import { useCrudPermissions } from "@/src/hooks/usePermissions";
 
 export default function CRMOpportunitiesPage() {
   return (
@@ -68,6 +69,9 @@ export default function CRMOpportunitiesPage() {
 }
 
 function CRMOpportunitiesContent() {
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    "crm:opportunities",
+  );
   const { formatCurrency } = useCurrency();
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [loading, setLoading] = useState(true);
@@ -356,15 +360,17 @@ function CRMOpportunitiesContent() {
               Manage your sales opportunities and pipeline
             </p>
           </div>
-          <Button
-            onClick={() => {
-              setShowCreateDialog(true);
-              resetForm();
-            }}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            New Opportunity
-          </Button>
+          {canCreate() && (
+            <Button
+              onClick={() => {
+                setShowCreateDialog(true);
+                resetForm();
+              }}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              New Opportunity
+            </Button>
+          )}
         </div>
 
         {/* Success Message */}
@@ -534,20 +540,24 @@ function CRMOpportunitiesContent() {
                       >
                         <Eye className="w-4 h-4" />
                       </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEdit(opportunity)}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDelete(opportunity)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      {canUpdate() && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(opportunity)}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                      )}
+                      {canDelete() && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDelete(opportunity)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                 );
@@ -958,7 +968,7 @@ function CRMOpportunitiesContent() {
               >
                 Close
               </Button>
-              {viewingOpportunity && (
+              {viewingOpportunity && canUpdate() && (
                 <Button
                   onClick={() => {
                     setViewingOpportunity(null);

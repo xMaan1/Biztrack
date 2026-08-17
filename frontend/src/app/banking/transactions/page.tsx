@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { ModuleGuard } from "@/src/components/guards/PermissionGuard";
 import { RefreshCw } from "lucide-react";
 import { useAuth } from "@/src/contexts/AuthContext";
+import { useCrudPermissions } from "@/src/hooks/usePermissions";
 import { bankingService } from "@/src/services/BankingService";
 import { useCurrency } from "@/src/contexts/CurrencyContext";
 import {
@@ -65,6 +66,7 @@ const emptyFormData = (): TransactionFormData => ({
 });
 
 function BankTransactionsContent() {
+  const { canUpdate, canDelete } = useCrudPermissions("banking:transactions");
   const {} = useAuth();
   const { formatCurrency } = useCurrency();
 
@@ -364,10 +366,10 @@ function BankTransactionsContent() {
           formatCurrency={formatCurrency}
           isDeleting={isDeleting}
           onView={setViewingTransaction}
-          onEdit={openEditModal}
+          onEdit={canUpdate() ? openEditModal : undefined}
           onReconcile={handleReconcileTransaction}
           onUnreconcile={handleUnreconcileTransaction}
-          onDelete={openDeleteModal}
+          onDelete={canDelete() ? openDeleteModal : undefined}
         />
 
         <TransactionFormDialog
@@ -386,7 +388,7 @@ function BankTransactionsContent() {
           bankAccounts={bankAccounts}
           formatCurrency={formatCurrency}
           onClose={() => setViewingTransaction(null)}
-          onEdit={handleViewEdit}
+          onEdit={canUpdate() ? handleViewEdit : undefined}
         />
 
         <TransactionFormDialog

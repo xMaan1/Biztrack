@@ -64,6 +64,7 @@ import { Product } from "../../../models/pos";
 import { Textarea } from "../../../components/ui/textarea";
 import { Label } from "../../../components/ui/label";
 import { useCurrency } from "../../../contexts/CurrencyContext";
+import { useCrudPermissions } from "@/src/hooks/usePermissions";
 
 export default function DumpsPage() {
   return (
@@ -77,6 +78,9 @@ export default function DumpsPage() {
 }
 
 function DumpsContent() {
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    "inventory:dumps",
+  );
   const { isAuthenticated } = useAuth();
   const [mounted, setMounted] = useState(false);
 
@@ -368,10 +372,12 @@ function DumpsContent() {
               <Package className="mr-2 h-4 w-4" />
               View All Movements
             </Button>
-            <Button onClick={() => setIsRecordDamageOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Record Damage
-            </Button>
+            {canCreate() && (
+              <Button onClick={() => setIsRecordDamageOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Record Damage
+              </Button>
+            )}
           </div>
         </div>
 
@@ -565,21 +571,25 @@ function DumpsContent() {
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEditDamage(dump)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openDeleteDialog(dump)}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        {canUpdate() && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditDamage(dump)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {canDelete() && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openDeleteDialog(dump)}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -690,14 +700,16 @@ function DumpsContent() {
               <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                 Close
               </Button>
-              <Button
-                onClick={() => {
-                  setIsDialogOpen(false);
-                  router.push(`/inventory/stock-movements/${selectedDump?.id}`);
-                }}
-              >
-                Edit Details
-              </Button>
+              {canUpdate() && (
+                <Button
+                  onClick={() => {
+                    setIsDialogOpen(false);
+                    router.push(`/inventory/stock-movements/${selectedDump?.id}`);
+                  }}
+                >
+                  Edit Details
+                </Button>
+              )}
             </DialogFooter>
           </DialogContent>
         </Dialog>

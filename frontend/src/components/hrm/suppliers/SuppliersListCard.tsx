@@ -124,20 +124,24 @@ export function SuppliersListCard({
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onEdit(supplier)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onDelete(supplier)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      {onEdit && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onEdit(supplier)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {onDelete && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onDelete(supplier)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -153,7 +157,7 @@ export function SuppliersListCard({
                 ? "Try adjusting your search terms"
                 : "Get started by adding your first supplier"}
             </p>
-            {!searchTerm && (
+            {!searchTerm && onAddSupplier && (
               <Button onClick={onAddSupplier}>
                 <Plus className="mr-2 h-4 w-4" />
                 Add Supplier

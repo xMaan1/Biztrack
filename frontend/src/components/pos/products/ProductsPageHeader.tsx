@@ -4,7 +4,7 @@ import { Plus } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 
 type ProductsPageHeaderProps = {
-  onAddProduct: () => void;
+  onAddProduct?: () => void;
 };
 
 export function ProductsPageHeader({ onAddProduct }: ProductsPageHeaderProps) {
@@ -16,10 +16,12 @@ export function ProductsPageHeader({ onAddProduct }: ProductsPageHeaderProps) {
           Manage your product catalog and inventory
         </p>
       </div>
-      <Button onClick={onAddProduct}>
-        <Plus className="mr-2 h-4 w-4" />
-        Add Product
-      </Button>
+      {onAddProduct && (
+        <Button onClick={onAddProduct}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Product
+        </Button>
+      )}
     </div>
   );
 }

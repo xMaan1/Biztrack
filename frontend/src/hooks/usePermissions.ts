@@ -96,6 +96,16 @@ export function useModuleAccess(module: string) {
   return hasModuleAccess(module);
 }
 
+export function useCrudPermissions(prefix: string) {
+  const { hasPermission, isOwner } = useRBAC();
+  return {
+    canView: () => hasPermission(`${prefix}:view`) || isOwner(),
+    canCreate: () => hasPermission(`${prefix}:create`) || isOwner(),
+    canUpdate: () => hasPermission(`${prefix}:update`) || isOwner(),
+    canDelete: () => hasPermission(`${prefix}:delete`) || isOwner(),
+  };
+}
+
 export function usePermission(permission: string) {
   const { hasPermission } = useRBAC();
   return hasPermission(permission);

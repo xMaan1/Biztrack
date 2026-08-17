@@ -23,7 +23,7 @@ type ProductViewDialogProps = {
   product: Product | null;
   formatCurrency: (value: number) => string;
   onClose: () => void;
-  onEdit: (product: Product) => void;
+  onEdit?: (product: Product) => void;
 };
 
 export function ProductViewDialog({
@@ -302,7 +302,7 @@ export function ProductViewDialog({
           <Button variant="outline" onClick={onClose}>
             Close
           </Button>
-          {product && (
+          {product && onEdit && (
             <Button
               onClick={() => {
                 onClose();

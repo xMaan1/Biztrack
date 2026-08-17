@@ -96,6 +96,7 @@ import {
 } from "@/src/utils/customerUtils";
 import { extractErrorMessage } from "@/src/utils/errorUtils";
 import { Textarea } from "@/src/components/ui/textarea";
+import { useCrudPermissions } from "@/src/hooks/usePermissions";
 
 export default function CustomersPage() {
   return (
@@ -109,6 +110,9 @@ export default function CustomersPage() {
 }
 
 function CustomersContent() {
+  const { canCreate, canUpdate, canDelete } = useCrudPermissions(
+    "crm:customers",
+  );
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [stats, setStats] = useState<CustomerStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -525,17 +529,21 @@ function CustomersContent() {
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <Button
-              variant="outline"
-              onClick={() => setIsImportDialogOpen(true)}
-            >
-              <Upload className="w-4 h-4 mr-2" />
-              Import Customers
-            </Button>
-            <Button onClick={() => setIsCreateDialogOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Customer
-            </Button>
+            {canCreate() && (
+              <Button
+                variant="outline"
+                onClick={() => setIsImportDialogOpen(true)}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Import Customers
+              </Button>
+            )}
+            {canCreate() && (
+              <Button onClick={() => setIsCreateDialogOpen(true)}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Customer
+              </Button>
+            )}
             <CreateCustomerDialog
               open={isCreateDialogOpen}
               onOpenChange={setIsCreateDialogOpen}
@@ -820,19 +828,23 @@ function CustomersContent() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuItem
-                                onClick={() => openEditDialog(customer)}
-                              >
-                                <Edit className="mr-2 h-4 w-4" />
-                                Edit
-                              </DropdownMenuItem>
+                              {canUpdate() && (
+                                <DropdownMenuItem
+                                  onClick={() => openEditDialog(customer)}
+                                >
+                                  <Edit className="mr-2 h-4 w-4" />
+                                  Edit
+                                </DropdownMenuItem>
+                              )}
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                onClick={() => openDeleteDialog(customer)}
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
-                              </DropdownMenuItem>
+                              {canDelete() && (
+                                <DropdownMenuItem
+                                  onClick={() => openDeleteDialog(customer)}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Delete
+                                </DropdownMenuItem>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
@@ -1208,14 +1220,16 @@ function CustomersContent() {
                 <Label className="text-sm font-medium">
                   Guarantors / Friends
                 </Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={openAddGuarantor}
-                >
-                  <UserPlus className="h-4 w-4 mr-1" /> Add
-                </Button>
+                {canCreate() && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={openAddGuarantor}
+                  >
+                    <UserPlus className="h-4 w-4 mr-1" /> Add
+                  </Button>
+                )}
               </div>
               {guarantors.length === 0 ? (
                 <p className="text-sm text-muted-foreground py-2">
@@ -1243,20 +1257,24 @@ function CustomersContent() {
                           <TableCell>{g.cnic || "-"}</TableCell>
                           <TableCell>{g.relation || "-"}</TableCell>
                           <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => openEditGuarantor(g)}
-                            >
-                              <Edit className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDeleteGuarantor(g.id)}
-                            >
-                              <Trash2 className="h-3 w-3 text-red-600" />
-                            </Button>
+                            {canUpdate() && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => openEditGuarantor(g)}
+                              >
+                                <Edit className="h-3 w-3" />
+                              </Button>
+                            )}
+                            {canDelete() && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteGuarantor(g.id)}
+                              >
+                                <Trash2 className="h-3 w-3 text-red-600" />
+                              </Button>
+                            )}
                           </TableCell>
                         </TableRow>
                       ))}

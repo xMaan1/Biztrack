@@ -15,10 +15,12 @@ export function SuppliersPageHeader({
           Manage your supplier relationships and vendor information
         </p>
       </div>
-      <Button onClick={onAddSupplier}>
-        <Plus className="mr-2 h-4 w-4" />
-        Add Supplier
-      </Button>
+      {onAddSupplier && (
+        <Button onClick={onAddSupplier}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Supplier
+        </Button>
+      )}
     </div>
   );
 }
