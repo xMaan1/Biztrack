@@ -119,6 +119,11 @@ export function MotBookingPrintSheet({ booking }: MotBookingPrintSheetProps) {
                   | "wait_on_site") || "",
               )}
             </p>
+            {booking.mot_expiry_date && (
+              <p className="text-sm font-semibold text-slate-700">
+                Next MOT due: {booking.mot_expiry_date.slice(0, 10)}
+              </p>
+            )}
           </section>
 
           <section>

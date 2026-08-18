@@ -27,6 +27,7 @@ class MotBooking(Base):
     price = Column(Numeric(12, 2), default=0)
     mileage = Column(String(50))
     mot_expiry_date = Column(Date, nullable=True)
+    mot_reminder_sent_at = Column(DateTime, nullable=True)
     notes = Column(Text)
     result_notes = Column(Text)
     is_active = Column(Boolean, default=True)

@@ -185,7 +185,7 @@ export function MotBookingFormFields({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="motExpiryDate">MOT expiry</Label>
+          <Label htmlFor="motExpiryDate">Next MOT due</Label>
           <Input
             id="motExpiryDate"
             type="date"

@@ -28,6 +28,7 @@ export interface MotBooking {
   price: number;
   mileage?: string;
   mot_expiry_date?: string;
+  mot_reminder_sent_at?: string;
   notes?: string;
   result_notes?: string;
   is_active: boolean;

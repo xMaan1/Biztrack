@@ -16,6 +16,7 @@ from .bookings.schemas import (
     MotBookingStats,
 )
 from .bookings import logic as booking_logic
+from .bookings.notifications import process_mot_due_reminders
 from .settings.schemas import MotSettingsResponse, MotSettingsUpdate
 from .settings import logic as settings_logic
 from .tenant_context import resolve_mot_tenant_by_domain
@@ -176,6 +177,10 @@ async def list_mot_bookings_admin(
     _=Depends(require_mot_admin),
 ):
     tenant_context, _ = admin_context
+    try:
+        process_mot_due_reminders(db, tenant_context["tenant_id"])
+    except Exception:
+        pass
     return booking_logic.list_mot_bookings(
         db,
         tenant_context["tenant_id"],

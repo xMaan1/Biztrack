@@ -202,6 +202,16 @@ export function TenantMotConfirmationPage() {
                   {booking.customer_phone}
                 </p>
               </div>
+              {booking.mot_expiry_date && (
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                    Next MOT Due
+                  </p>
+                  <p className="font-medium">
+                    {booking.mot_expiry_date.slice(0, 10)}
+                  </p>
+                </div>
+              )}
             </div>
             {booking.delivery_option && (
               <p className="text-sm text-muted-foreground">

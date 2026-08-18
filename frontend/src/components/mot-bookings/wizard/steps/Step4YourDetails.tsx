@@ -42,8 +42,8 @@ export function Step4YourDetails({
         </p>
         <h2 className="mt-2 text-3xl font-bold tracking-tight">Your Details</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          All fields are mandatory unless otherwise stated. By submitting this
-          form you agree to our terms and privacy policy.
+          Fields marked optional are not required. By submitting this form you
+          agree to our terms and privacy policy.
         </p>
       </div>
 
@@ -84,7 +84,9 @@ export function Step4YourDetails({
           />
         </div>
         <div className="space-y-2">
-          <Label className="text-sm font-semibold">Email</Label>
+          <Label className="text-sm font-semibold">
+            Email <span className="font-normal text-muted-foreground">(optional)</span>
+          </Label>
           <Input
             type="email"
             value={customer.email}
@@ -109,7 +111,10 @@ export function Step4YourDetails({
           />
         </div>
         <div className="space-y-2">
-          <Label className="text-sm font-semibold">House Number</Label>
+          <Label className="text-sm font-semibold">
+            House Number{" "}
+            <span className="font-normal text-muted-foreground">(optional)</span>
+          </Label>
           <Input
             value={customer.houseNumber}
             onChange={(e) => onChange({ houseNumber: e.target.value })}

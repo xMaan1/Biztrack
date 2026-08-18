@@ -121,7 +121,9 @@ export function MotBookingViewDialog({
                   </div>
                 )}
                 {booking.mot_expiry_date && (
-                  <div>MOT expires: {booking.mot_expiry_date.slice(0, 10)}</div>
+                  <div>
+                    Next MOT due: {booking.mot_expiry_date.slice(0, 10)}
+                  </div>
                 )}
               </DetailSection>
 

@@ -62,6 +62,7 @@ class MotBookingStatusUpdate(BaseModel):
 
 class MotBooking(MotBookingBase):
     id: str
+    mot_reminder_sent_at: Optional[datetime] = None
     is_active: bool = True
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None

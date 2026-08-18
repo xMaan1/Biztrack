@@ -22,6 +22,10 @@ from .notifications import notify_mot_booking_confirmation
 logger = logging.getLogger(__name__)
 
 
+def _next_mot_due_date(booking_date: date) -> date:
+    return booking_date + timedelta(days=365)
+
+
 def _get_mot_booking_row(
     booking_id: str,
     db: Session,
@@ -209,6 +213,8 @@ def create_mot_booking_record(body: MotBookingCreate, db: Session, tenant_id: st
     data["customer_email"] = customer_email
     data["tenant_id"] = tenant_id
     data["is_active"] = True
+    if not data.get("mot_expiry_date"):
+        data["mot_expiry_date"] = _next_mot_due_date(data.get("booking_date") or date.today())
     if isinstance(data.get("price"), Decimal):
         data["price"] = float(data["price"])
     row = create_entity(MotBooking, data, db)

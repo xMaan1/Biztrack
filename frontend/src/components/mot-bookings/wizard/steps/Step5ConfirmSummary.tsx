@@ -121,7 +121,7 @@ export function Step5ConfirmSummary({
 
         <SummaryBlock title="Your Details" step={4} onEdit={onEditStep}>
           <p className="font-semibold">{formatCustomerName(data)}</p>
-          <p>{data.customer.email}</p>
+          {data.customer.email && <p>{data.customer.email}</p>}
           <p>{data.customer.telephone}</p>
           {customerLines.map((line) => (
             <p key={line} className="text-muted-foreground">

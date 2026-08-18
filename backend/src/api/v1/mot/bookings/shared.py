@@ -22,6 +22,7 @@ def mot_booking_to_schema(row: MotBooking) -> MotBookingSchema:
         price=row.price or 0,
         mileage=row.mileage,
         mot_expiry_date=row.mot_expiry_date,
+        mot_reminder_sent_at=row.mot_reminder_sent_at,
         notes=row.notes,
         result_notes=row.result_notes,
         is_active=row.is_active if row.is_active is not None else True,
