@@ -216,6 +216,16 @@ export function InvoiceViewContent({
               value={formatCurrency(invoice.labourCost)}
             />
           ) : null}
+          {invoice.taxAmount > 0 ? (
+            <InvoiceDetailField
+              label={
+                invoice.vatRate && invoice.vatRate > 0
+                  ? `VAT (${Math.round(invoice.vatRate * 100)}%)`
+                  : "VAT"
+              }
+              value={formatCurrency(invoice.taxAmount)}
+            />
+          ) : null}
           <InvoiceDetailField
             label="Total"
             value={

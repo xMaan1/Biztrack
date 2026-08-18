@@ -168,6 +168,7 @@ def create_invoice_endpoint(
         totals = calculate_invoice_totals(
             invoice_data.items,
             invoice_data.labourCost or 0,
+            invoice_data.vatRate or 0,
         )
 
         db_invoice = Invoice(
@@ -597,10 +598,12 @@ def update_invoice_endpoint(
                 totals = calculate_invoice_totals(
                     value,
                     invoice.labourCost or 0,
+                    getattr(invoice, "vatRate", 0) or 0,
                 )
                 invoice.subtotal = totals["subtotal"]
                 invoice.discountAmount = totals["discountAmount"]
                 invoice.taxAmount = totals["taxAmount"]
+                invoice.vatRate = totals["vatRate"]
                 invoice.total = totals["total"]
             elif field == "orderTime" and value:
                 setattr(invoice, field, datetime.fromisoformat(value))
@@ -620,14 +623,16 @@ def update_invoice_endpoint(
             except Exception:
                 pass
 
-        if any(k in update_data for k in ("items", "labourCost")):
+        if any(k in update_data for k in ("items", "labourCost", "vatRate")):
             totals = calculate_invoice_totals(
                 invoice.items or [],
                 invoice.labourCost or 0,
+                invoice.vatRate or 0,
             )
             invoice.subtotal = totals["subtotal"]
             invoice.discountAmount = totals["discountAmount"]
             invoice.taxAmount = totals["taxAmount"]
+            invoice.vatRate = totals["vatRate"]
             invoice.total = totals["total"]
 
         if update_data.get("items"):

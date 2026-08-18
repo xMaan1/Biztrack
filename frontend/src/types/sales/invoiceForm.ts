@@ -21,6 +21,7 @@ export type InvoiceFormTotals = {
   subtotal: number;
   discountAmount: number;
   labourCost: number;
+  taxAmount: number;
   total: number;
 };
 

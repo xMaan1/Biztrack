@@ -14,6 +14,7 @@ type InvoiceFormTotalsSummaryProps = {
   mode: InvoiceFormMode;
   totals: InvoiceFormTotals;
   labourCost?: number;
+  vatRate?: number;
   onLabourCostChange: (
     field: keyof InvoiceCreate,
     value: string | number,
@@ -59,6 +60,7 @@ export function InvoiceFormTotalsSummary({
   mode,
   totals,
   labourCost,
+  vatRate,
   onLabourCostChange,
 }: InvoiceFormTotalsSummaryProps) {
   return (
@@ -83,6 +85,30 @@ export function InvoiceFormTotalsSummary({
               onChange={(value) => onLabourCostChange("labourCost", value)}
             />
           </InlineField>
+          <InlineField label="VAT Rate (%):">
+            <Input
+              type="number"
+              min="0"
+              max="100"
+              step="0.1"
+              readOnly={mode === "view"}
+              disabled={mode === "view"}
+              value={vatRate ? Math.round(vatRate * 1000) / 10 : 0}
+              onChange={(e) =>
+                onLabourCostChange(
+                  "vatRate",
+                  Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)) /
+                    100,
+                )
+              }
+              className={`${COMMERCE_INPUT_CLS} bg-background`}
+            />
+          </InlineField>
+          {totals.taxAmount > 0 && (
+            <InlineField label="VAT Amount:">
+              <CurrencyInput value={totals.taxAmount} />
+            </InlineField>
+          )}
         </div>
 
         <div className="space-y-1.5" />

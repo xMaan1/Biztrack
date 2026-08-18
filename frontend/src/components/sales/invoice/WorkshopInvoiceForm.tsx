@@ -72,6 +72,7 @@ export function WorkshopInvoiceForm({
         mode={mode}
         totals={form.totals}
         labourCost={form.formData.labourCost}
+        vatRate={form.formData.vatRate}
         onLabourCostChange={form.handleInputChange}
       />
 

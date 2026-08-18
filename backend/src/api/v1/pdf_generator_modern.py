@@ -373,27 +373,31 @@ def create_vehicle_section(invoice, customization: Optional[Dict[str, Any]], sty
 def create_items_table(invoice, styles: Dict[str, ParagraphStyle], colors: Dict[str, tuple], currency: str = "USD") -> List:
     elements = []
     
+    has_items = hasattr(invoice, 'items') and invoice.items
+    
+    if not has_items:
+        return elements
+    
     elements.append(Paragraph("Items & Services", styles['header']))
     
     headers = ['Description', 'SKU', 'Qty', 'Sale Price', 'Discount', 'Total']
     table_data = [headers]
-    if hasattr(invoice, 'items') and invoice.items:
-        for item in invoice.items:
-            item_unit_price = item.get('salePrice') or item.get('unitPrice', 0)
-            item_total = item['quantity'] * item_unit_price * (1 - item.get('discount', 0) / 100)
-            
-            # Include SKU if available from product selection
-            sku = item.get('productSku', '') if item.get('productSku') else ''
-            
-            row = [
-                item['description'],
-                sku,
-                f"{item['quantity']:.2f}",
-                format_currency(item_unit_price, currency),
-                f"{item.get('discount', 0):.1f}%",
-                format_currency(item_total, currency)
-            ]
-            table_data.append(row)
+    for item in invoice.items:
+        item_unit_price = item.get('salePrice') or item.get('unitPrice', 0)
+        item_total = item['quantity'] * item_unit_price * (1 - item.get('discount', 0) / 100)
+
+        # Include SKU if available from product selection
+        sku = item.get('productSku', '') if item.get('productSku') else ''
+
+        row = [
+            item['description'],
+            sku,
+            f"{item['quantity']:.2f}",
+            format_currency(item_unit_price, currency),
+            f"{item.get('discount', 0):.1f}%",
+            format_currency(item_total, currency)
+        ]
+        table_data.append(row)
     
     items_table = Table(table_data, colWidths=[2.5*inch, 1*inch, 0.7*inch, 0.9*inch, 0.7*inch, 1*inch])
     table_style = [
@@ -427,6 +431,8 @@ def create_totals_section(invoice, styles: Dict[str, ParagraphStyle], colors: Di
     
     subtotal = getattr(invoice, 'subtotal', 0) or 0
     labour_cost = getattr(invoice, 'labourCost', 0) or 0
+    vat_rate = getattr(invoice, 'vatRate', 0) or 0
+    tax_amount = getattr(invoice, 'taxAmount', 0) or 0
     total = getattr(invoice, 'total', 0) or 0
     
     totals_data = [
@@ -435,6 +441,10 @@ def create_totals_section(invoice, styles: Dict[str, ParagraphStyle], colors: Di
     
     if labour_cost > 0:
         totals_data.append([f'Labour Cost:', format_currency(labour_cost, currency)])
+    
+    if vat_rate > 0 or tax_amount > 0:
+        vat_label = f'VAT ({vat_rate * 100:.0f}%):' if vat_rate > 0 else 'VAT:'
+        totals_data.append([vat_label, format_currency(tax_amount, currency)])
     
     totals_data.append(['TOTAL:', format_currency(total, currency)])
     

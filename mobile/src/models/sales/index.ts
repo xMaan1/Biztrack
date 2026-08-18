@@ -204,6 +204,7 @@ export interface InvoiceCreate {
   orderNumber?: string;
   orderTime?: string;
   labourCost?: number;
+  vatRate?: number;
   terms?: string;
   items: InvoiceItemCreate[];
   opportunityId?: string;
@@ -220,6 +221,7 @@ export interface InvoiceUpdate {
   orderNumber?: string;
   orderTime?: string;
   labourCost?: number;
+  vatRate?: number;
   terms?: string;
   status?: InvoiceStatus;
   items?: InvoiceItemCreate[];

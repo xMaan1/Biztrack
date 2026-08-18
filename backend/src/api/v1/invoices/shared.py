@@ -123,6 +123,7 @@ def generate_order_number(tenant_id: str, db: Session) -> str:
 def calculate_invoice_totals(
     items: List,
     labour_cost: float = 0.0,
+    vat_rate: float = 0.0,
 ) -> dict:
     subtotal = 0
     discount_amount = 0
@@ -139,12 +140,17 @@ def calculate_invoice_totals(
         subtotal += gross
         discount_amount += gross * (discount / 100)
 
-    total = (subtotal - discount_amount) + (labour_cost or 0)
+    labour = labour_cost or 0
+    taxable_base = (subtotal - discount_amount) + labour
+    vat_amount = taxable_base * (vat_rate or 0)
+
+    total = taxable_base + vat_amount
 
     return {
         "subtotal": round(subtotal, 2),
         "discountAmount": round(discount_amount, 2),
-        "taxAmount": 0.0,
+        "taxAmount": round(vat_amount, 2),
+        "vatRate": round(vat_rate, 4),
         "total": round(total, 2),
     }
 
@@ -199,6 +205,7 @@ def transform_invoice_to_pydantic(db_invoice: Invoice):
         orderTime=db_invoice.orderTime,
         subtotal=db_invoice.subtotal,
         taxAmount=db_invoice.taxAmount,
+        vatRate=getattr(db_invoice, "vatRate", 0) or 0,
         labourCost=getattr(db_invoice, "labourCost", 0) or 0,
         total=db_invoice.total,
         terms=db_invoice.terms,

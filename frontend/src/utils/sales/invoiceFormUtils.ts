@@ -65,6 +65,7 @@ export function emptyInvoiceForm(): InvoiceCreate {
     orderNumber: "",
     orderTime: defaultOrderTime(),
     labourCost: 0,
+    vatRate: 0,
     terms: "",
     items: [],
     opportunityId: "",
@@ -89,6 +90,7 @@ export function invoiceFormDataFromInvoice(invoice: Invoice): InvoiceCreate {
       ? parseToLocalDateTimeInputValue(String(invoice.orderTime))
       : defaultOrderTime(),
     labourCost: invoice.labourCost || 0,
+    vatRate: invoice.vatRate || 0,
     terms: invoice.terms || "",
     items: [],
     opportunityId: invoice.opportunityId || "",
@@ -151,6 +153,11 @@ export function jobCardLabourEstimate(jc: JobCard): number {
   return Number(jc.labor_estimate) || 0;
 }
 
+export function jobCardVatRate(jc: JobCard): number {
+  const raw = Number(jc.vat_rate);
+  return Number.isFinite(raw) && raw >= 0 ? raw : 0;
+}
+
 export function jobCardToVehicle(jc: JobCard): Vehicle | null {
   const vi = (jc.vehicle_info || {}) as Record<string, unknown>;
   const reg = vi.registration_number ? String(vi.registration_number) : "";
@@ -208,12 +215,16 @@ export function calculateInvoiceTotals(
     0,
   );
   const labourCost = formData.labourCost || 0;
-  const total = subtotal - discountAmount + labourCost;
+  const vatRate = formData.vatRate || 0;
+  const taxableBase = subtotal - discountAmount + labourCost;
+  const taxAmount = taxableBase * vatRate;
+  const total = taxableBase + taxAmount;
 
   return {
     subtotal: Math.round(subtotal * 100) / 100,
     discountAmount: Math.round(discountAmount * 100) / 100,
     labourCost: Math.round(labourCost * 100) / 100,
+    taxAmount: Math.round(taxAmount * 100) / 100,
     total: Math.round(total * 100) / 100,
   };
 }

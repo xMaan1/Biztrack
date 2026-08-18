@@ -192,6 +192,19 @@ export function InvoiceCreatedDialog({
                     </span>
                   </div>
                 ) : null}
+                {invoice.taxAmount > 0 ? (
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-2 text-gray-500">
+                      <Package className="h-4 w-4 text-blue-500" />
+                      {invoice.vatRate && invoice.vatRate > 0
+                        ? `VAT (${Math.round(invoice.vatRate * 100)}%)`
+                        : "VAT"}
+                    </span>
+                    <span className="font-medium text-gray-900">
+                      {formatCurrency(invoice.taxAmount)}
+                    </span>
+                  </div>
+                ) : null}
                 <div className="mt-1 flex items-center justify-between border-t border-dashed pt-2.5">
                   <span className="text-sm font-medium text-gray-500">
                     Total Amount

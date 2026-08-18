@@ -69,6 +69,7 @@ class InvoiceBase(BaseModel):
     orderTime: Optional[datetime] = None
     subtotal: float = 0.0
     taxAmount: float = 0.0
+    vatRate: float = 0.0
     labourCost: float = 0.0
     total: float = 0.0
     terms: Optional[str] = None
@@ -90,6 +91,7 @@ class InvoiceCreate(BaseModel):
     orderNumber: Optional[str] = None
     orderTime: Optional[str] = None
     labourCost: float = 0.0
+    vatRate: float = 0.0
     terms: Optional[str] = None
     items: List[InvoiceItemCreate] = []
     opportunityId: Optional[str] = None
@@ -110,6 +112,7 @@ class InvoiceUpdate(BaseModel):
     orderNumber: Optional[str] = None
     orderTime: Optional[str] = None
     labourCost: Optional[float] = None
+    vatRate: Optional[float] = None
     terms: Optional[str] = None
     status: Optional[InvoiceStatus] = None
     items: Optional[List[InvoiceItemCreate]] = None
