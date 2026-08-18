@@ -13,6 +13,7 @@ from .....config.database import create_user, get_user_by_email, get_user_by_id
 from .....models.projects import Project
 from .....config.notification_models import Notification, NotificationPreference
 from .....core.auth import get_password_hash
+from .....models.common import TenantRole
 from .....models.platform import User as UserORM
 from .....models.rbac import Role as RoleORM, TenantUser as TenantUserORM
 from .....models.user_models import User, UserCreate
@@ -24,7 +25,7 @@ from ..shared import (
     role_orm_to_schema,
     send_user_invitation,
 )
-from .schemas import TenantUser, TenantUserCreate, TenantUserUpdate, UserWithPermissions
+from .schemas import TenantUser, TenantUserCreate, TenantUserUpdate, UserSummary, UserWithPermissions
 
 logger = logging.getLogger(__name__)
 
@@ -100,14 +101,71 @@ def _tenant_user_to_schema(tenant_user: TenantUserORM) -> TenantUser:
         joinedAt=_tenant_joined_at(tenant_user),
         createdAt=tenant_user.createdAt,
         updatedAt=tenant_user.updatedAt,
+        role=role_orm_to_schema(tenant_user.role_obj) if tenant_user.role_obj else None,
+        user=UserSummary(
+            id=str(tenant_user.user.id),
+            userName=tenant_user.user.userName,
+            email=tenant_user.user.email,
+            firstName=tenant_user.user.firstName,
+            lastName=tenant_user.user.lastName,
+            avatar=tenant_user.user.avatar,
+        ) if tenant_user.user else None,
     )
+
+
+def _is_owner_role(role: Optional[RoleORM]) -> bool:
+    return bool(role and role.name == TenantRole.OWNER.value)
+
+
+def _active_owner_count(db: Session, tenant_id: str) -> int:
+    return db.query(TenantUserORM).join(RoleORM).filter(
+        and_(
+            TenantUserORM.tenant_id == tenant_id,
+            TenantUserORM.isActive == True,
+            RoleORM.name == TenantRole.OWNER.value,
+        )
+    ).count()
+
+
+def _ensure_not_demoting_last_owner(
+    db: Session,
+    tenant_id: str,
+    tenant_user: TenantUserORM,
+    new_role_id: Optional[str],
+) -> None:
+    if not tenant_user.isActive or not _is_owner_role(tenant_user.role_obj):
+        return
+    new_role = get_tenant_role(db, new_role_id, tenant_id) if new_role_id else None
+    if _is_owner_role(new_role):
+        return
+    if _active_owner_count(db, tenant_id) <= 1:
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot demote the last owner of this workspace",
+        )
+
+
+def _ensure_caller_can_manage_owner(
+    db: Session,
+    tenant_id: str,
+    tenant_user: TenantUserORM,
+    current_user_id: str,
+) -> None:
+    if not _is_owner_role(tenant_user.role_obj):
+        return
+    if not RBACService.is_owner(db, current_user_id, tenant_id):
+        raise HTTPException(
+            status_code=403,
+            detail="Only the tenant owner can modify or remove an owner",
+        )
 
 
 def get_tenant_users_list(db: Session, tenant_id: Optional[str]) -> List[UserWithPermissions]:
     if not tenant_id:
         return []
     tenant_users = db.query(TenantUserORM).join(UserORM).join(RoleORM).filter(
-        TenantUserORM.tenant_id == tenant_id
+        TenantUserORM.tenant_id == tenant_id,
+        TenantUserORM.isActive == True,
     ).all()
     user_list = []
     for tenant_user in tenant_users:
@@ -155,6 +213,7 @@ def add_user_to_tenant(
             raise HTTPException(status_code=400, detail="User already exists in this tenant")
         existing_tenant_user.isActive = True
         existing_tenant_user.role_id = user_data.role_id
+        existing_tenant_user.role = role.name
         existing_tenant_user.custom_permissions = user_data.custom_permissions
         db.commit()
         db.refresh(existing_tenant_user)
@@ -201,12 +260,17 @@ def update_rbac_tenant_user(
         if not role:
             raise HTTPException(status_code=404, detail="Role not found")
         ensure_owner_role_assignment(db, role, str(current_user.id), tenant_id)
+    _ensure_caller_can_manage_owner(db, tenant_id, tenant_user, str(current_user.id))
+    _ensure_not_demoting_last_owner(db, tenant_id, tenant_user, user_data.role_id)
     update_dict = user_data.dict(exclude_unset=True)
     if 'role_id' in update_dict and update_dict['role_id']:
         try:
             update_dict['role_id'] = UUID(update_dict['role_id'])
         except (ValueError, TypeError):
             raise HTTPException(status_code=400, detail="Invalid role ID format")
+        role = get_tenant_role(db, str(update_dict['role_id']), tenant_id)
+        if role:
+            update_dict['role'] = role.name
     for key, value in update_dict.items():
         if hasattr(tenant_user, key) and value is not None:
             setattr(tenant_user, key, value)
@@ -248,6 +312,17 @@ def _remove_tenant_user_record(
 ) -> dict:
     if str(tenant_user.userId) == str(current_user_id):
         raise HTTPException(status_code=400, detail="You cannot remove yourself from the tenant")
+    if _is_owner_role(tenant_user.role_obj):
+        if not RBACService.is_owner(db, current_user_id, tenant_id):
+            raise HTTPException(
+                status_code=403,
+                detail="Only the tenant owner can remove an owner",
+            )
+        if _active_owner_count(db, tenant_id) <= 1:
+            raise HTTPException(
+                status_code=400,
+                detail="Cannot remove the last owner of this workspace",
+            )
     user_id_uuid = tenant_user.userId
     managed_projects = _get_managed_project_names(db, user_id_uuid, tenant_id)
     if managed_projects:
@@ -322,6 +397,17 @@ def force_delete_user_by_id(
     ).first()
     if not tenant_user:
         raise HTTPException(status_code=404, detail="User not found in this tenant")
+    if _is_owner_role(tenant_user.role_obj):
+        if not RBACService.is_owner(db, current_user_id, tenant_id):
+            raise HTTPException(
+                status_code=403,
+                detail="Only the tenant owner can remove an owner",
+            )
+        if _active_owner_count(db, tenant_id) <= 1:
+            raise HTTPException(
+                status_code=400,
+                detail="Cannot remove the last owner of this workspace",
+            )
     try:
         return force_delete_user_service(
             db,

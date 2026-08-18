@@ -4,7 +4,6 @@ from typing import Optional
 
 from .....config.database import get_db
 from .....api.dependencies import get_current_user, get_tenant_context, require_permission
-from .....models.common import ModulePermission
 from .schemas import POSShiftCreate, POSShiftUpdate, POSShiftsResponse, POSShiftResponse
 from . import logic
 
@@ -22,7 +21,7 @@ async def list_pos_shifts(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
     tenant_context: Optional[dict] = Depends(get_tenant_context),
-    _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value)),
+    _: dict = Depends(require_permission("pos:shifts:view")),
 ):
     return logic.list_pos_shifts_endpoint(
         db, tenant_context, status, cashier_id, date_from, date_to, page, limit
@@ -34,7 +33,7 @@ async def get_current_open_shift(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
     tenant_context: Optional[dict] = Depends(get_tenant_context),
-    _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value)),
+    _: dict = Depends(require_permission("pos:shifts:view")),
 ):
     return logic.get_current_open_shift_endpoint(db, tenant_context, current_user)
 
@@ -45,7 +44,7 @@ async def get_pos_shift(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
     tenant_context: Optional[dict] = Depends(get_tenant_context),
-    _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value)),
+    _: dict = Depends(require_permission("pos:shifts:view")),
 ):
     return logic.get_pos_shift_endpoint(db, tenant_context, shift_id)
 
@@ -56,7 +55,7 @@ async def open_pos_shift(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
     tenant_context: Optional[dict] = Depends(get_tenant_context),
-    _: dict = Depends(require_permission(ModulePermission.INVENTORY_CREATE.value)),
+    _: dict = Depends(require_permission("pos:shifts:create")),
 ):
     return logic.open_pos_shift_endpoint(db, tenant_context, current_user, shift_data)
 
@@ -68,6 +67,6 @@ async def update_pos_shift(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
     tenant_context: Optional[dict] = Depends(get_tenant_context),
-    _: dict = Depends(require_permission(ModulePermission.INVENTORY_UPDATE.value)),
+    _: dict = Depends(require_permission("pos:shifts:update")),
 ):
     return logic.update_pos_shift_endpoint(db, tenant_context, shift_id, shift_data)

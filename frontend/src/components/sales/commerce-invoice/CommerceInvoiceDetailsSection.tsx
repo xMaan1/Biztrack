@@ -14,6 +14,7 @@ import { getCustomerDisplayName } from "@/src/utils/customerUtils";
 import { COMMERCE_INPUT_CLS } from "./constants";
 import { AddCustomerButton } from "./AddCustomerButton";
 import { InlineField } from "./InlineField";
+import { usePermissions } from "@/src/hooks/usePermissions";
 
 type CommerceInvoiceDetailsSectionProps = {
   formData: InvoiceCreate;
@@ -40,6 +41,9 @@ export function CommerceInvoiceDetailsSection({
   onOrderTimeChange,
   onNewCustomer,
 }: CommerceInvoiceDetailsSectionProps) {
+  const { hasPermission } = usePermissions();
+  const canCreateCustomer =
+    hasPermission("crm:customers:create") || hasPermission("crm:create");
   return (
     <section className="rounded-lg border border-border bg-card px-3 pb-3 pt-2">
       <div className="grid grid-cols-1 gap-x-6 gap-y-2 lg:grid-cols-2">
@@ -129,7 +133,7 @@ export function CommerceInvoiceDetailsSection({
                   ))}
                 </SelectContent>
               </Select>
-              {onNewCustomer ? (
+              {onNewCustomer && canCreateCustomer ? (
                 <AddCustomerButton
                   onClick={onNewCustomer}
                   className="w-full shrink-0 md:w-auto"

@@ -400,6 +400,13 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
     if (!userPermissions) return false;
     if (userPermissions.permissions.includes(permission)) return true;
     const segments = permission.split(':');
+    if (segments.length === 2) {
+      const [module, action] = segments;
+      const prefix = `${module}:`;
+      return userPermissions.permissions.some(
+        (p) => p.startsWith(prefix) && p.endsWith(`:${action}`),
+      );
+    }
     if (segments.length >= 3) {
       const module = segments[0];
       const action = segments[segments.length - 1];

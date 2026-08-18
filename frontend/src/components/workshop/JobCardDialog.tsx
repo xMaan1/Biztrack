@@ -34,6 +34,7 @@ import {
   WorkshopDocumentLinksValue,
 } from "./WorkshopDocumentLinks";
 import { usePlanInfo } from "../../hooks/usePlanInfo";
+import { usePermissions } from "../../hooks/usePermissions";
 import type { Product } from "../../models/pos";
 
 interface JobCardDialogProps {
@@ -52,7 +53,10 @@ export default function JobCardDialog({
   onSuccess,
 }: JobCardDialogProps) {
   const { planInfo } = usePlanInfo();
+  const { hasPermission } = usePermissions();
   const isWorkshop = planInfo?.planType === "workshop";
+  const canCreateCustomer =
+    hasPermission("crm:customers:create") || hasPermission("crm:create");
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
@@ -376,6 +380,8 @@ export default function JobCardDialog({
                     variant="outline"
                     onClick={() => setShowCreateCustomer(true)}
                     className="shrink-0"
+                    disabled={!canCreateCustomer}
+                    title={canCreateCustomer ? undefined : "You don't have permission to create customers"}
                   >
                     <Plus className="h-4 w-4 mr-1" />
                     New

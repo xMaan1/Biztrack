@@ -14,6 +14,29 @@ from ..models.platform import User
 from ..models.rbac import Role, TenantUser
 
 
+def permission_satisfied(user_permissions: List[str], required: str) -> bool:
+    """Check whether a user's permission list satisfies a required permission.
+
+    A module-level permission (``module:action``) is satisfied by any matching
+    granular permission (``module:resource:action``), and a granular permission
+    is satisfied by the matching module-level permission (``module:action``).
+    """
+    if required in user_permissions:
+        return True
+    segments = required.split(":")
+    if len(segments) == 2:
+        module, action = segments
+        prefix = f"{module}:"
+        for user_permission in user_permissions:
+            if user_permission.startswith(prefix) and user_permission.endswith(f":{action}"):
+                return True
+    elif len(segments) == 3:
+        module, action = segments[0], segments[2]
+        if f"{module}:{action}" in user_permissions:
+            return True
+    return False
+
+
 def _crud(prefix: str) -> List[str]:
     return [f"{prefix}:view", f"{prefix}:create", f"{prefix}:update", f"{prefix}:delete"]
 
@@ -84,6 +107,7 @@ GRANULAR_PERMISSIONS = {
         *_crud("ledger:journal_entries"),
         *_crud("ledger:budgets"),
         *_crud("ledger:account_receivables"),
+        *_crud("ledger:investments"),
         "ledger:reports:view",
         "ledger:profit_loss:view",
     ],
@@ -93,6 +117,20 @@ GRANULAR_PERMISSIONS = {
         *_crud("pos:transactions"),
         *_crud("pos:shifts"),
         "pos:reports:view",
+    ],
+    "mot": [
+        *_crud("mot:bookings"),
+        "mot:settings:view",
+        "mot:settings:update",
+    ],
+    "notifications": [
+        "notifications:view",
+    ],
+    "workshop": [
+        *_crud("workshop:customers"),
+        *_crud("workshop:job_cards"),
+        *_crud("workshop:vehicles"),
+        *_crud("workshop:quality_control"),
     ],
     "healthcare": [
         *_crud("healthcare:appointments"),
@@ -104,6 +142,8 @@ GRANULAR_PERMISSIONS = {
     ],
     "ngo": [
         *_crud("ngo:donors"),
+        *_crud("ngo:donor_leads"),
+        *_crud("ngo:donor_contacts"),
         *_crud("ngo:partner-organizations"),
     ],
     "users": _crud("users"),
@@ -178,6 +218,34 @@ OWNER_ACCESSIBLE_MODULES = [
     'finance', 'settings', 'notifications', 'users', 'dashboard', 'healthcare', 'ngo',
 ]
 
+VALID_ACTIONS = {"view", "create", "update", "delete", "export"}
+
+# Modules known to have granular resource permissions.
+GRANULAR_MODULES = set(GRANULAR_PERMISSIONS.keys())
+
+
+def validate_permissions(permissions) -> Optional[str]:
+    """Validate a list of permission strings.
+
+    Accepts any permission whose module is known and whose action is valid.
+    Returns an error message string, or ``None`` if all permissions are valid.
+    """
+    if not isinstance(permissions, (list, tuple)):
+        return "permissions must be a list of strings"
+    for permission in permissions:
+        if not isinstance(permission, str) or not permission.strip():
+            return "permissions must be a list of strings"
+        parts = permission.strip().split(":")
+        if len(parts) not in (2, 3):
+            return f"Invalid permission format: '{permission}' (expected module:action or module:resource:action)"
+        module = parts[0]
+        action = parts[-1]
+        if module not in GRANULAR_MODULES and module not in OWNER_ACCESSIBLE_MODULES:
+            return f"Unknown permission module: '{module}' in '{permission}'"
+        if action not in VALID_ACTIONS:
+            return f"Invalid permission action: '{action}' in '{permission}'"
+    return None
+
 
 class RBACService:
     @staticmethod
@@ -189,8 +257,14 @@ class RBACService:
 
     @staticmethod
     def create_default_roles(db: Session, tenant_id: str) -> List[Role]:
+        existing = {
+            role.name
+            for role in db.query(Role).filter(Role.tenant_id == tenant_id).all()
+        }
         roles = []
         for role_name, permissions in DEFAULT_ROLE_PERMISSIONS.items():
+            if role_name.value in existing:
+                continue
             role = Role(
                 tenant_id=tenant_id,
                 name=role_name.value,
@@ -205,12 +279,35 @@ class RBACService:
         return roles
 
     @staticmethod
+    def _implied_view_permissions(permissions: List[str]) -> List[str]:
+        """Automatically grant view permission when create/update/delete is granted.
+
+        A user who can create, update or delete a resource must be able to see it,
+        otherwise the resource is unreachable from the UI. This expands both
+        module-level (``crm:create`` -> ``crm:view``) and granular
+        (``crm:customers:create`` -> ``crm:customers:view``) permissions.
+        """
+        result = list(permissions)
+        for permission in permissions:
+            parts = permission.split(":")
+            if len(parts) not in (2, 3):
+                continue
+            action = parts[-1]
+            if action not in ("create", "update", "delete"):
+                continue
+            view_permission = f"{parts[0]}:{parts[1]}:view" if len(parts) == 3 else f"{parts[0]}:view"
+            if view_permission not in result:
+                result.append(view_permission)
+        return result
+
+    @staticmethod
     def get_user_permissions(db: Session, user_id: str, tenant_id: str) -> List[str]:
         tenant_user = db.query(TenantUser).join(Role).filter(
             and_(
                 TenantUser.userId == user_id,
                 TenantUser.tenant_id == tenant_id,
                 TenantUser.isActive == True,
+                Role.isActive == True,
             )
         ).first()
         if not tenant_user:
@@ -218,8 +315,11 @@ class RBACService:
         role_permissions = tenant_user.role_obj.permissions if tenant_user.role_obj else []
         custom_permissions = tenant_user.custom_permissions or []
         all_permissions = list(set(role_permissions + custom_permissions))
+        all_permissions = RBACService._implied_view_permissions(all_permissions)
         if all_permissions and "dashboard:view" not in all_permissions:
             all_permissions.append("dashboard:view")
+        if all_permissions and "notifications:view" not in all_permissions:
+            all_permissions.append("notifications:view")
         plan_type = RBACService._get_tenant_plan_type(db, tenant_id)
         return filter_permissions_for_plan(all_permissions, plan_type)
 
@@ -231,7 +331,7 @@ class RBACService:
             return False
         if RBACService.is_owner(db, user_id, tenant_id):
             return True
-        return permission in RBACService.get_user_permissions(db, user_id, tenant_id)
+        return permission_satisfied(RBACService.get_user_permissions(db, user_id, tenant_id), permission)
 
     @staticmethod
     def has_module_access(db: Session, user_id: str, tenant_id: str, module: str) -> bool:
@@ -248,6 +348,7 @@ class RBACService:
                 TenantUser.userId == user_id,
                 TenantUser.tenant_id == tenant_id,
                 TenantUser.isActive == True,
+                Role.isActive == True,
             )
         ).first()
         return tenant_user.role_obj if tenant_user else None
@@ -264,6 +365,7 @@ class RBACService:
                 TenantUser.tenant_id == tenant_id,
                 TenantUser.isActive == True,
                 Role.name == TenantRole.OWNER.value,
+                Role.isActive == True,
             )
         ).all()
         return [str(row[0]) for row in rows]

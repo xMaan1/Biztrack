@@ -217,7 +217,17 @@ class TenantMiddleware:
                 current_users = len(get_tenant_users(tenant_context["tenant_id"], db))
                 if current_users >= tenant_context["max_users"]:
                     # Allow read operations but block user creation
-                    if request.method in ["POST", "PUT", "PATCH"] and "/users" in request.url.path:
+                    path = request.url.path
+                    is_user_creation = (
+                        request.method in ["POST", "PUT", "PATCH"]
+                        and (
+                            "/users" in path
+                            or path in ("/rbac/tenant-users", "/rbac/create-user")
+                            or path.startswith("/rbac/tenant-users")
+                            or path.startswith("/rbac/create-user")
+                        )
+                    )
+                    if is_user_creation:
                         raise HTTPException(
                             status_code=status.HTTP_403_FORBIDDEN,
                             detail=f"User limit reached ({current_users}/{tenant_context['max_users']}). Please upgrade your plan."

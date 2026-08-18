@@ -38,7 +38,7 @@ def get_tenant_role(db: Session, role_id: str, tenant_id: str) -> Optional[Role]
     except (ValueError, TypeError):
         return None
     return db.query(Role).filter(
-        and_(Role.id == role_uuid, Role.tenant_id == tenant_uuid)
+        and_(Role.id == role_uuid, Role.tenant_id == tenant_uuid, Role.isActive == True)
     ).first()
 
 

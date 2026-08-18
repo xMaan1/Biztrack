@@ -4,7 +4,6 @@ from typing import Optional
 
 from .....config.database import get_db
 from .....api.dependencies import get_current_user, get_tenant_context, require_permission
-from .....models.common import ModulePermission
 from . import logic
 
 router = APIRouter()
@@ -19,7 +18,7 @@ async def get_pos_sales_report(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
     tenant_context: Optional[dict] = Depends(get_tenant_context),
-    _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value)),
+    _: dict = Depends(require_permission("pos:reports:view")),
 ):
     return logic.get_pos_sales_report_endpoint(
         db, tenant_context, date_from, date_to, payment_method, cashier_id
@@ -33,7 +32,7 @@ async def get_pos_inventory_report(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
     tenant_context: Optional[dict] = Depends(get_tenant_context),
-    _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value)),
+    _: dict = Depends(require_permission("pos:reports:view")),
 ):
     return logic.get_pos_inventory_report_endpoint(db, tenant_context, low_stock_only, category)
 
@@ -46,6 +45,6 @@ async def get_pos_shifts_report(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
     tenant_context: Optional[dict] = Depends(get_tenant_context),
-    _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value)),
+    _: dict = Depends(require_permission("pos:reports:view")),
 ):
     return logic.get_pos_shifts_report_endpoint(db, tenant_context, date_from, date_to, cashier_id)

@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from .....config.database import get_db
-from .....api.dependencies import get_current_user, get_tenant_context
+from .....api.dependencies import get_current_user, get_tenant_context, require_permission
 from ...http_common import tenant_id_str
 from .schemas import DonorLead, DonorLeadCreate, DonorLeadUpdate, DonorLeadsResponse
 from . import logic
@@ -23,7 +23,7 @@ async def list_donor_leads(
     limit: int = Query(50, ge=1, le=500),
     db: Session = Depends(get_db),
     tenant_context: dict = Depends(get_tenant_context),
-    _=Depends(get_current_user),
+    _=Depends(require_permission("ngo:donor_leads:view")),
 ):
     return logic.list_donor_leads(
         tenant_id_str(tenant_context),
@@ -42,7 +42,7 @@ async def get_donor_lead(
     lead_id: str,
     db: Session = Depends(get_db),
     tenant_context: dict = Depends(get_tenant_context),
-    _=Depends(get_current_user),
+    _=Depends(require_permission("ngo:donor_leads:view")),
 ):
     return logic.get_donor_lead(tenant_id_str(tenant_context), lead_id, db)
 
@@ -52,7 +52,7 @@ async def create_donor_lead(
     body: DonorLeadCreate,
     db: Session = Depends(get_db),
     tenant_context: dict = Depends(get_tenant_context),
-    _=Depends(get_current_user),
+    _=Depends(require_permission("ngo:donor_leads:create")),
 ):
     return logic.create_donor_lead_record(tenant_id_str(tenant_context), body, db)
 
@@ -63,7 +63,7 @@ async def update_donor_lead(
     body: DonorLeadUpdate,
     db: Session = Depends(get_db),
     tenant_context: dict = Depends(get_tenant_context),
-    _=Depends(get_current_user),
+    _=Depends(require_permission("ngo:donor_leads:update")),
 ):
     return logic.update_donor_lead_record(tenant_id_str(tenant_context), lead_id, body, db)
 
@@ -73,6 +73,6 @@ async def delete_donor_lead(
     lead_id: str,
     db: Session = Depends(get_db),
     tenant_context: dict = Depends(get_tenant_context),
-    _=Depends(get_current_user),
+    _=Depends(require_permission("ngo:donor_leads:delete")),
 ):
     logic.delete_donor_lead_record(tenant_id_str(tenant_context), lead_id, db)

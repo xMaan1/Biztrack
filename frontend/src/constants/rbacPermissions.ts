@@ -159,6 +159,38 @@ export const RBAC_PERMISSION_MODULES: PermissionModule[] = [
     ],
   },
   {
+    label: "Workshop",
+    permissions: crud("workshop"),
+    submodules: [
+      { label: "Customers", permissions: crud("workshop:customers") },
+      { label: "Job Cards", permissions: crud("workshop:job_cards") },
+      { label: "Vehicles", permissions: crud("workshop:vehicles") },
+      {
+        label: "Quality Control",
+        permissions: crud("workshop:quality_control"),
+      },
+    ],
+  },
+  {
+    label: "MOT",
+    permissions: [],
+    submodules: [
+      { label: "Bookings", permissions: crud("mot:bookings") },
+      {
+        label: "Settings",
+        permissions: [
+          { label: "View", value: "mot:settings:view" },
+          { label: "Update", value: "mot:settings:update" },
+        ],
+      },
+    ],
+  },
+  {
+    label: "Notifications",
+    permissions: [{ label: "View", value: "notifications:view" }],
+    submodules: [],
+  },
+  {
     label: "POS",
     permissions: crud("pos"),
     submodules: [
@@ -182,6 +214,19 @@ export const RBAC_PERMISSION_MODULES: PermissionModule[] = [
       { label: "Staff", permissions: crud("healthcare:staff") },
       { label: "Admissions", permissions: crud("healthcare:admissions") },
       { label: "Expenses", permissions: crud("healthcare:expenses") },
+    ],
+  },
+  {
+    label: "NGO",
+    permissions: crud("ngo"),
+    submodules: [
+      { label: "Donors", permissions: crud("ngo:donors") },
+      { label: "Donor Leads", permissions: crud("ngo:donor_leads") },
+      { label: "Donor Contacts", permissions: crud("ngo:donor_contacts") },
+      {
+        label: "Partner Organizations",
+        permissions: crud("ngo:partner-organizations"),
+      },
     ],
   },
   {

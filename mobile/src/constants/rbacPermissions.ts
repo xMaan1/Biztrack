@@ -54,4 +54,9 @@ export const SIDEBAR_PATH_PERMISSIONS: Record<string, string> = {
   '/users': 'users:view',
   '/reports': 'reports:view',
   '/events': 'events:view',
+  '/workshop-management/customers': 'crm:customers:view',
+  '/workshop-management/job-cards': 'production:job_cards:view',
+  '/workshop-management/vehicles': 'production:vehicles:view',
+  '/workshop-management/quality-control': 'quality:quality_control:view',
+  '/workshop-management/mot/bookings': 'mot:bookings:view',
 };

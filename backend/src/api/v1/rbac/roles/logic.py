@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from .....models.common import Pagination, TenantRole
 from .....models.rbac import Role as RoleORM, TenantUser as TenantUserORM
+from .....services.rbac_service import validate_permissions
 from ..shared import role_orm_to_schema
 from .schemas import Role, RoleCreate, RoleUpdate, RolesResponse
 
@@ -29,6 +30,9 @@ def get_roles(db: Session, tenant_id: Optional[str]) -> RolesResponse:
 def create_role(db: Session, tenant_id: str, role_data: RoleCreate) -> Role:
     if role_data.name and role_data.name.lower() == TenantRole.OWNER.value:
         raise HTTPException(status_code=400, detail="Role name 'owner' is reserved")
+    validation_error = validate_permissions(role_data.permissions)
+    if validation_error:
+        raise HTTPException(status_code=400, detail=validation_error)
     role = RoleORM(
         tenant_id=tenant_id,
         name=role_data.name,
@@ -52,6 +56,10 @@ def update_role(db: Session, tenant_id: str, role_id: str, role_data: RoleUpdate
     if role.name == TenantRole.OWNER.value:
         raise HTTPException(status_code=400, detail="Cannot modify the owner role")
     update_dict = role_data.dict(exclude_unset=True)
+    if "permissions" in update_dict and update_dict["permissions"] is not None:
+        validation_error = validate_permissions(update_dict["permissions"])
+        if validation_error:
+            raise HTTPException(status_code=400, detail=validation_error)
     for key, value in update_dict.items():
         if hasattr(role, key) and value is not None:
             setattr(role, key, value)

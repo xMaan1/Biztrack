@@ -2,6 +2,7 @@
 
 import { CustomerSearch } from "@/src/components/ui/customer-search";
 import { AddCustomerButton } from "../commerce-invoice/AddCustomerButton";
+import { usePermissions } from "@/src/hooks/usePermissions";
 import type { Customer } from "@/src/services/CustomerService";
 import type { InvoiceFormMode } from "@/src/types/sales/invoiceForm";
 
@@ -20,6 +21,10 @@ export function InvoiceFormCustomerSection({
   onCustomerSelect,
   onNewCustomer,
 }: InvoiceFormCustomerSectionProps) {
+  const { hasPermission } = usePermissions();
+  const canCreateCustomer =
+    hasPermission("crm:customers:create") ||
+    hasPermission("crm:create");
   return (
     <div className="border-t border-border/60 pt-3">
       <div className="flex flex-col gap-2 lg:flex-row lg:items-start">
@@ -38,7 +43,7 @@ export function InvoiceFormCustomerSection({
                 error={customerError}
               />
             </div>
-            {mode !== "view" && (
+            {mode !== "view" && canCreateCustomer && (
               <AddCustomerButton
                 onClick={onNewCustomer}
                 className="w-full shrink-0 md:w-auto"

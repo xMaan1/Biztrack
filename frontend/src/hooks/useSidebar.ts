@@ -98,7 +98,6 @@ export function useSidebar() {
     accessibleModules,
     hasModuleAccess,
     hasPermission,
-    permissions,
     isOwner,
     initializing: rbacInitializing,
   } = usePermissions();
@@ -137,9 +136,9 @@ export function useSidebar() {
   const hasStrictPermission = useCallback(
     (permission?: string) => {
       if (!permission || isSuperAdmin || isOwner()) return true;
-      return permissions.includes(permission);
+      return hasPermission(permission);
     },
-    [permissions, isOwner, isSuperAdmin],
+    [hasPermission, isOwner, isSuperAdmin],
   );
 
   const hasPathPermission = useCallback(

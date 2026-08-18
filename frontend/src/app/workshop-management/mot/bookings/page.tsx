@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { DashboardLayout } from "@/src/components/layout";
 import { useCurrency } from "@/src/contexts/CurrencyContext";
 import { useAuth } from "@/src/contexts/AuthContext";
+import { PermissionGuard } from "@/src/components/guards/PermissionGuard";
 import { getTenantMotBookingUrl } from "@/src/models/mot/MotSettings";
 import { useMotBookingsPage } from "@/src/hooks/useMotBookingsPage";
 import { MotBookingsLoadingState } from "@/src/components/mot-bookings/MotBookingsLoadingState";
@@ -93,5 +94,9 @@ function MotManageBookingsContent() {
 }
 
 export default function MotManageBookingsPage() {
-  return <MotManageBookingsContent />;
+  return (
+    <PermissionGuard permission="mot:bookings:view">
+      <MotManageBookingsContent />
+    </PermissionGuard>
+  );
 }

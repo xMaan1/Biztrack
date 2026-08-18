@@ -6,7 +6,7 @@ from ..config.database import (
     get_db, get_user_by_email, get_user_tenants, get_tenant_by_id,
     get_subscription_by_tenant,
 )
-from ..services.rbac_service import RBACService
+from ..services.rbac_service import RBACService, permission_satisfied
 from sqlalchemy.orm import Session
 from typing import Optional, List
 from ..models.common import ModulePermission
@@ -40,11 +40,14 @@ PATH_MODULE_MAP = {
     "quality-control": "quality",
     "banking": "banking",
     "ledger": "ledger",
+    "investments": "ledger",
     "reports": "reports",
     "events": "events",
     "healthcare": "healthcare",
     "users": "users",
     "dashboard": "dashboard",
+    "mot": "mot",
+    "ngo": "ngo",
 }
 
 RESOURCE_PATH_MAP = {
@@ -92,11 +95,14 @@ RESOURCE_PATH_MAP = {
     "/ledger/reports/income-statement": "ledger:reports",
     "/ledger/reports/balance-sheet": "ledger:reports",
     "/ledger/profit-loss-dashboard": "ledger:profit_loss",
+    "/investments": "ledger:investments",
     "/pos/sale": "pos:sale",
     "/pos/products": "pos:products",
     "/pos/transactions": "pos:transactions",
     "/pos/shifts": "pos:shifts",
     "/pos/reports": "pos:reports",
+    "/mot/bookings": "mot:bookings",
+    "/mot/settings": "mot:settings",
     "/hrm/employees": "hrm:employees",
     "/hrm/jobs": "hrm:jobs",
     "/hrm/reviews": "hrm:reviews",
@@ -113,6 +119,8 @@ RESOURCE_PATH_MAP = {
     "/healthcare/expense-categories": "healthcare:expenses",
     "/ngo/donors": "ngo:donors",
     "/ngo/partner-organizations": "ngo:partner-organizations",
+    "/ngo/donor-leads": "ngo:donor_leads",
+    "/ngo/donor-contacts": "ngo:donor_contacts",
 }
 
 KNOWN_GENERIC_SEGMENTS = {
@@ -211,7 +219,7 @@ def _enforce_granular_permission(
         return
 
     user_permissions = tenant_context.get("permissions", [])
-    if any(permission in user_permissions for permission in candidates):
+    if any(permission_satisfied(user_permissions, permission) for permission in candidates):
         return
 
     raise HTTPException(
@@ -302,6 +310,20 @@ def get_current_user(
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail=f"User not found: No user exists with email {email}"
+            )
+
+        if not getattr(user, "isActive", True):
+            logger.warning(
+                f"Authentication failed: User account is disabled | "
+                f"Email: {email} | "
+                f"URL: {request.url.path} | "
+                f"Method: {request.method} | "
+                f"IP: {request.client.host if request.client else 'unknown'} | "
+                f"Tenant-ID: {tenant_id}"
+            )
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Account is disabled: User {email} has been deactivated"
             )
         
         logger.debug(
@@ -452,6 +474,9 @@ def require_permission(permission: str):
         tenant_context = Depends(get_tenant_context),
         db: Session = Depends(get_db)
     ):
+        if getattr(current_user, "userRole", None) == "super_admin":
+            return current_user
+
         if not tenant_context:
             logger.warning(
                 f"Permission check failed: Tenant context missing | "
@@ -475,7 +500,7 @@ def require_permission(permission: str):
             return current_user
         
         user_permissions = tenant_context.get("permissions", [])
-        if permission not in user_permissions:
+        if not permission_satisfied(user_permissions, permission):
             logger.warning(
                 f"Permission denied: User lacks required permission | "
                 f"Required permission: {permission} | "

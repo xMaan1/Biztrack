@@ -4,7 +4,6 @@ from typing import Optional
 
 from .....config.database import get_db
 from .....api.dependencies import get_current_user, get_tenant_context, require_permission
-from .....models.common import ModulePermission
 from .schemas import POSTransactionCreate, POSTransactionUpdate, POSTransactionsResponse, POSTransactionResponse
 from . import logic
 
@@ -25,7 +24,7 @@ async def list_pos_transactions(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
     tenant_context: Optional[dict] = Depends(get_tenant_context),
-    _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value)),
+    _: dict = Depends(require_permission("pos:transactions:view")),
 ):
     return logic.list_pos_transactions_endpoint(
         db,
@@ -48,7 +47,7 @@ async def get_pos_transaction(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
     tenant_context: Optional[dict] = Depends(get_tenant_context),
-    _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value)),
+    _: dict = Depends(require_permission("pos:transactions:view")),
 ):
     return logic.get_pos_transaction_endpoint(db, tenant_context, transaction_id)
 
@@ -59,7 +58,7 @@ async def create_pos_transaction(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
     tenant_context: Optional[dict] = Depends(get_tenant_context),
-    _: dict = Depends(require_permission(ModulePermission.INVENTORY_CREATE.value)),
+    _: dict = Depends(require_permission("pos:transactions:create")),
 ):
     return logic.create_pos_transaction_endpoint(db, tenant_context, current_user, transaction_data)
 
@@ -71,6 +70,6 @@ async def update_pos_transaction(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
     tenant_context: Optional[dict] = Depends(get_tenant_context),
-    _: dict = Depends(require_permission(ModulePermission.INVENTORY_UPDATE.value)),
+    _: dict = Depends(require_permission("pos:transactions:update")),
 ):
     return logic.update_pos_transaction_endpoint(db, tenant_context, transaction_id, transaction_data)

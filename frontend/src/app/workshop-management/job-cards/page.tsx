@@ -45,6 +45,7 @@ function JobCardsContent() {
   const { canCreate, canUpdate, canDelete } = useCrudPermissions(
     "production:job_cards",
   );
+  const invoices = useCrudPermissions("sales:invoices");
   const [jobCards, setJobCards] = useState<JobCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -341,28 +342,32 @@ function JobCardsContent() {
                         <td className="py-2">{jc.assigned_to_name || "–"}</td>
                         <td className="py-2">{formatDate(jc.planned_date)}</td>
                         <td className="py-2 text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openCreateInvoice(jc)}
-                            disabled={preparingInvoiceId === jc.id}
-                          >
-                            <FileText className="h-4 w-4 mr-1" />
-                            {preparingInvoiceId === jc.id
-                              ? "Preparing..."
-                              : "Create Invoice"}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDownloadPdf(jc)}
-                            disabled={downloadingPdfId === jc.id}
-                          >
-                            <FileDown className="h-4 w-4 mr-1" />
-                            {downloadingPdfId === jc.id
-                              ? "Downloading..."
-                              : "Download PDF"}
-                          </Button>
+                          {invoices.canCreate() && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openCreateInvoice(jc)}
+                              disabled={preparingInvoiceId === jc.id}
+                            >
+                              <FileText className="h-4 w-4 mr-1" />
+                              {preparingInvoiceId === jc.id
+                                ? "Preparing..."
+                                : "Create Invoice"}
+                            </Button>
+                          )}
+                          {invoices.canView() && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDownloadPdf(jc)}
+                              disabled={downloadingPdfId === jc.id}
+                            >
+                              <FileDown className="h-4 w-4 mr-1" />
+                              {downloadingPdfId === jc.id
+                                ? "Downloading..."
+                                : "Download PDF"}
+                            </Button>
+                          )}
                           {canUpdate() && (
                             <Button
                               variant="ghost"

@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from .....config.database import get_db
-from .....api.dependencies import get_current_user, get_tenant_context
+from .....api.dependencies import get_tenant_context, require_permission
 from ...http_common import tenant_id_str
 from .schemas import PartnerOrganization, PartnerOrganizationCreate, PartnerOrganizationUpdate, PartnerOrganizationsResponse
 from . import logic
@@ -22,7 +22,7 @@ async def list_partner_organizations(
     limit: int = Query(50, ge=1, le=500),
     db: Session = Depends(get_db),
     tenant_context: dict = Depends(get_tenant_context),
-    _=Depends(get_current_user),
+    _=Depends(require_permission("ngo:partner-organizations:view")),
 ):
     return logic.list_partner_organizations(
         tenant_id_str(tenant_context),
@@ -41,7 +41,7 @@ async def get_partner_organization(
     partner_id: str,
     db: Session = Depends(get_db),
     tenant_context: dict = Depends(get_tenant_context),
-    _=Depends(get_current_user),
+    _=Depends(require_permission("ngo:partner-organizations:view")),
 ):
     return logic.get_partner_organization(tenant_id_str(tenant_context), partner_id, db)
 
@@ -51,7 +51,7 @@ async def create_partner_organization(
     body: PartnerOrganizationCreate,
     db: Session = Depends(get_db),
     tenant_context: dict = Depends(get_tenant_context),
-    _=Depends(get_current_user),
+    _=Depends(require_permission("ngo:partner-organizations:create")),
 ):
     return logic.create_partner_record(tenant_id_str(tenant_context), body, db)
 
@@ -62,7 +62,7 @@ async def update_partner_organization(
     body: PartnerOrganizationUpdate,
     db: Session = Depends(get_db),
     tenant_context: dict = Depends(get_tenant_context),
-    _=Depends(get_current_user),
+    _=Depends(require_permission("ngo:partner-organizations:update")),
 ):
     return logic.update_partner_record(tenant_id_str(tenant_context), partner_id, body, db)
 
@@ -72,6 +72,6 @@ async def delete_partner_organization(
     partner_id: str,
     db: Session = Depends(get_db),
     tenant_context: dict = Depends(get_tenant_context),
-    _=Depends(get_current_user),
+    _=Depends(require_permission("ngo:partner-organizations:delete")),
 ):
     logic.delete_partner_record(tenant_id_str(tenant_context), partner_id, db)

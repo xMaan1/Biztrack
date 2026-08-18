@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from .....config.database import get_db
-from .....api.dependencies import get_current_user, get_tenant_context
+from .....api.dependencies import get_tenant_context, require_permission
 from ...http_common import tenant_id_str
 from .schemas import Donor, DonorCreate, DonorUpdate, DonorsResponse
 from . import logic
@@ -21,7 +21,7 @@ async def list_donors(
     limit: int = Query(50, ge=1, le=500),
     db: Session = Depends(get_db),
     tenant_context: dict = Depends(get_tenant_context),
-    _=Depends(get_current_user),
+    _=Depends(require_permission("ngo:donors:view")),
 ):
     return logic.list_donors(
         tenant_id_str(tenant_context),
@@ -39,7 +39,7 @@ async def get_donor(
     donor_id: str,
     db: Session = Depends(get_db),
     tenant_context: dict = Depends(get_tenant_context),
-    _=Depends(get_current_user),
+    _=Depends(require_permission("ngo:donors:view")),
 ):
     return logic.get_donor(tenant_id_str(tenant_context), donor_id, db)
 
@@ -49,7 +49,7 @@ async def create_donor_endpoint(
     body: DonorCreate,
     db: Session = Depends(get_db),
     tenant_context: dict = Depends(get_tenant_context),
-    _=Depends(get_current_user),
+    _=Depends(require_permission("ngo:donors:create")),
 ):
     return logic.create_donor_record(tenant_id_str(tenant_context), body, db)
 
@@ -60,7 +60,7 @@ async def update_donor_endpoint(
     body: DonorUpdate,
     db: Session = Depends(get_db),
     tenant_context: dict = Depends(get_tenant_context),
-    _=Depends(get_current_user),
+    _=Depends(require_permission("ngo:donors:update")),
 ):
     return logic.update_donor_record(tenant_id_str(tenant_context), donor_id, body, db)
 
@@ -70,6 +70,6 @@ async def delete_donor_endpoint(
     donor_id: str,
     db: Session = Depends(get_db),
     tenant_context: dict = Depends(get_tenant_context),
-    _=Depends(get_current_user),
+    _=Depends(require_permission("ngo:donors:delete")),
 ):
     logic.delete_donor_record(tenant_id_str(tenant_context), donor_id, db)

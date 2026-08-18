@@ -4,7 +4,6 @@ from typing import Optional
 
 from .....config.database import get_db
 from .....api.dependencies import get_current_user, get_tenant_context, require_permission
-from .....models.common import ModulePermission
 from . import logic
 
 router = APIRouter()
@@ -15,7 +14,7 @@ async def get_pos_categories_list(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
     tenant_context: Optional[dict] = Depends(get_tenant_context),
-    _: dict = Depends(require_permission(ModulePermission.INVENTORY_VIEW.value)),
+    _: dict = Depends(require_permission("pos:products:view")),
 ):
     return logic.list_pos_categories_endpoint(db, tenant_context)
 
@@ -26,7 +25,7 @@ async def create_pos_category_endpoint(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
     tenant_context: Optional[dict] = Depends(get_tenant_context),
-    _: dict = Depends(require_permission(ModulePermission.INVENTORY_CREATE.value)),
+    _: dict = Depends(require_permission("pos:products:create")),
 ):
     return logic.create_pos_category_endpoint(db, tenant_context, body)
 
@@ -37,6 +36,6 @@ async def delete_pos_category_endpoint(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
     tenant_context: Optional[dict] = Depends(get_tenant_context),
-    _: dict = Depends(require_permission(ModulePermission.INVENTORY_DELETE.value)),
+    _: dict = Depends(require_permission("pos:products:delete")),
 ):
     return logic.delete_pos_category_endpoint(db, tenant_context, category_id)
