@@ -42,14 +42,21 @@ export function Step4YourDetails({
         </p>
         <h2 className="mt-2 text-3xl font-bold tracking-tight">Your Details</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Fields marked optional are not required. By submitting this form you
-          agree to our terms and privacy policy.
+          Fields marked <span className="font-medium">(optional)</span> are not
+          required. Fields marked{" "}
+          <span className="font-medium">(required)</span> must be completed. By
+          submitting this form you agree to our terms and privacy policy.
         </p>
       </div>
 
       <div className="grid gap-5 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label className="text-sm font-semibold">Title</Label>
+          <Label className="text-sm font-semibold">
+            Title{" "}
+            <span className="font-normal text-muted-foreground">
+              (required)
+            </span>
+          </Label>
           <Select
             value={customer.title}
             onValueChange={(v) => onChange({ title: v })}
@@ -68,7 +75,12 @@ export function Step4YourDetails({
         </div>
         <div />
         <div className="space-y-2">
-          <Label className="text-sm font-semibold">First Name</Label>
+          <Label className="text-sm font-semibold">
+            First Name{" "}
+            <span className="font-normal text-muted-foreground">
+              (required)
+            </span>
+          </Label>
           <Input
             value={customer.firstName}
             onChange={(e) => onChange({ firstName: e.target.value })}
@@ -76,7 +88,12 @@ export function Step4YourDetails({
           />
         </div>
         <div className="space-y-2">
-          <Label className="text-sm font-semibold">Last Name</Label>
+          <Label className="text-sm font-semibold">
+            Last Name{" "}
+            <span className="font-normal text-muted-foreground">
+              (required)
+            </span>
+          </Label>
           <Input
             value={customer.lastName}
             onChange={(e) => onChange({ lastName: e.target.value })}
@@ -85,7 +102,10 @@ export function Step4YourDetails({
         </div>
         <div className="space-y-2">
           <Label className="text-sm font-semibold">
-            Email <span className="font-normal text-muted-foreground">(optional)</span>
+            Email{" "}
+            <span className="font-normal text-muted-foreground">
+              (optional)
+            </span>
           </Label>
           <Input
             type="email"
@@ -95,7 +115,12 @@ export function Step4YourDetails({
           />
         </div>
         <div className="space-y-2">
-          <Label className="text-sm font-semibold">County</Label>
+          <Label className="text-sm font-semibold">
+            County{" "}
+            <span className="font-normal text-muted-foreground">
+              (optional)
+            </span>
+          </Label>
           <Input
             value={customer.county}
             onChange={(e) => onChange({ county: e.target.value })}
@@ -103,7 +128,12 @@ export function Step4YourDetails({
           />
         </div>
         <div className="space-y-2">
-          <Label className="text-sm font-semibold">Telephone</Label>
+          <Label className="text-sm font-semibold">
+            Telephone{" "}
+            <span className="font-normal text-muted-foreground">
+              (required)
+            </span>
+          </Label>
           <Input
             value={customer.telephone}
             onChange={(e) => onChange({ telephone: e.target.value })}
@@ -113,7 +143,9 @@ export function Step4YourDetails({
         <div className="space-y-2">
           <Label className="text-sm font-semibold">
             House Number{" "}
-            <span className="font-normal text-muted-foreground">(optional)</span>
+            <span className="font-normal text-muted-foreground">
+              (optional)
+            </span>
           </Label>
           <Input
             value={customer.houseNumber}
@@ -122,7 +154,12 @@ export function Step4YourDetails({
           />
         </div>
         <div className="space-y-2">
-          <Label className="text-sm font-semibold">Street</Label>
+          <Label className="text-sm font-semibold">
+            Street{" "}
+            <span className="font-normal text-muted-foreground">
+              (optional)
+            </span>
+          </Label>
           <Input
             value={customer.street}
             onChange={(e) => onChange({ street: e.target.value })}
@@ -130,7 +167,12 @@ export function Step4YourDetails({
           />
         </div>
         <div className="space-y-2">
-          <Label className="text-sm font-semibold">Town</Label>
+          <Label className="text-sm font-semibold">
+            Town{" "}
+            <span className="font-normal text-muted-foreground">
+              (optional)
+            </span>
+          </Label>
           <Input
             value={customer.town}
             onChange={(e) => onChange({ town: e.target.value })}
@@ -138,7 +180,12 @@ export function Step4YourDetails({
           />
         </div>
         <div className="space-y-2">
-          <Label className="text-sm font-semibold">Postcode</Label>
+          <Label className="text-sm font-semibold">
+            Postcode{" "}
+            <span className="font-normal text-muted-foreground">
+              (required)
+            </span>
+          </Label>
           <Input
             value={customer.postcode}
             onChange={(e) =>

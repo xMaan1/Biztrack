@@ -175,8 +175,6 @@ export function isCustomerDetailsComplete(data: MotWizardData): boolean {
       customer.firstName.trim() &&
       customer.lastName.trim() &&
       customer.telephone.trim() &&
-      customer.street.trim() &&
-      customer.town.trim() &&
       customer.postcode.trim() &&
       customer.privacyAccepted &&
       customer.termsAccepted,
