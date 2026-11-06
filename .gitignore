@@ -3,3 +3,7 @@
 *.ppk
 *.md
 idea/
+# credentials - never commit
+service-account.json
+client_secrets.json
+*.env
